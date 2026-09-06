@@ -243,6 +243,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .callout .stem { font-weight: 600; }
 .callout .ans { font-size: 0.95rem; }
 .lesson-link .inplan { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.lesson-link .lock { color: var(--muted); font-size: 0.55rem; flex: none; }
+.paywall { border-left: 4px solid var(--warn); }
 .stage-strip { display: flex; gap: 6px; flex-wrap: wrap; }
 .stage { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; color: var(--muted); }
 .stage.done { color: var(--ink-2); }

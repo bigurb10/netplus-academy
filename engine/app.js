@@ -41,6 +41,18 @@
   const gens = FRA.generators || {};
   document.title = course.name;
 
+  // ---------- access ----------
+  // Free set: the cheat sheet, the starter test, and the lessons below. Everything else needs entitlement.
+  const FREE_SET = new Set();
+  (function () { const f = course.free || {}; if (Array.isArray(f.lessons)) f.lessons.forEach(id => FREE_SET.add(id)); else if (typeof f.lessons === 'number') lessons.slice(0, f.lessons).forEach(l => FREE_SET.add(l.id)); })();
+  const entitled = () => !!course.freeCourse || window.FRA_ENTITLED === true;
+  const lessonLocked = id => !entitled() && !FREE_SET.has(id);
+  const testsLocked = kind => !entitled() && kind !== 'starter';
+  function paywall(what) {
+    const btn = course.upgradeUrl ? `<a class="btn primary" href="${esc(course.upgradeUrl)}">Unlock the full course</a>` : `<button class="btn primary" data-act="upgrade">Unlock the full course</button>`;
+    return `<div class="card lift stack paywall"><div class="eyebrow">Full course</div><h3>${esc(what)} is part of the full ${esc(course.name)} course.</h3><p class="ink2">The cheat sheet, the starter test, and the first ${FREE_SET.size} lessons are free. The full course adds every lesson, the ${EXAM_N}-question test, retraining, practice tests, and drills.</p><div class="row">${btn}<button class="btn ghost" data-act="go" data-arg="course">See the free lessons</button></div></div>`;
+  }
+
   // ---------- utilities ----------
   const $ = (sel, root) => (root || document).querySelector(sel);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -236,8 +248,9 @@
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
     if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
-    if (st === 'fulltest') return { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
+    if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
+    if (testsLocked('practice')) return { label: 'Unlock the full course for practice tests', act: 'upgrade', arg: '' };
     return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `Pass streak ${S.passStreak} of ${STREAK_NEEDED}. Score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row to be cleared.` };
   }
 
@@ -311,7 +324,7 @@
           <span class="unit-title">${esc(u.title)}</span>
           <span class="unit-meta">${inPlan ? `<span class="pill accent" style="padding:1px 7px">${inPlan} to do</span>` : `${passed}/${u.lessons.length}`}</span>
         </button>
-        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}</span>${rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
+        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}</span>${lessonLocked(l.id) ? '<span class="lock" title="Full course">&#9679;</span>' : rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
       </div>`;
     }).join('');
   }
@@ -438,7 +451,7 @@
     if (u) {
       return `<div class="content stack" style="gap:18px">
         <div><div class="eyebrow">Unit ${u.n}</div><h1>${esc(u.title)}</h1><p class="ink2" style="margin-top:6px">${esc(u.blurb)}</p></div>
-        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
+        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${lessonLocked(l.id) ? '<span class="pill">Full course</span>' : planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
         <div class="row"><button class="btn ghost" data-act="go" data-arg="course">All units</button></div>
       </div>`;
     }
@@ -452,6 +465,7 @@
   // Lesson view with personalization callouts and checkpoint quiz.
   function viewLesson(id) {
     const l = L[id]; if (!l) return viewCourse();
+    if (lessonLocked(id)) return `<div class="content stack" style="gap:20px"><div class="lesson-head"><div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span></div><h1>${esc(l.title)}</h1></div>${paywall('This lesson')}</div>`;
     const ls = lstat(id); if (ls.status === 'new') { ls.status = 'read'; save(); }
     const entry = planEntry(id); const rem = planRemaining(); const posInPlan = entry ? rem.findIndex(e => e.id === id) : -1;
     const nextInPlan = entry ? rem.find(e => e.id !== id) : null;
@@ -548,7 +562,7 @@
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
       <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row and you are cleared to book the real thing.`}</p></div>
-        <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>` : ''}</div></div>
+        <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}</div></div>
         <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Use the ${EXAM_MINUTES}-minute timer on ${EXAM_N}-question tests</label></div>
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
@@ -624,6 +638,7 @@
   // ---------- drills (optional extra practice on weak topics) ----------
   function viewTrain() {
     const tr = S.active && S.active.kind === 'train' ? S.active : null;
+    if (!entitled()) return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Drills</div><h1>Extra practice on weak topics</h1></div>${paywall('Drilling')}</div>`;
     if (!tr) {
       const weak = weakTopics();
       return `<div class="content stack" style="gap:18px">
@@ -880,6 +895,7 @@
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
       case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
       case 'start-exam': {
+        if (testsLocked(arg === 'starter' ? 'starter' : 'full')) { toast('The full course is needed for this test.'); return go('exam'); }
         if (S.active && S.active.kind !== 'checkpoint' && !confirm('You have an unfinished session. Start a new test and discard it?')) return;
         if (arg === 'starter' && S.plan && planRemaining().length && !confirm('Retaking the starter test will rebuild your tutorial from the new results. Continue?')) return;
         startExam(arg === 'starter' ? 'starter' : arg === 'full' ? 'full' : 'practice'); return;
@@ -891,6 +907,7 @@
       case 'train-topic': { startTrain([arg]); return; }
       case 'train-drills': { const tr = S.active; if (!tr) return; tr.phase = 'drill'; tr.items = []; tr.i = 0; tr.answers = []; tr.used = tr.used || []; extendQueue(tr); save(); render(); return; }
       case 'abandon-train': { S.active = null; save(); return go('train'); }
+      case 'upgrade': { if (course.upgradeUrl) { location.href = course.upgradeUrl; return; } toast('The full course is not for sale yet. Everything is free for now.'); return; }
       case 'deep-toggle': { deepOpen = deepOpen === arg ? null : arg; render(); if (deepOpen) { const el = $('#deep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
       case 'print-cheat': { if (S.view.name !== 'cheatsheet') go('cheatsheet'); setTimeout(() => window.print(), 120); return; }
       case 'cheat-continue': { S.seen.cheat = true; save(); startExam('starter'); return; }
