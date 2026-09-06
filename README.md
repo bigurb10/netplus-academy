@@ -4,6 +4,7 @@ A self-paced CompTIA Network+ (N10-009) course in a single web page: a 10-questi
 
 ## Run it
 
+- Live site: https://bigurb10.github.io/netplus-academy/ (GitHub Pages, served from the root of the `main` branch of https://github.com/bigurb10/netplus-academy). Every push to `main` redeploys within a minute or two; no build step is needed because `index.html` loads the source files directly. On a phone, open the link and use "Add to Home Screen".
 - Open `dist/netplus-academy.html` in any browser. Nothing else is required. Progress is saved in that browser's local storage.
 - Or open `index.html` from this folder during development; it loads the same files unbundled.
 - To host it, upload `dist/netplus-academy.html` (rename to `index.html`) to any static host: GitHub Pages, Netlify, Cloudflare Pages, or a plain web server.
