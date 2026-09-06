@@ -71,6 +71,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--ink-2); }
 .nav button:hover { background: var(--surface-2); color: var(--ink); }
 .nav button[aria-current="page"] { background: var(--accent-soft); color: var(--ink); }
+.nav a { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--muted); text-decoration: none; }
+.nav a:hover { background: var(--surface-2); color: var(--ink); }
 .readiness { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 200px; }
 .readiness .eyebrow { white-space: nowrap; }
 .rail-toggle { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }

@@ -80,6 +80,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--ink-2); }
 .nav button:hover { background: var(--surface-2); color: var(--ink); }
 .nav button[aria-current="page"] { background: var(--accent-soft); color: var(--ink); }
+.nav a { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--muted); text-decoration: none; }
+.nav a:hover { background: var(--surface-2); color: var(--ink); }
 .readiness { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 200px; }
 .readiness .eyebrow { white-space: nowrap; }
 .rail-toggle { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
@@ -5597,51 +5599,37 @@ FRA.questions.push(
 {id:"u9l6-8",t:"u9l6",q:"Wireless clients experience interference that does not appear as another Wi-Fi network. Which tool reveals non-Wi-Fi sources of radio energy?",a:["Wi-Fi analyzer","Spectrum analyzer","Cable tester","Protocol analyzer"],c:1,e:"A spectrum analyzer shows all RF energy in a band, including microwaves and other non-802.11 sources that a Wi-Fi analyzer cannot decode."}
 );
 
-/* NetPlus Academy application.
+/* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
    retraining tutorial built from the misses -> practice tests until three in a row at 85% or better.
    Every test ends with an explanation of each wrong answer and each lucky guess. */
 (function () {
   'use strict';
 
-  // ---------- constants ----------
-  const DOMAINS = {
-    1: { name: 'Networking Concepts', short: 'Concepts', pct: 23, quota: 12 },
-    2: { name: 'Network Implementation', short: 'Implementation', pct: 20, quota: 10 },
-    3: { name: 'Network Operations', short: 'Operations', pct: 19, quota: 9 },
-    4: { name: 'Network Security', short: 'Security', pct: 14, quota: 7 },
-    5: { name: 'Network Troubleshooting', short: 'Troubleshooting', pct: 24, quota: 12 }
-  };
-  const PASS_PCT = 85, STREAK_NEEDED = 3, EXAM_N = 50, EXAM_MINUTES = 50, STARTER_N = 10, CHECKPOINT_N = 4, CHECKPOINT_PASS = 3;
+  // ---------- course manifest ----------
+  const course = FRA.course;
+  if (!course || !Array.isArray(course.domains) || !course.test) throw new Error('FRA.course manifest missing or incomplete');
+  const DOMAINS = {}; course.domains.forEach(d => { DOMAINS[d.id] = d; });
+  const DOMAIN_IDS = course.domains.map(d => d.id);
+  const T = course.test;
+  const PASS_PCT = T.passPct, STREAK_NEEDED = T.streakNeeded, EXAM_N = T.questions, EXAM_MINUTES = T.minutes;
+  const STARTER_N = DOMAIN_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
+  const REBUILD_PTS = 3 * T.starterPerDomain; // every starter question in the domain wrong
+  const ALL_WORD = T.starterPerDomain === 2 ? 'both' : 'all';
   const CONF = [[1, 'Guess'], [2, 'Unsure'], [3, 'Fairly sure'], [4, 'Sure'], [5, 'Certain']];
-  const STORE_KEY = 'npa.state.v2';
+  const STORE_KEY = `fra.${course.id}.state.v3`;
   // Feedback delivery. Feedback is always saved in the browser and exportable from the Feedback tab.
-  // Optionally set an endpoint that accepts POSTed JSON (Formspree, a Cloudflare Worker, your own API)
-  // and/or an email address for the Email button. Both are empty by default.
-  const FEEDBACK_ENDPOINT = '';
-  const FEEDBACK_EMAIL = '';
+  // Optionally set feedbackEndpoint (a URL that accepts POSTed JSON) and/or feedbackEmail in the course manifest.
+  const FEEDBACK_ENDPOINT = course.feedbackEndpoint || '';
+  const FEEDBACK_EMAIL = course.feedbackEmail || '';
   const FB_CATS = {
     question: ['Answer key is wrong', 'Question is unclear or ambiguous', 'Explanation is wrong or unclear', 'Too easy or off-topic', 'Typo', 'Other'],
     lesson: ['Content is inaccurate', 'Unclear or confusing', 'Missing something the exam covers', 'Too long or too short', 'Typo', 'Other'],
     overall: ['Content accuracy', 'Difficulty', 'Website bug', 'Design or usability', 'Idea or request', 'Other']
   };
-  const WHERE_LABEL = { starter: 'Starter test', full: '50-question test', practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': '50-question test results', 'practice-results': 'Practice test results', callout: 'Lesson callout' };
-  // Lessons the starter test samples from (two per domain, different lessons each time).
-  const STARTER_POOL = {
-    1: ['u2l1', 'u2l2', 'u4l3', 'u5l2', 'u3l3', 'u7l4', 'u4l5', 'u1l3'],
-    2: ['u6l2', 'u6l3', 'u7l2', 'u6l6', 'u7l3', 'u6l4', 'u6l5'],
-    3: ['u5l3', 'u5l4', 'u8l3', 'u8l5', 'u8l6', 'u8l2'],
-    4: ['u8l7', 'u8l8', 'u8l9'],
-    5: ['u9l1', 'u9l3', 'u9l5', 'u9l2', 'u9l4']
-  };
-  // Core lessons added when a domain shows a gap on the starter test.
-  const CORE = {
-    1: ['u2l1', 'u2l2', 'u3l1', 'u3l3', 'u4l2', 'u4l3', 'u5l1', 'u5l2', 'u7l4'],
-    2: ['u6l2', 'u6l3', 'u6l5', 'u6l6', 'u7l2', 'u7l3'],
-    3: ['u5l3', 'u5l4', 'u8l3', 'u8l5', 'u8l6'],
-    4: ['u8l7', 'u8l8', 'u8l9'],
-    5: ['u9l1', 'u9l3', 'u9l5']
-  };
+  const WHERE_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': `${EXAM_N}-question test results`, 'practice-results': 'Practice test results', callout: 'Lesson callout' };
+  const STARTER_POOL = course.starterPool || {};
+  const CORE = course.core || {};
 
   // ---------- data index ----------
   const units = (FRA.units || []).slice().sort((a, b) => a.n - b.n);
@@ -5649,9 +5637,10 @@ FRA.questions.push(
   units.forEach(u => u.lessons.forEach(l => { l.unit = u; l.index = lessons.length; lessons.push(l); L[l.id] = l; }));
   const bank = FRA.questions || []; const Q = {}; bank.forEach(q => { Q[q.id] = q; });
   const byLesson = {}; bank.forEach(q => { (byLesson[q.t] = byLesson[q.t] || []).push(q); });
-  const lessonsByDomain = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-  lessons.forEach(l => lessonsByDomain[l.domain].push(l));
+  const lessonsByDomain = {}; DOMAIN_IDS.forEach(d => { lessonsByDomain[d] = []; });
+  lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
   const gens = FRA.generators || {};
+  document.title = course.name;
 
   // ---------- utilities ----------
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -5686,11 +5675,18 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 2, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
-    try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.v === 2) return Object.assign(fresh(), s); } } catch (e) { /* storage unavailable */ }
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) { const s = JSON.parse(raw); if (s && s.v === 3) return Object.assign(fresh(), s); }
+      for (const key of (course.legacyStoreKeys || [])) {
+        const old = localStorage.getItem(key);
+        if (old) { const s = JSON.parse(old); if (s && s.v === 2) return Object.assign(fresh(), s, { v: 3, course: course.id }); }
+      }
+    } catch (e) { /* storage unavailable */ }
     return fresh();
   }
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
@@ -5745,7 +5741,7 @@ FRA.questions.push(
   }
   function buildExam() {
     const items = []; const used = new Set();
-    for (const d of [1, 2, 3, 4, 5]) {
+    for (const d of DOMAIN_IDS) {
       const quota = DOMAINS[d].quota; const ls = shuffle(lessonsByDomain[d]); let i = 0, guard = 0; const target = items.length + quota;
       while (items.length < target && guard < 400) {
         const l = ls[i % ls.length]; i++; guard++;
@@ -5760,8 +5756,8 @@ FRA.questions.push(
   }
   function buildStarter() {
     const items = []; const used = new Set();
-    for (const d of [1, 2, 3, 4, 5]) {
-      const picks = shuffle(STARTER_POOL[d]).slice(0, 2);
+    for (const d of DOMAIN_IDS) {
+      const picks = shuffle(STARTER_POOL[d] || lessonsByDomain[d].map(l => l.id)).slice(0, T.starterPerDomain);
       for (const lid of picks) {
         let q = (gens[lid] && Math.random() < 0.5) ? FRA.generate(lid) : leastSeen(byLesson[lid] || [], used);
         if (!q) q = leastSeen(byLesson[lid] || [], new Set());
@@ -5775,7 +5771,7 @@ FRA.questions.push(
 
   // ---------- plan (personalized tutorial) ----------
   function planFromStarter(rec, examIdx) {
-    const entries = {}; const domPts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }; const domCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const entries = {}; const domPts = {}; const domCount = {}; DOMAIN_IDS.forEach(d => { domPts[d] = 0; domCount[d] = 0; });
     const add = (id, reason) => { if (!L[id]) return; (entries[id] = entries[id] || { id, reasons: [] }).reasons.push(reason); };
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const d = L[q.t].domain; const p = points(r.correct, r.conf); domPts[d] += p; domCount[d]++;
@@ -5783,8 +5779,8 @@ FRA.questions.push(
       if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, conf: r.conf, source: 'starter' });
     });
     const depth = {};
-    for (const d of [1, 2, 3, 4, 5]) {
-      if (domPts[d] >= 6) { depth[d] = 'rebuild'; lessonsByDomain[d].forEach(l => add(l.id, { kind: 'domain', level: 'rebuild', d, pts: domPts[d] })); }
+    for (const d of DOMAIN_IDS) {
+      if (domPts[d] >= REBUILD_PTS) { depth[d] = 'rebuild'; lessonsByDomain[d].forEach(l => add(l.id, { kind: 'domain', level: 'rebuild', d, pts: domPts[d] })); }
       else if (domPts[d] >= 3) { depth[d] = 'core'; CORE[d].forEach(id => add(id, { kind: 'domain', level: 'core', d, pts: domPts[d] })); }
       else depth[d] = domPts[d] > 0 ? 'light' : 'solid';
     }
@@ -5814,7 +5810,7 @@ FRA.questions.push(
     if (!S.exams.some(e => e.kind === 'full' || e.kind === 'practice')) return 'fulltest';
     return 'practice';
   }
-  const STAGE_LABEL = { starter: 'Starter test', tutorial: 'Initial tutorial', fulltest: '50-question test', retrain: 'Retraining', practice: 'Practice tests', ready: 'Ready' };
+  const STAGE_LABEL = { starter: 'Starter test', tutorial: 'Initial tutorial', fulltest: `${EXAM_N}-question test`, retrain: 'Retraining', practice: 'Practice tests', ready: 'Ready' };
 
   function lastExam(kind) { for (let i = S.exams.length - 1; i >= 0; i--) if (!kind || S.exams[i].kind === kind) return S.exams[i]; return null; }
   function weakTopics() {
@@ -5841,7 +5837,7 @@ FRA.questions.push(
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
     if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
-    if (st === 'fulltest') return { label: 'Take the 50-question test', act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
+    if (st === 'fulltest') return { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
     return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `Pass streak ${S.passStreak} of ${STREAK_NEEDED}. Score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row to be cleared.` };
   }
@@ -5880,9 +5876,9 @@ FRA.questions.push(
       <div class="shell">
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
-          <button class="brand" data-act="go" data-arg="home"><span class="mark">N+</span> NetPlus Academy</button>
+          <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and pass streak">
             <span class="eyebrow">Readiness</span>
@@ -5925,9 +5921,9 @@ FRA.questions.push(
   function viewWelcome() {
     return `<main class="main"><div class="content stack" style="gap:22px;padding-top:24px">
       <div class="stack" style="gap:10px">
-        <div class="eyebrow">NetPlus Academy</div>
-        <h1>Ten questions, then a course built for you.</h1>
-        <p class="ink2" style="font-size:1.1rem">The starter test asks two questions from each of the five exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
+        <div class="eyebrow">${esc(course.brand)} · ${esc(course.name)}</div>
+        <h1>${STARTER_N} questions, then a course built for you.</h1>
+        <p class="ink2" style="font-size:1.1rem">The starter test asks ${T.starterPerDomain} questions from each of the ${DOMAIN_IDS.length} exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
       </div>
       <div class="card stack" style="gap:10px"><div class="row spread"><div><div class="eyebrow">Before you start</div><h3>The memorization sheet</h3><p class="ink2">Every port number, mask, standard, and step order the exam expects cold. Print it and keep it beside you while you study.</p></div><div class="row"><button class="btn" data-act="go" data-arg="cheatsheet">Open</button><button class="btn" data-act="print-cheat">Print</button></div></div></div>
       <div class="card lift stack" style="gap:14px">
@@ -5996,17 +5992,17 @@ FRA.questions.push(
       <div class="row"><span class="pill ${p >= 6 ? 'bad' : p >= 3 ? 'warn' : ''}">${p} pts</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`;
   }
   function domainBars() {
-    return `<div class="bars">${[1, 2, 3, 4, 5].map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
+    return `<div class="bars">${DOMAIN_IDS.map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
       return `<div class="bar-row"><span class="label">${DOMAINS[d].short} <span class="muted">${DOMAINS[d].pct}%</span></span><div class="track"><i class="${a.t ? '' : 'dim'}" style="width:${a.t ? v : 100}%"></i></div><span class="value">${a.t ? v + '%' : '—'}</span></div>`; }).join('')}</div>`;
   }
 
   // ---------- tutorial (plan) ----------
   function reasonLabel(r) {
-    if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: both starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
+    if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: ${ALL_WORD} starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
     const src = r.source === 'starter' ? 'starter test' : 'last test';
     return `${KIND_LABEL[r.kind]} on the ${src}`;
   }
-  function lessonWhy(r) { const d = DOMAINS[r.d].short; return r.level === 'rebuild' ? `In your tutorial because you missed both ${d} questions on the starter test.` : `In your tutorial because the starter test showed a gap in ${d}.`; }
+  function lessonWhy(r) { const d = DOMAINS[r.d].short; return r.level === 'rebuild' ? `In your tutorial because you missed ${ALL_WORD} ${d} questions on the starter test.` : `In your tutorial because the starter test showed a gap in ${d}.`; }
   function reasonPill(e) {
     const kinds = e.reasons.map(r => r.kind);
     if (kinds.includes('wrong-confident')) return '<span class="pill bad">Wrong, confident</span>';
@@ -6029,7 +6025,7 @@ FRA.questions.push(
       <div><div class="eyebrow">${S.plan.source === 'starter' ? 'Your tutorial' : 'Retraining tutorial'} · built from your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
         <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
-      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
+      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : 'Next: a practice test.'} <button class="btn primary small" data-act="start-exam" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
@@ -6048,7 +6044,7 @@ FRA.questions.push(
       </div>`;
     }
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">All lessons</div><h1>Nine units, ${lessons.length} lessons</h1><p class="ink2" style="margin-top:6px">Your tutorial picks from these. Any lesson can be opened at any time; each ends with a four-question checkpoint.</p></div>
+      <div><div class="eyebrow">All lessons</div><h1>${plural(units.length, 'unit')}, ${plural(lessons.length, 'lesson')}</h1><p class="ink2" style="margin-top:6px">Your tutorial picks from these. Any lesson can be opened at any time; each ends with a four-question checkpoint.</p></div>
       <div class="stack" style="gap:8px">${units.map(u => { const passed = u.lessons.filter(l => lstat(l.id).status === 'passed').length;
         return `<button class="option" data-act="course" data-arg="${u.id}" style="align-items:center"><span class="key">${u.n}</span><span style="flex:1"><strong>${esc(u.title)}</strong><br><span class="muted" style="font-size:.9rem">${esc(u.blurb)}</span></span><span class="tnum muted">${passed}/${u.lessons.length}</span></button>`; }).join('')}</div>
     </div>`;
@@ -6136,7 +6132,7 @@ FRA.questions.push(
 
   // ---------- tests ----------
   const isTest = k => k === 'starter' || k === 'full' || k === 'practice';
-  const TEST_LABEL = { starter: 'Starter test', full: '50-question test', practice: 'Practice test' };
+  const TEST_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test' };
   function viewExam() {
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
@@ -6151,7 +6147,7 @@ FRA.questions.push(
   function viewTestsHub() {
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, two per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${[1, 2, 3, 4, 5].map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first, and subnetting, ports, OSI, and route-selection items are generated fresh every time.</p></div>
+      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
       <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row and you are cleared to book the real thing.`}</p></div>
         <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>` : ''}</div></div>
         <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Use the ${EXAM_MINUTES}-minute timer on ${EXAM_N}-question tests</label></div>
@@ -6168,7 +6164,7 @@ FRA.questions.push(
   }
   function finishExam() {
     const ex = S.active; const items = ex.items.map(fat);
-    let score = 0; const byDomain = { 1: { c: 0, t: 0 }, 2: { c: 0, t: 0 }, 3: { c: 0, t: 0 }, 4: { c: 0, t: 0 }, 5: { c: 0, t: 0 } };
+    let score = 0; const byDomain = {}; DOMAIN_IDS.forEach(d => { byDomain[d] = { c: 0, t: 0 }; });
     const review = [];
     items.forEach((q, k) => {
       const a = ex.answers[k] || { choice: -1, conf: 1, skipped: true };
@@ -6201,8 +6197,8 @@ FRA.questions.push(
     if (isStarter) {
       headline = e.pct >= 90 && !guesses.length ? 'Strong start.' : e.pct >= 60 ? 'A solid base with clear gaps.' : 'Starting from the ground up, which is fine.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
-        <div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
-        <p class="ink2" style="font-size:.95rem">Missed both questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on both: nothing from that domain.</p>
+        <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
+        <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
         <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
         : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
     } else {
@@ -6215,10 +6211,10 @@ FRA.questions.push(
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${TEST_LABEL[e.kind]} · ${fmtDate(e.date)} · ${mins} min</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `The real exam passes at 720 of 900, about 72%. This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
         <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>` : ''}</div>
         <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
-      <div class="card stack"><h3>By domain</h3><div class="bars">${[1, 2, 3, 4, 5].map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
+      <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
       ${guesses.length ? `<div class="card"><h3 style="margin-bottom:6px">Right, but you were not sure (${guesses.length})</h3><p class="muted" style="font-size:.9rem;margin-bottom:6px">These count as gaps. Read why the answer is right so it stops being a guess.</p>${guesses.map(r => reviewItem(r, false)).join('')}</div>` : ''}
@@ -6298,13 +6294,9 @@ FRA.questions.push(
     const last3 = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-3);
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Readiness report</div><h1>${S.passStreak >= STREAK_NEEDED ? 'Book the exam.' : 'Not yet.'}</h1></div>
-      ${S.passStreak >= STREAK_NEEDED ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passStreak} tests in a row${last3.length ? ` (${last3.map(e => e.pct + '%').join(', ')})` : ''}.</strong><p>The real exam passes at about 72%, so you have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : `<div class="card"><p>You need ${STREAK_NEEDED - S.passStreak} more test${STREAK_NEEDED - S.passStreak === 1 ? '' : 's'} at ${PASS_PCT}% or better in a row.</p></div>`}
+      ${S.passStreak >= STREAK_NEEDED ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passStreak} tests in a row${last3.length ? ` (${last3.map(e => e.pct + '%').join(', ')})` : ''}.</strong><p>${esc(course.realExamNote)} You have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : `<div class="card"><p>You need ${STREAK_NEEDED - S.passStreak} more test${STREAK_NEEDED - S.passStreak === 1 ? '' : 's'} at ${PASS_PCT}% or better in a row.</p></div>`}
       <div class="card stack"><h3>Exam day</h3><ul style="margin:0;padding-left:20px;line-height:1.7">
-        <li>Up to 90 questions in 90 minutes, including performance-based items. Do the multiple choice first if a simulation stalls you; flag and return.</li>
-        <li>Read for the qualifier: MOST likely, BEST, FIRST, NEXT. The methodology questions are about order.</li>
-        <li>Subnet with block sizes on the scratch board. 256 minus the mask octet, then count.</li>
-        <li>Eliminate two options, then decide. Never leave a question blank.</li>
-        <li>Two forms of ID, arrive early, sleep the night before.</li>
+        ${(course.examDay || []).map(t => `<li>${inline(t)}</li>`).join('')}
       </ul></div>
       <div class="row"><button class="btn" data-act="start-exam" data-arg="practice">One more practice test</button><button class="btn ghost" data-act="go" data-arg="home">Home</button></div>
     </div>`;
@@ -6364,7 +6356,7 @@ FRA.questions.push(
     const f = Object.assign({ id: 'fb-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), sent: false }, item);
     S.feedback = S.feedback || []; S.feedback.push(f); save();
     if (FEEDBACK_ENDPOINT && typeof fetch === 'function') {
-      try { fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ course: 'netplus-academy' }, f)) }).then(r => { if (r.ok) { f.sent = true; save(); } }).catch(() => { /* offline; stays local */ }); } catch (e) { /* ignore */ }
+      try { fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ course: course.id }, f)) }).then(r => { if (r.ok) { f.sent = true; save(); } }).catch(() => { /* offline; stays local */ }); } catch (e) { /* ignore */ }
     }
     return f;
   }
@@ -6379,7 +6371,7 @@ FRA.questions.push(
   }
   function feedbackReport() {
     const items = S.feedback || [];
-    const lines = [`# NetPlus Academy feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
     items.forEach((f, i) => {
       const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null;
       lines.push(`## ${i + 1}. ${FB_KIND[f.kind] || f.kind} · ${f.cat || 'Uncategorized'} · ${new Date(f.ts).toISOString().slice(0, 10)}`);
@@ -6397,7 +6389,7 @@ FRA.questions.push(
   }
   function viewFeedback() {
     const items = (S.feedback || []).slice().reverse();
-    const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('NetPlus Academy feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
+    const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(course.name + ' feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, any lesson from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
       <div class="card lift stack">
@@ -6519,9 +6511,9 @@ FRA.questions.push(
       case 'fb-delete': { S.feedback = (S.feedback || []).filter(f => f.id !== arg); save(); render(); return; }
       case 'fb-clear': { if (!confirm('Delete all saved feedback in this browser?')) return; S.feedback = []; save(); render(); return; }
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
-      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'netplus-academy-feedback.json'; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
+      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
-      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || obj.v !== 2) throw new Error('bad'); S = Object.assign(fresh(), obj); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
+      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
@@ -6541,7 +6533,7 @@ FRA.questions.push(
   function runSelfTest() {
     const log = []; S = fresh();
     startExam('starter'); let ex = S.active;
-    ex.items.forEach((it, k) => { const q = fat(it); const wrong = (q.c + 1) % 4; ex.answers[k] = k < 6 ? { choice: wrong, conf: 5 } : k < 8 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 5 }; });
+    ex.items.forEach((it, k) => { const q = fat(it); const wrong = (q.c + 1) % 4; ex.answers[k] = k < Math.round(STARTER_N * 0.6) ? { choice: wrong, conf: 5 } : k < Math.round(STARTER_N * 0.8) ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 5 }; });
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
@@ -6554,7 +6546,7 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% streak=${S.passStreak} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
-    saveFeedback({ kind: 'question', ref: { qid: 'u1l1-1', lesson: 'u1l1', stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
+    saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
     if (S.plan && S.plan.lessons[1]) { const second = S.plan.lessons[1].id; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
@@ -6564,9 +6556,9 @@ FRA.questions.push(
       if (lstat(second).status === 'passed') throw new Error('unsure answers counted toward a checkpoint pass'); }
     const missingDeep = lessons.filter(l => !(FRA.deep && FRA.deep[l.id])).map(l => l.id);
     if (missingDeep.length) throw new Error('lessons without a deeper explanation: ' + missingDeep.join(', '));
-    go('lesson', 'u4l1'); deepOpen = 'u4l1'; render();
+    const deepId = lessons.find(l => FRA.deep && FRA.deep[l.id]).id; go('lesson', deepId); deepOpen = deepId; render();
     const deepPre = document.querySelectorAll('#deep pre').length, deepOl = document.querySelectorAll('#deep ol').length;
-    log.push(`deep u4l1 rendered pre=${deepPre} ol=${deepOl}`);
+    log.push(`deep ${deepId} rendered pre=${deepPre} ol=${deepOl}`);
     if (!deepPre) throw new Error('deep explanation did not render fenced blocks'); deepOpen = null;
     for (const v of ['tutorial', 'home', 'progress', 'train', 'exam', 'ready', 'course', 'cheatsheet', 'feedback']) go(v);
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
