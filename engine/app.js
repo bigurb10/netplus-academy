@@ -964,7 +964,8 @@
     log.push(`full ${S.exams[1].pct}% streak=${S.passStreak} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
-    if (S.plan && S.plan.lessons[1]) { const second = S.plan.lessons[1].id; go('lesson', second);
+    const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
+    if (unsureId) { const second = unsureId; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
       S.active = { kind: 'checkpoint', lesson: second, items: items2.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
       for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; s.conf = 1; submitAnswer(s, false); advance(s); }
