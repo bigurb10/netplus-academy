@@ -245,3 +245,69 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .stage { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; color: var(--muted); }
 .stage.done { color: var(--ink-2); }
 .stage.cur { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); }
+
+/* Cheat sheet */
+.cs h1 { font-size: 1.7rem; }
+.cs-toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-toc a { font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; text-decoration: none; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+.cs-toc a:hover { border-color: var(--accent); color: var(--ink); }
+.cs-section { margin-top: 10px; scroll-margin-top: 70px; }
+.cs-section h2 { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); margin-bottom: 12px; font-size: 1.25rem; }
+.cs-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; color: var(--accent); }
+.cs-section h3 { font-size: 0.95rem; margin: 14px 0 6px; color: var(--ink-2); }
+.cs-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin: 6px 0 14px; }
+.cs-table th { text-align: left; font-family: var(--font-display); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--ink); }
+.cs-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cs-table td:first-child { font-weight: 600; }
+.cs-list ul { margin: 0 0 12px; padding-left: 20px; }
+.cs-list li { margin: 3px 0; font-size: 0.95rem; break-inside: avoid; }
+.cs-list.two ul { columns: 2; column-gap: 28px; }
+.print-only { display: none; }
+.callout.accent { border-left-color: var(--accent); background: var(--accent-soft); }
+@media (max-width: 700px) { .cs-list.two ul { columns: 1; } }
+
+/* Deeper explanations */
+.deep-cta { padding: 4px 0; }
+.deep { border-left: 4px solid var(--accent); }
+.lesson-body ol { margin: 0 0 12px; padding-left: 24px; }
+.lesson-body ol li { margin: 5px 0; }
+.lesson-body pre { margin: 10px 0 14px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--ink); white-space: pre; }
+.deep-body h3:first-child { margin-top: 4px; }
+
+/* Feedback */
+.fb-btn { font-size: 0.8rem; padding: 4px 8px; color: var(--muted); white-space: nowrap; }
+.fb-btn:hover { color: var(--ink); }
+.modal-back { position: fixed; inset: 0; background: rgba(20,33,46,0.45); z-index: 60; display: grid; place-items: center; padding: 16px; }
+.modal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; width: min(560px, 100%); box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; }
+.field { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; color: var(--ink-2); }
+.field select, .field textarea { font: inherit; font-family: var(--font-body); font-weight: 400; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
+.field textarea { resize: vertical; min-height: 96px; }
+@media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
+
+/* Print: only the page content, light colors, compact tables */
+@media print {
+  @page { margin: 12mm; }
+  :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --surface-2: #f1f1f1; --ink: #000; --ink-2: #222; --muted: #555; --line: #bbb; --accent: #000; --accent-soft: #eee; --shadow: none; color-scheme: light; }
+  html, body { background: #fff !important; color: #000; font-size: 10.5pt; }
+  .topbar, .rail, .mobile-nav, .no-print, .toast, .modal-back { display: none !important; }
+  .shell { display: block; min-height: 0; }
+  .main { padding: 0; }
+  .wide, .content { max-width: none; }
+  .table-wrap { overflow: visible; }
+  .print-only { display: block; }
+  .cs-print-head h1 { font-size: 16pt; }
+  .cs-print-head p { font-size: 9.5pt; color: #333; margin: 4pt 0 10pt; }
+  .cs-section { margin-top: 12pt; }
+  .cs-section h2 { font-size: 12.5pt; border-bottom: 1.5pt solid #000; break-after: avoid; margin-bottom: 6pt; }
+  .cs-section h3 { font-size: 10pt; margin: 8pt 0 3pt; break-after: avoid; }
+  .cs-table { font-size: 8.8pt; margin: 3pt 0 8pt; }
+  .cs-table th { font-size: 7pt; padding: 2pt 4pt; }
+  .cs-table td { padding: 2.5pt 4pt; }
+  .cs-table thead { display: table-header-group; }
+  .cs-table tr { break-inside: avoid; }
+  .cs-list li { font-size: 9.2pt; margin: 1.5pt 0; }
+  .cs-list ul { margin-bottom: 6pt; }
+  .cs-list.two ul { columns: 2; column-gap: 20pt; }
+  .tip { border-left: 2pt solid #000; background: none; padding: 3pt 8pt; margin: 6pt 0; font-size: 9.2pt; break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}

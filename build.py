@@ -7,7 +7,7 @@ import os, re, json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = ["curriculum-1.js", "curriculum-2.js", "curriculum-3.js", "questions-1.js", "questions-2.js", "questions-3.js",
-        "questions-4.js", "questions-5.js", "questions-6.js", "questions-7.js", "generators.js"]
+        "questions-4.js", "questions-5.js", "questions-6.js", "questions-7.js", "cheatsheet.js", "deep-1.js", "deep-2.js", "deep-3.js", "generators.js"]
 FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">'
 
 def read(p):

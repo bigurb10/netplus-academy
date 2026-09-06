@@ -16,6 +16,17 @@
   const PASS_PCT = 85, STREAK_NEEDED = 3, EXAM_N = 50, EXAM_MINUTES = 50, STARTER_N = 10, CHECKPOINT_N = 4, CHECKPOINT_PASS = 3;
   const CONF = [[1, 'Guess'], [2, 'Unsure'], [3, 'Fairly sure'], [4, 'Sure'], [5, 'Certain']];
   const STORE_KEY = 'npa.state.v2';
+  // Feedback delivery. Feedback is always saved in the browser and exportable from the Feedback tab.
+  // Optionally set an endpoint that accepts POSTed JSON (Formspree, a Cloudflare Worker, your own API)
+  // and/or an email address for the Email button. Both are empty by default.
+  const FEEDBACK_ENDPOINT = '';
+  const FEEDBACK_EMAIL = '';
+  const FB_CATS = {
+    question: ['Answer key is wrong', 'Question is unclear or ambiguous', 'Explanation is wrong or unclear', 'Too easy or off-topic', 'Typo', 'Other'],
+    lesson: ['Content is inaccurate', 'Unclear or confusing', 'Missing something the exam covers', 'Too long or too short', 'Typo', 'Other'],
+    overall: ['Content accuracy', 'Difficulty', 'Website bug', 'Design or usability', 'Idea or request', 'Other']
+  };
+  const WHERE_LABEL = { starter: 'Starter test', full: '50-question test', practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': '50-question test results', 'practice-results': 'Practice test results', callout: 'Lesson callout' };
   // Lessons the starter test samples from (two per domain, different lessons each time).
   const STARTER_POOL = {
     1: ['u2l1', 'u2l2', 'u4l3', 'u5l2', 'u3l3', 'u7l4', 'u4l5', 'u1l3'],
@@ -54,22 +65,29 @@
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
   function renderBody(md) {
-    const lines = md.split('\n'); let html = ''; let list = [];
-    const flush = () => { if (list.length) { html += '<ul>' + list.map(li => `<li>${inline(li)}</li>`).join('') + '</ul>'; list = []; } };
+    const lines = md.split('\n'); let html = ''; let list = []; let olist = []; let pre = null;
+    const flush = () => {
+      if (list.length) { html += '<ul>' + list.map(li => `<li>${inline(li)}</li>`).join('') + '</ul>'; list = []; }
+      if (olist.length) { html += '<ol>' + olist.map(li => `<li>${inline(li)}</li>`).join('') + '</ol>'; olist = []; }
+    };
     for (const raw of lines) {
+      if (pre !== null) { if (raw.trim().startsWith('```')) { html += `<pre>${esc(pre.join('\n'))}</pre>`; pre = null; } else pre.push(raw); continue; }
       const line = raw.trim();
+      if (line.startsWith('```')) { flush(); pre = []; continue; }
       if (!line) { flush(); continue; }
       if (line.startsWith('## ')) { flush(); html += `<h3>${inline(line.slice(3))}</h3>`; }
-      else if (line.startsWith('- ')) { list.push(line.slice(2)); }
+      else if (line.startsWith('- ')) { if (olist.length) flush(); list.push(line.slice(2)); }
+      else if (/^\d+\. /.test(line)) { if (list.length) flush(); olist.push(line.replace(/^\d+\. /, '')); }
       else if (line.startsWith('> ')) { flush(); html += `<div class="tip">${inline(line.slice(2))}</div>`; }
       else { flush(); html += `<p>${inline(line)}</p>`; }
     }
+    if (pre !== null) html += `<pre>${esc(pre.join('\n'))}</pre>`;
     flush(); return html;
   }
 
   // ---------- state ----------
   function fresh() {
-    return { v: 2, view: { name: 'home' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, plan: null, active: null, settings: { timer: true }, created: Date.now() };
+    return { v: 2, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -81,6 +99,8 @@
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
+  // Checkpoint credit: right answers marked Guess or Unsure do not count toward passing the lesson.
+  const cpScore = s => s.answers.filter(a => a.correct && a.conf >= 3).length;
 
   // Priority points. Wrong and confident is the most dangerous state; right but unsure is probably a guess.
   function points(correct, conf) {
@@ -230,13 +250,17 @@
   // ---------- rendering ----------
   const app = $('#app');
   let railOpen = false; let timerHandle = null; let toastHandle = null;
+  let deepOpen = null; // lesson id whose deeper explanation is expanded
+  let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
+  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
   function render() {
     const v = S.view || { name: 'home' };
-    if (stage() === 'starter' && !S.active && v.name !== 'course' && v.name !== 'lesson' && v.name !== 'progress') { app.innerHTML = viewWelcome(); return; }
+    fbReg = [];
+    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal(); return; }
     let main = '';
     switch (v.name) {
       case 'home': main = viewHome(); break;
@@ -248,6 +272,8 @@
       case 'train': main = viewTrain(); break;
       case 'progress': main = viewProgress(); break;
       case 'ready': main = viewReady(); break;
+      case 'cheatsheet': main = viewCheatsheet(); break;
+      case 'feedback': main = viewFeedback(); break;
       default: main = viewHome();
     }
     const r = readiness();
@@ -257,7 +283,7 @@
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
           <button class="brand" data-act="go" data-arg="home"><span class="mark">N+</span> NetPlus Academy</button>
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('progress', 'Progress')}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and pass streak">
             <span class="eyebrow">Readiness</span>
@@ -268,9 +294,9 @@
         <aside class="rail ${railOpen ? 'open' : ''}">${viewRail()}</aside>
         <main class="main">${main}</main>
         <nav class="mobile-nav">
-          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('progress', 'Progress')}
+          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
-      </div>`;
+      </div>${fbModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function navBtn(name, label) {
@@ -304,6 +330,7 @@
         <h1>Ten questions, then a course built for you.</h1>
         <p class="ink2" style="font-size:1.1rem">The starter test asks two questions from each of the five exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
       </div>
+      <div class="card stack" style="gap:10px"><div class="row spread"><div><div class="eyebrow">Before you start</div><h3>The memorization sheet</h3><p class="ink2">Every port number, mask, standard, and step order the exam expects cold. Print it and keep it beside you while you study.</p></div><div class="row"><button class="btn" data-act="go" data-arg="cheatsheet">Open</button><button class="btn" data-act="print-cheat">Print</button></div></div></div>
       <div class="card lift stack" style="gap:14px">
         <h3>How the path works</h3>
         <ol style="margin:0;padding-left:22px;line-height:1.7">
@@ -315,13 +342,14 @@
         </ol>
         <div class="row"><button class="btn primary lg" data-act="start-exam" data-arg="starter">Start the ${STARTER_N}-question test</button><button class="btn ghost" data-act="go" data-arg="course">Browse the lessons first</button></div>
       </div>
-      <p class="muted">Progress is saved in this browser. The Progress page has a code you can paste into another device.</p>
+      <p class="muted">Progress is saved in this browser. The Progress page has a code you can paste into another device. <button class="btn small ghost" data-act="go" data-arg="feedback">Send feedback</button></p>
     </div></main>`;
   }
 
   function viewHome() {
     const na = nextAction();
     const last = lastExam();
+    const lastMeta = last ? { wrong: last.review.filter(r => !r.correct).length, guess: last.review.filter(r => r.correct && r.conf <= 2).length, attempt: S.exams.filter(e => e.kind === last.kind).length } : null;
     const st = stage();
     const passedCount = lessons.filter(l => lstat(l.id).status === 'passed').length;
     const mastered = lessons.filter(l => topicMastered(l.id)).length;
@@ -337,10 +365,11 @@
         </div>
       </div>
       ${stageStrip(st)}
+      ${S.seen.cheat ? '' : cheatCallout()}
       <div class="stats">
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
-        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? last.pct + '<small>% ' + (last.kind === 'starter' ? 'starter' : '') + '</small>' : '<small>none yet</small>'}</div></div>
+        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${TEST_LABEL[last.kind]}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
@@ -374,17 +403,18 @@
 
   // ---------- tutorial (plan) ----------
   function reasonLabel(r) {
-    if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: both starter questions missed, rebuilding the domain` : `${DOMAINS[r.d].short}: gap on the starter test, core lesson`;
+    if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: both starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
     const src = r.source === 'starter' ? 'starter test' : 'last test';
     return `${KIND_LABEL[r.kind]} on the ${src}`;
   }
+  function lessonWhy(r) { const d = DOMAINS[r.d].short; return r.level === 'rebuild' ? `In your tutorial because you missed both ${d} questions on the starter test.` : `In your tutorial because the starter test showed a gap in ${d}.`; }
   function reasonPill(e) {
     const kinds = e.reasons.map(r => r.kind);
     if (kinds.includes('wrong-confident')) return '<span class="pill bad">Wrong, confident</span>';
     if (kinds.includes('wrong')) return '<span class="pill bad">Wrong</span>';
     if (kinds.includes('guess')) return '<span class="pill warn">Guessed</span>';
     const d = e.reasons.find(r => r.kind === 'domain');
-    if (d) return `<span class="pill">${d.level === 'rebuild' ? 'Domain rebuild' : 'Core lesson'}</span>`;
+    if (d) return `<span class="pill">${d.level === 'rebuild' ? 'Whole domain' : 'Core lesson'}</span>`;
     return '<span class="pill">Review</span>';
   }
   function viewTutorial() {
@@ -400,7 +430,7 @@
       <div><div class="eyebrow">${S.plan.source === 'starter' ? 'Your tutorial' : 'Retraining tutorial'} · built from your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
         <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
-      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'full rebuild' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
+      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : 'Next: a practice test.'} <button class="btn primary small" data-act="start-exam" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
@@ -441,9 +471,9 @@
     const domainReason = entry ? entry.reasons.find(r => r.kind === 'domain') : null;
     let quiz;
     if (!cp) {
-      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint</div><h3>${CHECKPOINT_N} questions on this lesson</h3><p class="ink2">Pass ${CHECKPOINT_PASS} of ${CHECKPOINT_N} to complete it.${ls.best ? ` Your best so far: ${ls.best}/${CHECKPOINT_N}.` : ''}</p></div><button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Start checkpoint</button></div></div>`;
+      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint</div><h3>${CHECKPOINT_N} questions on this lesson</h3><p class="ink2">Pass ${CHECKPOINT_PASS} of ${CHECKPOINT_N} to complete it. An answer counts only if you were at least fairly sure.${ls.best ? ` Your best so far: ${ls.best}/${CHECKPOINT_N}.` : ''}</p></div><button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Start checkpoint</button></div></div>`;
     } else if (cp.i >= cp.items.length) {
-      const score = cp.answers.filter(a => a.correct).length; const passed = score >= CHECKPOINT_PASS;
+      const score = cpScore(cp); const unsure = cp.answers.filter(a => a.correct && a.conf <= 2).length; const passed = score >= CHECKPOINT_PASS;
       const st = stage();
       let nextBtn = '';
       if (passed) {
@@ -451,21 +481,23 @@
         else if (S.plan && !planRemaining().length) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="__test">Tutorial complete. Take the ${EXAM_N}-question ${st === 'fulltest' ? 'test' : 'practice test'}</button>`;
         else if (nextLesson) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextLesson.id}">Next lesson: ${esc(nextLesson.title)}</button>`;
       }
-      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint result</div><h3>${score} of ${CHECKPOINT_N} ${passed ? 'correct. Lesson complete.' : 'correct. Review and try again.'}</h3></div><span class="pill ${passed ? 'good' : 'warn'}">${passed ? 'PASSED' : 'RETRY'}</span></div>
+      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint result</div><h3>${score} of ${CHECKPOINT_N} ${passed ? 'correct and sure. Lesson complete.' : 'correct and sure. Review and try again.'}</h3>${unsure ? `<p class="ink2">${plural(unsure, 'answer')} right but marked Guess or Unsure did not count.</p>` : ''}</div><span class="pill ${passed ? 'good' : 'warn'}">${passed ? 'PASSED' : 'RETRY'}</span></div>
         <div class="row">${nextBtn}${!passed ? `<button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Try a fresh checkpoint</button>` : ''}<button class="btn ghost" data-act="finish-checkpoint" data-arg="__stay">Stay here</button></div></div>`;
     } else {
       quiz = `<div class="card lift">${questionCard(cp, { showNumber: true, immediate: true })}</div>`;
     }
     return `<div class="content stack" style="gap:20px">
       <div class="lesson-head">
-        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span><span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}</div>
+        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span><span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
         <h1>${esc(l.title)}</h1>
-        ${domainReason && !callouts ? `<p class="ink2">In your tutorial because ${esc(reasonLabel(domainReason)).toLowerCase()}.</p>` : ''}
+        ${domainReason && !callouts ? `<p class="ink2">${esc(lessonWhy(domainReason))}</p>` : ''}
       </div>
       ${callouts}
       <article class="lesson-body">${renderBody(l.body)}</article>
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
+      ${deepSection(id)}
       ${quiz}
+      <div class="row" style="justify-content:flex-end"><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}">&#9873; Something wrong or unclear in this lesson? Send feedback</button></div>
       <div class="row spread">
         ${prevLesson ? `<button class="btn ghost" data-act="lesson" data-arg="${prevLesson.id}">← ${esc(prevLesson.title)}</button>` : '<span></span>'}
         ${nextLesson ? `<button class="btn ghost" data-act="lesson" data-arg="${nextLesson.id}">${esc(nextLesson.title)} →</button>` : ''}
@@ -487,14 +519,14 @@
     let feedback = '';
     if (submitted && opts.immediate) {
       const correct = sel === q.c;
-      feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
+      feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
     const canSubmit = sel != null && conf != null;
     const controls = submitted
       ? `<div class="row spread"><span class="kbd-hint"><kbd>Enter</kbd> continue</span><button class="btn primary" data-act="next">Continue</button></div>`
       : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, <kbd>1</kbd>–<kbd>5</kbd> confidence, <kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
     return `<div class="quiz">
-      <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span>${opts.right || ''}</div>
+      <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span><span class="row" style="gap:6px">${opts.right || ''}${fbBtn(q, sess.kind)}</span></div>
       <div class="q-stem">${esc(q.q)}</div>
       <div class="options">${optionsHtml}</div>
       ${confHtml}
@@ -570,7 +602,7 @@
     if (isStarter) {
       headline = e.pct >= 90 && !guesses.length ? 'Strong start.' : e.pct >= 60 ? 'A solid base with clear gaps.' : 'Starting from the ground up, which is fine.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
-        <div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'full rebuild' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
+        <div class="row" style="gap:8px">${[1, 2, 3, 4, 5].map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed both questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on both: nothing from that domain.</p>
         <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
         : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
@@ -580,11 +612,11 @@
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
         : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${S.passStreak >= STREAK_NEEDED ? 'You are cleared to book the exam.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${S.passStreak < STREAK_NEEDED ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
-    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button></div></div>`; };
+    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${TEST_LABEL[e.kind]} · ${fmtDate(e.date)} · ${mins} min</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct.</strong> ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `The real exam passes at 720 of 900, about 72%. This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `The real exam passes at 720 of 900, about 72%. This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
         <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>` : ''}</div>
         <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${[1, 2, 3, 4, 5].map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
@@ -622,9 +654,10 @@
     const header = `<div class="row spread"><div class="row" style="gap:8px"><span class="pill accent">Topic ${tr.ti + 1} of ${tr.topics.length}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill ${tr.streak >= 2 ? 'good' : ''}">streak ${tr.streak}/3</span></div><button class="btn ghost small" data-act="abandon-train">End session</button></div>`;
     if (tr.phase === 'lesson') {
       return `<div class="content stack" style="gap:18px">${header}
-        <div><div class="eyebrow">Refresher</div><h1>${esc(l.title)}</h1></div>
+        <div class="row spread"><div><div class="eyebrow">Refresher</div><h1>${esc(l.title)}</h1></div><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${topic}">&#9873; Feedback</button></div>
         <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
         <details class="lesson-fold" ${topicPriority(topic) >= 6 ? 'open' : ''}><summary>Read the full lesson</summary><article class="lesson-body">${renderBody(l.body)}</article></details>
+        ${deepSection(topic)}
         <div class="row"><button class="btn primary lg" data-act="train-drills">Start drills</button></div></div>`;
     }
     if (tr.i >= tr.items.length) { extendQueue(tr); if (tr.i >= tr.items.length) { tr.ti++; tr.phase = 'lesson'; tr.i = 0; tr.items = []; tr.answers = []; tr.streak = 0; tr.drills = 0; save(); return viewTrain(); } }
@@ -655,7 +688,7 @@
         ${lessons.map(l => { const ls = lstat(l.id); const t = S.topics[l.id] || { attempts: 0, correct: 0 }; const p = topicPriority(l.id); const m = topicMastered(l.id);
           return `<tr><td class="tnum muted">${l.unit.n}</td><td><button class="btn small ghost" data-act="lesson" data-arg="${l.id}" style="padding-left:0">${esc(l.title)}</button></td><td>${ls.status === 'passed' ? `<span class="pill good">passed ${ls.best}/${CHECKPOINT_N}</span>` : ls.status === 'read' ? '<span class="pill">read</span>' : '<span class="muted">—</span>'}</td><td class="tnum">${t.correct}/${t.attempts}</td><td class="tnum">${p}</td><td><span class="led ${m ? 'green' : t.attempts ? 'amber' : 'off'}" style="display:inline-block;vertical-align:middle"></span> ${m ? 'mastered' : t.attempts ? 'in progress' : 'not started'}</td></tr>`; }).join('')}
       </tbody></table></div></div>
-      <div class="card stack"><h3>Move your progress to another device</h3><p class="ink2">Copy this code, paste it into the same box on your other device, and press Load. Progress lives only in this browser otherwise.</p>
+      <div class="card stack"><h3>Move your progress to another device</h3><p class="ink2">Copy this code, paste it into the same box on your other device, and press Load. Progress and saved feedback live only in this browser otherwise.</p>
         <textarea class="io" id="io" spellcheck="false">${esc(JSON.stringify(exportable()))}</textarea>
         <div class="row"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Load from box</button><span style="flex:1"></span><button class="btn danger small" data-act="reset">Reset everything</button></div></div>
     </div>`;
@@ -675,6 +708,111 @@
         <li>Two forms of ID, arrive early, sleep the night before.</li>
       </ul></div>
       <div class="row"><button class="btn" data-act="start-exam" data-arg="practice">One more practice test</button><button class="btn ghost" data-act="go" data-arg="home">Home</button></div>
+    </div>`;
+  }
+
+
+  // ---------- deeper explanations ----------
+  function deepSection(id) {
+    const l = L[id]; const deep = NPA.deep && NPA.deep[id]; if (!l || !deep) return '';
+    if (deepOpen !== id) return `<div class="row deep-cta"><button class="btn" data-act="deep-toggle" data-arg="${id}">Need a deeper explanation?</button><span class="muted" style="font-size:.9rem">A slower walkthrough of this lesson with worked examples.</span></div>`;
+    return `<section class="card deep stack" id="deep"><div class="row spread"><div><div class="eyebrow">Deeper explanation</div><h3>${esc(l.title)}, explained slowly</h3></div><button class="btn small ghost" data-act="deep-toggle" data-arg="${id}">Hide</button></div>
+      <article class="lesson-body deep-body">${renderBody(deep)}</article>
+      <div class="row spread"><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}">&#9873; Feedback on this explanation</button><button class="btn small ghost" data-act="deep-toggle" data-arg="${id}">Hide</button></div></section>`;
+  }
+
+  // ---------- cheat sheet ----------
+  function csBlock(b) {
+    if (b.type === 'table') return `${b.title ? `<h3>${inline(b.title)}</h3>` : ''}<div class="table-wrap"><table class="cs-table"><thead><tr>${b.cols.map(c => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    if (b.type === 'list') return `<div class="cs-list ${b.cols === 2 ? 'two' : ''}">${b.title ? `<h3>${inline(b.title)}</h3>` : ''}<ul>${b.items.map(i => `<li>${inline(i)}</li>`).join('')}</ul></div>`;
+    if (b.type === 'note') return `<div class="tip">${inline(b.text)}</div>`;
+    return '';
+  }
+  function viewCheatsheet() {
+    const cs = NPA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
+    const intro = S.view.arg === 'intro';
+    if (!S.seen.cheat) { S.seen.cheat = true; save(); }
+    const printBtn = `<button class="btn primary" data-act="print-cheat">Print or save as PDF</button>`;
+    return `<div class="wide cs stack" style="gap:16px">
+      <div class="no-print row spread" style="align-items:flex-start">
+        <div><div class="eyebrow">Cheat sheet</div><h1>${esc(cs.title)}</h1><p class="ink2" style="margin-top:6px;max-width:720px">${esc(cs.intro)}</p></div>
+        <div class="row">${printBtn}</div>
+      </div>
+      ${intro ? `<div class="callout accent no-print"><strong>Start here.</strong><div class="ans">This sheet is everything the exam expects you to recall from memory. Print it now, or save it as a PDF, and keep it beside you through the course. When you are ready, the ten-question starter test builds your tutorial.</div><div class="row" style="margin-top:6px"><button class="btn primary" data-act="cheat-continue">Continue to the starter test</button><button class="btn ghost" data-act="go" data-arg="home">Skip for now</button></div></div>` : ''}
+      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}</nav>
+      <div class="print-only cs-print-head"><h1>${esc(cs.title)}</h1><p>${esc(cs.intro)}</p></div>
+      ${cs.sections.map((s, i) => `<section class="cs-section" id="cs-${s.id}"><h2><span class="cs-num">${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</h2>${s.blocks.map(csBlock).join('')}</section>`).join('')}
+      <div class="row no-print">${printBtn}${intro ? `<button class="btn" data-act="cheat-continue">Continue to the starter test</button>` : `<button class="btn ghost" data-act="go" data-arg="home">Home</button>`}</div>
+    </div>`;
+  }
+  function cheatCallout() {
+    return `<div class="callout accent"><div class="row spread"><div><div class="eyebrow">New</div><strong>The memorization sheet</strong><div class="ans ink2">Every port, mask, standard, and step order the exam expects cold. Print it and keep it beside you.</div></div><div class="row"><button class="btn small" data-act="go" data-arg="cheatsheet">Open</button><button class="btn small" data-act="print-cheat">Print</button><button class="btn small ghost" data-act="cheat-dismiss">Dismiss</button></div></div></div>`;
+  }
+
+  // ---------- feedback ----------
+  function fbBtn(q, where) { const i = fbReg.push({ q, where }) - 1; return `<button class="btn small ghost fb-btn" data-act="fb-open" data-kind="question" data-arg="${i}" title="Report a problem with this question">&#9873; Flag</button>`; }
+  function fbModal() {
+    if (!fb) return '';
+    const cats = FB_CATS[fb.kind === 'question' ? 'question' : fb.kind === 'lesson' ? 'lesson' : 'overall'];
+    return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
+      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}</div>
+      <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+      <label class="field">Details<textarea id="fb-text" rows="4" placeholder="What is wrong, and what should it say instead?"></textarea></label>
+      <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
+    </div></div>`;
+  }
+  function saveFeedback(item) {
+    const f = Object.assign({ id: 'fb-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), sent: false }, item);
+    S.feedback = S.feedback || []; S.feedback.push(f); save();
+    if (FEEDBACK_ENDPOINT && typeof fetch === 'function') {
+      try { fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ course: 'netplus-academy' }, f)) }).then(r => { if (r.ok) { f.sent = true; save(); } }).catch(() => { /* offline; stays local */ }); } catch (e) { /* ignore */ }
+    }
+    return f;
+  }
+  const FB_KIND = { question: 'Question', lesson: 'Lesson', unit: 'Unit', site: 'Website', page: 'Page', overall: 'Overall' };
+  function fbContext(f) {
+    const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null; const u = r.unit ? units.find(x => x.id === r.unit) : null;
+    if (f.kind === 'question') return `${l ? l.title : 'Question'}${r.where ? ' · ' + (WHERE_LABEL[r.where] || r.where) : ''}`;
+    if (l) return `${l.title} (Unit ${l.unit.n})`;
+    if (u) return `Unit ${u.n}: ${u.title}`;
+    if (f.kind === 'page') return `Page: ${r.view || ''}${r.arg ? ' ' + r.arg : ''}`;
+    return f.kind === 'site' ? 'The website' : 'The course overall';
+  }
+  function feedbackReport() {
+    const items = S.feedback || [];
+    const lines = [`# NetPlus Academy feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    items.forEach((f, i) => {
+      const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null;
+      lines.push(`## ${i + 1}. ${FB_KIND[f.kind] || f.kind} · ${f.cat || 'Uncategorized'} · ${new Date(f.ts).toISOString().slice(0, 10)}`);
+      lines.push(`- About: ${fbContext(f)}`);
+      if (l) lines.push(`- Lesson id: ${l.id}`);
+      if (r.stem) { lines.push(`- Question${r.qid ? ' ' + r.qid : ' (generated at run time)'}: ${r.stem}`); (r.options || []).forEach((o, k) => lines.push(`  - ${letters[k]}. ${o}${k === r.correct ? ' (marked correct)' : ''}`)); }
+      lines.push(`- Feedback: ${f.text}`, '');
+    });
+    return lines.join('\n');
+  }
+  function copyText(txt, msg) {
+    const done = () => toast(msg || 'Copied');
+    try { navigator.clipboard.writeText(txt).then(done, () => fallback()); } catch (err) { fallback(); }
+    function fallback() { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Could not copy'); } ta.remove(); }
+  }
+  function viewFeedback() {
+    const items = (S.feedback || []).slice().reverse();
+    const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('NetPlus Academy feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
+    return `<div class="content stack" style="gap:18px">
+      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, any lesson from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
+      <div class="card lift stack">
+        <h3>Send feedback</h3>
+        <label class="field">About<select id="fb-area"><option value="overall">The course overall</option><option value="site">The website: bugs, design, usability</option><optgroup label="Units">${units.map(u => `<option value="unit:${u.id}">Unit ${u.n}: ${esc(u.title)}</option>`).join('')}</optgroup><optgroup label="Lessons">${lessons.map(l => `<option value="lesson:${l.id}">${esc(l.title)}</option>`).join('')}</optgroup></select></label>
+        <label class="field">Type<select id="fb-cat">${FB_CATS.overall.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+        <label class="field">Your feedback<textarea id="fb-text" rows="5" placeholder="What should change, and why?"></textarea></label>
+        <div class="row"><button class="btn primary" data-act="fb-save-page">Save feedback</button></div>
+      </div>
+      <div class="card stack">
+        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${items.length ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${items.length ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
+        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span><span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${esc(f.text)}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
+        <p class="muted" style="font-size:.85rem">Feedback stays in this browser and travels with the progress code on the Progress page. Copy the report and paste it into a message to the course author.</p>
+      </div>
     </div>`;
   }
 
@@ -722,7 +860,7 @@
   function advance(sess) {
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
-      if (sess.i >= sess.items.length) { const score = sess.answers.filter(a => a.correct).length; const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
       save(); render(); return;
     }
     if (sess.kind === 'train') {
@@ -743,7 +881,7 @@
       case 'go': { if (arg && arg.startsWith('results:')) return go('results', arg); return go(arg || 'home'); }
       case 'nav': railOpen = false; return go(arg);
       case 'course': railOpen = false; return go('course', arg);
-      case 'lesson': railOpen = false; if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== arg) S.active = null; return go('lesson', arg);
+      case 'lesson': railOpen = false; if (deepOpen !== arg) deepOpen = null; if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== arg) S.active = null; return go('lesson', arg);
       case 'start-checkpoint': { const items = pickForLesson(arg, CHECKPOINT_N, new Set(), 0.3); if (!items.length) { toast('No questions for this lesson yet.'); return; } S.active = { kind: 'checkpoint', lesson: arg, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false }; save(); render(); return; }
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
@@ -763,14 +901,35 @@
       case 'train-topic': { startTrain([arg]); return; }
       case 'train-drills': { const tr = S.active; if (!tr) return; tr.phase = 'drill'; tr.items = []; tr.i = 0; tr.answers = []; tr.used = tr.used || []; extendQueue(tr); save(); render(); return; }
       case 'abandon-train': { S.active = null; save(); return go('train'); }
+      case 'deep-toggle': { deepOpen = deepOpen === arg ? null : arg; render(); if (deepOpen) { const el = $('#deep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
+      case 'print-cheat': { if (S.view.name !== 'cheatsheet') go('cheatsheet'); setTimeout(() => window.print(), 120); return; }
+      case 'cheat-continue': { S.seen.cheat = true; save(); startExam('starter'); return; }
+      case 'cheat-dismiss': { S.seen.cheat = true; save(); render(); return; }
+      case 'fb-open': {
+        const kind = btn.dataset.kind;
+        if (kind === 'question') { const r = fbReg[parseInt(arg, 10)]; if (!r) return; const q = r.q; const l = L[q.t];
+          fb = { kind, ref: { qid: q.gen ? null : q.id, gen: !!q.gen, lesson: q.t, stem: q.q, options: q.a, correct: q.c, where: r.where, view: S.view.name }, title: 'Flag this question', sub: `${l ? l.title : ''} · ${WHERE_LABEL[r.where] || r.where}` }; }
+        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}` }; }
+        else fb = { kind: 'page', ref: { view: S.view.name, arg: S.view.arg }, title: 'Feedback on this page', sub: '' };
+        render(); const ta = $('#fb-text'); if (ta) ta.focus(); return; }
+      case 'fb-cancel': { if (btn.classList.contains('modal-back') && e.target !== btn) return; fb = null; render(); return; }
+      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; if (!text) { toast('Write a sentence or two first.'); return; } saveFeedback({ kind: fb.kind, ref: fb.ref, cat, text }); fb = null; render(); toast('Feedback saved'); return; }
+      case 'fb-save-page': { const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; const area = ($('#fb-area') || {}).value || 'overall'; if (!text) { toast('Write a sentence or two first.'); return; }
+        const kind = area.startsWith('lesson:') ? 'lesson' : area.startsWith('unit:') ? 'unit' : area; const ref = area.startsWith('lesson:') ? { lesson: area.slice(7) } : area.startsWith('unit:') ? { unit: area.slice(5) } : {};
+        saveFeedback({ kind, ref, cat, text }); render(); toast('Feedback saved'); return; }
+      case 'fb-delete': { S.feedback = (S.feedback || []).filter(f => f.id !== arg); save(); render(); return; }
+      case 'fb-clear': { if (!confirm('Delete all saved feedback in this browser?')) return; S.feedback = []; save(); render(); return; }
+      case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
+      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'netplus-academy-feedback.json'; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
       case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || obj.v !== 2) throw new Error('bad'); S = Object.assign(fresh(), obj); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
-      case 'reset': { if (!confirm('Erase all progress in this browser?')) return; S = fresh(); save(); render(); return; }
+      case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
   app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; save(); } });
   document.addEventListener('keydown', e => {
-    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
     if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
@@ -796,7 +955,21 @@
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% streak=${S.passStreak} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
-    for (const v of ['tutorial', 'home', 'progress', 'train', 'exam', 'ready', 'course']) go(v);
+    saveFeedback({ kind: 'question', ref: { qid: 'u1l1-1', lesson: 'u1l1', stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
+    log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
+    if (S.plan && S.plan.lessons[1]) { const second = S.plan.lessons[1].id; go('lesson', second);
+      const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
+      S.active = { kind: 'checkpoint', lesson: second, items: items2.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
+      for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; s.conf = 1; submitAnswer(s, false); advance(s); }
+      log.push(`unsure checkpoint ${second} status=${lstat(second).status} best=${lstat(second).best} (expected read, 0)`);
+      if (lstat(second).status === 'passed') throw new Error('unsure answers counted toward a checkpoint pass'); }
+    const missingDeep = lessons.filter(l => !(NPA.deep && NPA.deep[l.id])).map(l => l.id);
+    if (missingDeep.length) throw new Error('lessons without a deeper explanation: ' + missingDeep.join(', '));
+    go('lesson', 'u4l1'); deepOpen = 'u4l1'; render();
+    const deepPre = document.querySelectorAll('#deep pre').length, deepOl = document.querySelectorAll('#deep ol').length;
+    log.push(`deep u4l1 rendered pre=${deepPre} ol=${deepOl}`);
+    if (!deepPre) throw new Error('deep explanation did not render fenced blocks'); deepOpen = null;
+    for (const v of ['tutorial', 'home', 'progress', 'train', 'exam', 'ready', 'course', 'cheatsheet', 'feedback']) go(v);
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
     const callouts = document.querySelectorAll('.callout').length;
     log.push(`lesson view callouts=${callouts}`);
@@ -806,6 +979,9 @@
   if (location.hash === '#selftest' && location.protocol === 'file:') {
     try { runSelfTest(); } catch (err) { document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">FAIL ${esc(err.stack || err)}</pre>`); }
   } else {
+    if (location.hash === '#cheatsheet' || location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
+    else if (location.hash === '#feedback') S.view = { name: 'feedback' };
     render();
+    if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }
 })();
