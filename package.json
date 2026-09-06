@@ -1,0 +1,13 @@
+{
+  "name": "fieldready-academy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FieldReady Academy course engine and course packs",
+  "scripts": {
+    "test": "node tests/selftest.js && node tests/gating.js",
+    "build": "python build.py"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}
