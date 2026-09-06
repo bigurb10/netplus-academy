@@ -1,56 +1,53 @@
-# NetPlus Academy
+# FieldReady Academy
 
-A self-paced CompTIA Network+ (N10-009) course in a single web page: a printable memorization sheet, a 10-question starter test that builds a personalized tutorial from 49 lessons, a 50-question test that builds a retraining tutorial from your misses, and practice tests that continue until you score 85% or better three times in a row. All content and questions are original.
+Self-paced certification courses in a single web page each: a printable memorization sheet, a short starter test that builds a personalized tutorial, a full-length test that builds a retraining tutorial from your misses, and practice tests until you score above the bar three times in a row. All content and questions are original.
+
+Courses live in `courses/<id>/` and share one engine in `engine/`. The first course is **NetPlus Academy** (CompTIA Network+ N10-009). Security+, CBET, and A+ Core 1 and Core 2 are next.
 
 ## Run it
 
-- Live site: https://bigurb10.github.io/netplus-academy/ (GitHub Pages, served from the root of the `main` branch of https://github.com/bigurb10/netplus-academy). Every push to `main` redeploys within a minute or two; no build step is needed because `index.html` loads the source files directly. On a phone, open the link and use "Add to Home Screen".
-- Open `dist/netplus-academy.html` in any browser. Nothing else is required. Progress is saved in that browser's local storage.
-- Or open `index.html` from this folder during development; it loads the same files unbundled.
-- To host it, upload `dist/netplus-academy.html` (rename to `index.html`) to any static host: GitHub Pages, Netlify, Cloudflare Pages, or a plain web server.
+- Live: https://bigurb10.github.io/netplus-academy/ is the catalog; https://bigurb10.github.io/netplus-academy/netplus/ is the Network+ course. Every push to `main` redeploys within a minute or two; no build step is needed because each course page loads the source files directly. On a phone, open the course link and use "Add to Home Screen".
+- Locally: open `netplus/index.html` (or `dist/netplus.html`, a single self-contained file) in any browser. Progress is saved in that browser's local storage.
+- To host elsewhere, upload the repo as-is, or upload `dist/<course>.html` renamed to `index.html` to any static host. For the custom domain, add a `CNAME` file containing `fieldreadyacademy.com` and point the domain's DNS at GitHub Pages.
 
-## How the course works
+## Layout
 
-0. **Cheat sheet.** The first thing a new user sees is the memorization sheet: every port, mask, standard, table, and order of steps the exam expects from memory. Print it or save it as a PDF, then continue to the starter test. It stays one tap away in the Cheat sheet tab.
-1. **Starter test.** 10 questions, two from each exam domain, each with a confidence rating from 1 (guess) to 5 (certain). Wrong answers and lucky guesses are explained at the end.
-2. **Your tutorial.** Built from the starter test. A lesson tied to a question you missed or guessed is always included and opens with your answer versus the correct one. A domain where you missed one question adds that domain's core lessons. A domain where you missed both adds every lesson in it. Lessons run in course order and each ends with a four-question checkpoint. Pass 3 of 4; a right answer marked Guess or Unsure does not count. Every lesson has a "Need a deeper explanation?" button that opens a slower walkthrough with analogies, diagrams, and worked examples.
-3. **The 50-question test.** Weighted like the real exam (12 Concepts, 10 Implementation, 9 Operations, 7 Security, 12 Troubleshooting). Every miss and guess is explained at the end.
-4. **Retraining tutorial.** Built from the 50-question test, worst first: wrong-and-confident topics before guessed topics. Each lesson opens with the exact question you missed.
-5. **Practice tests** until three consecutive tests score 85% or better. Each one produces a new retraining tutorial if there is anything to retrain. Then book the exam.
+- `engine/app.js`, `engine/styles.css`: the course engine. It reads `FRA.course` and the pack data; it contains nothing course-specific.
+- `courses/<id>/course.js`: the course manifest: id, name, badge, exam, domains with weights and full-test quotas, test sizes and pass bar, starter pools and core lessons, access settings, exam-day tips.
+- `courses/<id>/curriculum-*.js`: units and lessons. Lesson bodies use a tiny markup: `## ` heading, `- ` bullet, `1. ` numbered step, `> ` exam tip, ``` fenced block for diagrams and tables, `{{code}}`, `**bold**`.
+- `courses/<id>/questions-*.js`: the question bank. Each question has an id, lesson id `t`, stem `q`, four options `a`, correct index `c`, and explanation `e`.
+- `courses/<id>/generators.js`: optional generators that produce computed questions at run time.
+- `courses/<id>/cheatsheet.js`: the memorization sheet. `courses/<id>/deep-*.js`: the deeper explanation for every lesson, keyed by lesson id.
+- `<id>/index.html`: the page that loads the engine plus that pack. `index.html`: the catalog. `catalog.css`: its styles.
+- `build.py`: bundles each course into `dist/<id>.html` and `dist/<id>-artifact.html`. Run `python build.py` (all) or `python build.py netplus`.
+- `tests/`: jsdom harness. `npm install` once, then `npm test` runs the engine's built-in self-test for every course and the gating test. `tests/patches/` holds the scripts that made the engine refactor, kept for reference.
 
-Scoring behind the scenes: wrong and confident counts 4 points, wrong and unsure 3, right but unsure 2, right at medium confidence 1, right and confident 0. Points drive tutorial selection, ordering, and the optional Drills page, where a topic is done after three consecutive confident correct answers.
+## How a course works
 
-## Cheat sheet
+0. **Cheat sheet.** Shown first to new users, printable, always one tap away in the Cheat sheet tab. Direct link: `<course>/#cheatsheet` (`#cheatsheet-print` opens the print dialog). `dist/netplus-cheatsheet.pdf` is the Network+ sheet printed from headless Chrome.
+1. **Starter test.** A few questions from each exam domain (`test.starterPerDomain`), each with a confidence rating from 1 (guess) to 5 (certain).
+2. **Your tutorial.** A lesson tied to a question you missed or guessed is always included. A domain where you missed some questions adds its core lessons; a domain where you missed them all adds every lesson in it. Each lesson ends with a checkpoint (pass `checkpointPass` of `checkpointN`; a right answer marked Guess or Unsure does not count) and has a "Need a deeper explanation?" walkthrough.
+3. **The full-length test.** `test.questions` items, weighted by each domain's `quota`.
+4. **Retraining tutorial.** Built from the misses, worst first.
+5. **Practice tests** until `streakNeeded` in a row at `passPct` or better.
 
-- Lives in `data/cheatsheet.js` as sections of tables, lists, and notes. Edit it there and rebuild.
-- Opens automatically on a brand-new browser, from the Cheat sheet tab, from the welcome page, and by direct link: `https://bigurb10.github.io/netplus-academy/#cheatsheet`. Adding `#cheatsheet-print` opens it and immediately shows the print dialog.
-- The Print button uses the browser's print dialog; choose "Save as PDF" to keep a copy. The print stylesheet hides the navigation, forces light colors, and packs tables tightly (about 14 letter pages).
-- To regenerate `dist/netplus-cheatsheet.pdf` without a browser window, run headless Chrome from this folder:
+Scoring behind the scenes: wrong and confident counts 4 points, wrong and unsure 3, right but unsure 2, right at medium confidence 1, right and confident 0. Points drive tutorial selection, ordering, and the optional Drills page.
 
-```
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=10000 --print-to-pdf="dist\netplus-cheatsheet.pdf" "file:///E:/CERT%20GUIDES/COMPTIA%20NET+/NetPlus%20Academy/dist/netplus-academy.html#cheatsheet"
-```
+## Access and pricing
+
+Each manifest declares `freeCourse` and `free.lessons`. With `freeCourse: true` (the launch setting) everything is open. With it false, the cheat sheet, the starter test, and the first `free.lessons` lessons stay open and everything else shows an unlock card; `upgradeUrl` is where that card sends people, and a page that sets `window.FRA_ENTITLED = true` before loading the engine (after login and purchase) unlocks the course.
 
 ## Feedback
 
-- Every question has a flag button (during tests, checkpoints, drills, and on results pages). Every lesson has a feedback button at the top and bottom. The Feedback tab takes feedback about a unit, a lesson, the site, or the course overall.
-- Feedback is saved in the browser and travels with the progress code on the Progress page. The Feedback tab lists everything saved, and "Copy report" produces a Markdown report with the exact question text, options, and marked answer, ready to paste into a message or into a Claude Code session to fix the course.
-- Optional delivery: set `FEEDBACK_ENDPOINT` in `app.js` to a URL that accepts POSTed JSON (Formspree, a Cloudflare Worker, your own API) and each item is also sent there, or set `FEEDBACK_EMAIL` to show an Email button. Both are empty by default so nothing leaves the browser.
+Every question has a flag button and every lesson has feedback buttons; the Feedback tab collects overall feedback and exports a Markdown report. Feedback stays in the browser unless the manifest sets `feedbackEndpoint` (a URL that accepts POSTed JSON) or `feedbackEmail`.
 
-## Files
+## Adding a course
 
-- `index.html`, `styles.css`, `app.js`: the application.
-- `data/curriculum-*.js`: units and lessons. Lesson bodies use a tiny markup: `## ` heading, `- ` bullet, `1. ` numbered step, `> ` exam tip, ``` fenced block for diagrams and tables, `{{code}}`, `**bold**`.
-- `data/deep-*.js`: the deeper explanation for every lesson, keyed by lesson id, same markup. Opened by the "Need a deeper explanation?" button under a lesson and in drill refreshers.
-- `data/questions-*.js`: the question bank. Each question has an id, lesson id `t`, stem `q`, four options `a`, correct index `c`, and explanation `e`.
-- `data/generators.js`: generators that produce fresh subnetting, mask, port, OSI-layer, route-selection, and PoE questions at run time.
-- `data/cheatsheet.js`: the memorization sheet.
-- `build.py`: bundles everything into `dist/`. Run `python build.py` after editing any source file. It also reports lessons with too few questions.
+1. Copy `courses/netplus/course.js` to `courses/<id>/course.js` and fill in every field. Domain ids are what lessons reference.
+2. Write `cheatsheet.js`, then `curriculum-*.js`, then `questions-*.js` (five or more per lesson), then `deep-*.js` (one entry per lesson; the self-test fails if any lesson lacks one), then `generators.js` if anything is computable.
+3. Create `<id>/index.html` from `netplus/index.html` with the new script list, and add a card to `index.html`.
+4. Run `npm test` and `python build.py <id>`.
 
 ## Testing
 
-Open `index.html` from disk with `#selftest` on the end of the URL (it only runs from a `file:` URL). It drives the whole flow without clicks and prints `OK` plus a log at the bottom of the page, or `FAIL` with a stack trace. It covers the starter test, tutorial building, a passed checkpoint, a checkpoint where unsure answers must not count, the 50-question test, retraining, feedback saving, and every view.
-
-## Adding questions
-
-Append objects to the matching `questions-*.js` file, keep the `t` field equal to an existing lesson id, and rebuild. Aim for at least five questions per lesson so checkpoints and exams stay fresh.
+`npm test` runs `tests/selftest.js` (the engine's `#selftest` flow under jsdom for every course plus the `tests/fixtures/mini` three-domain course) and `tests/gating.js`. You can also open any `<id>/index.html` from disk with `#selftest` on the URL to see the same log in a browser.
