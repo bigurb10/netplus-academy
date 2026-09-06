@@ -1,8 +1,8 @@
 // NetPlus Academy curriculum, units 7 to 9.
-window.NPA = window.NPA || {};
-NPA.units = NPA.units || [];
+window.FRA = window.FRA || {};
+FRA.units = FRA.units || [];
 
-NPA.units.push({
+FRA.units.push({
   id: "u7", n: 7, title: "Routing, Cloud, and Infrastructure", domain: 2,
   blurb: "How routers choose paths, NAT and gateway redundancy, the appliances on a network, cloud and modern networking, and the physical room it all lives in.",
   assumes: "You have configured switches or Wi-Fi and understand VLANs.",
@@ -208,7 +208,7 @@ Keep temperature around 18 to 27 C (64 to 80 F) and relative humidity about 40 t
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u8", n: 8, title: "Operations and Security", domain: 3,
   blurb: "Documentation, change control, monitoring, disaster recovery, remote access, and the security concepts, attacks, and defenses on the exam.",
   assumes: "You have done routing, NAT, and switching. This unit is about running and protecting the network.",
@@ -464,7 +464,7 @@ Separate VLANs and firewall rules for guests, IoT, industrial systems, and manag
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u9", n: 9, title: "Troubleshooting", domain: 5,
   blurb: "The seven-step method, the cabling, service, and performance problems the exam describes, and the tools that find them.",
   assumes: "You run networks day to day and want to sharpen diagnosis and tool selection.",

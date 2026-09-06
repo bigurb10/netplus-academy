@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: unit 9 (troubleshooting).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u9l1 Methodology
 {id:"u9l1-1",t:"u9l1",q:"A technician has tested a theory and confirmed the actual cause of a network problem. According to the troubleshooting methodology, what is the NEXT step?",a:["Implement the solution","Establish a plan of action and identify potential effects","Verify full system functionality","Document findings"],c:1,e:"After confirming the cause, plan the fix and consider its side effects before implementing."},
 {id:"u9l1-2",t:"u9l1",q:"Which is the FIRST step of the troubleshooting methodology?",a:["Establish a theory of probable cause","Identify the problem","Test the theory","Document findings"],c:1,e:"Identifying the problem, including gathering information and determining what changed, comes first."},

@@ -1,8 +1,8 @@
 // NetPlus Academy question bank, units 1 to 3. All questions are original.
 // Fields: id, t (lesson id), q (stem), a (four options), c (index of correct option), e (explanation).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u1l1 Networks and their types
 {id:"u1l1-1",t:"u1l1",q:"A company connects its offices in Denver, Atlanta, and Seattle using circuits leased from a telecommunications provider. Which term BEST describes this network?",a:["LAN","WAN","PAN","SAN"],c:1,e:"A WAN connects LANs across geographic distance, typically over provider links. A LAN is a single site, a PAN is personal-range such as Bluetooth, and a SAN is dedicated storage networking."},
 {id:"u1l1-2",t:"u1l1",q:"Which network design lets an administrator manage user accounts, file permissions, and backups from a central location?",a:["Peer-to-peer","Ad hoc","Client-server","Point-to-point"],c:2,e:"Client-server designs centralize resources and control on dedicated servers. Peer-to-peer spreads them across every host, which does not scale for management or security."},

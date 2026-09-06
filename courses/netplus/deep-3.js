@@ -1,7 +1,7 @@
 // NetPlus Academy deeper explanations, units 7 to 9. Original content.
-window.NPA = window.NPA || {};
-NPA.deep = NPA.deep || {};
-Object.assign(NPA.deep, {
+window.FRA = window.FRA || {};
+FRA.deep = FRA.deep || {};
+Object.assign(FRA.deep, {
 
 u7l1: `## The decision every host makes before sending
 Before a PC sends anything, it asks one question: **is the destination on my own subnet?** It answers by applying its mask to both addresses.

@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: unit 7 (routing, appliances, cloud, modern networking, physical installations).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u7l1 Routing fundamentals
 {id:"u7l1-1",t:"u7l1",q:"A user can communicate with devices on the local subnet but cannot reach any remote networks or the internet. Which setting is MOST likely wrong?",a:["DNS server address","Default gateway","NTP server","DHCP lease time"],c:1,e:"Local traffic never touches the gateway, so a wrong gateway breaks only remote destinations."},
 {id:"u7l1-2",t:"u7l1",q:"As a packet travels from a workstation through two routers to a server, which of the following remains unchanged?",a:["The source and destination MAC addresses","The source and destination IP addresses","The frame check sequence","The TTL value"],c:1,e:"Routers rewrite the frame at each hop and decrement the TTL, but the IP addresses in the packet stay the same unless NAT is applied."},

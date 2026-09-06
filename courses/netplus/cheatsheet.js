@@ -1,8 +1,8 @@
 // NetPlus Academy memorization sheet. Everything on the N10-009 exam that must be recalled cold:
 // numbers, tables, orders of steps, and one-line distinctions. Rendered by the Cheat sheet tab and printable.
 // Block types: table {cols, rows}, list {items, cols}, note {text}. Inline markup: **bold**, {{code}}.
-window.NPA = window.NPA || {};
-NPA.cheatsheet = {
+window.FRA = window.FRA || {};
+FRA.cheatsheet = {
   title: "Network+ N10-009 Memorization Sheet",
   intro: "Print this and keep it beside you while you study. Every number, order, and pairing on this sheet is fair game on the exam. Nothing here needs understanding to score; it needs recall.",
   sections: [

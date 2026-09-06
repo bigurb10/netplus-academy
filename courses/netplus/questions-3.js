@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: unit 6 (switching and wireless).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u6l1 How switches work
 {id:"u6l1-1",t:"u6l1",q:"A switch receives a frame whose destination MAC address is not in its MAC address table. What does it do?",a:["Drops the frame","Sends the frame to the default gateway","Floods the frame out all ports in the VLAN except the one it arrived on","Sends an ARP request"],c:2,e:"Unknown unicast frames are flooded within the VLAN so the destination can respond and the switch can learn its port."},
 {id:"u6l1-2",t:"u6l1",q:"How does a switch populate its MAC address table?",a:["By reading the destination MAC of incoming frames","By reading the source MAC of incoming frames and noting the arrival port","From the DHCP server","From the routing table"],c:1,e:"Switches learn by recording the source MAC address of each frame along with the port it arrived on."},

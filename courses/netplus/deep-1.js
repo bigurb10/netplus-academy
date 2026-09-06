@@ -1,8 +1,8 @@
 // NetPlus Academy deeper explanations, units 1 to 3. Opened from the "Need a deeper explanation?" button on a lesson.
 // Same mini-markup as lessons, plus ``` fenced blocks for diagrams and tables and "1. " numbered steps. Original content.
-window.NPA = window.NPA || {};
-NPA.deep = NPA.deep || {};
-Object.assign(NPA.deep, {
+window.FRA = window.FRA || {};
+FRA.deep = FRA.deep || {};
+Object.assign(FRA.deep, {
 
 u1l1: `## Start with one idea
 A network is nothing more than devices that can pass data to each other. Two laptops and a cable is a network. So is the internet. Every term in this lesson is just a way of describing one of two things: **how far the network reaches**, or **who is in charge of it**.

@@ -1,8 +1,8 @@
 // NetPlus Academy curriculum, units 4 to 6.
-window.NPA = window.NPA || {};
-NPA.units = NPA.units || [];
+window.FRA = window.FRA || {};
+FRA.units = FRA.units || [];
 
-NPA.units.push({
+FRA.units.push({
   id: "u4", n: 4, title: "IP Addressing and Subnetting", domain: 1,
   blurb: "IPv4 structure, special ranges, subnetting you can do in your head, and IPv6.",
   assumes: "You know the OSI layers and that routers forward by IP address.",
@@ -158,7 +158,7 @@ IPv4 exhaustion drove all of this. Carrier-grade NAT lets providers share one pu
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u5", n: 5, title: "Protocols, Ports, and Network Services", domain: 1,
   blurb: "TCP and UDP, the port numbers the exam expects cold, and how DHCP, DNS, and time services work.",
   assumes: "You can subnet and know the difference between an IP address and a MAC address.",
@@ -303,7 +303,7 @@ On IPv6 networks the router's advertisements are themselves a network service: t
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u6", n: 6, title: "Switching and Wireless", domain: 2,
   blurb: "How switches learn, VLANs and trunks, spanning tree, switch features, and Wi-Fi design and security.",
   assumes: "You know ports, protocols, and how DHCP and DNS work.",

@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: network services (unit 5 lessons 3-5) and operations (unit 8 lessons 1-6).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u5l3 DHCP
 {id:"u5l3-1",t:"u5l3",q:"Clients on a remote subnet with no local DHCP server fail to obtain addresses. What should be configured on the router interface for that subnet?",a:["A DHCP reservation","A DHCP relay, also called an IP helper address","A DHCP exclusion","A DNS forwarder"],c:1,e:"DHCP Discover is a broadcast that routers do not forward. A relay converts it to a unicast to the central server."},
 {id:"u5l3-2",t:"u5l3",q:"A network printer must always receive the same IP address but the administrator wants to keep managing addresses centrally. What should be configured?",a:["A static address on the printer only","A DHCP reservation for the printer's MAC address","A shorter lease time","A second scope"],c:1,e:"A reservation ties an address to a MAC so the device always gets the same lease while DHCP still manages it."},

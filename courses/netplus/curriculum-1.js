@@ -1,9 +1,9 @@
 // NetPlus Academy curriculum, units 1 to 3. Original teaching content for CompTIA Network+ N10-009.
 // Lesson body mini-markup: "## " heading, "- " bullet, "> " exam tip, {{text}} inline code, **text** bold.
-window.NPA = window.NPA || {};
-NPA.units = NPA.units || [];
+window.FRA = window.FRA || {};
+FRA.units = FRA.units || [];
 
-NPA.units.push({
+FRA.units.push({
   id: "u1", n: 1, title: "Networking Foundations", domain: 1,
   blurb: "What a network is, the shapes networks take, and how large networks are organized.",
   assumes: "Nothing. Start here if you are new to networking.",
@@ -68,7 +68,7 @@ Data centers use a two-tier fabric. Every **leaf** switch (where servers connect
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u2", n: 2, title: "The OSI Model", domain: 1,
   blurb: "The seven-layer map the exam uses to describe every protocol, device, and problem.",
   assumes: "You know what a LAN, a WAN, and a switch are.",
@@ -134,7 +134,7 @@ The four-layer TCP/IP model is what the protocols were actually built on: **Appl
   ]
 });
 
-NPA.units.push({
+FRA.units.push({
   id: "u3", n: 3, title: "Media, Connectors, and Ethernet", domain: 1,
   blurb: "Copper, fiber, transceivers, Ethernet standards, and the four ways traffic is addressed.",
   assumes: "You can name the OSI layers and know that switches use MAC addresses.",

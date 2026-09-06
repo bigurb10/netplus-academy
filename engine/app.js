@@ -45,14 +45,14 @@
   };
 
   // ---------- data index ----------
-  const units = (NPA.units || []).slice().sort((a, b) => a.n - b.n);
+  const units = (FRA.units || []).slice().sort((a, b) => a.n - b.n);
   const lessons = []; const L = {};
   units.forEach(u => u.lessons.forEach(l => { l.unit = u; l.index = lessons.length; lessons.push(l); L[l.id] = l; }));
-  const bank = NPA.questions || []; const Q = {}; bank.forEach(q => { Q[q.id] = q; });
+  const bank = FRA.questions || []; const Q = {}; bank.forEach(q => { Q[q.id] = q; });
   const byLesson = {}; bank.forEach(q => { (byLesson[q.t] = byLesson[q.t] || []).push(q); });
   const lessonsByDomain = { 1: [], 2: [], 3: [], 4: [], 5: [] };
   lessons.forEach(l => lessonsByDomain[l.domain].push(l));
-  const gens = NPA.generators || {};
+  const gens = FRA.generators || {};
 
   // ---------- utilities ----------
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -136,9 +136,9 @@
     used = used || new Set();
     for (let i = 0; i < n * 3 && out.length < n; i++) {
       let q = null;
-      if (gens[lessonId] && Math.random() < (genShare == null ? 0.35 : genShare)) q = NPA.generate(lessonId);
+      if (gens[lessonId] && Math.random() < (genShare == null ? 0.35 : genShare)) q = FRA.generate(lessonId);
       else q = leastSeen(pool, used);
-      if (!q && gens[lessonId]) q = NPA.generate(lessonId);
+      if (!q && gens[lessonId]) q = FRA.generate(lessonId);
       if (!q) break;
       used.add(q.id); out.push(q);
     }
@@ -151,7 +151,7 @@
       while (items.length < target && guard < 400) {
         const l = ls[i % ls.length]; i++; guard++;
         let q = null;
-        if (gens[l.id] && Math.random() < 0.3) q = NPA.generate(l.id);
+        if (gens[l.id] && Math.random() < 0.3) q = FRA.generate(l.id);
         else q = leastSeen(byLesson[l.id] || [], used);
         if (!q) continue;
         used.add(q.id); items.push(q);
@@ -164,7 +164,7 @@
     for (const d of [1, 2, 3, 4, 5]) {
       const picks = shuffle(STARTER_POOL[d]).slice(0, 2);
       for (const lid of picks) {
-        let q = (gens[lid] && Math.random() < 0.5) ? NPA.generate(lid) : leastSeen(byLesson[lid] || [], used);
+        let q = (gens[lid] && Math.random() < 0.5) ? FRA.generate(lid) : leastSeen(byLesson[lid] || [], used);
         if (!q) q = leastSeen(byLesson[lid] || [], new Set());
         if (q) { used.add(q.id); items.push(q); }
       }
@@ -714,7 +714,7 @@
 
   // ---------- deeper explanations ----------
   function deepSection(id) {
-    const l = L[id]; const deep = NPA.deep && NPA.deep[id]; if (!l || !deep) return '';
+    const l = L[id]; const deep = FRA.deep && FRA.deep[id]; if (!l || !deep) return '';
     if (deepOpen !== id) return `<div class="row deep-cta"><button class="btn" data-act="deep-toggle" data-arg="${id}">Need a deeper explanation?</button><span class="muted" style="font-size:.9rem">A slower walkthrough of this lesson with worked examples.</span></div>`;
     return `<section class="card deep stack" id="deep"><div class="row spread"><div><div class="eyebrow">Deeper explanation</div><h3>${esc(l.title)}, explained slowly</h3></div><button class="btn small ghost" data-act="deep-toggle" data-arg="${id}">Hide</button></div>
       <article class="lesson-body deep-body">${renderBody(deep)}</article>
@@ -729,7 +729,7 @@
     return '';
   }
   function viewCheatsheet() {
-    const cs = NPA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
+    const cs = FRA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
     const intro = S.view.arg === 'intro';
     if (!S.seen.cheat) { S.seen.cheat = true; save(); }
     const printBtn = `<button class="btn primary" data-act="print-cheat">Print or save as PDF</button>`;
@@ -963,7 +963,7 @@
       for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; s.conf = 1; submitAnswer(s, false); advance(s); }
       log.push(`unsure checkpoint ${second} status=${lstat(second).status} best=${lstat(second).best} (expected read, 0)`);
       if (lstat(second).status === 'passed') throw new Error('unsure answers counted toward a checkpoint pass'); }
-    const missingDeep = lessons.filter(l => !(NPA.deep && NPA.deep[l.id])).map(l => l.id);
+    const missingDeep = lessons.filter(l => !(FRA.deep && FRA.deep[l.id])).map(l => l.id);
     if (missingDeep.length) throw new Error('lessons without a deeper explanation: ' + missingDeep.join(', '));
     go('lesson', 'u4l1'); deepOpen = 'u4l1'; render();
     const deepPre = document.querySelectorAll('#deep pre').length, deepOl = document.querySelectorAll('#deep ol').length;

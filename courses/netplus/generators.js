@@ -1,6 +1,6 @@
 // NetPlus Academy dynamic question generators. Each generator returns a fresh, computed question
 // so subnetting, ports, OSI layers, and route selection never repeat exactly.
-window.NPA = window.NPA || {};
+window.FRA = window.FRA || {};
 (function () {
   const R = (n) => Math.floor(Math.random() * n);
   const pick = (arr) => arr[R(arr.length)];
@@ -170,7 +170,7 @@ window.NPA = window.NPA || {};
   }
 
   // Map lesson -> generator. Diagnostic and practice exams also sample these.
-  NPA.generators = {
+  FRA.generators = {
     u4l1: maskConversion,
     u4l3: subnetting,
     u4l4: () => (R(2) === 0 ? subnetting() : maskConversion()),
@@ -180,5 +180,5 @@ window.NPA = window.NPA || {};
     u7l2: routeSelect,
     u6l4: poe
   };
-  NPA.generate = function (lessonId) { const g = NPA.generators[lessonId]; return g ? g() : null; };
+  FRA.generate = function (lessonId) { const g = FRA.generators[lessonId]; return g ? g() : null; };
 })();

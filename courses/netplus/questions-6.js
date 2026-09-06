@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: unit 8 lessons 7-9 (security concepts, attacks, defense).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u8l7 Security concepts
 {id:"u8l7-1",t:"u8l7",q:"A user signs in with a password and then enters a six-digit code from an authenticator app on their phone. Which factor types are in use?",a:["Something you know and something you have","Something you know and something you are","Something you have and somewhere you are","Two instances of something you know"],c:0,e:"The password is knowledge; the TOTP app on a possessed device is possession. A fingerprint would be inherence."},
 {id:"u8l7-2",t:"u8l7",q:"Which AAA protocol encrypts the entire packet payload, separates authentication from authorization, and is commonly used for administering network devices?",a:["RADIUS","TACACS+","LDAP","SAML"],c:1,e:"TACACS+ uses TCP 49, encrypts the whole payload, and supports per-command authorization. RADIUS encrypts only the password."},

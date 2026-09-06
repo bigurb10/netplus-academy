@@ -1,7 +1,7 @@
 // NetPlus Academy question bank: unit 4 (IP addressing) and unit 5 lessons 1-2 (transport and ports).
-window.NPA = window.NPA || {};
-NPA.questions = NPA.questions || [];
-NPA.questions.push(
+window.FRA = window.FRA || {};
+FRA.questions = FRA.questions || [];
+FRA.questions.push(
 // u4l1 IPv4 basics and classes
 {id:"u4l1-1",t:"u4l1",q:"What is the CIDR prefix length for the subnet mask 255.255.255.240?",a:["/26","/27","/28","/29"],c:2,e:"240 in binary is 11110000, four network bits in the last octet. 24 plus 4 equals /28."},
 {id:"u4l1-2",t:"u4l1",q:"A host has the address 172.20.5.9 with no mask specified. To which historical address class does it belong, and what is its default mask?",a:["Class A, /8","Class B, /16","Class C, /24","Class D, multicast"],c:1,e:"First octets from 128 to 191 are Class B with a default /16 mask."},

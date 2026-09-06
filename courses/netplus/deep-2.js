@@ -1,7 +1,7 @@
 // NetPlus Academy deeper explanations, units 4 to 6. Original content.
-window.NPA = window.NPA || {};
-NPA.deep = NPA.deep || {};
-Object.assign(NPA.deep, {
+window.FRA = window.FRA || {};
+FRA.deep = FRA.deep || {};
+Object.assign(FRA.deep, {
 
 u4l1: `## Stop seeing four numbers
 The easiest way to understand IPv4 is to stop thinking of it as four numbers and think of it as two parts glued together:
