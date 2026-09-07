@@ -50,7 +50,7 @@ window.FRA = window.FRA || {};
     const kind = R(4);
     if (kind === 0) return build("u14l3", `An asset is valued at ${money(av)}. A single incident would destroy ${Math.round(ef * 100)}% of its value. What is the single loss expectancy?`, money(sle),
       wrong(money(sle), [money(av * (1 - ef)), money(av), money(sle * 2), money(sle / 2), money(sle * 10), money(av * 2)]),
-      `SLE = AV x EF = ${money(av)} x ${ef} = ${money(sle)}.`, "risk");
+      `SLE = AV x EF = ${money(av)} x ${ef} = ${money(sle)}. Single loss expectancy is the asset value times the fraction lost in one incident.`, "risk");
     if (kind === 1) return build("u14l3", `An asset is valued at ${money(av)} with an exposure factor of ${ef}, and the threat is expected ${aroText}. What is the annualized loss expectancy?`, money(ale),
       wrong(money(ale), [money(sle), money(av * aro), money(sle / aro), money(av), money(ale * 2), money(ale / 2), money(av * 2)]),
       `SLE = ${money(av)} x ${ef} = ${money(sle)}. ARO = ${aro}. ALE = SLE x ARO = ${money(sle)} x ${aro} = ${money(ale)}.`, "risk");
