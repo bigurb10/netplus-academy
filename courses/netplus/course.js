@@ -6,7 +6,7 @@ FRA.course = {
   short: "N+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009" },
+  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009", questions: 90, minutes: 90 },
   description: "Self-paced CompTIA Network+ N10-009 course with adaptive training and practice exams.",
   // Domains in exam order. id is what lessons reference in their `domain` field. quota is the count on the full test.
   domains: [

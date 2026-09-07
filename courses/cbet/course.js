@@ -6,7 +6,7 @@ FRA.course = {
   short: "CB",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET" },
+  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180 },
   description: "Self-paced Certified Biomedical Equipment Technician (CBET) exam prep with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "Anatomy and Physiology", short: "A&P", pct: 7, quota: 4 },

@@ -6,7 +6,7 @@ FRA.course = {
   short: "A1",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 1", code: "220-1201" },
+  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 1", code: "220-1201", questions: 90, minutes: 90 },
   description: "Self-paced CompTIA A+ Core 1 (220-1201) course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "Mobile Devices", short: "Mobile", pct: 13, quota: 6 },

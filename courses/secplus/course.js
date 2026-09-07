@@ -6,7 +6,7 @@ FRA.course = {
   short: "S+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701" },
+  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90 },
   description: "Self-paced CompTIA Security+ SY0-701 course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "General Security Concepts", short: "Concepts", pct: 12, quota: 6 },
