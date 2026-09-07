@@ -16,7 +16,7 @@ In the cloud, security is shared. The **responsibility matrix** spells out who s
 - **Hybrid** environments mix on-premises and cloud, so responsibilities and controls must be mapped across both.
 - **Third-party vendors** add another layer: a software-as-a-service provider running on a cloud provider means two sets of responsibilities to understand.
 Most cloud incidents come from the customer's side of the line: exposed storage, over-privileged identities, unpatched customer-managed systems.
-
+Hybrid considerations (which workloads live where, and how identity and data move between private and public) and third-party vendors are the other two cloud sub-items; infrastructure as code is abbreviated IaC.
 ## Infrastructure as code
 Servers, networks, and policies are defined in files and created by automation. Benefits: consistency (every environment matches the file), speed, and reviewable change history. Risks: a mistake in the file is deployed everywhere at once, and secrets committed to code repositories leak. Treat the code like production: review it, test it, scan it, and keep secrets out of it.
 
@@ -328,7 +328,7 @@ Disk redundancy inside a server: RAID 1 mirrors two disks; RAID 5 stripes with p
 - **Failover test**: actually switch to the backup system or site and confirm it works.
 - **Simulation**: a realistic drill of an incident, exercising people and procedures.
 - **Parallel processing**: run the recovery system alongside production and compare results without cutting over.
-
+The four named tests are tabletop exercises, fail over (deliberately switching to the backup), simulation, and parallel processing.
 ## Power
 - **UPS**: batteries that carry the load through short outages and give time to shut down or to start a generator. Also conditions dirty power.
 - **Generators**: long-term power for extended outages; need fuel, testing, and a UPS to bridge the start-up gap.
@@ -483,7 +483,7 @@ Knowing what attackers are doing right now.
 - **Proprietary and third-party feeds**: paid intelligence from security vendors.
 - **Information sharing organizations**: industry groups (ISACs) where members share threats affecting their sector.
 - **Dark web monitoring**: watching criminal marketplaces for your data, credentials, or plans against you.
-
+OSINT stands for open source intelligence; information-sharing organizations are the ISACs.
 ## Penetration testing
 Authorized attackers try to break in the way real attackers would, proving which vulnerabilities are actually exploitable and how far an intruder could get. Scanning finds possibilities; penetration testing finds consequences.
 
@@ -492,7 +492,7 @@ Outside researchers who find your flaws need a safe way to tell you. A **respons
 
 ## System and process audits
 Reviewing configurations, procedures, and compliance against standards finds weaknesses that no scanner sees: a missing approval step, an unmonitored account, an unreviewed firewall rule.
-
+The objective calls this a system/process audit.
 > Exam tip: "see installed software and missing patches in detail" is a credentialed scan. "Find flaws in a running application" is dynamic analysis. "Alert when a library we use has a new CVE" is package monitoring. "Confirm the vulnerability can actually be exploited" is a penetration test.`,
       hook: "Credentialed scans see more. Static reads code, dynamic tests it running, package monitoring watches dependencies. Threat feeds: OSINT, paid, ISACs, dark web. Pen tests prove exploitability. Disclosure and bounties invite reports."
     },
@@ -511,7 +511,7 @@ Reviewing configurations, procedures, and compliance against standards finds wea
   - **Industry and organizational impact**: what a compromise would mean for operations, customers, and regulators.
   - **Risk tolerance**: how much risk the organization has decided to accept.
 A critical CVSS score on an isolated test system may rank below a medium score on the internet-facing payment server.
-
+Two more prioritization inputs the objective names: industry/organizational impact and risk tolerance.
 ## Response and remediation
 - **Patching**: the normal fix.
 - **Insurance**: transfers financial impact; does not fix anything.

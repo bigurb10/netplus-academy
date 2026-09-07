@@ -921,7 +921,7 @@ The sender cannot later deny sending. Achieved with **digital signatures**: only
 - **Authentication** proves an identity. People authenticate with passwords, tokens, and biometrics. Systems authenticate too: a device presents a certificate for 802.1X, a server presents a TLS certificate.
 - **Authorization** decides what an authenticated identity may do. The models (mandatory, discretionary, role-based, attribute-based) have their own lesson.
 - **Accounting** records what was done: logs, session records, audit trails.
-
+The exam splits this into authenticating people, authenticating systems (devices and services proving who they are), and authorization models that decide what each may do.
 ## Gap analysis
 Compare where security is now against where it should be, usually against a framework, regulation, or the organization's own policy. The output is a list of gaps, each with an owner and a plan. It is the first step before a security program, an audit, or a compliance effort.
 
@@ -946,7 +946,7 @@ Zero trust splits the work into a **control plane** that decides and a **data pl
 - **Subject and system**: the user or process asking, and the resource being asked for.
 - **Policy enforcement point**: where the decision is applied. It sits in the path of the traffic and only passes what the control plane approved.
 - **Implicit trust zones**: small zones where, after verification, traffic is allowed to flow. They replace the one big trusted inside.
-
+The subject/system making the request is evaluated at the policy enforcement point before it reaches the resource.
 ## How a request flows
 1. The subject asks the enforcement point for a resource.
 2. The enforcement point hands the request to the policy administrator.
@@ -1015,10 +1015,10 @@ FRA.units.push({
 - **Service and application restarts**: many changes take effect only after a restart, which itself is downtime.
 - **Legacy applications**: old software may break when its platform changes.
 - **Dependencies**: a change to one system can break others that rely on it.
-
+The objective's own words for the restart items are service restart and application restart, and legacy applications and dependencies decide the order.
 ## Documentation and version control
 After the change, update diagrams, procedures, and configuration records. **Version control** keeps every version of configurations and code, records who changed what, and makes rollback a checkout instead of a memory test.
-
+Updating diagrams and updating policies and procedures are the two documentation tasks the exam names.
 > Exam tip: "what must exist before the change can be approved" is the backout plan plus impact analysis and test results. "Roll back to the previous configuration quickly" is version control. Emergency changes still get documented afterward.`,
       hook: "Request, impact analysis, test, approve, window, backout plan ready, implement, document. Watch dependencies, legacy apps, restarts, and downtime. Version control makes rollback cheap."
     },
@@ -1140,7 +1140,7 @@ Pick the level that matches the threat: a lost device needs full-disk; a databas
 - **HSM**: a dedicated tamper-resistant appliance or card that generates, stores, and uses keys at scale. Certificate authorities and payment systems use them.
 - **KMS**: a key management service, usually cloud-hosted, that creates, rotates, and controls access to keys for applications.
 - **Secure enclave**: an isolated area of a processor that handles secrets such as biometric templates, separate from the main operating system.
-
+A key management system (KMS) is the software or service that generates, stores, rotates, and retires keys at scale, often backed by an HSM.
 ## Obfuscation
 Making data less useful to whoever sees it, without full encryption.
 - **Steganography**: hiding data inside another file, such as an image or audio, so its existence is concealed.
@@ -1174,10 +1174,10 @@ FRA.units.push({
 - **Internal versus external**: does the actor already have legitimate access?
 - **Resources and funding**: a nation-state can spend years; an unskilled attacker cannot.
 - **Sophistication and capability**: custom zero-day exploits versus downloaded scripts.
-
+The exam's attribute list reads: internal or external, resources/funding, and level of sophistication or capability.
 ## Motivations to recognize
 Data exfiltration, espionage, service disruption, blackmail, financial gain, philosophical or political beliefs, ethical (authorized testing), revenge, disruption or chaos, and war.
-
+Disruption/chaos appears on the list as its own motivation, separate from targeted service disruption.
 ## Matching scenarios
 - Custom malware, months of stealthy access, government targets: nation-state.
 - Ransomware with a payment portal: organized crime.
@@ -1276,7 +1276,7 @@ FRA.units.push({
 
 ## Operating system vulnerabilities
 Unpatched kernels and services, insecure default settings, unnecessary services running, weak permissions on system files. The fix is boring and decisive: patch on a schedule, apply a secure baseline, remove what is not needed, and monitor for drift.
-
+The objective calls these OS-based vulnerabilities.
 ## Reading the scenario
 - "Input longer than expected crashed the service, then arbitrary code ran": buffer overflow.
 - "The file was verified and then replaced before it was used": TOC/TOU race condition.
@@ -1293,7 +1293,7 @@ Unpatched kernels and services, insecure default settings, unnecessary services 
 ## Web application vulnerabilities
 - **SQL injection**: user input is pasted into a database query. Entering {{' OR 1=1 --}} in a login field turns the query into "where the password is anything." Attackers read, change, or delete data. Defense: parameterized queries and input validation.
 - **Cross-site scripting (XSS)**: an attacker stores or reflects script in a web page, and other users' browsers run it, stealing session cookies or defacing content. Defense: output encoding, input validation, content security policy.
-
+SQL injection is abbreviated SQLi on the exam.
 ## Hardware vulnerabilities
 - **Firmware**: the code inside devices can carry flaws that survive reinstalling the operating system. Patch firmware too.
 - **End-of-life**: the vendor no longer supports the product. **Legacy**: old technology still in use because something depends on it. Both keep known flaws open forever; isolate, monitor, and plan replacement.
@@ -1335,7 +1335,7 @@ The most common vulnerability of all: open ports, default accounts, verbose erro
 ## Mobile device vulnerabilities
 - **Side loading**: installing apps from outside the official store bypasses the store's screening.
 - **Jailbreaking** (iOS) and **rooting** (Android): removing the operating system's protections gives the user, and any malware, full control. Mobile device management can detect and block these devices.
-
+Side loading (also written sideloading) and jailbreaking are the two named mobile risks.
 ## Zero-day
 A vulnerability that is being exploited before the vendor has a patch, or before the vendor even knows. There is nothing to install. Defense while waiting: compensating controls such as segmentation, disabling the vulnerable feature, tighter monitoring, and threat intelligence to know it exists.
 
@@ -1450,7 +1450,7 @@ Payloads delivered over the network: exploit traffic against a listening service
 - **Out-of-cycle logging**: log entries at unusual times or in unusual volume.
 - **Published or documented**: an exploit for your exact version is public.
 - **Missing logs**: gaps where logs should be; attackers clear their tracks.
-
+One more named indicator: published/documented, meaning the attacker or a researcher has publicly posted the stolen data or the exploit.
 ## Reading the scenario
 - "Hundreds of accounts each had one failed login at 2 a.m.": password spraying.
 - "The same account is active in the office and overseas simultaneously": concurrent sessions and impossible travel.
@@ -1483,7 +1483,7 @@ Payloads delivered over the network: exploit traffic against a listening service
 5. **Change default passwords** on every account and device.
 6. **Remove unnecessary software** and services.
 7. Patch, then apply the baseline and keep it enforced.
-
+The objective phrases the port item as disabling ports and protocols.
 ## Choosing under pressure
 - Malware spreading between hosts: isolation first, then segmentation to stop the next one.
 - A system that cannot be patched: isolation or segmentation plus monitoring, a compensating control.
@@ -1514,7 +1514,7 @@ In the cloud, security is shared. The **responsibility matrix** spells out who s
 - **Hybrid** environments mix on-premises and cloud, so responsibilities and controls must be mapped across both.
 - **Third-party vendors** add another layer: a software-as-a-service provider running on a cloud provider means two sets of responsibilities to understand.
 Most cloud incidents come from the customer's side of the line: exposed storage, over-privileged identities, unpatched customer-managed systems.
-
+Hybrid considerations (which workloads live where, and how identity and data move between private and public) and third-party vendors are the other two cloud sub-items; infrastructure as code is abbreviated IaC.
 ## Infrastructure as code
 Servers, networks, and policies are defined in files and created by automation. Benefits: consistency (every environment matches the file), speed, and reviewable change history. Risks: a mistake in the file is deployed everywhere at once, and secrets committed to code repositories leak. Treat the code like production: review it, test it, scan it, and keep secrets out of it.
 
@@ -1826,7 +1826,7 @@ Disk redundancy inside a server: RAID 1 mirrors two disks; RAID 5 stripes with p
 - **Failover test**: actually switch to the backup system or site and confirm it works.
 - **Simulation**: a realistic drill of an incident, exercising people and procedures.
 - **Parallel processing**: run the recovery system alongside production and compare results without cutting over.
-
+The four named tests are tabletop exercises, fail over (deliberately switching to the backup), simulation, and parallel processing.
 ## Power
 - **UPS**: batteries that carry the load through short outages and give time to shut down or to start a generator. Also conditions dirty power.
 - **Generators**: long-term power for extended outages; need fuel, testing, and a UPS to bridge the start-up gap.
@@ -1981,7 +1981,7 @@ Knowing what attackers are doing right now.
 - **Proprietary and third-party feeds**: paid intelligence from security vendors.
 - **Information sharing organizations**: industry groups (ISACs) where members share threats affecting their sector.
 - **Dark web monitoring**: watching criminal marketplaces for your data, credentials, or plans against you.
-
+OSINT stands for open source intelligence; information-sharing organizations are the ISACs.
 ## Penetration testing
 Authorized attackers try to break in the way real attackers would, proving which vulnerabilities are actually exploitable and how far an intruder could get. Scanning finds possibilities; penetration testing finds consequences.
 
@@ -1990,7 +1990,7 @@ Outside researchers who find your flaws need a safe way to tell you. A **respons
 
 ## System and process audits
 Reviewing configurations, procedures, and compliance against standards finds weaknesses that no scanner sees: a missing approval step, an unmonitored account, an unreviewed firewall rule.
-
+The objective calls this a system/process audit.
 > Exam tip: "see installed software and missing patches in detail" is a credentialed scan. "Find flaws in a running application" is dynamic analysis. "Alert when a library we use has a new CVE" is package monitoring. "Confirm the vulnerability can actually be exploited" is a penetration test.`,
       hook: "Credentialed scans see more. Static reads code, dynamic tests it running, package monitoring watches dependencies. Threat feeds: OSINT, paid, ISACs, dark web. Pen tests prove exploitability. Disclosure and bounties invite reports."
     },
@@ -2009,7 +2009,7 @@ Reviewing configurations, procedures, and compliance against standards finds wea
   - **Industry and organizational impact**: what a compromise would mean for operations, customers, and regulators.
   - **Risk tolerance**: how much risk the organization has decided to accept.
 A critical CVSS score on an isolated test system may rank below a medium score on the internet-facing payment server.
-
+Two more prioritization inputs the objective names: industry/organizational impact and risk tolerance.
 ## Response and remediation
 - **Patching**: the normal fix.
 - **Insurance**: transfers financial impact; does not fix anything.
@@ -2159,7 +2159,7 @@ FRA.units.push({
 - **Provisioning**: creating the account and granting the access a role needs when someone joins or changes jobs.
 - **Deprovisioning**: removing access when they leave or change jobs. The classic failure is the account that stays active after the person is gone. Automated deprovisioning tied to the HR system closes that gap.
 - **Permission assignments**: grant by role, not by individual request, and review periodically so permissions do not accumulate.
-
+The objective spells it de-provisioning.
 ## Identity proofing
 Before issuing credentials, verify that the person is who they claim: government ID, knowledge checks, in-person verification, or trusted referrals. Weak proofing means strong authentication protects an impostor's account.
 
@@ -2267,7 +2267,7 @@ Administrator accounts are the crown jewels, so they get their own controls.
 - **Enabling and disabling services and access**: turn a compromised account off the moment the alert fires.
 - **Continuous integration and testing**: every code change is built and tested, including security scans, before it can be deployed.
 - **Integrations and APIs**: the connections between tools that make all of this possible.
-
+Guard rails (guardrails) are automated limits that stop a change from exceeding policy; enabling/disabling services and access is another named use case.
 ## Benefits
 - **Efficiency and time saving**: routine work happens without people.
 - **Enforcing baselines**: automation applies the same configuration every time.
@@ -2415,7 +2415,7 @@ FRA.units.push({
 - **Incident response policy**: authority, roles, and the requirement to follow the plan.
 - **Software development lifecycle policy**: security built into each phase of development.
 - **Change management policy**: no change without the process.
-
+The full list: acceptable use policy (AUP), information security policies, business continuity, disaster recovery, incident response, software development life cycle (SDLC), and change management.
 ## Standards the exam names
 Password standards, access control standards, physical security standards, and encryption standards: each turns a policy into measurable settings.
 
@@ -2441,7 +2441,7 @@ Change management procedures, onboarding and offboarding procedures, and **playb
 - **Legal**: laws on data protection, breach notification, and liability.
 - **Industry**: standards required by the industry itself, such as payment card rules imposed by card brands.
 - **Local, regional, national, global**: requirements vary by jurisdiction, and a global company must satisfy all of them. Data collected in one country may be regulated by that country's law wherever it is processed.
-
+The jurisdiction ladder is written local/regional, national, and global.
 ## Monitoring and revision
 Governance documents are reviewed on a schedule and whenever laws, threats, or the business change. A policy last reviewed five years ago is a finding.
 
@@ -2456,7 +2456,7 @@ Governance documents are reviewed on a schedule and whenever laws, threats, or t
 - **Controller**: in privacy law, the party that decides why and how personal data is processed.
 - **Processor**: the party that processes personal data on the controller's behalf, such as a payroll provider, and must follow the controller's instructions.
 - **Custodian or steward**: the people who handle the data day to day, implementing the owner's decisions: backups, access changes, quality.
-
+Custodians are also called stewards.
 ## Reading the scenario
 - "A cloud payroll service processing employee data under the company's instructions": the company is the controller, the service is the processor.
 - "The finance director decides who may access the ledger": data owner.
@@ -2572,7 +2572,7 @@ FRA.units.push({
 - **Work order (WO)** and **statement of work (SOW)**: define one specific piece of work: deliverables, timeline, price, under the MSA.
 - **Non-disclosure agreement (NDA)**: confidentiality obligations.
 - **Business partnership agreement (BPA)**: how partners share responsibilities, profits, and decisions.
-
+Written out: service-level agreement (SLA), memorandum of agreement (MOA), memorandum of understanding (MOU), master service agreement (MSA), work order (WO) or statement of work (SOW), non-disclosure agreement (NDA), and business partners agreement (BPA).
 ## During the relationship
 - **Vendor monitoring**: ongoing review of performance, security incidents, and compliance, not a one-time check.
 - **Questionnaires**: standardized security questionnaires the vendor completes, at onboarding and periodically.
@@ -2614,7 +2614,7 @@ FRA.units.push({
 - **Ownership**: who is responsible for the data within the organization.
 - **Data inventory and retention**: knowing what personal data you hold, where, why, and for how long, and deleting it when the purpose ends.
 - **Right to be forgotten**: a data subject's right, under some laws, to have their personal data erased on request.
-
+The exam phrases the roles as controller vs. processor.
 ## Reading the scenario
 - "A customer requests deletion of all their personal information": right to be forgotten.
 - "Employees sign that they have read the acceptable use policy": acknowledgement.
@@ -2667,7 +2667,7 @@ A formal statement, by management or an auditor, that controls are in place and 
 ## Phishing
 - **Campaigns**: simulated phishing emails sent to employees to measure and improve recognition. Those who click get immediate education, not punishment.
 - **Recognizing and reporting**: training focuses on the signs (urgency, mismatched addresses, unexpected attachments) and on the one behavior that matters most: reporting suspected phishing quickly, so the security team can act.
-
+Three named skills: running phishing campaigns, recognizing a phishing attempt, and responding to reported suspicious messages.
 ## Anomalous behavior recognition
 Teaching people to notice and report behavior that is out of place.
 - **Risky**: actions that violate policy, such as disabling antivirus or sharing credentials.
@@ -2683,7 +2683,7 @@ Teaching people to notice and report behavior that is out of place.
 - **Social engineering**: the techniques and the verification habits that defeat them.
 - **Operational security**: not revealing sensitive details in public, on social media, or to callers.
 - **Hybrid and remote work**: securing home networks, locking screens, avoiding public Wi-Fi without a VPN, protecting devices at home.
-
+Hybrid/remote work environments are on the list.
 ## Reporting and monitoring
 - **Initial**: baseline measurements when the program starts: phishing click rates, training completion.
 - **Recurring**: ongoing metrics to show improvement and find groups that need more attention.
@@ -5857,7 +5857,7 @@ window.FRA = window.FRA || {};
     const kind = R(4);
     if (kind === 0) return build("u14l3", `An asset is valued at ${money(av)}. A single incident would destroy ${Math.round(ef * 100)}% of its value. What is the single loss expectancy?`, money(sle),
       wrong(money(sle), [money(av * (1 - ef)), money(av), money(sle * 2), money(sle / 2), money(sle * 10), money(av * 2)]),
-      `SLE = AV x EF = ${money(av)} x ${ef} = ${money(sle)}.`, "risk");
+      `SLE = AV x EF = ${money(av)} x ${ef} = ${money(sle)}. Single loss expectancy is the asset value times the fraction lost in one incident.`, "risk");
     if (kind === 1) return build("u14l3", `An asset is valued at ${money(av)} with an exposure factor of ${ef}, and the threat is expected ${aroText}. What is the annualized loss expectancy?`, money(ale),
       wrong(money(ale), [money(sle), money(av * aro), money(sle / aro), money(av), money(ale * 2), money(ale / 2), money(av * 2)]),
       `SLE = ${money(av)} x ${ef} = ${money(sle)}. ARO = ${aro}. ALE = SLE x ARO = ${money(sle)} x ${aro} = ${money(ale)}.`, "risk");

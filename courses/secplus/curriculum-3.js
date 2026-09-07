@@ -99,7 +99,7 @@ FRA.units.push({
 - **Provisioning**: creating the account and granting the access a role needs when someone joins or changes jobs.
 - **Deprovisioning**: removing access when they leave or change jobs. The classic failure is the account that stays active after the person is gone. Automated deprovisioning tied to the HR system closes that gap.
 - **Permission assignments**: grant by role, not by individual request, and review periodically so permissions do not accumulate.
-
+The objective spells it de-provisioning.
 ## Identity proofing
 Before issuing credentials, verify that the person is who they claim: government ID, knowledge checks, in-person verification, or trusted referrals. Weak proofing means strong authentication protects an impostor's account.
 
@@ -207,7 +207,7 @@ Administrator accounts are the crown jewels, so they get their own controls.
 - **Enabling and disabling services and access**: turn a compromised account off the moment the alert fires.
 - **Continuous integration and testing**: every code change is built and tested, including security scans, before it can be deployed.
 - **Integrations and APIs**: the connections between tools that make all of this possible.
-
+Guard rails (guardrails) are automated limits that stop a change from exceeding policy; enabling/disabling services and access is another named use case.
 ## Benefits
 - **Efficiency and time saving**: routine work happens without people.
 - **Enforcing baselines**: automation applies the same configuration every time.
@@ -355,7 +355,7 @@ FRA.units.push({
 - **Incident response policy**: authority, roles, and the requirement to follow the plan.
 - **Software development lifecycle policy**: security built into each phase of development.
 - **Change management policy**: no change without the process.
-
+The full list: acceptable use policy (AUP), information security policies, business continuity, disaster recovery, incident response, software development life cycle (SDLC), and change management.
 ## Standards the exam names
 Password standards, access control standards, physical security standards, and encryption standards: each turns a policy into measurable settings.
 
@@ -381,7 +381,7 @@ Change management procedures, onboarding and offboarding procedures, and **playb
 - **Legal**: laws on data protection, breach notification, and liability.
 - **Industry**: standards required by the industry itself, such as payment card rules imposed by card brands.
 - **Local, regional, national, global**: requirements vary by jurisdiction, and a global company must satisfy all of them. Data collected in one country may be regulated by that country's law wherever it is processed.
-
+The jurisdiction ladder is written local/regional, national, and global.
 ## Monitoring and revision
 Governance documents are reviewed on a schedule and whenever laws, threats, or the business change. A policy last reviewed five years ago is a finding.
 
@@ -396,7 +396,7 @@ Governance documents are reviewed on a schedule and whenever laws, threats, or t
 - **Controller**: in privacy law, the party that decides why and how personal data is processed.
 - **Processor**: the party that processes personal data on the controller's behalf, such as a payroll provider, and must follow the controller's instructions.
 - **Custodian or steward**: the people who handle the data day to day, implementing the owner's decisions: backups, access changes, quality.
-
+Custodians are also called stewards.
 ## Reading the scenario
 - "A cloud payroll service processing employee data under the company's instructions": the company is the controller, the service is the processor.
 - "The finance director decides who may access the ledger": data owner.
@@ -512,7 +512,7 @@ FRA.units.push({
 - **Work order (WO)** and **statement of work (SOW)**: define one specific piece of work: deliverables, timeline, price, under the MSA.
 - **Non-disclosure agreement (NDA)**: confidentiality obligations.
 - **Business partnership agreement (BPA)**: how partners share responsibilities, profits, and decisions.
-
+Written out: service-level agreement (SLA), memorandum of agreement (MOA), memorandum of understanding (MOU), master service agreement (MSA), work order (WO) or statement of work (SOW), non-disclosure agreement (NDA), and business partners agreement (BPA).
 ## During the relationship
 - **Vendor monitoring**: ongoing review of performance, security incidents, and compliance, not a one-time check.
 - **Questionnaires**: standardized security questionnaires the vendor completes, at onboarding and periodically.
@@ -554,7 +554,7 @@ FRA.units.push({
 - **Ownership**: who is responsible for the data within the organization.
 - **Data inventory and retention**: knowing what personal data you hold, where, why, and for how long, and deleting it when the purpose ends.
 - **Right to be forgotten**: a data subject's right, under some laws, to have their personal data erased on request.
-
+The exam phrases the roles as controller vs. processor.
 ## Reading the scenario
 - "A customer requests deletion of all their personal information": right to be forgotten.
 - "Employees sign that they have read the acceptable use policy": acknowledgement.
@@ -607,7 +607,7 @@ A formal statement, by management or an auditor, that controls are in place and 
 ## Phishing
 - **Campaigns**: simulated phishing emails sent to employees to measure and improve recognition. Those who click get immediate education, not punishment.
 - **Recognizing and reporting**: training focuses on the signs (urgency, mismatched addresses, unexpected attachments) and on the one behavior that matters most: reporting suspected phishing quickly, so the security team can act.
-
+Three named skills: running phishing campaigns, recognizing a phishing attempt, and responding to reported suspicious messages.
 ## Anomalous behavior recognition
 Teaching people to notice and report behavior that is out of place.
 - **Risky**: actions that violate policy, such as disabling antivirus or sharing credentials.
@@ -623,7 +623,7 @@ Teaching people to notice and report behavior that is out of place.
 - **Social engineering**: the techniques and the verification habits that defeat them.
 - **Operational security**: not revealing sensitive details in public, on social media, or to callers.
 - **Hybrid and remote work**: securing home networks, locking screens, avoiding public Wi-Fi without a VPN, protecting devices at home.
-
+Hybrid/remote work environments are on the list.
 ## Reporting and monitoring
 - **Initial**: baseline measurements when the program starts: phishing click rates, training completion.
 - **Recurring**: ongoing metrics to show improvement and find groups that need more attention.

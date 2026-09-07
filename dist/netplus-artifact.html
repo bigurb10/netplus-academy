@@ -4941,6 +4941,8 @@ window.FRA = window.FRA || {};
     return { b, host: 1 + R(253) };
   }
 
+  // Distinct wrong answers: drop anything equal to the correct value, dedupe, keep three.
+  const wrong = (correct, cands) => { const out = []; for (const c of cands) { if (c !== correct && !out.includes(c)) out.push(c); if (out.length === 3) break; } return out; };
   function subnetting() {
     const kind = R(6);
     if (kind <= 3) {
@@ -4957,12 +4959,12 @@ window.FRA = window.FRA || {};
       const nextNet = Math.min(255, net + block), prevNet = Math.max(0, net - block);
       if (kind === 0) {
         return build("u4l3", `What is the network address for the host ${addr}?`, netStr,
-          [`${base}.${nextNet}`, `${base}.${prevNet}`, `${base}.${Math.max(0, net - 1)}`, `${base}.${bcast}`],
+          wrong(netStr, [`${base}.${nextNet}`, `${base}.${prevNet}`, `${base}.${Math.max(0, net - 1)}`, `${base}.${bcast}`, `${base}.${net + 1}`, `${base}.${host}`, `${base}.${net + block / 2}`, `${base}.0`, `${base}.255`]),
           `Mask ${maskFor(prefix)} gives a block size of ${block}. Multiples of ${block} are the subnet starts; ${host} falls in the block starting at ${net}.`, "sub");
       }
       if (kind === 1) {
         return build("u4l3", `What is the broadcast address of the subnet containing ${addr}?`, bcastStr,
-          [`${base}.${Math.min(255, bcast + 1)}`, `${base}.${net}`, `${base}.${Math.min(255, bcast + block)}`, `${base}.255`],
+          wrong(bcastStr, [`${base}.${Math.min(255, bcast + 1)}`, `${base}.${net}`, `${base}.${Math.min(255, bcast + block)}`, `${base}.255`, `${base}.${bcast - 1}`, `${base}.${Math.max(0, net - 1)}`, `${base}.${host}`, `${base}.${nextNet}`, `${base}.0`]),
           `Block size is 256 minus ${maskOctets[prefix]}, which is ${block}. The subnet runs ${net} to ${bcast}; the broadcast is one less than the next subnet.`, "sub");
       }
       if (kind === 2) {
@@ -4971,7 +4973,7 @@ window.FRA = window.FRA || {};
           `A /${prefix} leaves ${32 - prefix} host bits. 2 to the ${32 - prefix} is ${block}, minus the network and broadcast addresses, leaves ${usable}.`, "sub");
       }
       return build("u4l3", `What is the range of usable host addresses in the subnet containing ${addr}?`, `${base}.${net + 1} to ${base}.${bcast - 1}`,
-        [`${base}.${net} to ${base}.${bcast}`, `${base}.${net + 1} to ${base}.${bcast}`, `${base}.${net} to ${base}.${bcast - 1}`, `${base}.${Math.max(0, prevNet + 1)} to ${base}.${Math.max(0, net - 2)}`],
+        [`${base}.${net} to ${base}.${bcast}`, `${base}.${net + 1} to ${base}.${bcast}`, `${base}.${net} to ${base}.${bcast - 1}`, `${base}.${net + 2} to ${base}.${bcast - 1}`],
         `Block size ${block}: the network is ${netStr}, the broadcast is ${bcastStr}, and every address between them is usable.`, "sub");
     }
     if (kind === 4) {
@@ -4992,7 +4994,7 @@ window.FRA = window.FRA || {};
     const net = Math.floor(third / block) * block;
     const bcast3 = net + block - 1;
     return build("u4l3", `What is the network address for the host ${b1}.${b2}.${third}.${fourth}/${prefix}?`, `${b1}.${b2}.${net}.0`,
-      [`${b1}.${b2}.${third}.0`, `${b1}.${b2}.${Math.min(255, net + block)}.0`, `${b1}.${b2}.${bcast3}.0`, `${b1}.${b2}.0.0`],
+      wrong(`${b1}.${b2}.${net}.0`, [`${b1}.${b2}.${third}.0`, `${b1}.${b2}.${Math.min(255, net + block)}.0`, `${b1}.${b2}.${bcast3}.0`, `${b1}.${b2}.0.0`, `${b1}.${b2}.${third}.${fourth}`, `${b1}.${b2}.${net + block / 2}.0`, `${b1}.0.0.0`]),
       `Mask ${maskFor(prefix)}: the interesting octet is the third, block size ${block}. ${third} falls in the block from ${net} to ${bcast3}, so the network is ${b1}.${b2}.${net}.0 and the broadcast is ${b1}.${b2}.${bcast3}.255.`, "sub");
   }
 

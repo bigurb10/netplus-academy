@@ -55,7 +55,7 @@ The sender cannot later deny sending. Achieved with **digital signatures**: only
 - **Authentication** proves an identity. People authenticate with passwords, tokens, and biometrics. Systems authenticate too: a device presents a certificate for 802.1X, a server presents a TLS certificate.
 - **Authorization** decides what an authenticated identity may do. The models (mandatory, discretionary, role-based, attribute-based) have their own lesson.
 - **Accounting** records what was done: logs, session records, audit trails.
-
+The exam splits this into authenticating people, authenticating systems (devices and services proving who they are), and authorization models that decide what each may do.
 ## Gap analysis
 Compare where security is now against where it should be, usually against a framework, regulation, or the organization's own policy. The output is a list of gaps, each with an owner and a plan. It is the first step before a security program, an audit, or a compliance effort.
 
@@ -80,7 +80,7 @@ Zero trust splits the work into a **control plane** that decides and a **data pl
 - **Subject and system**: the user or process asking, and the resource being asked for.
 - **Policy enforcement point**: where the decision is applied. It sits in the path of the traffic and only passes what the control plane approved.
 - **Implicit trust zones**: small zones where, after verification, traffic is allowed to flow. They replace the one big trusted inside.
-
+The subject/system making the request is evaluated at the policy enforcement point before it reaches the resource.
 ## How a request flows
 1. The subject asks the enforcement point for a resource.
 2. The enforcement point hands the request to the policy administrator.
@@ -149,10 +149,10 @@ FRA.units.push({
 - **Service and application restarts**: many changes take effect only after a restart, which itself is downtime.
 - **Legacy applications**: old software may break when its platform changes.
 - **Dependencies**: a change to one system can break others that rely on it.
-
+The objective's own words for the restart items are service restart and application restart, and legacy applications and dependencies decide the order.
 ## Documentation and version control
 After the change, update diagrams, procedures, and configuration records. **Version control** keeps every version of configurations and code, records who changed what, and makes rollback a checkout instead of a memory test.
-
+Updating diagrams and updating policies and procedures are the two documentation tasks the exam names.
 > Exam tip: "what must exist before the change can be approved" is the backout plan plus impact analysis and test results. "Roll back to the previous configuration quickly" is version control. Emergency changes still get documented afterward.`,
       hook: "Request, impact analysis, test, approve, window, backout plan ready, implement, document. Watch dependencies, legacy apps, restarts, and downtime. Version control makes rollback cheap."
     },
@@ -274,7 +274,7 @@ Pick the level that matches the threat: a lost device needs full-disk; a databas
 - **HSM**: a dedicated tamper-resistant appliance or card that generates, stores, and uses keys at scale. Certificate authorities and payment systems use them.
 - **KMS**: a key management service, usually cloud-hosted, that creates, rotates, and controls access to keys for applications.
 - **Secure enclave**: an isolated area of a processor that handles secrets such as biometric templates, separate from the main operating system.
-
+A key management system (KMS) is the software or service that generates, stores, rotates, and retires keys at scale, often backed by an HSM.
 ## Obfuscation
 Making data less useful to whoever sees it, without full encryption.
 - **Steganography**: hiding data inside another file, such as an image or audio, so its existence is concealed.
@@ -308,10 +308,10 @@ FRA.units.push({
 - **Internal versus external**: does the actor already have legitimate access?
 - **Resources and funding**: a nation-state can spend years; an unskilled attacker cannot.
 - **Sophistication and capability**: custom zero-day exploits versus downloaded scripts.
-
+The exam's attribute list reads: internal or external, resources/funding, and level of sophistication or capability.
 ## Motivations to recognize
 Data exfiltration, espionage, service disruption, blackmail, financial gain, philosophical or political beliefs, ethical (authorized testing), revenge, disruption or chaos, and war.
-
+Disruption/chaos appears on the list as its own motivation, separate from targeted service disruption.
 ## Matching scenarios
 - Custom malware, months of stealthy access, government targets: nation-state.
 - Ransomware with a payment portal: organized crime.
@@ -410,7 +410,7 @@ FRA.units.push({
 
 ## Operating system vulnerabilities
 Unpatched kernels and services, insecure default settings, unnecessary services running, weak permissions on system files. The fix is boring and decisive: patch on a schedule, apply a secure baseline, remove what is not needed, and monitor for drift.
-
+The objective calls these OS-based vulnerabilities.
 ## Reading the scenario
 - "Input longer than expected crashed the service, then arbitrary code ran": buffer overflow.
 - "The file was verified and then replaced before it was used": TOC/TOU race condition.
@@ -427,7 +427,7 @@ Unpatched kernels and services, insecure default settings, unnecessary services 
 ## Web application vulnerabilities
 - **SQL injection**: user input is pasted into a database query. Entering {{' OR 1=1 --}} in a login field turns the query into "where the password is anything." Attackers read, change, or delete data. Defense: parameterized queries and input validation.
 - **Cross-site scripting (XSS)**: an attacker stores or reflects script in a web page, and other users' browsers run it, stealing session cookies or defacing content. Defense: output encoding, input validation, content security policy.
-
+SQL injection is abbreviated SQLi on the exam.
 ## Hardware vulnerabilities
 - **Firmware**: the code inside devices can carry flaws that survive reinstalling the operating system. Patch firmware too.
 - **End-of-life**: the vendor no longer supports the product. **Legacy**: old technology still in use because something depends on it. Both keep known flaws open forever; isolate, monitor, and plan replacement.
@@ -469,7 +469,7 @@ The most common vulnerability of all: open ports, default accounts, verbose erro
 ## Mobile device vulnerabilities
 - **Side loading**: installing apps from outside the official store bypasses the store's screening.
 - **Jailbreaking** (iOS) and **rooting** (Android): removing the operating system's protections gives the user, and any malware, full control. Mobile device management can detect and block these devices.
-
+Side loading (also written sideloading) and jailbreaking are the two named mobile risks.
 ## Zero-day
 A vulnerability that is being exploited before the vendor has a patch, or before the vendor even knows. There is nothing to install. Defense while waiting: compensating controls such as segmentation, disabling the vulnerable feature, tighter monitoring, and threat intelligence to know it exists.
 
@@ -584,7 +584,7 @@ Payloads delivered over the network: exploit traffic against a listening service
 - **Out-of-cycle logging**: log entries at unusual times or in unusual volume.
 - **Published or documented**: an exploit for your exact version is public.
 - **Missing logs**: gaps where logs should be; attackers clear their tracks.
-
+One more named indicator: published/documented, meaning the attacker or a researcher has publicly posted the stolen data or the exploit.
 ## Reading the scenario
 - "Hundreds of accounts each had one failed login at 2 a.m.": password spraying.
 - "The same account is active in the office and overseas simultaneously": concurrent sessions and impossible travel.
@@ -617,7 +617,7 @@ Payloads delivered over the network: exploit traffic against a listening service
 5. **Change default passwords** on every account and device.
 6. **Remove unnecessary software** and services.
 7. Patch, then apply the baseline and keep it enforced.
-
+The objective phrases the port item as disabling ports and protocols.
 ## Choosing under pressure
 - Malware spreading between hosts: isolation first, then segmentation to stop the next one.
 - A system that cannot be patched: isolation or segmentation plus monitoring, a compensating control.
