@@ -872,12 +872,14 @@ A filesystem is how an OS organizes a disk. Choose one by what has to read the d
 
 ## Vendor life cycles
 Every OS version has a **product life cycle** ending at **end-of-life (EOL)**, after which no security updates ship. Running an EOL system is a vulnerability the security domain names by that word. **Update limitations** also exist inside the life cycle: an old CPU or a missing TPM blocks an upgrade, a Home edition lacks features an update needs, and vendors stop supporting older phones long before they stop working. Windows 10 reached end of support in October 2025.
+The exam calls these vendor life-cycle limitations: an operating system past end-of-life, or one that no longer receives updates on that hardware, is a limitation the technician must plan around.
 
 ## Compatibility concerns
 - Programs and drivers are built for a specific OS and **architecture**; 64-bit Windows runs 32-bit programs, but a 32-bit OS cannot run 64-bit programs, and no Windows program runs on macOS without a compatibility layer or a virtual machine.
 - Files cross between systems only on a filesystem both can read: exFAT or FAT32 for a shared drive, or a network share, or the cloud.
 - Document formats, line endings, and case sensitivity (Linux treats File.txt and file.txt as different) trip up mixed environments.
 - Hardware needs a driver for the OS in use; an old printer may have a Windows driver and no macOS driver.
+Compatibility concerns between operating systems come up whenever files, applications, or drives move between Windows, macOS, and Linux.
 
 > Exam tip: NTFS for permissions and encryption, exFAT for big files on removable media that everyone must read, FAT32 for old compatibility with the 4 GB limit, ext4 and XFS for Linux, APFS for Apple, ReFS for resilience on servers and workstations. EOL means no more patches. Chrome OS is the browser-based one.`,
       hook: "Windows, Linux (apt or dnf, root), macOS (APFS, App Store), Chrome OS (browser, cloud, Admin console); iOS, iPadOS, Android. NTFS permissions and EFS; ReFS resilience; FAT32 4 GB limit; exFAT big files everywhere; ext4 and XFS Linux; APFS Apple. EOL = no patches; update limitations from hardware or edition; 64-bit runs 32-bit, not the reverse; shared drives need a shared filesystem."
@@ -977,9 +979,11 @@ Read the box (or the download page) against the machine:
 - **RAM** and **CPU** minimums and recommendations; the recommendation is what makes it usable.
 - **External hardware tokens**: some professional software runs only with a USB license key present.
 - **Storage** for the installation and for its working files, on the type of drive it expects (some insist on an SSD).
+Storage requirements mean free disk space for the installer, the installed program, and its data, checked against the drive before installing.
 
 ## Application-to-OS compatibility
 The vendor lists the supported operating systems and versions. An app written for Windows 7 may fail on Windows 11 without **compatibility mode**; a macOS app compiled for Intel needs a translation layer on Apple silicon; a phone app needs a minimum iOS or Android version. Check before buying, and test on one machine before rolling out.
+Application to OS compatibility is the first check: 32-bit or 64-bit, the minimum OS version, and whether the application was built for this operating system at all.
 
 ## Distribution methods
 - **Physical media** (a DVD or USB stick from the vendor) versus a **mountable ISO file**: an ISO is a disk image; double-click to mount it as a virtual drive and run setup.
@@ -1002,6 +1006,7 @@ Most offices now run on hosted suites. The technician's tasks:
 - **Collaboration tools**: spreadsheets, videoconferencing, presentation and word processing tools, instant messaging; sharing permissions and external access are the security points.
 - **Identity synchronization**: user accounts from the on-premises directory are synced to the cloud tenant so one login works everywhere; account problems trace back to the sync.
 - **Licensing assignment**: each user gets a license from the pool; a user who cannot open the desktop apps or mailbox usually has no license assigned or an expired one.
+The suite typically includes email, file storage and synchronization, word processing, spreadsheet, and presentation tools, plus collaboration and identity synchronization with the directory.
 
 > Exam tip: 64-bit apps need a 64-bit OS; VRAM is on a dedicated card; a hardware token is a USB license key. An ISO is mounted, not burned. Impact: device, network, operation, business. In the cloud suite, no mailbox or apps usually means no license assigned; one password everywhere is identity synchronization.`,
       hook: "Requirements: 32 versus 64-bit, dedicated graphics and VRAM, RAM, CPU, hardware token, storage; check OS compatibility and test first. Distribution: physical media or mounted ISO, downloadable package (verify the hash), image deployment. Impact: device, network, operation, business. Cloud suite: email, storage sync and folder settings, collaboration tools, identity synchronization, license assignment per user."
@@ -1126,6 +1131,7 @@ Keys hold values of types such as string (REG_SZ) and DWORD. Edit only with a ve
 - {{winver}} opens the About Windows dialog with version and build.
 - {{whoami}} shows the current account; {{whoami /groups}} its group memberships.
 - {{command /?}} prints help for any command (for example {{robocopy /?}}).
+Any command followed by /? (for example, ipconfig /?) prints its help and switches; the exam writes this as [command name] /?.
 
 ## OS management
 - {{gpupdate}} applies Group Policy changes now instead of waiting for the refresh interval; {{/force}} reapplies all settings even if unchanged.
@@ -1160,6 +1166,7 @@ Formerly Folder Options.
 - **View**: **show hidden files, folders, and drives**; **hide extensions for known file types** (turn this off so "invoice.pdf.exe" is visible); **hide protected operating system files**; show full path in the title bar; launch folder windows in a separate process.
 - **Search**: how searches treat indexed and non-indexed locations.
 A support call that says "I cannot see the AppData folder" or "the file has no extension" is this dialog.
+Its General options cover opening folders in the same window, single-click or double-click, and privacy; its View options cover how to view hidden files, file extensions, and protected operating system files.
 
 ## Power Options
 - **Power plans**: Balanced (default), Power saver, High performance, and, on some machines, Ultimate performance; each plan sets display-off and sleep timers, and **Change advanced power settings** exposes everything else.
@@ -1229,6 +1236,7 @@ Newer and simpler items live in Settings; deeper and older ones stay in Control 
 - **File servers**: shared folders on a server or another PC; permissions are the share permissions plus NTFS permissions.
 - **Mapped drives**: a share given a drive letter for convenience: File Explorer, This PC, Map network drive, choose a letter and {{\\\\server\\share}}, tick **Reconnect at sign-in** and, if needed, **Connect using different credentials**; or {{net use X: \\\\server\\share /persistent:yes}}. A mapped drive that shows a red X at login means the server or the credentials were not reachable when the drive was reconnected.
 - **File Explorer navigation and network paths**: type {{\\\\server}} in the address bar to browse its shares; the **Network** node lists discovered machines when network discovery is on; the **UNC** path form is {{\\\\server\\share\\folder}}.
+File Explorer navigation to network paths means typing \\\\server\\share in the address bar to browse a share without mapping it.
 
 ## Local OS firewall settings
 Windows Defender Firewall is on by default and blocks unsolicited inbound connections.
@@ -1240,12 +1248,14 @@ On the adapter's properties (Internet Protocol Version 4) or in Settings, Networ
 - **IP addressing scheme**: the address and its **subnet mask** (which decide the local network), the **gateway** (the router's address, on the same subnet), and **DNS settings** (usually the domain controller inside a domain, or the router or a public resolver at home).
 - **Static versus dynamic**: dynamic (obtain automatically) uses DHCP and suits laptops and most desktops; static addresses are typed in for servers, printers, and devices others must find, and must be excluded from the DHCP scope. An alternate configuration can provide a fallback static address when DHCP fails.
 A wrong mask or gateway isolates the machine; a wrong DNS server breaks names while addresses still work.
+This is the client's Internet Protocol (IP) addressing scheme: static or dynamic, with the address, subnet mask, gateway, and DNS servers.
 
 ## Establishing connections
 - **VPN**: Settings, Network and Internet, VPN, Add a VPN connection: provider, server address, type (IKEv2, L2TP/IPsec, SSTP, or a vendor client), sign-in method; connect from the taskbar network icon. Split tunneling is a setting on the connection's advanced properties.
 - **Wireless**: pick the SSID, enter the passphrase, or for enterprise networks the username and password and certificate; manage known networks to forget a stale profile.
 - **Wired**: plug in; the adapter negotiates speed and duplex and asks DHCP.
 - **WWAN (cellular)**: a laptop with a cellular modem needs a SIM or eSIM, the carrier's **APN** settings, and a data plan; treat it as a metered connection.
+The exam groups these as establish network connections: VPN, wireless (WLAN), wired, and wireless wide area network (WWAN) cellular.
 
 ## Proxy settings
 A proxy fetches web content for clients. Configure it under Settings, Network and Internet, Proxy: **automatic** detection (WPAD), a **setup script** (PAC file URL), or **manual** address and port with exceptions for local addresses. The same setting sits in Internet Options, Connections, LAN settings. A machine that browses at home but not at work usually needs the work proxy; one that fails at home may have a leftover manual proxy.
@@ -1277,6 +1287,7 @@ FRA.units.push({
 - **.app**: the application itself, a bundle folder that looks like one file; it can run from anywhere.
 - **App Store**: Apple's curated store tied to the Apple ID; automatic updates; corporate Macs can be restricted to it.
 - **Uninstallation**: drag the .app to the Trash and empty it, or run the vendor's uninstaller for packaged software that scattered files; some leftovers stay in the Library folders.
+The uninstallation process is dragging the application from Applications to the Trash, or running the vendor's uninstaller when it installed system components.
 
 ## System folders
 - **/Applications**: installed applications for all users.
@@ -1420,7 +1431,7 @@ FRA.units.push({
 - **Smart cards**: cards with a chip that proves identity, often the same card that logs into the PC; may need a PIN (two factors).
 - **Mobile digital keys**: the phone as the badge, through NFC or Bluetooth.
 - **Keys**: metal keys still exist and are the hardest to revoke; a lost master key means rekeying.
-- **Biometrics**: something you are. **Retina scanner** (blood vessels in the eye), **fingerprint scanner**, **palm print scanner**, **facial recognition**, **voice recognition**. Biometrics cannot be forgotten or lent, but they can be spoofed and cannot be changed if copied, so they pair with a badge or PIN for high security.
+- **Biometrics**: something you are. **Retina scanner** (blood vessels in the eye), **fingerprint scanner**, **palm print scanner**, **facial recognition technology (FRT)**, **voice recognition technology**. Biometrics cannot be forgotten or lent, but they can be spoofed and cannot be changed if copied, so they pair with a badge or PIN for high security. Together these are the exam's physical access security methods.
 
 ## Matching control to threat
 - A car aimed at the lobby: bollards.
@@ -1528,7 +1539,7 @@ A user who cannot join enterprise Wi-Fi while others can has a credential, certi
 - **Antimalware**: broader tools that also target spyware, adware, and PUPs; often a second-opinion scanner.
 - **Email security gateway**: filters mail before delivery for spam, phishing, malicious attachments, and links; where most malware arrives.
 - **Software firewalls**: the host firewall blocking unsolicited inbound connections and, with rules, outbound calls home.
-- **User education**: the control that stops what the tools miss. **Antiphishing training** with simulated phishing campaigns teaches people to recognize and report.
+- **User education regarding common threats**: the control that stops what the tools miss. **Antiphishing training** with simulated phishing campaigns teaches people to recognize and report.
 - **OS reinstallation**: the last resort and the only sure cure for rootkits and deep infections; back up data first, and scan the backup.
 
 ## Matching
@@ -2223,7 +2234,7 @@ The archive bit (or a change log) marks a file as changed since its last backup;
 ## Backup testing
 A backup that has never been restored is a hope. Test **frequency** is set by policy: a sample file restore weekly or monthly, a full restore of a system quarterly, and a full disaster recovery exercise annually. Test after any change to the backup software, targets, or media. Verify that the backup completed, that the restored data opens, and that the time to restore fits the recovery objectives.
 
-## Rotation schemes
+## Backup rotation schemes
 - **On-site versus off-site**: on-site copies are fast to restore; off-site copies (another building, a vault, the cloud) survive fire, theft, flood, and ransomware that reaches everything on the LAN. Off-site should be offline or immutable so ransomware cannot encrypt it.
 - **Grandfather-father-son (GFS)**: daily backups (sons) rotate weekly; weekly backups (fathers) rotate monthly; monthly backups (grandfathers) are kept for a year or longer. It gives recent granularity and long retention with a bounded number of media.
 - **3-2-1 backup rule**: at least **3** copies of the data (production plus two backups), on **2** different media or systems, with **1** copy off-site. Many add a second 1: one copy offline or immutable.

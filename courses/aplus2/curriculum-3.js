@@ -327,7 +327,7 @@ The archive bit (or a change log) marks a file as changed since its last backup;
 ## Backup testing
 A backup that has never been restored is a hope. Test **frequency** is set by policy: a sample file restore weekly or monthly, a full restore of a system quarterly, and a full disaster recovery exercise annually. Test after any change to the backup software, targets, or media. Verify that the backup completed, that the restored data opens, and that the time to restore fits the recovery objectives.
 
-## Rotation schemes
+## Backup rotation schemes
 - **On-site versus off-site**: on-site copies are fast to restore; off-site copies (another building, a vault, the cloud) survive fire, theft, flood, and ransomware that reaches everything on the LAN. Off-site should be offline or immutable so ransomware cannot encrypt it.
 - **Grandfather-father-son (GFS)**: daily backups (sons) rotate weekly; weekly backups (fathers) rotate monthly; monthly backups (grandfathers) are kept for a year or longer. It gives recent granularity and long retention with a bounded number of media.
 - **3-2-1 backup rule**: at least **3** copies of the data (production plus two backups), on **2** different media or systems, with **1** copy off-site. Many add a second 1: one copy offline or immutable.

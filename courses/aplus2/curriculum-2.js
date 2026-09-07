@@ -33,7 +33,7 @@ FRA.units.push({
 - **Smart cards**: cards with a chip that proves identity, often the same card that logs into the PC; may need a PIN (two factors).
 - **Mobile digital keys**: the phone as the badge, through NFC or Bluetooth.
 - **Keys**: metal keys still exist and are the hardest to revoke; a lost master key means rekeying.
-- **Biometrics**: something you are. **Retina scanner** (blood vessels in the eye), **fingerprint scanner**, **palm print scanner**, **facial recognition**, **voice recognition**. Biometrics cannot be forgotten or lent, but they can be spoofed and cannot be changed if copied, so they pair with a badge or PIN for high security.
+- **Biometrics**: something you are. **Retina scanner** (blood vessels in the eye), **fingerprint scanner**, **palm print scanner**, **facial recognition technology (FRT)**, **voice recognition technology**. Biometrics cannot be forgotten or lent, but they can be spoofed and cannot be changed if copied, so they pair with a badge or PIN for high security. Together these are the exam's physical access security methods.
 
 ## Matching control to threat
 - A car aimed at the lobby: bollards.
@@ -141,7 +141,7 @@ A user who cannot join enterprise Wi-Fi while others can has a credential, certi
 - **Antimalware**: broader tools that also target spyware, adware, and PUPs; often a second-opinion scanner.
 - **Email security gateway**: filters mail before delivery for spam, phishing, malicious attachments, and links; where most malware arrives.
 - **Software firewalls**: the host firewall blocking unsolicited inbound connections and, with rules, outbound calls home.
-- **User education**: the control that stops what the tools miss. **Antiphishing training** with simulated phishing campaigns teaches people to recognize and report.
+- **User education regarding common threats**: the control that stops what the tools miss. **Antiphishing training** with simulated phishing campaigns teaches people to recognize and report.
 - **OS reinstallation**: the last resort and the only sure cure for rootkits and deep infections; back up data first, and scan the backup.
 
 ## Matching
