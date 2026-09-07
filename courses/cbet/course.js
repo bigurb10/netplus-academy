@@ -19,12 +19,12 @@ FRA.course = {
   // The real exam needs roughly 70%, so the course bar is 85% to keep a margin.
   test: { questions: 50, minutes: 55, passPct: 85, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
-    1: ["u1l2", "u1l3", "u1l4", "u1l5", "u1l1"],
-    2: ["u3l1", "u3l2", "u3l3", "u3l4", "u3l5"],
-    3: ["u2l1", "u2l2", "u2l4", "u2l5", "u2l3"],
-    4: ["u4l1", "u4l2", "u4l3", "u4l6", "u5l2", "u6l1", "u6l3", "u6l4", "u5l1", "u5l4"],
-    5: ["u7l1", "u7l4", "u8l1", "u8l5", "u7l2", "u8l2", "u8l3"],
-    6: ["u9l1", "u9l5", "u9l4", "u9l3", "u9l6", "u9l2"]
+    1: ["u1l2", "u1l3", "u1l4", "u1l5", "u1l1", "u1l6", "u1l7"],
+    2: ["u3l1", "u3l2", "u3l3", "u3l4", "u3l5", "u3l6", "u3l7"],
+    3: ["u2l1", "u2l2", "u2l4", "u2l5", "u2l3", "u2l6", "u2l7"],
+    4: ["u4l1", "u4l2", "u4l3", "u4l6", "u5l2", "u6l1", "u6l3", "u6l4", "u5l1", "u5l4", "u4l7", "u5l5", "u5l6", "u5l7", "u6l5"],
+    5: ["u7l1", "u7l4", "u8l1", "u8l5", "u7l2", "u8l2", "u8l3", "u7l6", "u8l6"],
+    6: ["u9l1", "u9l5", "u9l4", "u9l3", "u9l6", "u9l2", "u9l7", "u9l8"]
   },
   core: {
     1: ["u1l2", "u1l3"],

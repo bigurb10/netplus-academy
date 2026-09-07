@@ -168,7 +168,7 @@ Monitors and central stations are IT systems now: IP addresses (usually static),
 ## Fetal monitoring
 Labor and delivery monitors track the fetal heart rate and the mother's contractions together, printing both on one strip.
 - **Fetal heart rate (FHR)** by **ultrasound Doppler**: a transducer strapped to the abdomen sends ultrasound and detects the frequency shift from the moving fetal heart. Normal is **110 to 160 bpm**. Gel is essential; the transducer must be repositioned as the baby moves. Signal loss, doubling or halving of the rate, and picking up the maternal pulse are the classic artifacts.
-- **Uterine contractions** by **tocodynamometer (TOCO)**: a pressure-sensing button strapped over the fundus measures the change in abdominal firmness during contractions. It shows timing and duration, not true intrauterine pressure; the baseline is zeroed between contractions and belt tension matters.
+- **Uterine contractions** by **tocodynamometer (TOCO, also called a tocograph)**: a pressure-sensing button strapped over the fundus measures the change in abdominal firmness during contractions. It shows timing and duration, not true intrauterine pressure; the baseline is zeroed between contractions and belt tension matters.
 - **Direct methods** when needed: a **fetal scalp electrode** gives a beat-to-beat ECG, and an **intrauterine pressure catheter** measures actual contraction pressure in mmHg.
 - The monitor also records maternal pulse and often maternal NIBP and SpO2, and has an event marker.
 Testing: a fetal simulator provides Doppler-like signals and TOCO pressures; verify FHR accuracy, TOCO calibration, paper speed (commonly 3 cm/min in the US), and printer function. Ultrasound transducers crack when dropped and fail from cable flexing.

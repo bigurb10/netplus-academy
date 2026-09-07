@@ -45,7 +45,7 @@ Three layers: the **epidermis** (outer barrier), the **dermis** (blood vessels, 
       body: `The heart is the organ the most equipment is built around: ECG monitors, blood pressure devices, defibrillators, pacemakers, and balloon pumps. Understand how it works and those devices make sense.
 
 ## The pump
-Four chambers. The **right atrium** receives blood from the body through the vena cava and passes it through the **tricuspid valve** into the **right ventricle**, which pumps it through the **pulmonary valve** and pulmonary artery to the lungs. Oxygenated blood returns through the pulmonary veins to the **left atrium**, passes the **mitral valve** into the **left ventricle**, the strongest chamber, which pumps it through the **aortic valve** into the aorta and the body. Right side to the lungs, left side to the body.
+Four chambers. The **right atrium** receives blood from the body through the vena cava and passes it through the **tricuspid valve** into the **right ventricle**, which pumps it through the **pulmonary valve** and pulmonary artery to the lungs. Oxygenated blood returns through the pulmonary veins to the **left atrium**, passes the **mitral valve** into the **left ventricle**, the strongest chamber, which pumps it through the **aortic valve** into the aorta and the body. Right side to the lungs, left side to the body; the **septum** divides the two sides, and the heart feeds itself through the coronary arteries.
 
 ## The electrical system
 A heartbeat starts as an electrical impulse.
@@ -78,7 +78,7 @@ Arteries carry blood away from the heart under pressure; veins return it; capill
       body: `Ventilators, oximeters, capnographs, spirometers, and oxygen equipment all serve one system. Know how breathing works and what each number means.
 
 ## The airway
-Air enters through the nose and mouth, passes the **pharynx** and **larynx**, and goes down the **trachea**, which splits into the right and left **bronchi**, then smaller **bronchioles**, ending in the **alveoli**, tiny sacs wrapped in capillaries where gas exchange happens. The lungs sit in the thoracic cavity, protected by the ribs, with the **diaphragm** underneath.
+Air enters through the nose and mouth, passes the **pharynx** and **larynx**, and goes down the **trachea**, which splits into the right and left **bronchi**, then smaller **bronchioles**, ending in the **alveoli**, tiny sacs wrapped in capillaries where gas exchange happens. The right lung has **three lobes** and the left **two** (leaving room for the heart); a **pleural** membrane around each lung reduces friction; **cilia** lining the airway sweep debris and microbes back toward the mouth. The lungs sit in the thoracic cavity, protected by the ribs, with the **diaphragm** and the **intercostal muscles** underneath and between the ribs.
 
 ## How breathing works
 Normal breathing is **negative pressure**: the diaphragm contracts and moves down, the chest expands, pressure inside falls below atmospheric, and air flows in. Exhalation is passive as the diaphragm relaxes. A **ventilator** does the opposite: it pushes gas in under **positive pressure**, which is why airway pressures and their alarms are central to ventilator care.
@@ -88,6 +88,7 @@ Oxygen diffuses from the alveoli into the blood and binds to **hemoglobin**; car
 - **Ventilation**: moving air in and out. Measured by respiratory rate, tidal volume, and end-tidal CO2.
 - **Oxygenation**: getting oxygen into the blood. Measured by SpO2 and arterial blood gases.
 - **Perfusion**: blood flow to carry it. A patient can ventilate fine and still be hypoxic if perfusion fails.
+Breathing also keeps **acid-base** balance: blowing off CO2 raises blood pH, slowing breathing lowers it.
 
 ## Volumes and rates
 - **Tidal volume**: one normal breath, about 500 mL in an adult; ventilators are set at 6 to 8 mL per kg of ideal body weight.

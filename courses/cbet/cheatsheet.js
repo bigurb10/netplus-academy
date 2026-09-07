@@ -62,6 +62,19 @@ FRA.cheatsheet = {
           "Paper speed 25 mm/s; 1 mV = 10 mm; small box 0.04 s (1 mm), large box 0.20 s (5 mm)",
           "Heart rate = 1500 / small boxes between R waves, or 300 / large boxes",
           "Ventricular fibrillation: chaotic, no QRS, shockable. Asystole: flat line, not shockable. Atrial fibrillation: irregular, no P waves, cardiovert synchronized"
+        ] },
+        { type: "table", cols: ["Anatomy detail", "Facts"], rows: [
+          ["Skin layers", "Epidermis (stratum basale at its base) over dermis over hypodermis (deepest); sebaceous glands oil, sweat glands cool, vitamin D made in skin"],
+          ["Muscle types", "Skeletal striated voluntary; cardiac striated involuntary; smooth non-striated involuntary (organs, vessels, uterus, bladder)"],
+          ["Skeleton", "206 bones: 80 axial (skull, 33 vertebrae, ribs, sternum with manubrium and xiphoid, ossicles, hyoid) and 126 appendicular (scapula, clavicle, pelvis, humerus, radius, ulna, femur, patella, tibia, fibula)"],
+          ["Brain", "Forebrain: cerebrum (frontal plans, parietal senses, occipital sees, temporal hears), thalamus relays, hypothalamus drives the pituitary. Midbrain relays vision and hearing. Hindbrain: cerebellum coordinates, pons relays, medulla runs breathing and heart rate. Brain stem = midbrain + pons + medulla"],
+          ["Nerves", "Somatic voluntary; autonomic involuntary (sympathetic fight or flight, parasympathetic rest and digest); neurons signal by action potentials across synapses"],
+          ["Digestion in order", "Mouth (amylase, lipase), esophagus (epiglottis, lower esophageal sphincter), stomach (pH 1.5 to 3.5, pyloric sphincter releases chyme), duodenum, jejunum, ileum, large intestine (reabsorbs water); liver makes bile, glycogen, urea; gallbladder stores bile; pancreas enzymes and insulin"],
+          ["Lymph and immunity", "Lymph filtered in nodes (neck, armpits, groin); tonsils, thymus (T cells), spleen (cleans blood), Peyer's patches; the immune system avoids, detects, and eliminates infection"],
+          ["Endocrine", "Hypothalamus and pituitary control; thyroid metabolism; parathyroid (posterior thyroid lobes) raises calcium; adrenal cortex cortisol, medulla epinephrine; islets insulin and glucagon; pineal rhythms; negative feedback stabilizes, positive amplifies; the pons secretes nothing"],
+          ["Kidney", "Cortex, medulla, pelvis; nephron: glomerulus in Bowman's capsule (blood pressure drives filtration), tubules reabsorb and secrete; ureter, bladder, urethra"],
+          ["Reproduction", "Testes, epididymis, vas deferens, prostate; FSH sperm, LH testosterone. Ovaries (estrogen, progesterone), fallopian tube (fertilization), uterus (implantation)"],
+          ["Blood terms", "Hemoglobin carries oxygen; hematocrit is the red-cell fraction (about 45%); about 5 liters total; lymphocytes, neutrophils, monocytes, eosinophils, basophils"]
         ] }
       ]
     },
@@ -80,7 +93,18 @@ FRA.cheatsheet = {
           ["Inductive reactance", "XL = 2 x pi x f x L; inductors pass DC, oppose changes in current"],
           ["RC time constant", "tau = R x C; capacitor reaches 63% of full charge in one tau, about 99% in five"],
           ["Frequency and period", "f = 1 / T; 60 Hz has a period of 16.7 ms"],
-          ["Stored energy", "E = one half x C x V squared (joules); how a defibrillator capacitor stores its charge"]
+          ["Stored energy", "E = one half x C x V squared (joules); how a defibrillator capacitor stores its charge"],
+          ["Energy", "E = P x t; 60 W for 8 h = 0.48 kWh; kWh is energy, kW is power"],
+          ["Voltage divider", "V across R1 = V source x R1 / R total (series); 120 V across 60 and 100 ohms puts 45 V on the 60"],
+          ["Current divider", "I through a branch = I total x (1/R branch) / (sum of 1/R); the smallest resistance takes the most current"],
+          ["Kirchhoff's laws", "KCL: current into a node equals current out (nodal analysis). KVL: voltages around a loop sum to zero (mesh analysis)"],
+          ["Internal resistance", "(open-circuit voltage minus loaded voltage) / load current; 1.58 V to 1.46 V into 80 ohms = 6.58 ohms; rises with age"],
+          ["Wheatstone bridge", "Balanced (no meter current) when R1 / R2 = R3 / R4; strain gauges and thermistors sit in bridges"],
+          ["Complex impedance", "Z = R + jX; 40 mH at 60 Hz is about 15 ohms of reactance; an ideal 30 mH inductor at 60 Hz is 11.3j ohms"],
+          ["AC power", "S squared = P squared + Q squared; P true (W), Q reactive (VAR), S apparent (VA); 180 W and 240 VAR give 300 VA; power factor = P / S"],
+          ["Op-amp gain", "Inverting gain = R feedback / R input (gain 9 with 5 k in needs 45 k feedback); non-inverting = 1 + Rf / Rin"],
+          ["Transformer ratio", "V primary / V secondary = N primary / N secondary; 240 V to 6,000 V is a 0.04 ratio"],
+          ["C-rate", "Charge or discharge current relative to capacity; 60 kWh at 0.5 C = 30 kW"]
         ] },
         { type: "list", cols: 2, items: [
           "Resistor color code digits: black 0, brown 1, red 2, orange 3, yellow 4, green 5, blue 6, violet 7, gray 8, white 9; tolerance gold 5%, silver 10%",
@@ -92,7 +116,12 @@ FRA.cheatsheet = {
           "Transistor: NPN or PNP, base controls collector-emitter; used as a switch or amplifier. SCR and triac switch AC power",
           "Op-amp rules: huge gain, inputs draw no current, feedback makes the inputs equal; instrumentation amplifier rejects common-mode noise (high CMRR) for ECG front ends; isolation amplifiers and optocouplers keep patient circuits floating",
           "Filters: low-pass keeps slow signals, high-pass removes baseline drift, band-pass keeps a range, notch removes 60 Hz",
-          "DMM measures volts, amps (in series), ohms (power off); oscilloscope shows voltage against time, 10x probe divides by ten; function generator provides test signals"
+          "DMM measures volts, amps (in series), ohms (power off); oscilloscope shows voltage against time, 10x probe divides by ten; function generator provides test signals",
+          "Passive: resistor, capacitor, inductor, memristor, thermistor (no gain). Active: transistor, op-amp, IC, SCR. Transducer converts energy: sensor to electrical, actuator from electrical; piezoelectric crystals do both",
+          "US distribution: step-up to transmit, step-down to use; split-phase 120/240 V at 60 Hz with a grounded center neutral; NEC is NFPA 70 (building wiring), NESC is IEEE (utility lines)",
+          "Battery specifications: voltage per cell, capacity (Ah), energy density (sets weight), internal resistance (rises with age, sag under load), shelf life, discharge curve, cycle life, C-rate",
+          "Regulators: linear drops excess as heat (quiet, inefficient); switching chops at a duty cycle (efficient, noisy); shorted switching element passes full input voltage, open element gives zero; test regulator input and output pins to ground",
+          "Filters by what they pass: low-pass, high-pass, band-pass, band-stop (notch is a narrow band-stop)"
         ] },
         { type: "table", cols: ["Power storage and conditioning", "Facts"], rows: [
           ["Cell voltages", "Lead-acid 2.0 V, nickel-cadmium 1.2 V, nickel-metal hydride 1.2 V, lithium-ion 3.6 to 3.7 V, alkaline 1.5 V"],
@@ -132,7 +161,16 @@ FRA.cheatsheet = {
           ["Line isolation monitor alarm", "5 mA total hazard current"],
           ["GFCI trip", "4 to 6 mA (nominal 5 mA)"],
           ["Hospital-grade receptacle", "Green dot; test retention force, polarity, ground continuity"],
-          ["Relocatable power taps", "Only where allowed, rated, and secured; never daisy-chained; no extension cords for patient care equipment"]
+          ["Relocatable power taps", "Only where allowed, rated, and secured; never daisy-chained; no extension cords for patient care equipment"],
+          ["Relocatable power tap load", "No more than 75% of the tap's rating (an AWG 10 tap rated 35 A carries at most 26 A); never daisy-chained"],
+          ["Prohibited", "Three-to-two prong (cheater) adapters; tinned stranded wire ends under screw terminals; cords without strain relief; isolated-ground receptacles in the patient care vicinity"],
+          ["Patient room receptacles", "At least 8 per general bed (more in critical care), non-locking, tamper-resistant; no minimum in bathrooms; OR receptacles single, duplex, or quadruplex with insulated grounds, locking or not"],
+          ["Household electronics", "Allowed only outside the patient care vicinity unless double insulated; inspected before patient use; worn units removed"],
+          ["Gas cylinder storage", "Unwrapped, secured upright, minus 7 to 52 C; oxidizers 20 ft from flammables (5 ft with sprinklers, none in a compliant cabinet); no smoking within 20 ft; not in tight enclosures; door warning for other positive-pressure gases"],
+          ["Medical gas systems", "DOT/TC/ASME cylinders; gas-specific outlets, no adapters; redundant supply; alarms; labeled zone shutoff valves; inventory and inspection"],
+          ["Telecommunications rooms", "No data outlet more than 90 m from its room; at least one per floor; each serves at most 20,000 sq ft; interior rooms in disaster areas"],
+          ["Nurse call", "Carries device alarms, staff emergencies, code calls, patient requests; audible and visual annunciation; may forward to pagers"],
+          ["Touch current and clean agents", "Touch current: chassis leakage reachable by a person via a path other than ground. Clean agents: nonconductive, residue-free extinguishants (nitrogen, CO2, noble gases, halocarbons)"]
         ] },
         { type: "list", title: "Classes, types, symbols, and testing", cols: 2, items: [
           "Class I: protective earth (three-prong ground). Class II: double insulation, no ground (square-in-square symbol). Internally powered: battery only",
@@ -154,7 +192,10 @@ FRA.cheatsheet = {
           "Cleaning removes soil; disinfection kills most microbes; sterilization kills all including spores",
           "Spaulding: critical items (enter sterile tissue) sterilize; semi-critical (touch mucous membranes) high-level disinfect; non-critical (intact skin) low-level disinfect",
           "Steam autoclave: 121 C (250 F) at 15 psi for 15 to 30 minutes, or 132 to 135 C flash cycles; biological indicators verify; ethylene oxide and hydrogen peroxide plasma for heat-sensitive items",
-          "Clean and disinfect equipment before servicing it; sharps in puncture-resistant containers; OSHA bloodborne pathogens standard covers exposure control; report needlesticks immediately"
+          "Clean and disinfect equipment before servicing it; sharps in puncture-resistant containers; OSHA bloodborne pathogens standard covers exposure control; report needlesticks immediately",
+          "Universal precautions (1980s): blood and blood-contaminated fluids only, not sweat, tears, nasal secretions, or urine; bleach cleanup; bagged waste. Standard precautions (CDC 1996): all body fluids plus body substance isolation; transmission-based precautions supplement them",
+          "Regulated waste: liquid or free-flowing blood, sealed for a licensed medical waste service; dried blood on dressings sealed in a plastic bag with regular trash; broken glass with tools, never hands",
+          "Lab practice: annual biological risk assessment sets the biosafety level; no mouth pipetting; no food, drink, or contact lenses; retractable needles; decontaminate before disposal; eyewash station; hands-free sinks; clean utility room separate from dirty utility; lab coats are not gowns"
         ] },
         { type: "list", title: "Hazard communication and signage", cols: 2, items: [
           "Safety data sheet (SDS): 16 sections including identification, hazards, first aid, fire fighting, handling and storage, exposure controls and PPE; must be accessible to staff",
@@ -163,7 +204,11 @@ FRA.cheatsheet = {
           "Laser signs state the class and wavelength; classes 1 (safe) through 4 (fire and eye hazard); wavelength-specific eyewear",
           "Ionizing radiation: trefoil symbol; time, distance, shielding; ALARA; inverse square law; lead aprons about 0.5 mm; dosimeters",
           "MRI: zones I (public) through IV (magnet room); the magnet is always on; ferromagnetic objects become projectiles; quench vents helium; MR Safe, MR Conditional, MR Unsafe labels",
-          "Patient precaution signs at the door: contact, droplet, airborne, fall risk, latex allergy, no blood pressure on a limb"
+          "Patient precaution signs at the door: contact, droplet, airborne, fall risk, latex allergy, no blood pressure on a limb",
+          "HazCom (OSHA 29 CFR 1910.1200) requires labels, SDS access, training, and records; it adopted the UN Globally Harmonized System (GHS) for classification, pictograms, signal words, and the 16-section SDS",
+          "SDS order: identification, hazards, composition, first aid, fire fighting, accidental release, handling and storage, exposure controls and PPE, physical and chemical properties, stability and reactivity, toxicology, ecology, disposal, transport, regulatory, other",
+          "Toxicity and limits: LD50 lethal dose for 50%, LC50 lethal concentration; PEL legal limit (OSHA); TLV recommended (ACGIH); REL recommended (NIOSH); STEL 15-minute ceiling; carcinogen lists from NTP, IARC, OSHA",
+          "GHS label: identity, manufacturer contact, pictograms, signal word (Danger or Warning only), hazard and precautionary statements; secondary containers need the same; pyrophoric ignites in air within 5 minutes; oxidizer pictogram exists, reducer does not"
         ] },
         { type: "list", title: "Fire and medical gas", cols: 2, items: [
           "Fire triangle: heat, fuel, oxygen. RACE: rescue, alarm, confine, extinguish. PASS: pull, aim, squeeze, sweep",
@@ -184,7 +229,13 @@ FRA.cheatsheet = {
           ["ANSI/AAMI EQ103", "Alternative equipment maintenance (AEM) programs: how to justify and document maintenance strategies that differ from the manufacturer's"],
           ["AEM rules (CMS)", "Allowed with documented risk assessment by qualified staff; not for imaging or radiologic equipment, lasers, or where the manufacturer or law requires otherwise; new equipment follows the manufacturer until history supports a change"],
           ["CMMS", "Computerized maintenance management system: inventory and asset tags, work orders, PM schedules, equipment history, parts, reports (PM completion rate, mean time between failures, cost); every activity documented there"],
-          ["After an incident", "Remove the device with all accessories and disposables attached, do not clear logs or settings, tag and sequester, document, report; root cause analysis asks why repeatedly"]
+          ["After an incident", "Remove the device with all accessories and disposables attached, do not clear logs or settings, tag and sequester, document, report; root cause analysis asks why repeatedly"],
+          ["Joint Commission programs", "Accredits and certifies by peer survey; publishes National Patient Safety Goals yearly; links quality and risk management; does not set financial benefits"],
+          ["DNV", "Accredits hospitals under NIAHO, integrating CMS Conditions of Participation with ISO 9001; annual surveys"],
+          ["ISO 9000 / 9001", "Quality management standards; plan-do-check-act; risk-based thinking; customer focus, leadership, process approach"],
+          ["CMS programs", "Medicare, Medicaid, CHIP; regulates human laboratory testing; publishes yearly core measure sets (clinical quality measures); fights fraud; does not accredit"],
+          ["CAP", "College of American Pathologists: nonprofit accreditor of clinical laboratories under CMS authority; inspections every two years plus unannounced"],
+          ["SMDA", "Safe Medical Devices Act (1990, amended 1992): user facilities report device-related deaths to FDA and manufacturer, serious injuries to the manufacturer; annual summaries"]
         ] }
       ]
     },
@@ -198,7 +249,9 @@ FRA.cheatsheet = {
           ["Bandwidth", "Monitoring mode 0.5 to 40 Hz; diagnostic mode 0.05 to 150 Hz"],
           ["Interference", "60 Hz: bad electrode contact, unshielded leads, nearby equipment; wandering baseline: respiration or motion; spikes: muscle tremor or loose lead"],
           ["Lead-off", "High impedance detected on an electrode; check gel, skin prep, cable"],
-          ["Simulator test", "Patient simulator provides rate, amplitude, and arrhythmias to verify the monitor"]
+          ["Simulator test", "Patient simulator provides rate, amplitude, and arrhythmias to verify the monitor"],
+          ["Rhythms on the strip", "Sinus tachycardia fast regular; atrial (supraventricular) tachycardia rapid consistent narrow complexes; atrial fibrillation irregular with quivering waves, no P; ventricular tachycardia rapid WIDE QRS; ventricular fibrillation chaotic; asystole flat (check leads)"],
+          ["Lead views and counts", "aVF views the inferior wall; 12 leads from 10 electrodes (4 limb, 6 chest); IEC colors RA red, LA yellow, LL green, RL black differ from AHA; thermal print head tested by printing letters or diagonals; paper speeds 10, 12.5, 25, 50 mm/s test the drive"]
         ] },
         { type: "table", cols: ["Blood pressure fact", "Value"], rows: [
           ["Korotkoff sounds", "Auscultatory method: cuff above systolic, deflate; first sound (phase 1) is systolic, sounds muffle then disappear (phase 5) at diastolic; automated devices use oscillometry instead"],
@@ -208,10 +261,11 @@ FRA.cheatsheet = {
           ["Dicrotic notch", "The small dip on the downslope of the arterial waveform marking aortic valve closure; its absence suggests overdamping"],
           ["Height error", "13.6 cm of water equals 10 mmHg; every 13.6 cm the transducer is off level changes the reading about 10 mmHg"],
           ["Damping", "Fast-flush (square wave) test: overdamped rounds the wave and reads low systolic; underdamped overshoots and reads high"],
-          ["Transducer sensitivity", "5 microvolts per volt per mmHg (industry standard)"]
+          ["Transducer sensitivity", "5 microvolts per volt per mmHg (industry standard)"],
+          ["Sphygmomanometer", "Cuff, bulb, valve, manometer (mercury, aneroid, electronic), stethoscope; gauge not at zero: zeroing screw; unstable: movement or placement; reads high: cuff below the heart; reads low: cuff above the heart or an air leak (most common); invasive lines read continuously even when hypotensive"]
         ] },
         { type: "table", cols: ["Oximetry and capnography", "Value"], rows: [
-          ["Pulse oximeter wavelengths", "Red about 660 nm, infrared about 940 nm; ratio of absorbances gives SpO2"],
+          ["Pulse oximeter wavelengths", "Red about 650 to 660 nm, infrared about 805 to 940 nm; oxyhemoglobin absorbs more infrared; ratio of pulsatile absorbances gives SpO2; high perfusion helps, low perfusion hurts"],
           ["Errors", "Carboxyhemoglobin reads falsely high; methemoglobin trends toward 85%; motion, low perfusion, nail polish, ambient light, dyes"],
           ["Testing", "SpO2 simulator or optical tester; check probe LED and detector, cable, and site"],
           ["Capnography", "Infrared absorption by CO2 (about 4.26 micrometers); mainstream sensor at the airway, sidestream samples through tubing (delay, water trap)"],
@@ -223,6 +277,8 @@ FRA.cheatsheet = {
           "Alarm priorities (IEC 60601-1-8): high red flashing, medium yellow flashing, low cyan or yellow steady; alarm fatigue is a patient safety problem; alarm management programs set limits per unit",
           "Telemetry: WMTS bands 608 to 614 MHz, 1395 to 1400 MHz, 1427 to 1432 MHz; dropouts from antenna coverage, low battery, interference; central station shows all beds",
           "Fetal monitor: ultrasound Doppler for fetal heart rate (110 to 160 bpm), tocodynamometer (TOCO) for contractions by pressure on the abdomen; internal scalp electrode and intrauterine pressure catheter are the direct methods",
+          "Respiration methods: chest impedance through ECG electrodes (most common), respiratory belts, airflow sampling (thermistor or capnograph), magnetometry; a fingertip oximeter that shuts off mid-use has a low battery",
+          "EEG 10-20 landmarks: nasion (bridge of the nose) to inion (back of the skull); beta above 13 Hz awake and active; differential amplifier removes common signals",
           "EEG bands: delta under 4 Hz, theta 4 to 8, alpha 8 to 13, beta above 13; electrodes placed by the 10-20 system; EMG measures muscle electrical activity; evoked potentials time the response to a stimulus"
         ] }
       ]
@@ -240,7 +296,8 @@ FRA.cheatsheet = {
           ["Gas flow and ventilator analyzer", "Volume, flow, pressure, oxygen concentration"],
           ["Infusion pump analyzer", "Flow rate accuracy, occlusion pressure"],
           ["DVM or DMM and meters", "Voltage, current, resistance; oxygen analyzer, pressure meter, tachometer, light meter, sound level meter"],
-          ["Cable tracer or toner", "Finds the far end of a network cable"]
+          ["Cable tracer or toner", "Finds the far end of a network cable"],
+          ["What each analyzer does not do", "Ventilator analyzer: flow, pressure, volume, O2, breath detection, no CO2 concentration. ESU analyzer: RMS power, crest factor, peak-to-peak voltage, RF leakage, REM thresholds, no handpiece continuity or chassis leakage (multimeter and safety analyzer). Defibrillator analyzer: energy, charge time, sync, not internal impedance. Simulator: no current. DVM: voltage only, draws a little current; DMM continuity = low resistance, unpowered"]
         ] },
         { type: "table", cols: ["Unit", "Conversion or meaning"], rows: [
           ["mmHg", "Blood and gas pressure; 760 mmHg = 1 atmosphere; 1 mmHg = 1.36 cm H2O"],
@@ -266,7 +323,14 @@ FRA.cheatsheet = {
           ["Spirometer", "FVC, FEV1, FEV1/FVC ratio (normal about 0.7 to 0.8); calibrate with a 3 L syringe; filters and mouthpieces"],
           ["Stress test system", "Treadmill or bike with 12-lead ECG and NIBP; emergency stop; treadmill speed and grade calibration; defibrillator nearby"],
           ["Scales", "Calibrate with certified test weights; zero with the bed or chair empty; load cells"],
-          ["Ultrasound", "Piezoelectric transducer sends and receives; 2 to 15 MHz; higher frequency, better resolution, less penetration; Doppler measures flow; gel removes air; transducer crystals crack if dropped"]
+          ["Ultrasound", "Piezoelectric transducer sends and receives; 2 to 15 MHz; higher frequency, better resolution, less penetration; Doppler measures flow; gel removes air; transducer crystals crack if dropped"],
+          ["Otoscope parts", "Handle, head, lamp with collar, magnifying lens, specula, insufflation port; no microphone; loose head cuts light off, worn fibers dim it"],
+          ["Ophthalmoscope", "Views the fundus; lens disc, filters, mirror, condensing lens; clean with lens wipes, alcohol discolors"],
+          ["Audiogram", "Threshold in dB versus frequency; air conduction (headphones) versus bone conduction (mastoid vibrator) separates sensorineural from conductive loss; creates tones, does not measure frequencies"],
+          ["Uroflow meter", "Flow rate and volume of voiding (bladder emptying); funnel, beaker, transducer; wireless within about 3 m"],
+          ["Tympanic thermometer", "Infrared from the eardrum onto a thermopile; probe covers; 30 minutes to settle; ambient 10 to 40 C; torn cover reads high, cracked lens or obstruction reads low"],
+          ["Endoscope", "Fiber-optic or camera, cool light source, insufflation, irrigation, suction; leak test before immersion; no wireless in flexible scopes"],
+          ["Imaging", "X-ray: electrons from a tungsten filament strike a tungsten anode; radiopaque bone is white. Fluoroscopy: live X-ray through an image intensifier. CT: rotating tube and detectors, computed slices. MRI: magnet aligns hydrogen, RF, realignment signal, no ionizing radiation, pacemakers contraindicated. PET: FDG tracer, positron annihilation, two gamma photons. Ultrasound Doppler: toward the probe = higher pitch"]
         ] },
         { type: "table", cols: ["Infusion device", "Facts"], rows: [
           ["Large-volume pump", "Peristaltic; accuracy typically within 5%; rate in mL/hr; free-flow protection; occlusion and air-in-line alarms; drug library"],
@@ -274,14 +338,23 @@ FRA.cheatsheet = {
           ["PCA pump", "Patient button, bolus dose, lockout interval, hourly limit; locked to prevent tampering"],
           ["Feeding (enteral) pump", "Enteral-only connectors on purpose; lower accuracy acceptable"],
           ["Contrast injector", "Programmed volume and flow for imaging; pressure limit; air detection; heated syringe"],
-          ["Rate math", "mL/hr = total mL / hours; drops per minute = (mL/hr x drop factor) / 60; mL/hr = (mg/kg/hr x kg) / (mg/mL)"]
+          ["Rate math", "mL/hr = total mL / hours; drops per minute = (mL/hr x drop factor) / 60; mL/hr = (mg/kg/hr x kg) / (mg/mL)"],
+          ["Enteral versus parenteral", "TPN by vein through a standard pump; enteral by rotary peristaltic head on wide tubing; low flow = empty bag, occlusion, drip chamber seated wrong or coated; no set = seating, wrong set, or bright light on the detector"],
+          ["Syringe pump settings", "Must know the syringe diameter and brand; small volume, fine control; runs past empty = sensor, size setting, or multi-phase program, not low voltage"],
+          ["PCA settings", "Bolus, lockout interval, maximum dose per hour or 4 hours, optional background; logged; locked; ignores requests = check settings first"],
+          ["Infusion modes", "Continuous; intermittent (high-rate periods separated by low-rate intervals); bolus; secondary or piggyback; pressure infusers squeeze a bag and are not pumps"]
         ] },
         { type: "table", cols: ["Therapeutic device", "Facts"], rows: [
           ["Infant incubator and warmer", "Air and skin temperature servo control, humidity, oxygen; radiant warmer with skin probe; over-temperature alarms; phototherapy blue light about 425 to 475 nm"],
           ["Patient temperature management", "Hypo- and hyperthermia units circulate water through blankets or pads; water temperature limits about 4 to 42 C; check flow, leaks, temperature sensor"],
           ["Aspiration (suction)", "Regulators in mmHg, continuous or intermittent; adult range about 80 to 120 mmHg; check filter, collection canister, tubing, vacuum source"],
           ["Sequential compression device", "Inflates leg sleeves in sequence to prevent clots; check pressures and cycle timing, hoses, sleeves"],
-          ["Physical therapy equipment", "TENS and muscle stimulators, therapeutic ultrasound (1 to 3 MHz), diathermy, traction, continuous passive motion; output and timer verification"]
+          ["Physical therapy equipment", "TENS and muscle stimulators, therapeutic ultrasound (1 to 3 MHz), diathermy, traction, continuous passive motion; output and timer verification"],
+          ["Radiant warmer versus incubator", "Radiant: open bed, overhead heater, skin sensor servo, easy access, drafts and dehydration. Incubator: enclosed, air, humidity, oxygen control. Fluctuating temperature = sensor attachment"],
+          ["Ultrasound therapy", "1 to 3 MHz deep heat for pain and blood flow; needs gel and motion; head too cold is not detected; overheating shutdown = too little gel; slow warming = low drive voltage"],
+          ["Hypo/hyperthermia flow", "Heating needs flow of about 1 L/min or more, correct limits, and a good element; poor heating and cooling with no leaks = insufficient flow"],
+          ["Aspirator parts", "Vacuum pump, gauge or regulator, tubing, collection container with overflow float, hydrophobic bacterial filter; pulmonary, gastric, surgical; fading suction = leak or filter; sudden stop = fuse or overheated pump"],
+          ["SCD and bilirubin", "SCD inflates distal (ankle) to proximal (thigh), holds seconds, rests about a minute; high pressure = sleeve too tight. Bilirubin light 360 to 520 nm, blue-green most effective, brighter, closer, more skin; bulb, ballast, fan filter"]
         ] },
         { type: "table", cols: ["Laboratory device", "Facts"], rows: [
           ["Centrifuge", "Speed in RPM, force in RCF (g); balance opposite loads; lid interlock; verify speed with a tachometer and timer"],
@@ -291,7 +364,12 @@ FRA.cheatsheet = {
           ["Microscope", "Light source, objectives, focus; cleaning optics"],
           ["Water bath", "Temperature control and uniformity; thermostat and heater"],
           ["Analyzers", "Reagents, calibration, quality control samples, fluidics and clogs, temperature"],
-          ["Cryostat and microtome", "Cryostat cuts frozen sections in a cold chamber (about minus 20 C); microtome cuts thin sections; blade safety, temperature, advance mechanism"]
+          ["Cryostat and microtome", "Cryostat cuts frozen sections in a cold chamber (about minus 20 C); microtome cuts thin sections; blade safety, temperature, advance mechanism"],
+          ["Blood gas analyzer", "Clark electrode pO2 (platinum cathode, silver anode, O2 membrane, current); glass electrode pH (voltage); Severinghaus electrode pCO2 (pH electrode behind a CO2 membrane in bicarbonate); too cold = thermistor; barcode = window"],
+          ["Spectrophotometer", "Absorbance at selected wavelengths; tungsten lamp for visible, deuterium for UV; read a blank first; quartz cuvettes for UV; intermittent at all wavelengths = power cable"],
+          ["Hematocrit centrifuge", "Packs red cells in capillary tubes at about 10,000 to 15,000 g; RCF rises with speed squared and radius"],
+          ["Microtome detail", "Paraffin-embedded blocks; thickness depends on blade clamping, sharpness, clearance angle, cool block, slow steady stroke, no wax; cryostat frost = drafts or breath, splinter = too cold"],
+          ["Water bath", "Gentle heating under 100 C with stirring; incubates microbial samples; not heating = setpoint or limit below ambient, or low water"]
         ] }
       ]
     },
@@ -304,13 +382,19 @@ FRA.cheatsheet = {
           ["Monopolar", "Current flows from the active electrode through the patient to a large return (dispersive) electrode; return electrode contact quality monitoring prevents burns"],
           ["Bipolar", "Current flows between the two tips of the forceps; no return pad needed"],
           ["Burns", "Poor return pad contact, pad on bony or hairy site, alternate paths through ECG electrodes or metal; capacitive coupling in laparoscopy"],
-          ["Video integration", "Cameras, light sources, monitors, recording and routing systems; check cable, connector, light cable fibers, white balance"]
+          ["Video integration", "Cameras, light sources, monitors, recording and routing systems; check cable, connector, light cable fibers, white balance"],
+          ["Waveform and faults", "Cut = continuous sine, 100% duty cycle, monopolar; coag = pulsed or damped, low duty cycle, higher peak; on but no output = blown high-voltage fuse; will not turn on = cord, fuse, low-voltage supply, switch; footswitch dead = footswitch board then control board"]
         ] },
         { type: "list", title: "Other perioperative equipment", cols: 2, items: [
           "Pneumatic tourniquet: cuff pressure above systolic (commonly 250 mmHg arm, 300 mmHg leg or adjusted to the patient), time limit alarms (about 2 hours), leak test, calibrated gauge",
           "Fluid and blood warmer: keeps fluids near body temperature; over-temperature cutoff around 41 to 42 C; check heater, sensor, alarms",
           "Sterilizer: steam 121 C at 15 psi or 132 C flash; verify temperature, pressure, time, gasket, chamber; biological indicator; ethylene oxide and hydrogen peroxide for heat-sensitive items",
-          "OR table: hydraulics or motors, controls, brakes, weight rating; surgical lights: lux at 1 m, color temperature, handles, bulbs or LEDs; surgical microscope: optics, illumination, balance, focus motors"
+          "OR table: hydraulics or motors, controls, brakes, weight rating; surgical lights: lux at 1 m, color temperature, handles, bulbs or LEDs; surgical microscope: optics, illumination, balance, focus motors",
+          "Sterilization methods: steam (fastest; dry heat for items that cannot be wet), ethylene oxide gas (heat- and moisture-sensitive, about 10 h plus aeration), liquid chemical (small hard-to-reach lumens, rinse), ionizing gamma or beta (disposables in sealed packages); no steam = water pump, low fluid pressure, breaker, heater",
+          "Surgical lasers: CO2 far infrared absorbed by water for skin and soft tissue; Nd:YAG near infrared penetrates (hair, tattoo, coagulation); argon blue-green for pigment and eye; excimer UV for corneas; aiming beam and articulated arm; aiming only = footswitch",
+          "Blood warmer: countercurrent warm water around the blood line; pressurized-flow units add a compressor (loud = unseated tubing or failing compressor; hot = blocked vents); prevents transfusion hypothermia, not for lab samples or infants",
+          "Heart-lung machine: venous reservoir, roller or centrifugal pump (gentle on cells), membrane oxygenator (older bubble), heat exchanger for hypothermia, filters, arterial return; heparin thins blood; cardioplegia stops the heart; backup pumps",
+          "Hemodialysis order: access, arterial monitor, blood pump, heparin pump, dialyzer (countercurrent dialysate across a semipermeable membrane), venous monitor, air trap and detector (last), return"
         ] },
         { type: "table", cols: ["Defibrillation and pacing", "Value"], rows: [
           ["Adult energy", "Monophasic 360 J; biphasic 120 to 200 J (device specific); pediatric 2 J/kg first, 4 J/kg after"],
@@ -318,7 +402,8 @@ FRA.cheatsheet = {
           ["Testing", "Defibrillator analyzer with a 50 ohm load; check delivered energy, charge time, synchronization, pacing output; daily user checks"],
           ["AED", "Analyzes rhythm, advises shock only for VF and pulseless VT"],
           ["External pacing", "Demand mode paces only when intrinsic rate falls below the set rate; fixed mode paces regardless; output in mA; capture confirmed by QRS after each spike"],
-          ["Intra-aortic balloon pump", "Balloon in the descending aorta inflates in diastole (raises coronary perfusion) and deflates just before systole (lowers afterload); timed to the ECG or arterial waveform; helium gas; alarms for timing, leak, and gas loss"]
+          ["Intra-aortic balloon pump", "Balloon in the descending aorta inflates in diastole (raises coronary perfusion) and deflates just before systole (lowers afterload); timed to the ECG or arterial waveform; helium gas; alarms for timing, leak, and gas loss"],
+          ["Pacing routes", "Transcutaneous: chest pads with gel, tens of mA, painful, fastest. Transvenous: lead through a vein (subclavian) into the right ventricle, low output. Epicardial: wires on the heart surface at surgery, no subclavian leads. External generators run on AC or battery"]
         ] },
         { type: "table", cols: ["Ventilator and anesthesia", "Value"], rows: [
           ["Tidal volume and minute volume", "6 to 8 mL/kg ideal body weight; minute volume = tidal volume x rate"],
@@ -326,7 +411,8 @@ FRA.cheatsheet = {
           ["Modes", "Volume control delivers a set volume; pressure control a set pressure; assist-control, SIMV, pressure support, CPAP; BiPAP has separate inspiratory and expiratory pressures"],
           ["Alarms", "High pressure: obstruction, kink, coughing, secretions. Low pressure or low volume: disconnect or leak. Apnea: no breath detected"],
           ["Oxygen analyzer calibration", "Room air 21% and 100% oxygen; galvanic cells wear out; concentrators deliver about 90 to 95%"],
-          ["Anesthesia machine", "Pipeline (50 psi) and cylinder supply, flowmeters, agent-specific vaporizers (sevoflurane yellow, isoflurane purple, desflurane blue), hypoxic guard keeps oxygen at least 21 to 25%, oxygen flush, CO2 absorber, scavenging removes waste gas, pin index and DISS prevent misconnection; leak test before use"]
+          ["Anesthesia machine", "Pipeline (50 psi) and cylinder supply, flowmeters, agent-specific vaporizers (sevoflurane yellow, isoflurane purple, desflurane blue), hypoxic guard keeps oxygen at least 21 to 25%, oxygen flush, CO2 absorber, scavenging removes waste gas, pin index and DISS prevent misconnection; leak test before use"],
+          ["Anesthesia gas path", "Supply (pipeline 50 psi, cylinders), regulators, flow controls and flowmeters, vaporizer (first section after the agent's flow control), common gas outlet, breathing circuit with CO2 absorber, ventilator, patient; scavenging removes waste"]
         ] }
       ]
     },
@@ -361,7 +447,21 @@ FRA.cheatsheet = {
           ["Telemetry dropouts on one patient", "Transmitter battery, leads, distance; many patients: antenna system or receiver, a system-wide problem"],
           ["Monitor not sending to the central station or EMR", "One bed: cable, port, network config on that monitor. Every bed: switch, server, middleware, network outage"],
           ["Centrifuge vibration", "Unbalanced load, worn rotor or bearing"],
-          ["Refrigerator temperature alarm", "Door seal, defrost cycle, compressor, probe, overloading"]
+          ["Refrigerator temperature alarm", "Door seal, defrost cycle, compressor, probe, overloading"],
+          ["EtCO2 no value or occlusion", "Cannula and tubing, filter present, moisture trap (occlusion test), internal leak (occlude upstream of filter and trap); occlusion: kink, clogged filter, full trap"],
+          ["Respiration rate missing, ECG fine", "Input printed circuit board; flat or short trace: raise sensitivity, then electrodes, leads, cable"],
+          ["Blood gas analyzer will not run", "Cable and outlet first; 'too cold' after warming = thermistor; no battery run = charger; barcode dead = window"],
+          ["Centrifuge rotor will not spin", "Lid not closed firmly (interlock), then connections, board, motor"],
+          ["Microtome sections wrong thickness", "Blade clamp, dull edge, clearance angle; compressed = dull, warm block, too fast, wax"],
+          ["Tympanic thermometer reads low", "Obstruction or cracked lens (high = torn cover); rest 30 minutes; ambient 10 to 40 C"],
+          ["Enteral pump low flow versus no set", "Low flow: empty bag, occlusion, drip chamber. No set: seating, wrong set, bright light"],
+          ["PCA ignores requests", "Settings (lockout, maximum) before pendant or motor; 'check settings' = door locked before setup"],
+          ["Aspirator suction fades", "Leak (tubing, container, vacuum line) or clogging filter; sudden stop = fuse or overheated pump; none = disconnected, blocked filter, full container"],
+          ["ESU on but no output", "High-voltage supply fuse"],
+          ["Tourniquet pump runs constantly", "Leak in tubing, cuff, or valves, or a bad pressure transducer; will not inflate = pump disconnected"],
+          ["Autoclave no steam", "Water pump, low fluid pressure, breaker or overload, burned-out heater, low water; over-pressure = pressure switch"],
+          ["Bilirubin light dark or dim", "Too hot to relight; bulb then ballast; dirty lens; overheating = fan filter, fans, thermistor"],
+          ["Device went to battery while plugged in", "Outlet and power cable continuity first, then the internal power circuit; regulator: measure input and output pins to ground"]
         ] },
         { type: "list", title: "Priorities, communication, maintenance", cols: 2, items: [
           "Priority order: life support and high-risk devices first, then patient risk, then urgency and downtime and clinical impact; loaners for critical downtime",
@@ -369,7 +469,11 @@ FRA.cheatsheet = {
           "In-service and cross-training: teach proper use, care, cleaning, and alarm response; document attendance; communicate clearly with clinicians, staff, and manufacturers in writing and verbally",
           "Preventive maintenance: scheduled or risk-based; AEM programs allowed with documented justification (not imaging, lasers, or where the manufacturer requires); PM after repair; performance verification against tolerances",
           "Calibration traceable to national standards; test equipment has its own calibration schedule",
-          "Incoming inspection before first use: physical, functional, safety test, inventory entry, manuals on file; lifecycle ends with data wiped, decontamination, and disposition"
+          "Incoming inspection before first use: physical, functional, safety test, inventory entry, manuals on file; lifecycle ends with data wiped, decontamination, and disposition",
+          "Criticality = importance to the mission + likelihood of failure or PM demand + potential harm; repair time is not a factor; redundancy lowers priority but does not prevent all downtime; checklists guide user inspections",
+          "Root cause analysis: what happened, why, how to prevent; keep asking why (five whys); ultrasound blurry = crystal then gel; oximeter erratic = ambient light; one sphygmomanometer = technique then cracked tubing (a leak reads low)",
+          "Local versus network: one room missing = that room; several = shared configuration or network; false alarms on many monitors = alarm limits; check physical links first; search repair records for fleet patterns; ping, cable tester, multimeter help, a safety analyzer does not",
+          "Switching supply shorted element = full input voltage out, open = zero; UPS short runtime = battery, no backup = inverter, switched over while plugged in = outlet or cable; desktop PSUs die of fan failure and heat"
         ] }
       ]
     },
@@ -387,7 +491,11 @@ FRA.cheatsheet = {
           ["Devices", "Switch connects devices in a LAN by MAC; router connects networks by IP; access point connects Wi-Fi clients; access point controller manages many APs; KVM switch shares one keyboard, video, and mouse among servers; virtual servers run many operating systems on one host; LAN is local, WAN spans sites, cloud is provider-hosted"],
           ["Cabling", "Cat 5e 1 Gbps, Cat 6A 10 Gbps, 100 m limit; fiber for longer runs; link light off means Layer 1; cable tracer finds the far end"],
           ["Wi-Fi", "2.4 GHz longer range, channels 1, 6, 11; 5 GHz more channels, less interference; WPA2 or WPA3; enterprise mode uses 802.1X with RADIUS"],
-          ["Telemetry and RTLS", "WMTS bands for patient telemetry; real-time location systems track equipment with RF, infrared, or ultrasound tags"]
+          ["Telemetry and RTLS", "WMTS bands for patient telemetry; real-time location systems track equipment with RF, infrared, or ultrasound tags"],
+          ["OSI layers", "1 physical (media, hubs), 2 data link (frames, MAC, switches), 3 network (IP, routers), 4 transport (TCP/UDP, ports), 5 session, 6 presentation (format conversion, encryption), 7 application (APIs); no conversion layer"],
+          ["Topologies", "Bus and ring fail on any break; star (central switch) survives one bad cable; hybrid; mesh partial or full; point-to-multipoint (central node also processes); physical versus logical"],
+          ["Binary masks", "255.255.255.240 = ...11110000 (/28, 16 addresses); 248 = 11111000; 252 = 11111100; ones must be contiguous; subnetting separates departments and limits broadcasts"],
+          ["Hub versus switch, PPP", "Hub repeats to every port at layer 1, half duplex, collisions; switch keeps a source address table and forwards at layer 2, full duplex; PPP links two routers over serial or dial with authentication"]
         ] },
         { type: "table", cols: ["Command or tool", "Use"], rows: [
           ["ping", "Is the address reachable, and how fast; ping the gateway first"],
@@ -396,7 +504,10 @@ FRA.cheatsheet = {
           ["nslookup", "Test name resolution"],
           ["arp -a", "IP to MAC table; duplicates"],
           ["netstat", "Open connections and listening ports"],
-          ["Cable tracer and tester", "Find the far end; check pinout and continuity"]
+          ["Cable tracer and tester", "Find the far end; check pinout and continuity"],
+          ["TDR", "Time-domain reflectometer: pulse reflection shows whether a cable is open and how far to the break"],
+          ["ping (ICMP)", "Echo request and reply, IPv4 and IPv6; reports round-trip ms, packet loss, min, max, average, deviation; not a cable resistance test; power cycling is not a test"],
+          ["Fiber inspection microscope", "Checks connector ends for dirt and damage; clean with isopropyl alcohol and lint-free wipes or cut and repolish; light source and power meter measure loss"]
         ] },
         { type: "table", cols: ["Interoperability", "Meaning"], rows: [
           ["HL7 version 2", "Text messages between systems: ADT (admit, discharge, transfer), ORM (orders), ORU (results, including device data)"],
@@ -404,7 +515,9 @@ FRA.cheatsheet = {
           ["DICOM", "Standard for medical images and their transfer; modality worklist pulls patient data to the device; PACS stores and serves images"],
           ["EMR and EHR", "Electronic medical record (within one organization) and electronic health record (across); devices feed vitals in directly or through middleware"],
           ["Middleware", "Translates and routes between devices and the EMR; device gateways; where most integration faults are diagnosed"],
-          ["Time synchronization", "NTP keeps device clocks aligned so records and alarms line up"]
+          ["Time synchronization", "NTP keeps device clocks aligned so records and alarms line up"],
+          ["PACS, RIS, LIS, LIMS", "PACS stores and transports images with patient data (redundant servers); RIS schedules, tracks, and reports radiology; LIS tracks specimens and analyzer results; LIMS is the research and high-volume version"],
+          ["DICOM and HL7 detail", "DICOM is a 22-part standard for image format and transfer referencing IEC definitions; HL7 standards: version 2 messaging, version 3 XML, Clinical Document Architecture; HL7 does not set leakage limits or breach rules"]
         ] },
         { type: "list", title: "Protected data and cybersecurity", cols: 2, items: [
           "HIPAA: privacy rule (who may see PHI), security rule (administrative, physical, technical safeguards), breach notification; PHI is any identifiable health information; minimum necessary",
@@ -413,7 +526,13 @@ FRA.cheatsheet = {
           "MDS2: manufacturer disclosure statement for medical device security; SBOM: software bill of materials",
           "Controls: unique accounts and MFA, least privilege, encryption at rest and in transit, patching on the vendor's validated schedule, network segmentation for devices that cannot be patched, antivirus where the vendor allows, physical security of workstations, screen locks",
           "Backups: 3 copies, 2 media, 1 offsite; test restores; ransomware response: isolate, report, restore",
-          "Incident: disconnect the device from the network, do not power off if forensics are needed, report to IT security and the vendor, document"
+          "Incident: disconnect the device from the network, do not power off if forensics are needed, report to IT security and the vendor, document",
+          "HITECH (2009): EHR incentives and penalties, meaningful use, breach notification to individuals and HHS, business associates bound, no sale of PHI, patient access; sets no spending guidelines",
+          "HIPAA titles: I insurance portability; II administrative simplification with the privacy and security rules, fraud control, and fines; III medical savings accounts; IV enforcement by the Office for Civil Rights; V revenue offsets",
+          "DMCA (1998): bans circumvention tools, raises penalties, limits provider liability; exemptions for security testing and personal implant data; does not ban copying devices as such",
+          "FDA MDDS: systems that store, transfer, reformat, or display device data without controlling devices; reclassified Class III to Class I in 2011; a vital signs monitor yes, a lobby TV no",
+          "IEC 80001-1 (2010, IEC and ISO): risk management for IT networks with medical devices; excludes drugs; applies to any organization's network; defines no acceptable risk level; not from the FDA",
+          "MDS2 contents: automatic logoff, audit controls, authorization, configurable security, security updates, de-identification, backup and recovery, emergency (break-glass) access, data integrity, malware protection, node and user authentication, physical locks, third-party component plans, remote servicing; not structural integrity"
         ] },
         { type: "list", title: "Computer hardware and software troubleshooting", cols: 2, items: [
           "Hardware: power supply (no power, random reboots), hard drive (slow, errors, clicking; SMART warnings; replace and restore image), memory (crashes), peripherals (drivers, cables, ports), connectors and cables (reseat, swap)",
