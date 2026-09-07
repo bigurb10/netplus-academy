@@ -26,7 +26,7 @@ Every copper run is limited to **100 meters (328 feet)** from switch to device i
 Both standards wire all eight pins; they differ only in which pair sits on pins 1 and 2 versus 3 and 6.
 - **T568B**: white-orange, orange, white-green, blue, white-blue, green, white-brown, brown.
 - **T568A**: white-green, green, white-orange, blue, white-blue, orange, white-brown, brown.
-The same standard on both ends makes a **straight-through** cable (device to switch). A on one end and B on the other makes a **crossover** cable, once needed to join two like devices; modern ports auto-sense (auto-MDIX), so crossovers are rare. Pick one standard and use it everywhere in a building.
+The same standard on both ends makes a **straight-through** cable (device to switch). A on one end and B on the other makes a **crossover** cable (pins 1 and 3 and pins 2 and 6 are swapped at one end), once needed to join two like devices such as switch to switch or host to host; modern ports auto-sense (auto-MDIX), so crossovers are rare. Pick one standard and use it everywhere in a building.
 
 ## Jackets and shielding
 - **UTP** (unshielded twisted pair) is the normal cable.
@@ -129,6 +129,9 @@ FRA.units.push({
       id: "u5l1", title: "RAM: DIMM and SODIMM, DDR3 to DDR5, ECC, Channels, and Virtual Memory", domain: 3, obj: "3.3", minutes: 9,
       body: `Memory questions come down to matching the right module to the slot and understanding a handful of features. The generations do not mix, and the numbers are worth memorizing.
 
+## Kinds of memory
+**DRAM** (dynamic RAM) is the working memory on DIMMs and SODIMMs and must be refreshed constantly; **SRAM** (static RAM) is the faster memory used for the CPU's cache; **ROM** and flash hold firmware; a small **CMOS** memory keeps firmware settings alive on the coin cell.
+
 ## Form factors
 - **DIMM**: the long module for desktops and servers.
 - **SODIMM**: the short module for laptops, all-in-ones, and small form factor PCs.
@@ -180,7 +183,7 @@ M.2 is a form factor: a small card 22 mm wide, with the length in the name (**22
 
 ## Removable media
 - **USB flash drives**: the everyday transfer tool; speed depends on the USB generation and the drive.
-- **Memory cards**: **SD** and **microSD** (cameras, phones, single-board computers), with speed classes printed on the card; **CompactFlash** in older professional cameras.
+- **Memory cards**: **SD**, **miniSD**, and **microSD** (cameras, phones, single-board computers; a smaller card fits a larger slot with an adapter), with speed classes printed on the card; **CompactFlash** in older professional cameras.
 - External drives over USB or Thunderbolt.
 
 ## Optical
@@ -222,7 +225,7 @@ Worked examples with four 2 TB drives: RAID 0 gives 8 TB, RAID 5 gives 6 TB, RAI
 RAID 0 needs 2 and survives 0 failures; RAID 1 needs 2 and survives 1; RAID 5 needs 3 and survives 1; RAID 6 needs 4 and survives 2; RAID 10 needs 4 and survives 1 per mirror (up to half the drives if they are in different pairs, but never both drives of one pair).
 
 ## Hardware, software, and the extras
-A **hardware RAID** controller does the work with its own processor and often a battery-backed cache; it presents one volume to the OS and needs a driver. **Software RAID** is done by the operating system, cheaper and slower. A **hot spare** is an idle drive the controller uses automatically to start a rebuild the moment a member fails. During a rebuild the array is slow and unprotected (RAID 5) or half protected (RAID 6), which is why replacing a failed drive is urgent.
+A **hardware RAID** controller does the work with its own processor and often a battery-backed cache; it presents one volume to the OS and needs a driver. **Software RAID** is done by the operating system, cheaper and slower. A **hot spare** is an idle drive the controller uses automatically to start a rebuild the moment a member fails. **Hot-swappable** bays let a failed drive be pulled and replaced while the array keeps running. During a rebuild the array is slow and unprotected (RAID 5) or half protected (RAID 6), which is why replacing a failed drive is urgent.
 
 ## RAID is not backup
 A mirror faithfully copies a deleted file, ransomware, and a corrupted database. RAID protects against drive failure and keeps the system running; backups protect the data.
@@ -288,7 +291,7 @@ The **Trusted Platform Module** is a secure chip (or a firmware implementation, 
 Secure Boot allows only boot loaders signed by trusted keys to run, which blocks boot-sector malware and rootkits that load before the OS. It requires UEFI mode and GPT. Some Linux distributions, older installation media, and certain hardware need it disabled or need their keys enrolled.
 
 ## Passwords
-A **supervisor** (setup or administrator) password locks the firmware settings; a **user** (boot or power-on) password is required before the machine boots at all. Both are cleared on a desktop by the CMOS jumper or removing the battery; laptops often store them in a chip that needs the vendor's help.
+A **supervisor** (setup, administrator, or BIOS) password locks the firmware settings; a **user** (boot) password is required before the machine boots at all. The exam calls these the BIOS password and the boot password. Both are cleared on a desktop by the CMOS jumper or removing the battery; laptops often store them in a chip that needs the vendor's help.
 
 ## Fans, temperatures, and monitoring
 Firmware shows CPU and system temperatures, fan speeds, and voltages, and lets you set fan curves and thermal shutdown thresholds. Checking temperatures here is the first step when a machine shuts down under load.
@@ -380,7 +383,7 @@ FRA.units.push({
       body: `Setting up a printer is a checklist the exam turns into scenario questions: which driver, which connection, which sharing method, which security feature. Know each choice and why.
 
 ## Unboxing and placement
-Remove every piece of shipping tape, the orange locks on the cartridges and scanner, and the plastic strips on the toner. Place the printer on a level surface near power and the network, away from direct sunlight, heaters, and dusty or humid spots, with room to open the trays and doors. Load paper, install cartridges, power on, run the setup and alignment, print a test page, and **update the firmware** before anything else.
+Remove every piece of shipping tape, the orange locks on the cartridges and scanner, and the plastic strips on the toner. Place the printer on a level surface near power and the network, away from direct sunlight, heaters, and dusty or humid spots, with room to open the trays and doors. Load paper, install cartridges, power on, run the setup and alignment, print a test page, and **update the firmware** before anything else. Confirm the driver works with the operating system and the applications people use, then show users the basics. Use the consumables the manufacturer recommends; off-brand toner, ink, and paper can damage the printer and void its warranty.
 
 ## Drivers and page description languages
 The driver translates the document into a language the printer understands.
@@ -455,7 +458,7 @@ Memory hook: Please Charge Every Dog Treats For Cleaning.
       body: `Three other printer families show up in offices, shops, and warehouses. Each has a few parts and a few maintenance habits the exam checks.
 
 ## Inkjet
-An inkjet sprays microscopic drops of liquid ink onto the paper from a **print head** that sweeps across the page on a **carriage belt**. Ink comes in **cartridges**, either combined with the head (replaced together) or separate tanks feeding a fixed head; refillable tank models hold bottles of ink. Feed rollers move the paper; a duplexer flips it.
+An inkjet sprays microscopic drops of liquid ink onto the paper from a **print head** (printhead) that sweeps across the page on a **carriage belt**. Ink comes in **cartridges**, either combined with the head (replaced together) or separate tanks feeding a fixed head; refillable tank models hold bottles of ink. Feed rollers move the paper; a duplexer flips it.
 Traits: inexpensive to buy, excellent photo quality on the right paper, slow, and costly per page. Ink dries out if the printer sits unused, and a wet page smears until it dries.
 Maintenance:
 - Run the **head cleaning** cycle when lines are missing or colors streak; it purges dried ink through the nozzles. Repeated cycles use a lot of ink.

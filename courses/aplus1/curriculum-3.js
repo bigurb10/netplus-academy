@@ -197,7 +197,7 @@ Fans spin, lights come on, but the screen stays blank or the machine beeps.
 
 ## Noises and small clues
 - **Unusual noise**: a high whine is a fan bearing; clicking or grinding is a hard drive; a buzz that changes with load is coil whine, harmless but annoying.
-- **Inaccurate date and time** on every boot: the CMOS battery.
+- **Inaccurate system date/time** on every boot: the CMOS battery.
 - **Intermittent problems** that come and go with touch or temperature: a loose connector, a cracked solder joint, or a failing capacitor.
 
 ## A minimal configuration test
@@ -297,7 +297,7 @@ A second monitor that is not detected: check the cable and input, then the OS di
 
 ## Connectivity and performance
 - **Poor or no connectivity**: airplane mode, Wi-Fi or cellular toggled off, out of range, a stale saved network (forget and rejoin), an unseated SIM, expired carrier settings, or a VPN or proxy left on. Toggle airplane mode on and off as a first reset.
-- **Cannot install apps**: storage full, OS version too old for the app, account or payment problems, or MDM restrictions blocking the store.
+- **Unable to install new applications**: storage full, OS version too old for the app, account or payment problems, or MDM restrictions blocking the store.
 - **Malware**: pop-ups, unexpected charges, apps the user did not install, and battery and data drain. Remove unknown apps, revoke unusual permissions, update, and as a last resort back up and factory reset. Apps from unofficial sources are the usual entry point.
 - **Degraded performance**: storage nearly full, too many background apps, an old OS, a failing battery that throttles the CPU, or malware. Free space, update, restart, and check battery health.
 
@@ -409,7 +409,7 @@ Each rung that passes moves the fault higher.
 ## Marks in the wrong places
 - **Lines down the page**: on a laser, a scratched or dirty drum (a thin vertical line), a dirty laser scanner window or a low toner cartridge with a clumped section, or a scratch on the fuser roller (a line that also smears). On an inkjet, a clogged nozzle gives a missing line; a dirty head gives an extra streak. Run the cleaning cycle on inkjets; replace the drum or cartridge on lasers.
 - **Speckling on printed pages**: loose toner inside the printer or a leaking cartridge dusting each page; clean the paper path with a toner vacuum and replace a leaking cartridge. On inkjets, ink splatter from a dirty head or wrong paper.
-- **Double or echo images (ghosting)**: a faint copy of a previous image lower on the page. The drum is not being cleaned or discharged: a worn cleaning blade, a dead erase lamp, or a worn drum; replace the drum unit. A fuser can also ghost when its roller is contaminated.
+- **Double/echo images (ghosting)**: a faint copy of a previous image lower on the page. The drum is not being cleaned or discharged: a worn cleaning blade, a dead erase lamp, or a worn drum; replace the drum unit. A fuser can also ghost when its roller is contaminated.
 - **Toner not fusing to the paper** (smears when touched, flakes off): the fuser is not reaching temperature or has failed, the paper type setting is wrong for heavy or glossy stock, or the wrong paper is loaded. Check the paper setting, then replace the fuser or the maintenance kit.
 
 ## Too light or wrong color
@@ -445,7 +445,7 @@ Each rung that passes moves the fault higher.
 - **Grinding noise**: a gear, a roller, the drum drive, or a foreign object; a laser at the end of its maintenance interval grinds as rollers wear. Locate the source with the doors open, remove any object, and replace the worn assembly.
 
 ## The queue
-- **Multiple prints pending in the queue** and nothing printing, or a **frozen queue**: a stuck job at the head of the line, the spooler service hung, the printer offline or paused, or a driver fault. On the client or the print server: cancel the stuck job; if it will not clear, restart the print spooler service (stop it, delete the files in the spool folder, start it). Check the printer's panel for an error or a paused state, and confirm it is online and reachable.
+- **Multiple prints pending in the queue** and nothing printing, or a **frozen print queue**: a stuck job at the head of the line, the spooler service hung, the printer offline or paused, or a driver fault. On the client or the print server: cancel the stuck job; if it will not clear, restart the print spooler service (stop it, delete the files in the spool folder, start it). Check the printer's panel for an error or a paused state, and confirm it is online and reachable.
 - Jobs print for some users and not others: permissions on the shared queue, or a driver mismatch between server and client.
 - A job that prints hours later or twice: a job stuck in the queue that finally cleared, or the user resending; clear the queue and educate.
 

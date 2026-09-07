@@ -2,7 +2,7 @@
 
 Self-paced certification courses in a single web page each: a printable memorization sheet, a short starter test that builds a personalized tutorial, a full-length test that builds a retraining tutorial from your misses, and practice tests until you score above the bar three times in a row. All content and questions are original.
 
-Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses: **NetPlus Academy** (CompTIA Network+ N10-009, 49 lessons), **SecPlus Academy** (CompTIA Security+ SY0-701, 54 lessons), and **CBET Academy** (AAMI Certified Biomedical Equipment Technician, 45 lessons). A+ Core 1 and Core 2 are next.
+Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses: **NetPlus Academy** (CompTIA Network+ N10-009, 49 lessons), **SecPlus Academy** (CompTIA Security+ SY0-701, 54 lessons), **CBET Academy** (AAMI Certified Biomedical Equipment Technician, 60 lessons), and **APlus Academy Core 1** (CompTIA A+ 220-1201, 41 lessons). A+ Core 2 is next.
 
 ## Run it
 

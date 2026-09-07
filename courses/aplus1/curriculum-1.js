@@ -35,7 +35,7 @@ Either a 2.5-inch SATA drive in a caddy or an **M.2** card. M.2 comes in SATA an
 A small M.2 2230 card with two tiny antenna leads snapped onto it. The antenna wires run through the hinge into the lid and around the display, where they get the best signal. The leads are marked main and aux (often one black, one white or gray); put each on its labeled terminal. A lead left off gives weak or no signal.
 
 ## Camera, microphone, and biometrics
-The webcam and microphone sit in the lid bezel with a cable through the hinge, sometimes behind a physical privacy shutter. Fingerprint readers live in the power button or the palm rest; smart card readers are in the side; NFC badge readers hide under the palm rest. Each is a module with a connector: replace the module, then reinstall its driver.
+The webcam and microphone sit in the lid bezel with a cable through the hinge, sometimes behind a physical privacy shutter. Fingerprint readers live in the power button or the palm rest; smart card readers are in the side; NFC badge readers (the near-field scanner feature) hide under the palm rest. Each is a module with a connector: replace the module, then reinstall its driver.
 
 > Exam tip: the first step in nearly every laptop hardware question is disconnect the power and the battery. The antenna question is about placement: the wireless antennas are in the lid around the screen, not in the base.`,
       hook: "Shut down, unplug, disconnect the battery, ESD strap, screw map. Swollen battery means replace now. SODIMM tilts in at an angle; match the generation; it may be soldered. Check the M.2 key and length. Wireless antenna leads run through the hinge into the lid."
@@ -52,7 +52,7 @@ The webcam and microphone sit in the lid bezel with a cable through the hinge, s
 - **3.5 mm audio**: still on some laptops and tablets; many phones dropped it in favor of USB-C or Bluetooth audio.
 
 ## The short-range radios
-- **NFC** (near field communication) works at 13.56 MHz over about 4 cm. It is behind tap to pay, badge readers, and the tap-to-pair shortcut that hands a Bluetooth pairing off with a touch.
+- **NFC** (near-field communication) works at 13.56 MHz over about 4 cm. It is behind tap to pay, badge readers, and the tap-to-pair shortcut that hands a Bluetooth pairing off with a touch.
 - **Bluetooth** builds a personal area network for headsets, keyboards, mice, speakers, and watches. Devices pair once and reconnect automatically afterward.
 
 ## Sharing a phone's internet
@@ -95,11 +95,11 @@ A hotspot shares cellular data by acting as a small Wi-Fi access point; tetherin
 2. Put the accessory into pairing mode so it is discoverable (usually hold its button until a light flashes).
 3. Select the accessory from the list of found devices.
 4. Enter or confirm the PIN or passkey (often 0000 or 1234 on simple accessories, or a matching six-digit code).
-5. Test it: play audio or type a character.
+5. Test connectivity: play audio or type a character.
 Once paired, the pair reconnects automatically whenever both are in range.
 
 ## Location services
-**GPS** listens to satellites; it is accurate to a few meters but needs a view of the sky and uses battery. **Cellular and Wi-Fi positioning** estimate location from nearby towers and access points; less precise but works indoors. Phones blend the two. Apps must be granted location permission, and a device with location off cannot be found by a locate-my-device service.
+**GPS** listens to satellites; it is accurate to a few meters but needs a view of the sky and uses battery. **Cellular location services** (tower and Wi-Fi positioning) estimate location from nearby towers and access points; less precise but works indoors. Phones blend the two. Apps must be granted location permission, and a device with location off cannot be found by a locate-my-device service.
 
 > Exam tip: a device that will not connect to anything is in airplane mode or has a bad SIM. A phone that finds its position outdoors but not inside is relying on GPS. eSIM equals downloaded profile, no card.`,
       hook: "3G slow, 4G LTE broadband, 5G fast and low latency (mmWave short range). SIM identifies the subscriber; eSIM is a downloaded profile. Airplane mode kills all radios. Pairing: Bluetooth on, accessory discoverable, select, PIN, test. GPS needs sky; cell and Wi-Fi positioning work indoors."
@@ -123,7 +123,7 @@ Enrollment happens through an MDM app or a profile the user installs, or automat
 A device that falls out of compliance (an old OS, encryption turned off) is blocked from corporate email and resources until it is fixed.
 
 ## Corporate applications
-MDM pushes the company's apps and their settings: the mail client pointed at the right server, the authenticator app for two-step sign-in, a managed browser, and line-of-business apps. It can also stop data leaving those apps, for example blocking copy and paste from the work mail client into a personal note.
+MDM pushes the company's apps and their settings: the mail client pointed at the right server, the authenticator app for two-step sign-in, a managed browser, and business applications (line-of-business apps). It can also stop data leaving those apps, for example blocking copy and paste from the work mail client into a personal note.
 
 ## Synchronization
 Sync keeps the same information on the phone, the laptop, and the cloud:
@@ -221,7 +221,7 @@ A firewall rule that blocks port 445 stops file sharing. A mail client that cann
 - **6 GHz**: the cleanest spectrum, opened by Wi-Fi 6E and used by Wi-Fi 7; the shortest range and only the newest devices.
 Each country's regulator decides which channels and power levels are legal; an access point set to the wrong country code may use channels its clients cannot hear.
 
-## Channel width
+## Channel selection and width
 A wider channel carries more data per second but occupies more spectrum and overlaps more neighbors. On 2.4 GHz stay at 20 MHz; on 5 GHz 80 MHz is common; 160 and 320 MHz appear with Wi-Fi 6 and 7. Two access points on overlapping channels interfere with each other; put neighboring APs on 1, 6, and 11 in the 2.4 GHz band.
 
 ## The 802.11 family
@@ -266,7 +266,7 @@ Building cable runs from wall jacks end in a **patch panel** in the closet, punc
 A firewall allows or blocks traffic by address, port, and rule. A network firewall sits between the internet and the LAN, is usually stateful (it tracks connections so replies are allowed automatically), and may add content filtering and intrusion prevention. A software firewall runs on each host.
 
 ## Power over Ethernet
-PoE sends DC power over the data cable so access points, IP phones, and cameras need no outlet. A **PoE switch** supplies it from its ports; a **PoE injector** adds it to a single run from a non-PoE switch. Standards: **802.3af** delivers 15.4 W per port, **802.3at (PoE+)** 30 W, and **802.3bt (PoE++)** 60 W (Type 3) or 100 W (Type 4). A device that reboots or will not power up on a long run may be exceeding the budget.
+PoE sends DC power over the data cable so access points, IP phones, and cameras need no outlet. A **PoE switch** supplies it from its ports; a **PoE injector** adds it to a single run from a non-PoE switch. PoE standards: **802.3af** delivers 15.4 W per port, **802.3at (PoE+)** 30 W, and **802.3bt (PoE++)** 60 W (Type 3) or 100 W (Type 4). A device that reboots or will not power up on a long run may be exceeding the budget.
 
 ## Modems and terminals
 - **Cable modem**: internet over the cable TV coax using DOCSIS; F-type connector; bandwidth shared with the neighborhood.
@@ -289,12 +289,12 @@ A hub repeated every frame to every port, causing collisions. It is obsolete; if
 ## Core server roles
 - **DNS server**: turns names into addresses. Every client needs one; a wrong DNS setting breaks "the internet" while pings to addresses still work.
 - **DHCP server**: hands out IP addresses, masks, gateways, and DNS servers for a lease period. Usually the router at home, a Windows or Linux server at work.
-- **File server**: shared folders over SMB (Windows) or NFS (Unix), with permissions.
+- **File server (fileshare)**: shared folders over SMB (Windows) or NFS (Unix), with permissions.
 - **Print server**: manages shared printers, their queues, and drivers so clients do not each hold a direct connection.
 - **Mail server**: sends with SMTP and lets clients read with IMAP or POP3; often hosted in the cloud now.
 - **Web server**: serves pages over HTTP and HTTPS; internal web apps run on one too.
 - **Syslog server**: collects log messages from switches, routers, firewalls, and servers in one place, so a problem can be traced across devices.
-- **AAA server**: authentication (who are you), authorization (what may you do), and accounting (what did you do). RADIUS and TACACS+ are the protocols; enterprise Wi-Fi and VPNs check credentials against one.
+- **AAA server** (authentication, authorization, and accounting): authentication is who are you, authorization is what may you do, and accounting is what did you do. RADIUS and TACACS+ are the protocols; enterprise Wi-Fi and VPNs check credentials against one.
 - **Database server**: stores structured data for applications (SQL).
 - **NTP server**: time. Authentication and certificates fail when clocks drift, so every device syncs to one.
 
@@ -394,12 +394,12 @@ The browser asks the operating system for www.example.com. The OS checks its cac
 ## The records
 - **A**: a name to an IPv4 address. www.example.com to 203.0.113.10.
 - **AAAA**: a name to an IPv6 address.
-- **CNAME**: an alias pointing at another name. shop.example.com is really store.hostingprovider.com; change the target and the alias follows.
+- **CNAME** (canonical name): an alias pointing at another name. shop.example.com is really store.hostingprovider.com; change the target and the alias follows.
 - **MX**: the mail server for a domain, with a priority number where lower is tried first. Without an MX record, nobody can send mail to the domain.
 - **TXT**: free-form text attached to a name. Used to prove domain ownership to services and, most importantly, to carry SPF, DKIM, and DMARC.
 - Also seen: **NS** (the domain's name servers) and **PTR** (reverse lookup, address to name).
 
-## Email authentication, the three TXT records
+## Email authentication and spam management, the three TXT records
 Anyone can put any address in the From line of an email, so receiving servers check three records published by the sender's domain:
 - **SPF** (sender policy framework) lists which servers are allowed to send mail for the domain. A message from a server not on the list fails SPF.
 - **DKIM** (DomainKeys identified mail) is a cryptographic signature the sending server adds to each message; the public key lives in DNS. A receiver that verifies the signature knows the message came from the domain and was not altered in transit.
@@ -490,7 +490,7 @@ With **full tunnel** every packet goes through the office; with **split tunnel**
 ## Making cables
 - **Cable stripper**: removes the outer jacket without nicking the wires inside. A nicked conductor is a future intermittent fault.
 - **Crimper**: presses an RJ45 (or RJ11) plug onto the wire ends. Arrange the eight wires in T568A or T568B order, push them fully into the plug, crimp, and check that the jacket is inside the strain relief.
-- **Punchdown tool**: seats each wire into a 110 block on a patch panel or the back of a keystone jack and trims the excess in one push. The color codes on the jack tell you where each wire goes. A 66 block is the older telephone version.
+- **Punchdown tool**: seats each wire into a 110 punchdown block on a patch panel or the back of a keystone jack and trims the excess in one push. The color codes on the jack tell you where each wire goes. A 66 block is the older telephone version.
 
 ## Testing cables
 - **Cable tester**: plug both ends in and it lights each of the eight wires in turn. It finds opens (a wire not connected), shorts, crossed pairs, and split pairs, and tells you whether the cable is straight-through or crossover. It does not measure quality.
