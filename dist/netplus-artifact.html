@@ -287,7 +287,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .modal-back { position: fixed; inset: 0; background: rgba(20,33,46,0.45); z-index: 60; display: grid; place-items: center; padding: 16px; }
 .modal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; width: min(560px, 100%); box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; }
 .field { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; color: var(--ink-2); }
-.field select, .field textarea { font: inherit; font-family: var(--font-body); font-weight: 400; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
+.setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.field select, .field textarea, .field input { font: inherit; font-family: var(--font-body); font-weight: 400; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
 .field textarea { resize: vertical; min-height: 96px; }
 @media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
 
@@ -330,7 +331,7 @@ FRA.course = {
   short: "N+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009" },
+  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009", questions: 90, minutes: 90 },
   description: "Self-paced CompTIA Network+ N10-009 course with adaptive training and practice exams.",
   // Domains in exam order. id is what lessons reference in their `domain` field. quota is the count on the full test.
   domains: [
@@ -5623,7 +5624,7 @@ FRA.questions.push(
     lesson: ['Content is inaccurate', 'Unclear or confusing', 'Missing something the exam covers', 'Too long or too short', 'Typo', 'Other'],
     overall: ['Content accuracy', 'Difficulty', 'Website bug', 'Design or usability', 'Idea or request', 'Other']
   };
-  const WHERE_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': `${EXAM_N}-question test results`, 'practice-results': 'Practice test results', callout: 'Lesson callout' };
+  const WHERE_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': `${EXAM_N}-question test results`, 'practice-results': 'Practice test results', custom: 'Custom test', 'custom-results': 'Custom test results', callout: 'Lesson callout' };
   const STARTER_POOL = course.starterPool || {};
   const CORE = course.core || {};
 
@@ -5747,11 +5748,11 @@ FRA.questions.push(
     }
     return out;
   }
-  function buildExam() {
+  function buildExam(quotas) {
     const items = []; const used = new Set();
     for (const d of DOMAIN_IDS) {
-      const quota = DOMAINS[d].quota; const ls = shuffle(lessonsByDomain[d]); let i = 0, guard = 0; const target = items.length + quota;
-      while (items.length < target && guard < 400) {
+      const quota = quotas ? (quotas[d] || 0) : DOMAINS[d].quota; const ls = shuffle(lessonsByDomain[d]); let i = 0, guard = 0; const target = items.length + quota;
+      while (items.length < target && guard < 400 + quota * 8) {
         const l = ls[i % ls.length]; i++; guard++;
         let q = null;
         if (gens[l.id] && Math.random() < 0.3) q = FRA.generate(l.id);
@@ -5773,6 +5774,38 @@ FRA.questions.push(
       }
     }
     return shuffle(items);
+  }
+  // ---------- test setup (standard = the real exam's format; custom = the learner's own count, time limit, and domain mix) ----------
+  const REAL_N = (course.exam && course.exam.questions) || EXAM_N, REAL_MIN = (course.exam && course.exam.minutes) || EXAM_MINUTES;
+  const MAX_N = Math.max(50, bank.length);
+  const clampN = n => Math.min(MAX_N, Math.max(5, parseInt(n, 10) || EXAM_N));
+  const clampMin = m => { const v = parseInt(m, 10); return isNaN(v) ? EXAM_MINUTES : Math.min(600, Math.max(0, v)); };
+  function pctWeights() { const w = {}; DOMAIN_IDS.forEach(d => { w[d] = DOMAINS[d].pct; }); return w; }
+  function defaultSetup() { return { n: EXAM_N, minutes: EXAM_MINUTES, weights: pctWeights() }; }
+  function currentSetup() {
+    const s = S.settings.testSetup; if (!s) return defaultSetup();
+    const weights = pctWeights(); DOMAIN_IDS.forEach(d => { if (s.weights && s.weights[d] != null) weights[d] = Math.max(0, Number(s.weights[d]) || 0); });
+    return { n: clampN(s.n), minutes: clampMin(s.minutes), weights };
+  }
+  // Largest-remainder apportionment of n questions across domains by relative weight. Zero weight excludes a domain.
+  function apportion(n, weights) {
+    let w = {}; let total = 0; DOMAIN_IDS.forEach(d => { w[d] = Math.max(0, Number(weights && weights[d]) || 0); total += w[d]; });
+    if (!total) { w = pctWeights(); total = DOMAIN_IDS.reduce((a, d) => a + w[d], 0); }
+    const q = {}; let assigned = 0; const rem = [];
+    DOMAIN_IDS.forEach(d => { const raw = n * w[d] / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
+    rem.sort((a, b) => b.r - a.r || DOMAINS[b.d].pct - DOMAINS[a.d].pct);
+    for (let i = 0; assigned < n && i < rem.length; i++) if (w[rem[i].d] > 0) { q[rem[i].d]++; assigned++; }
+    let guard = 0; while (assigned < n && guard++ < 1000) for (const d of DOMAIN_IDS) { if (assigned >= n) break; if (w[d] > 0) { q[d]++; assigned++; } }
+    return q;
+  }
+  function setupPreview(s) {
+    const q = apportion(s.n, s.weights); const total = DOMAIN_IDS.reduce((a, d) => a + q[d], 0);
+    return `${total} questions: ${DOMAIN_IDS.filter(d => q[d]).map(d => `${q[d]} ${DOMAINS[d].short}`).join(', ')}. ${s.minutes ? `${s.minutes}-minute time limit.` : 'No time limit.'}`;
+  }
+  function readSetupFromForm() {
+    const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
+    const weights = {}; document.querySelectorAll('.su-w').forEach(el => { weights[el.dataset.d] = Math.max(0, parseInt(el.value, 10) || 0); });
+    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; save(); return currentSetup();
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
@@ -6141,15 +6174,17 @@ FRA.questions.push(
   }
 
   // ---------- tests ----------
-  const isTest = k => k === 'starter' || k === 'full' || k === 'practice';
-  const TEST_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test' };
+  const isTest = k => k === 'starter' || k === 'full' || k === 'practice' || k === 'custom';
+  const TEST_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', custom: 'Custom test' };
+  const testLabel = e => e.setup && e.setup.mode === 'standard' ? `Standard test (${e.setup.count || e.setup.n} questions)` : e.setup && e.setup.mode === 'custom' ? `Custom test (${e.setup.count || e.setup.n} questions)` : TEST_LABEL[e.kind];
+  const examMinutes = ex => ex.minutes == null ? (ex.kind === 'starter' ? 0 : EXAM_MINUTES) : ex.minutes;
   function viewExam() {
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
     if (ex.i >= ex.items.length) return finishExam();
     const answered = ex.answers.filter(Boolean).length; const q = fat(ex.items[ex.i]);
     return `<div class="content">
-      <div class="exam-head"><span class="pill accent">${TEST_LABEL[ex.kind]}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${S.settings.timer && ex.kind !== 'starter' ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${S.settings.timer && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
       <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every wrong answer and every guess is explained on the results page. ${answered} answered so far.</p>
     </div>`;
@@ -6157,19 +6192,34 @@ FRA.questions.push(
   function viewTestsHub() {
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
+      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
       <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row and you are cleared to book the real thing.`}</p></div>
         <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}</div></div>
-        <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Use the ${EXAM_MINUTES}-minute timer on ${EXAM_N}-question tests</label></div>
+        <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests</label></div>
+      ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
-          return `<tr><td>${fmtDate(e.date)}</td><td>${TEST_LABEL[e.kind]}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
+          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
       </tbody></table></div></div>` : ''}
     </div>`;
   }
-  function startExam(kind) {
-    const items = kind === 'starter' ? buildStarter() : buildExam();
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now() };
+  function setupCard() {
+    if (testsLocked('full')) return '';
+    const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
+    return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
+      <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
+      <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="start-custom">Start custom test</button><button class="btn ghost small" data-act="setup-reset">Reset to exam defaults</button><span class="muted" style="font-size:.9rem">Custom tests feed your weak topics and retraining but do not count toward the pass streak.</span></div></div>`;
+  }
+  const nextFlowKind = () => S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full';
+  function startExam(kind, setup) {
+    let items, minutes = kind === 'starter' ? 0 : EXAM_MINUTES, quotas = null;
+    if (kind === 'starter') items = buildStarter();
+    else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
+    const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
+    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta };
     go('exam');
   }
   function finishExam() {
@@ -6183,10 +6233,13 @@ FRA.questions.push(
       review.push({ q: slim(q), choice: a.choice, conf: a.conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000) };
+    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
     if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; }
-    else {
+    else if (ex.kind === 'custom') {
+      // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
+      if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
+    } else {
       S.passStreak = p >= PASS_PCT ? S.passStreak + 1 : 0;
       const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null;
     }
@@ -6215,14 +6268,15 @@ FRA.questions.push(
       headline = passed ? 'Passing score.' : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
+        : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
         : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${S.passStreak >= STREAK_NEEDED ? 'You are cleared to book the exam.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${S.passStreak < STREAK_NEEDED ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
     const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">${TEST_LABEL[e.kind]} · ${fmtDate(e.date)} · ${mins} min</div><h1>${headline}</h1></div>
+      <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
         <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
-        <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>` : ''}</div>
+        <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
         <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
@@ -6422,8 +6476,8 @@ FRA.questions.push(
   function startTimer() {
     stopTimer(); if (!S.settings.timer) return;
     const tick = () => {
-      const ex = S.active; if (!ex || !isTest(ex.kind) || ex.kind === 'starter') { stopTimer(); return; }
-      const remain = EXAM_MINUTES * 60 - Math.floor((Date.now() - ex.startedAt) / 1000);
+      const ex = S.active; if (!ex || !isTest(ex.kind) || !examMinutes(ex)) { stopTimer(); return; }
+      const remain = examMinutes(ex) * 60 - Math.floor((Date.now() - ex.startedAt) / 1000);
       const el = $('#timer'); if (el) { const m = Math.max(0, Math.floor(remain / 60)), s = Math.max(0, remain % 60); el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; el.classList.toggle('low', remain < 300); }
       if (remain <= 0) { stopTimer(); ex.i = ex.items.length; save(); toast('Time is up. Scoring your test.'); render(); }
     };
@@ -6497,6 +6551,14 @@ FRA.questions.push(
         if (arg === 'starter' && S.plan && planRemaining().length && !confirm('Retaking the starter test will rebuild your tutorial from the new results. Continue?')) return;
         startExam(arg === 'starter' ? 'starter' : arg === 'full' ? 'full' : 'practice'); return;
       }
+      case 'start-standard': case 'start-custom': {
+        if (testsLocked('full')) { toast('The full course is needed for this test.'); return go('exam'); }
+        if (S.active && S.active.kind !== 'checkpoint' && !confirm('You have an unfinished session. Start a new test and discard it?')) return;
+        if (act === 'start-standard') { startExam(nextFlowKind(), { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); return; }
+        const s = readSetupFromForm() || currentSetup();
+        startExam('custom', { mode: 'custom', n: s.n, minutes: s.minutes, weights: s.weights }); return;
+      }
+      case 'setup-reset': { S.settings.testSetup = null; save(); render(); return; }
       case 'abandon-exam': { if (!confirm('Quit this test? Your answers so far will be discarded.')) return; S.active = null; save(); return go('exam'); }
       case 'resume': { const a = S.active; if (!a) return go('home'); if (a.kind === 'train') return go('train'); if (a.kind === 'checkpoint') return go('lesson', a.lesson); return go('exam'); }
       case 'start-train': { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain(); return; }
@@ -6531,6 +6593,7 @@ FRA.questions.push(
     }
   });
   app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; save(); } });
+  app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
@@ -6559,6 +6622,16 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% streak=${S.passStreak} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the streak alone.
+    const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
+    const streakBefore = S.passStreak, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
+    S.active = null; startExam('custom', { mode: 'custom', n: 12, minutes: 0, weights: cw }); ex = S.active;
+    if (ex.items.length !== 12) throw new Error('custom test built ' + ex.items.length + ' items, expected 12');
+    if (ex.minutes !== 0) throw new Error('custom test time limit not honored');
+    ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = { choice: q.c, conf: 4 }; }); ex.i = ex.items.length; render();
+    if (S.exams[2].kind !== 'custom' || S.passStreak !== streakBefore || S.plan !== planBefore) throw new Error('custom test changed the streak or the plan');
+    log.push(`custom ${S.exams[2].pct}% n=${S.exams[2].total} quotas=${JSON.stringify(S.exams[2].setup.quotas)} label=${testLabel(S.exams[2])}`);
+    go('exam'); if (!$('#su-n')) throw new Error('test setup card did not render');
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
     const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
