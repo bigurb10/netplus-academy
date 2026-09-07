@@ -2,11 +2,11 @@
 
 Self-paced certification courses in a single web page each: a printable memorization sheet, a short starter test that builds a personalized tutorial, a full-length test that builds a retraining tutorial from your misses, and practice tests until you score above the bar three times in a row. All content and questions are original.
 
-Courses live in `courses/<id>/` and share one engine in `engine/`. The first course is **NetPlus Academy** (CompTIA Network+ N10-009). Security+, CBET, and A+ Core 1 and Core 2 are next.
+Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses: **NetPlus Academy** (CompTIA Network+ N10-009, 49 lessons) and **SecPlus Academy** (CompTIA Security+ SY0-701, 54 lessons). CBET and A+ Core 1 and Core 2 are next.
 
 ## Run it
 
-- Live: https://bigurb10.github.io/netplus-academy/ is the catalog; https://bigurb10.github.io/netplus-academy/netplus/ is the Network+ course. Every push to `main` redeploys within a minute or two; no build step is needed because each course page loads the source files directly. On a phone, open the course link and use "Add to Home Screen".
+- Live: https://bigurb10.github.io/netplus-academy/ is the catalog; https://bigurb10.github.io/netplus-academy/netplus/ is the Network+ course and https://bigurb10.github.io/netplus-academy/secplus/ is the Security+ course. Every push to `main` redeploys within a minute or two; no build step is needed because each course page loads the source files directly. On a phone, open the course link and use "Add to Home Screen".
 - Locally: open `netplus/index.html` (or `dist/netplus.html`, a single self-contained file) in any browser. Progress is saved in that browser's local storage.
 - To host elsewhere, upload the repo as-is, or upload `dist/<course>.html` renamed to `index.html` to any static host. For the custom domain, add a `CNAME` file containing `fieldreadyacademy.com` and point the domain's DNS at GitHub Pages.
 
@@ -20,7 +20,7 @@ Courses live in `courses/<id>/` and share one engine in `engine/`. The first cou
 - `courses/<id>/cheatsheet.js`: the memorization sheet. `courses/<id>/deep-*.js`: the deeper explanation for every lesson, keyed by lesson id.
 - `<id>/index.html`: the page that loads the engine plus that pack. `index.html`: the catalog. `catalog.css`: its styles.
 - `build.py`: bundles each course into `dist/<id>.html` and `dist/<id>-artifact.html`. Run `python build.py` (all) or `python build.py netplus`.
-- `tests/`: jsdom harness. `npm install` once, then `npm test` runs the engine's built-in self-test for every course and the gating test. `tests/patches/` holds the scripts that made the engine refactor, kept for reference.
+- `tests/`: jsdom harness. `npm install` once, then `npm test` runs the engine's built-in self-test for every course and the gating test. `node tests/packcheck.js courses/<id>` validates a pack's lessons, deep dives, and questions (including answer-key balance); `node tests/balance-keys.js courses/<id>/questions-N.js` spreads correct answers evenly across A to D. `tests/patches/` holds the scripts that made the engine refactor, kept for reference.
 
 ## How a course works
 

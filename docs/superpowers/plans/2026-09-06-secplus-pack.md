@@ -2,7 +2,7 @@
 
 **Goal:** A complete `courses/secplus/` pack in the FieldReady Academy format: manifest, cheat sheet (done), 54 original lessons across 15 units with a deeper explanation each, five or more original questions per lesson (about 280), generators for computable topics, and its course page and catalog card.
 
-**Status:** Cheat sheet written (`courses/secplus/cheatsheet.js`). Everything else below is to do. Do NOT add `courses/secplus/course.js` until the curriculum and questions exist: the test harness and `build.py` treat any folder with a `course.js` as a complete course.
+**Status:** COMPLETE on 2026-09-06. All 54 lessons, deep dives, 270 questions, 7 generators, manifest, course page, and catalog card are in place; `npm test` passes for the pack.
 
 ## Content rules (from Blake)
 
