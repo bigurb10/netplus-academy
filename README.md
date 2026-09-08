@@ -6,7 +6,7 @@ Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses:
 
 ## Run it
 
-- Live: https://bigurb10.github.io/netplus-academy/ is the catalog; https://bigurb10.github.io/netplus-academy/netplus/ is the Network+ course https://bigurb10.github.io/netplus-academy/secplus/ is the Security+ course, and https://bigurb10.github.io/netplus-academy/cbet/ is the CBET course. Every push to `main` redeploys within a minute or two; no build step is needed because each course page loads the source files directly. On a phone, open the course link and use "Add to Home Screen".
+- Live (testing layout as of 2026-09-07): https://bigurb10.github.io/netplus-academy/ serves only the Network+ course, from the `gh-pages` branch of this repo, which holds the single-file build `dist/netplus.html` renamed to `index.html` plus the cheat sheet PDF. https://bigurb10.github.io/secplus-academy/ serves only the Security+ course the same way, from the separate `secplus-academy` repo. `main` here holds the code and is not what GitHub Pages deploys. To update a live page: `python build.py <id>`, copy `dist/<id>.html` to that branch or repo as `index.html` (and the cheat sheet PDF), commit, push. The catalog and the other courses are not published yet. On a phone, open the course link and use "Add to Home Screen".
 - Locally: open `netplus/index.html` (or `dist/netplus.html`, a single self-contained file) in any browser. Progress is saved in that browser's local storage.
 - To host elsewhere, upload the repo as-is, or upload `dist/<course>.html` renamed to `index.html` to any static host. For the custom domain, add a `CNAME` file containing `fieldreadyacademy.com` and point the domain's DNS at GitHub Pages.
 
