@@ -6404,7 +6404,7 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -6567,11 +6567,12 @@ FRA.questions.push(
   function stage() {
     if (!S.exams.some(e => e.kind === 'starter')) return 'starter';
     if (S.plan && planRemaining().length) return S.plan.source === 'starter' ? 'tutorial' : 'retrain';
-    if (S.passStreak >= STREAK_NEEDED) return 'ready';
+    if (S.passStreak >= STREAK_NEEDED) return S.official ? 'ready' : 'official';
     if (!S.exams.some(e => e.kind === 'full' || e.kind === 'practice')) return 'fulltest';
     return 'practice';
   }
-  const STAGE_LABEL = { starter: 'Starter test', tutorial: 'Initial tutorial', fulltest: `${EXAM_N}-question test`, retrain: 'Retraining', practice: 'Practice tests', ready: 'Ready' };
+  // The final gate: after the pass streak, one test in the real exam's format, within its time limit, at the course bar.
+  const STAGE_LABEL = { starter: 'Starter test', tutorial: 'Initial tutorial', fulltest: `${EXAM_N}-question test`, retrain: 'Retraining', practice: 'Practice tests', official: 'Official-format test', ready: 'Ready' };
 
   function lastExam(kind) { for (let i = S.exams.length - 1; i >= 0; i--) if (!kind || S.exams[i].kind === kind) return S.exams[i]; return null; }
   function weakTopics() {
@@ -6599,6 +6600,7 @@ FRA.questions.push(
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
     if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
+    if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${PASS_PCT}% or better within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
     if (testsLocked('practice')) return { label: 'Unlock the full course for practice tests', act: 'upgrade', arg: '' };
     return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `Pass streak ${S.passStreak} of ${STREAK_NEEDED}. Score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row to be cleared.` };
@@ -6695,7 +6697,8 @@ FRA.questions.push(
           <li><strong>Your tutorial.</strong> Lessons chosen from your results. Miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and you get that domain from the ground up.</li>
           <li><strong>The ${EXAM_N}-question test.</strong> Weighted like the real exam, explained at the end.</li>
           <li><strong>Retraining.</strong> A second tutorial built only from what you missed or guessed, worst first.</li>
-          <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row. Then book the exam.</li>
+          <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row.</li>
+          <li><strong>The official-format test.</strong> ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam. Pass it and book the exam.</li>
         </ol>
         <div class="row"><button class="btn primary lg" data-act="start-exam" data-arg="starter">Start the ${STARTER_N}-question test</button><button class="btn ghost" data-act="go" data-arg="course">Browse the lessons first</button></div>
       </div>
@@ -6726,7 +6729,7 @@ FRA.questions.push(
       <div class="stats">
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
-        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${TEST_LABEL[last.kind]}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
+        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
@@ -6737,7 +6740,7 @@ FRA.questions.push(
     </div>`;
   }
   function stageStrip(st) {
-    const steps = ['starter', 'tutorial', 'fulltest', 'retrain', 'practice', 'ready'];
+    const steps = ['starter', 'tutorial', 'fulltest', 'retrain', 'practice', 'official', 'ready'];
     const idx = steps.indexOf(st);
     return `<div class="stage-strip">${steps.map((s, i) => `<div class="stage ${i < idx ? 'done' : ''} ${i === idx ? 'cur' : ''}"><span class="led ${i < idx ? 'green' : i === idx ? 'amber' : 'off'}"></span><span>${STAGE_LABEL[s]}</span></div>`).join('')}</div>`;
   }
@@ -6788,7 +6791,7 @@ FRA.questions.push(
         <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
       ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
-      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : 'Next: a practice test.'} <button class="btn primary small" data-act="start-exam" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
+      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
       <div class="row"><button class="btn ghost" data-act="go" data-arg="course">Browse all ${lessons.length} lessons</button></div>
@@ -6898,13 +6901,15 @@ FRA.questions.push(
   const TEST_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', custom: 'Custom test' };
   const testLabel = e => e.setup && e.setup.mode === 'standard' ? `Standard test (${e.setup.count || e.setup.n} questions)` : e.setup && e.setup.mode === 'custom' ? `Custom test (${e.setup.count || e.setup.n} questions)` : TEST_LABEL[e.kind];
   const examMinutes = ex => ex.minutes == null ? (ex.kind === 'starter' ? 0 : EXAM_MINUTES) : ex.minutes;
+  // An official-format test: the real exam's format with a time limit. It is always timed and is the course's final gate.
+  const isOfficial = ex => !!(ex && ex.setup && ex.setup.mode === 'standard' && ex.minutes > 0);
   function viewExam() {
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
     if (ex.i >= ex.items.length) return finishExam();
     const answered = ex.answers.filter(Boolean).length; const q = fat(ex.items[ex.i]);
     return `<div class="content">
-      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${S.settings.timer && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
       <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every wrong answer and every guess is explained on the results page. ${answered} answered so far.</p>
     </div>`;
@@ -6913,9 +6918,9 @@ FRA.questions.push(
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
-      <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row and you are cleared to book the real thing.`}</p></div>
-        <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}</div></div>
-        <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests</label></div>
+      <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : st === 'official' ? 'Final step: the official-format test' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : st === 'official' ? `Your streak is complete. Pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${PASS_PCT}% or better and you are cleared to book the real thing.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row, then pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) and you are cleared to book the real thing.`}</p></div>
+        <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}${st === 'official' && !testsLocked('full') ? `<button class="btn primary" data-act="start-standard">Official-format test</button>` : ''}</div></div>
+        <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests (the official-format test is always timed)</label></div>
       ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
@@ -6960,7 +6965,11 @@ FRA.questions.push(
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
     } else {
-      S.passStreak = p >= PASS_PCT ? S.passStreak + 1 : 0;
+      const prevStreak = S.passStreak; const passed = p >= PASS_PCT;
+      S.passStreak = passed ? prevStreak + 1 : 0;
+      // The official pass counts only once the streak was already complete; any failed test sends the learner back through the streak.
+      if (!passed) S.official = null;
+      else if (isOfficial(ex) && prevStreak >= STREAK_NEEDED) S.official = { examIdx, date: rec.date, pct: p };
       const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null;
     }
     S.active = null;
@@ -6985,11 +6994,11 @@ FRA.questions.push(
         <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
         : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
     } else {
-      headline = passed ? 'Passing score.' : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
+      headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
-        : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${S.passStreak >= STREAK_NEEDED ? 'You are cleared to book the exam.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${S.passStreak < STREAK_NEEDED ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
+        : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
     const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
@@ -7076,10 +7085,10 @@ FRA.questions.push(
   function exportable() { const c = JSON.parse(JSON.stringify(S)); c.active = null; return c; }
 
   function viewReady() {
-    const last3 = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-3);
+    const last3 = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-3); const st = stage(); const ready = st === 'ready';
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Readiness report</div><h1>${S.passStreak >= STREAK_NEEDED ? 'Book the exam.' : 'Not yet.'}</h1></div>
-      ${S.passStreak >= STREAK_NEEDED ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passStreak} tests in a row${last3.length ? ` (${last3.map(e => e.pct + '%').join(', ')})` : ''}.</strong><p>${esc(course.realExamNote)} You have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : `<div class="card"><p>You need ${STREAK_NEEDED - S.passStreak} more test${STREAK_NEEDED - S.passStreak === 1 ? '' : 's'} at ${PASS_PCT}% or better in a row.</p></div>`}
+      <div><div class="eyebrow">Readiness report</div><h1>${ready ? 'Book the exam.' : 'Not yet.'}</h1></div>
+      ${ready ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passStreak} tests in a row${last3.length ? ` (${last3.map(e => e.pct + '%').join(', ')})` : ''}, and passed the official-format test at ${S.official.pct}% within its time limit.</strong><p>${esc(course.realExamNote)} You have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : st === 'official' ? `<div class="card stack"><p>Your streak of ${S.passStreak} is complete. The final step is the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam, at ${PASS_PCT}% or better.</p><div class="row"><button class="btn primary" data-act="start-standard">Start the official-format test</button></div></div>` : `<div class="card"><p>You need ${Math.max(0, STREAK_NEEDED - S.passStreak)} more test${STREAK_NEEDED - S.passStreak === 1 ? '' : 's'} at ${PASS_PCT}% or better in a row, then the official-format test.</p></div>`}
       <div class="card stack"><h3>Exam day</h3><ul style="margin:0;padding-left:20px;line-height:1.7">
         ${(course.examDay || []).map(t => `<li>${inline(t)}</li>`).join('')}
       </ul></div>
@@ -7194,7 +7203,7 @@ FRA.questions.push(
 
   // ---------- timer ----------
   function startTimer() {
-    stopTimer(); if (!S.settings.timer) return;
+    stopTimer(); if (!S.settings.timer && !isOfficial(S.active)) return;
     const tick = () => {
       const ex = S.active; if (!ex || !isTest(ex.kind) || !examMinutes(ex)) { stopTimer(); return; }
       const remain = examMinutes(ex) * 60 - Math.floor((Date.now() - ex.startedAt) / 1000);
@@ -7371,6 +7380,20 @@ FRA.questions.push(
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
     const callouts = document.querySelectorAll('.callout').length;
     log.push(`lesson view callouts=${callouts}`);
+    // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
+    const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
+    S.plan = null; S.passStreak = 0; S.official = null;
+    for (let r = 0; r < STREAK_NEEDED; r++) { S.active = null; startExam('practice'); allRight(S.active); }
+    if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
+    S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
+    if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
+    allRight(ex);
+    if (!S.official || stage() !== 'ready') throw new Error(`official pass did not clear the learner: stage ${stage()}`);
+    go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
+    log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
+    S.active = null; startExam('practice'); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: 2 }; }); failing.i = failing.items.length; render();
+    if (S.official || S.passStreak !== 0) throw new Error('a failed test did not reset the official pass and streak');
+    log.push(`failed test resets: streak=${S.passStreak} official=${S.official} stage=${stage()}`);
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
     document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">OK\n${log.join('\n')}</pre>`);
   }
