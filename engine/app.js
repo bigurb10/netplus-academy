@@ -1,7 +1,10 @@
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
    retraining tutorial built from the misses -> practice tests until three in a row at 85% or better.
-   Every test ends with an explanation of each wrong answer and each lucky guess. */
+   Every test ends with an explanation of each wrong answer and each lucky guess.
+   After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
+   Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
+   standard-format tests (the real exam's format) ask no confidence question. */
 (function () {
   'use strict';
 
@@ -60,7 +63,16 @@
   const pct = (c, t) => t ? Math.round(100 * c / t) : 0;
   const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const letters = ['A', 'B', 'C', 'D'];
-  const inline = s => esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // ---------- acronyms ----------
+  // FRA.acronyms: { KEY: { full, tip, more } }. Every key found in tutorial and cheat sheet text becomes a hover link
+  // (tooltip: full + tip) that opens the deeper explanation on click. Whole words only, plurals allowed, longest key wins.
+  // Never applied inside {{code}} spans or fenced blocks, and never to question text.
+  const ACR = FRA.acronyms || {};
+  const ACR_KEYS = Object.keys(ACR).filter(k => ACR[k] && ACR[k].full).sort((a, b) => b.length - a.length || a.localeCompare(b));
+  const ACR_RE = ACR_KEYS.length ? new RegExp('(^|[^A-Za-z0-9_])(' + ACR_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('|') + ')(s|es)?(?![A-Za-z0-9_])', 'g') : null;
+  const acrWrap = html => !ACR_RE ? html : html.split(/(<code>[\s\S]*?<\/code>)/).map(part => part.startsWith('<code>') ? part
+    : part.replace(ACR_RE, (m, pre, key, pl) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
+  const inline = s => acrWrap(esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
   function renderBody(md) {
@@ -86,7 +98,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -234,12 +246,26 @@
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
-      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: r.conf, source: 'test' }); }
+      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
     const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
       .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
     return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, pts };
   }
+  // Path choice after the starter test: the tailored plan, or every lesson in course order. Entries tied to a missed or
+  // guessed question keep their reasons either way, so those lessons still open with the learner's answer.
+  function applyScope(plan, scope) {
+    if (scope === 'full') { const have = {}; plan.lessons.forEach(e => { have[e.id] = e; }); plan.lessons = lessons.map(l => have[l.id] || { id: l.id, reasons: [{ kind: 'all' }] }); }
+    plan.scope = scope; return plan;
+  }
+  function choosePath(scope, idx) {
+    const rec = S.exams[idx]; if (!rec || rec.kind !== 'starter') return;
+    const createdAt = S.plan && S.plan.examIdx === idx ? S.plan.createdAt : Date.now();
+    const plan = applyScope(planFromStarter(rec, idx), scope); plan.createdAt = createdAt;
+    S.plan = plan.lessons.length ? plan : null; S.path = { examIdx: idx, scope }; save();
+  }
+  const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
+  const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
   const planEntry = id => S.plan ? S.plan.lessons.find(e => e.id === id) : null;
   const planDone = id => { const ls = S.lessons[id]; return !!(ls && ls.status === 'passed' && S.plan && ls.passedAt >= S.plan.createdAt); };
   const planRemaining = () => S.plan ? S.plan.lessons.filter(e => !planDone(e.id)) : [];
@@ -280,7 +306,7 @@
     if (S.active) return { label: S.active.kind === 'train' ? 'Resume drills' : S.active.kind === 'checkpoint' ? 'Resume the lesson checkpoint' : 'Resume your test', act: 'resume', arg: '' };
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
-    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
+    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${PASS_PCT}% or better within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
@@ -293,6 +319,7 @@
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
+  let acrOpen = null; // acronym whose deeper explanation is open
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
@@ -300,8 +327,8 @@
 
   function render() {
     const v = S.view || { name: 'home' };
-    fbReg = [];
-    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal(); return; }
+    fbReg = []; acrHide();
+    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
     let main = '';
     switch (v.name) {
       case 'home': main = viewHome(); break;
@@ -337,7 +364,7 @@
         <nav class="mobile-nav">
           ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
-      </div>${fbModal()}`;
+      </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function navBtn(name, label) {
@@ -376,7 +403,7 @@
         <h3>How the path works</h3>
         <ol style="margin:0;padding-left:22px;line-height:1.7">
           <li><strong>Starter test.</strong> ${STARTER_N} questions with confidence ratings. Wrong answers are explained at the end.</li>
-          <li><strong>Your tutorial.</strong> Lessons chosen from your results. Miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and you get that domain from the ground up.</li>
+          <li><strong>Your path.</strong> Right after the starter test you choose: a tutorial built from your results, or the whole course in order. Either way, miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and the tailored tutorial gives you that domain from the ground up.</li>
           <li><strong>The ${EXAM_N}-question test.</strong> Weighted like the real exam, explained at the end.</li>
           <li><strong>Retraining.</strong> A second tutorial built only from what you missed or guessed, worst first.</li>
           <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row.</li>
@@ -411,7 +438,7 @@
       <div class="stats">
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
-        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
+        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
@@ -445,6 +472,7 @@
 
   // ---------- tutorial (plan) ----------
   function reasonLabel(r) {
+    if (r.kind === 'all') return 'Part of the whole course';
     if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: ${ALL_WORD} starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
     const src = r.source === 'starter' ? 'starter test' : 'last test';
     return `${KIND_LABEL[r.kind]} on the ${src}`;
@@ -455,24 +483,28 @@
     if (kinds.includes('wrong-confident')) return '<span class="pill bad">Wrong, confident</span>';
     if (kinds.includes('wrong')) return '<span class="pill bad">Wrong</span>';
     if (kinds.includes('guess')) return '<span class="pill warn">Guessed</span>';
+    if (kinds.includes('all')) return '<span class="pill">Whole course</span>';
     const d = e.reasons.find(r => r.kind === 'domain');
     if (d) return `<span class="pill">${d.level === 'rebuild' ? 'Whole domain' : 'Core lesson'}</span>`;
     return '<span class="pill">Review</span>';
   }
   function viewTutorial() {
     if (!S.plan) {
+      const sIdx = lastStarterIdx();
       return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Tutorial</div><h1>No tutorial yet</h1><p class="ink2" style="margin-top:6px">${stage() === 'starter' ? 'Take the starter test and your tutorial will be built from the results.' : 'Your last test had no misses or guesses, so there is nothing to retrain. Take a practice test to find new gaps.'}</p></div>
-        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button><button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
+        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button>${sIdx >= 0 && stage() !== 'starter' ? `<button class="btn" data-act="path" data-arg="full:${sIdx}">Do the whole course instead</button>` : ''}<button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
     }
     const rem = planRemaining(); const done = S.plan.lessons.length - rem.length;
-    const src = S.exams[S.plan.examIdx];
+    const src = S.exams[S.plan.examIdx]; const full = S.plan.scope === 'full';
+    const tailoredN = S.plan.source === 'starter' && src ? planFromStarter(src, S.plan.examIdx).lessons.length : 0;
     const byUnit = {}; S.plan.lessons.forEach(e => { const u = L[e.id].unit; (byUnit[u.id] = byUnit[u.id] || { u, list: [] }).list.push(e); });
     const groups = Object.values(byUnit).sort((a, b) => S.plan.source === 'starter' ? a.u.n - b.u.n : Math.min(...a.list.map(e => S.plan.lessons.indexOf(e))) - Math.min(...b.list.map(e => S.plan.lessons.indexOf(e))));
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">${S.plan.source === 'starter' ? 'Your tutorial' : 'Retraining tutorial'} · built from your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
-        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
+      <div><div class="eyebrow">${S.plan.source === 'starter' ? (full ? 'The whole course' : 'Your tutorial') : 'Retraining tutorial'} · ${full ? 'chosen after' : 'built from'} your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
+        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
-      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
+      ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
@@ -507,7 +539,7 @@
     const idx = lessons.indexOf(l); const nextLesson = lessons[idx + 1]; const prevLesson = lessons[idx - 1];
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
-      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'} · confidence ${r.conf}/5</div>
+      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
         <div class="stem">${esc(q.q)}</div>
         <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
@@ -540,6 +572,7 @@
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
       ${deepSection(id)}
       ${quiz}
+      ${ratingRow(id)}
       <div class="row" style="justify-content:flex-end"><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}">&#9873; Something wrong or unclear in this lesson? Send feedback</button></div>
       <div class="row spread">
         ${prevLesson ? `<button class="btn ghost" data-act="lesson" data-arg="${prevLesson.id}">← ${esc(prevLesson.title)}</button>` : '<span></span>'}
@@ -548,26 +581,33 @@
     </div>`;
   }
 
-  // Shared question card. sess: { items, i, answers, sel, conf, submitted }
+  // Lesson rating: ten chips, 1 confusing to 10 great. The same chips appear on the lesson page and in the lesson feedback form.
+  function ratingChips(id, cur) { return `<div class="rate-row" role="group" aria-label="Rate this lesson from 1 to 10">${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button class="chip rate" data-act="rate" data-arg="${n}" data-lesson="${id}" aria-pressed="${cur === n ? 'true' : 'false'}">${n}</button>`).join('')}</div>`; }
+  function ratingRow(id) {
+    const r = S.ratings && S.ratings[id];
+    return `<div class="card soft stack rate-card" style="gap:8px"><div><div class="eyebrow">Rate this lesson</div><span class="ink2" style="font-size:.95rem">1 is confusing, 10 is great.${r ? ` You rated it ${r.r}/10.` : ' Your rating helps refine the course.'}</span></div>${ratingChips(id, r ? r.r : null)}</div>`;
+  }
+
+  // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
   function questionCard(sess, opts) {
     const q = fat(sess.items[sess.i]); const n = sess.items.length;
-    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf;
+    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf; const hasConf = !sess.noConf;
     const l = L[q.t];
     const optionsHtml = q.a.map((opt, k) => {
       let cls = 'option'; const pressed = sel === k ? 'true' : 'false';
       if (submitted && opts.immediate) { if (k === q.c) cls += ' correct'; else if (k === sel) cls += ' wrong'; }
       return `<button class="${cls}" data-act="opt" data-arg="${k}" aria-pressed="${pressed}" ${submitted ? 'disabled' : ''}><span class="key">${letters[k]}</span><span>${esc(opt)}</span></button>`;
     }).join('');
-    const confHtml = `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>`;
+    const confHtml = hasConf ? `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>` : '';
     let feedback = '';
     if (submitted && opts.immediate) {
       const correct = sel === q.c;
       feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
-    const canSubmit = sel != null && conf != null;
+    const canSubmit = sel != null && (conf != null || !hasConf);
     const controls = submitted
       ? `<div class="row spread"><span class="kbd-hint"><kbd>Enter</kbd> continue</span><button class="btn primary" data-act="next">Continue</button></div>`
-      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, <kbd>1</kbd>–<kbd>5</kbd> confidence, <kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
+      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, ${hasConf ? '<kbd>1</kbd>–<kbd>5</kbd> confidence, ' : ''}<kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
     return `<div class="quiz">
       <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span><span class="row" style="gap:6px">${opts.right || ''}${fbBtn(q, sess.kind)}</span></div>
       <div class="q-stem">${esc(q.q)}</div>
@@ -593,7 +633,7 @@
     return `<div class="content">
       <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every wrong answer and every guess is explained on the results page. ${answered} answered so far.</p>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -606,7 +646,7 @@
       ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
-          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
+          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${e.noConf ? 'no confidence ratings' : `${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}`}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
       </tbody></table></div></div>` : ''}
     </div>`;
   }
@@ -614,7 +654,7 @@
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
       <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
@@ -626,7 +666,8 @@
     if (kind === 'starter') items = buildStarter();
     else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
     const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta };
+    // Standard-format tests (the real exam's format) ask no confidence question.
+    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: !!(setup && setup.mode === 'standard') };
     go('exam');
   }
   function finishExam() {
@@ -635,14 +676,16 @@
     const review = [];
     items.forEach((q, k) => {
       const a = ex.answers[k] || { choice: -1, conf: 1, skipped: true };
-      const res = recordAnswer(q, a.choice, a.conf);
+      // Without a confidence rating, a right answer counts as sure (4) and a wrong one as plain wrong (3).
+      const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
+      const res = recordAnswer(q, a.choice, conf);
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
-      review.push({ q: slim(q), choice: a.choice, conf: a.conf, correct: res.correct });
+      review.push({ q: slim(q), choice: a.choice, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null };
+    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
-    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; }
+    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
     else if (ex.kind === 'custom') {
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
@@ -670,25 +713,40 @@
     let headline, planCard;
     if (isStarter) {
       headline = e.pct >= 90 && !guesses.length ? 'Strong start.' : e.pct >= 60 ? 'A solid base with clear gaps.' : 'Starting from the ground up, which is fine.';
-      planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
+      const latest = idx === lastStarterIdx(); const chosen = S.path && S.path.examIdx === idx ? S.path.scope : null;
+      if (latest && !chosen) {
+        // The path choice: the tailored tutorial or the whole course, whatever the score.
+        const tailored = planFromStarter(e, idx).lessons;
+        planCard = `<div class="card lift stack path-choice"><div><div class="eyebrow">Choose your path</div><h3>A tailored tutorial, or the whole course?</h3><p class="ink2">Pick either one, whatever your score. Every lesson ends with a checkpoint, and the ${EXAM_N}-question test comes after the lessons. You can switch later from the Tutorial tab.</p></div>
+          <div class="paths">
+            <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
+            <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
+          </div></div>`;
+      } else if (planIsFromThis && S.plan.scope === 'full') {
+        planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
+        <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="tailored:${idx}">Switch to the tailored tutorial</button>` : ''}</div></div>`;
+      } else {
+        planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
         <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
-        <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
-        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="full:${idx}">Switch to the whole course</button>` : ''}</div></div>`
+        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button>${latest ? `<button class="btn small" data-act="path" data-arg="full:${idx}" style="margin-left:8px">Do the whole course instead</button>` : ''}</div>`;
+      }
     } else {
       headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
-        : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
+        : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
     const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
-        <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
-        <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
+        <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
+        <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
@@ -795,6 +853,36 @@
     if (b.type === 'note') return `<div class="tip">${inline(b.text)}</div>`;
     return '';
   }
+  // The Acronyms section: every glossary entry, alphabetical, with the acronym clickable for the deeper explanation.
+  function acrSection(n) {
+    if (!ACR_KEYS.length) return '';
+    const keys = ACR_KEYS.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
+    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}">${esc(k)}</button></td><td>${esc(ACR[k].full)}</td><td>${esc(ACR[k].tip)}</td></tr>`).join('')}</tbody></table></div></section>`;
+  }
+  function acrModal() {
+    if (!acrOpen || !ACR[acrOpen]) return '';
+    const a = ACR[acrOpen];
+    return `<div class="modal-back" data-act="acr-close"><div class="modal stack acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-title">
+      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen)}</span>${esc(a.full)}</h3></div>
+      <p class="acr-tip-text"><strong>${esc(a.tip)}</strong></p>
+      <div class="lesson-body acr-more">${renderBody(a.more || '')}</div>
+      <div class="row spread"><button class="btn ghost small" data-act="acr-all">All acronyms</button><button class="btn primary" data-act="acr-close">Close</button></div>
+    </div></div>`;
+  }
+  // Hover tooltip: one shared element, positioned under the acronym and kept inside the viewport.
+  let acrTipEl = null;
+  function acrShow(el) {
+    const a = ACR[el.dataset.arg]; if (!a) return;
+    if (!acrTipEl) { acrTipEl = document.createElement('div'); acrTipEl.className = 'acr-tip'; acrTipEl.id = 'acr-tip'; acrTipEl.setAttribute('role', 'tooltip'); document.body.appendChild(acrTipEl); }
+    acrTipEl.innerHTML = `<b>${esc(el.dataset.arg)}: ${esc(a.full)}</b>${esc(a.tip)}`;
+    acrTipEl.style.maxWidth = Math.min(340, window.innerWidth - 16) + 'px'; acrTipEl.style.display = 'block';
+    const r = el.getBoundingClientRect(); const tw = acrTipEl.offsetWidth, th = acrTipEl.offsetHeight;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+    let top = r.bottom + 8; if (top + th > window.innerHeight - 8) top = r.top - th - 8;
+    acrTipEl.style.left = left + 'px'; acrTipEl.style.top = Math.max(8, top) + 'px';
+  }
+  function acrHide() { if (acrTipEl) acrTipEl.style.display = 'none'; }
+
   function viewCheatsheet() {
     const cs = FRA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
     const intro = S.view.arg === 'intro';
@@ -806,9 +894,10 @@
         <div class="row">${printBtn}</div>
       </div>
       ${intro ? `<div class="callout accent no-print"><strong>Start here.</strong><div class="ans">This sheet is everything the exam expects you to recall from memory. Print it now, or save it as a PDF, and keep it beside you through the course. When you are ready, the ${STARTER_N}-question starter test builds your tutorial.</div><div class="row" style="margin-top:6px"><button class="btn primary" data-act="cheat-continue">Continue to the starter test</button><button class="btn ghost" data-act="go" data-arg="home">Skip for now</button></div></div>` : ''}
-      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}</nav>
+      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}${ACR_KEYS.length ? `<a href="#cs-acronyms">${cs.sections.length + 1}. Acronyms</a>` : ''}</nav>
       <div class="print-only cs-print-head"><h1>${esc(cs.title)}</h1><p>${esc(cs.intro)}</p></div>
       ${cs.sections.map((s, i) => `<section class="cs-section" id="cs-${s.id}"><h2><span class="cs-num">${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</h2>${s.blocks.map(csBlock).join('')}</section>`).join('')}
+      ${acrSection(cs.sections.length + 1)}
       <div class="row no-print">${printBtn}${intro ? `<button class="btn" data-act="cheat-continue">Continue to the starter test</button>` : `<button class="btn ghost" data-act="go" data-arg="home">Home</button>`}</div>
     </div>`;
   }
@@ -822,9 +911,10 @@
     if (!fb) return '';
     const cats = FB_CATS[fb.kind === 'question' ? 'question' : fb.kind === 'lesson' ? 'lesson' : 'overall'];
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
-      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}</div>
+      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
+      ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
       <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
-      <label class="field">Details<textarea id="fb-text" rows="4" placeholder="What is wrong, and what should it say instead?"></textarea></label>
+      <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;
   }
@@ -846,28 +936,31 @@
     return f.kind === 'site' ? 'The website' : 'The course overall';
   }
   function feedbackReport() {
-    const items = S.feedback || [];
-    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    const items = S.feedback || []; const rated = ratedLessons();
+    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, ${plural(rated.length, 'lesson rating')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    if (rated.length) { lines.push('## Lesson ratings (1 confusing to 10 great)', ''); rated.forEach(id => lines.push(`- ${L[id].title} (${id}): ${S.ratings[id].r}/10`)); lines.push(''); }
     items.forEach((f, i) => {
       const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null;
       lines.push(`## ${i + 1}. ${FB_KIND[f.kind] || f.kind} · ${f.cat || 'Uncategorized'} · ${new Date(f.ts).toISOString().slice(0, 10)}`);
       lines.push(`- About: ${fbContext(f)}`);
       if (l) lines.push(`- Lesson id: ${l.id}`);
+      if (f.rating != null) lines.push(`- Rating: ${f.rating}/10`);
       if (r.stem) { lines.push(`- Question${r.qid ? ' ' + r.qid : ' (generated at run time)'}: ${r.stem}`); (r.options || []).forEach((o, k) => lines.push(`  - ${letters[k]}. ${o}${k === r.correct ? ' (marked correct)' : ''}`)); }
-      lines.push(`- Feedback: ${f.text}`, '');
+      lines.push(`- Feedback: ${f.text || '(rating only)'}`, '');
     });
     return lines.join('\n');
   }
+  const ratedLessons = () => Object.keys(S.ratings || {}).filter(id => L[id] && S.ratings[id] && S.ratings[id].r >= 1).sort((a, b) => L[a].index - L[b].index);
   function copyText(txt, msg) {
     const done = () => toast(msg || 'Copied');
     try { navigator.clipboard.writeText(txt).then(done, () => fallback()); } catch (err) { fallback(); }
     function fallback() { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Could not copy'); } ta.remove(); }
   }
   function viewFeedback() {
-    const items = (S.feedback || []).slice().reverse();
+    const items = (S.feedback || []).slice().reverse(); const rated = ratedLessons(); const any = items.length || rated.length;
     const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(course.name + ' feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, any lesson from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
+      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, rate any lesson from 1 to 10 at the end of the lesson or from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
       <div class="card lift stack">
         <h3>Send feedback</h3>
         <label class="field">About<select id="fb-area"><option value="overall">The course overall</option><option value="site">The website: bugs, design, usability</option><optgroup label="Units">${units.map(u => `<option value="unit:${u.id}">Unit ${u.n}: ${esc(u.title)}</option>`).join('')}</optgroup><optgroup label="Lessons">${lessons.map(l => `<option value="lesson:${l.id}">${esc(l.title)}</option>`).join('')}</optgroup></select></label>
@@ -875,9 +968,10 @@
         <label class="field">Your feedback<textarea id="fb-text" rows="5" placeholder="What should change, and why?"></textarea></label>
         <div class="row"><button class="btn primary" data-act="fb-save-page">Save feedback</button></div>
       </div>
+      ${rated.length ? `<div class="card stack"><h3>Lesson ratings (${rated.length})</h3><div class="topic-list">${rated.map(id => `<div class="topic-item"><div><div class="t-title">${esc(L[id].title)}</div><div class="t-sub">Unit ${L[id].unit.n} · ${fmtDate(S.ratings[id].ts)}</div></div><div class="row"><span class="pill ${S.ratings[id].r >= 7 ? 'good' : S.ratings[id].r >= 4 ? 'warn' : 'bad'}">${S.ratings[id].r}/10</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`).join('')}</div></div>` : ''}
       <div class="card stack">
-        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${items.length ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${items.length ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
-        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span><span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${esc(f.text)}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
+        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${any ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${any ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
+        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span>${f.rating != null ? `<span class="pill ${f.rating >= 7 ? 'good' : f.rating >= 4 ? 'warn' : 'bad'}">${f.rating}/10</span>` : ''}<span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${f.text ? esc(f.text) : '<span class="muted">(rating only)</span>'}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
         <p class="muted" style="font-size:.85rem">Feedback stays in this browser and travels with the progress code on the Progress page. Copy the report and paste it into a message to the course author.</p>
       </div>
     </div>`;
@@ -906,7 +1000,7 @@
   }
   function submitAnswer(sess, skipped) {
     const q = fat(sess.items[sess.i]);
-    const choice = skipped ? -1 : sess.sel; const conf = skipped ? 1 : sess.conf;
+    const choice = skipped ? -1 : sess.sel; const conf = sess.noConf ? null : skipped ? 1 : sess.conf;
     if (isTest(sess.kind)) {
       sess.answers[sess.i] = { choice, conf, skipped: !!skipped };
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
@@ -953,7 +1047,17 @@
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
-      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || s.conf == null) return; submitAnswer(s, false); return; }
+      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
+      case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'rate': {
+        const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
+        S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();
+        if (fb && fb.kind === 'lesson' && fb.ref.lesson === id) { fb.rating = r; btn.closest('.rate-row').querySelectorAll('.rate').forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false')); return; }
+        const l = L[id]; fb = { kind: 'lesson', ref: { lesson: id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: r, note: `Rating ${r}/10 saved. Add a comment if you like, or just close this.` };
+        render(); const ta = $('#fb-text'); if (ta) ta.focus(); toast(`Rated ${r}/10`); return; }
+      case 'acr': { if (!ACR[arg]) return; acrOpen = arg; fb = null; render(); return; }
+      case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
+      case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
       case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
       case 'start-exam': {
@@ -986,18 +1090,21 @@
         const kind = btn.dataset.kind;
         if (kind === 'question') { const r = fbReg[parseInt(arg, 10)]; if (!r) return; const q = r.q; const l = L[q.t];
           fb = { kind, ref: { qid: q.gen ? null : q.id, gen: !!q.gen, lesson: q.t, stem: q.q, options: q.a, correct: q.c, where: r.where, view: S.view.name }, title: 'Flag this question', sub: `${l ? l.title : ''} · ${WHERE_LABEL[r.where] || r.where}` }; }
-        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}` }; }
+        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: S.ratings && S.ratings[l.id] ? S.ratings[l.id].r : null }; }
         else fb = { kind: 'page', ref: { view: S.view.name, arg: S.view.arg }, title: 'Feedback on this page', sub: '' };
         render(); const ta = $('#fb-text'); if (ta) ta.focus(); return; }
       case 'fb-cancel': { if (btn.classList.contains('modal-back') && e.target !== btn) return; fb = null; render(); return; }
-      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; if (!text) { toast('Write a sentence or two first.'); return; } saveFeedback({ kind: fb.kind, ref: fb.ref, cat, text }); fb = null; render(); toast('Feedback saved'); return; }
+      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || '';
+        if (!text && !(fb.kind === 'lesson' && fb.rating != null)) { toast(fb.kind === 'lesson' ? 'Pick a rating or write a sentence first.' : 'Write a sentence or two first.'); return; }
+        const item = { kind: fb.kind, ref: fb.ref, cat, text }; if (fb.kind === 'lesson' && fb.rating != null) item.rating = fb.rating;
+        saveFeedback(item); fb = null; render(); toast('Feedback saved'); return; }
       case 'fb-save-page': { const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; const area = ($('#fb-area') || {}).value || 'overall'; if (!text) { toast('Write a sentence or two first.'); return; }
         const kind = area.startsWith('lesson:') ? 'lesson' : area.startsWith('unit:') ? 'unit' : area; const ref = area.startsWith('lesson:') ? { lesson: area.slice(7) } : area.startsWith('unit:') ? { unit: area.slice(5) } : {};
         saveFeedback({ kind, ref, cat, text }); render(); toast('Feedback saved'); return; }
       case 'fb-delete': { S.feedback = (S.feedback || []).filter(f => f.id !== arg); save(); render(); return; }
       case 'fb-clear': { if (!confirm('Delete all saved feedback in this browser?')) return; S.feedback = []; save(); render(); return; }
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
-      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
+      case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
       case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
@@ -1007,13 +1114,20 @@
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
+    if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = e.target.dataset.arg; render(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
     if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
-    if (!s.submitted && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && s.conf != null) submitAnswer(s, false); }
+    if (!s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
   });
+  app.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  app.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  window.addEventListener('scroll', acrHide, true);
   document.addEventListener('click', e => { if (railOpen && !e.target.closest('.rail') && !e.target.closest('.rail-toggle')) { railOpen = false; const r = $('.rail'); if (r) r.classList.remove('open'); } });
 
   // Developer self-test: only when opened as a local file with #selftest. Drives the whole flow without clicks.
@@ -1024,6 +1138,15 @@
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
+    // Path choice: the results page offers tailored versus the whole course; "full" covers every lesson, "tailored" restores the list.
+    go('results', 'results:0'); if (document.querySelectorAll('[data-act="path"]').length < 2) throw new Error('path choice not offered on starter results');
+    const tailoredN = S.plan.lessons.length; choosePath('full', 0); render();
+    if (!S.plan || S.plan.lessons.length !== lessons.length || S.plan.scope !== 'full' || !S.path || S.path.scope !== 'full') throw new Error('whole-course path did not cover every lesson');
+    if ($('.path-choice')) throw new Error('path choice still offered after choosing');
+    if (!S.plan.lessons.some(e => e.reasons.some(r => r.q))) throw new Error('whole-course plan lost the starter-test reasons');
+    go('tutorial'); if (!document.body.textContent.includes('whole course')) throw new Error('tutorial page does not show the whole-course path');
+    choosePath('tailored', 0); render(); if (!S.plan || S.plan.lessons.length !== tailoredN || S.plan.scope !== 'tailored') throw new Error('switching back to tailored did not restore the plan');
+    log.push(`path choice tailored=${tailoredN} full=${lessons.length} switch ok`);
     const first = S.plan.lessons[0].id; go('lesson', first);
     const items = pickForLesson(first, CHECKPOINT_N, new Set(), 0.3);
     S.active = { kind: 'checkpoint', lesson: first, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
@@ -1045,6 +1168,14 @@
     go('exam'); if (!$('#su-n')) throw new Error('test setup card did not render');
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
+    // Ratings: a chip click stores the rating and opens the lesson feedback form; saving with no comment keeps the rating.
+    go('lesson', lessons[0].id); const chip = document.querySelector('.rate-card .rate[data-arg="8"]'); if (!chip) throw new Error('rating chips missing on the lesson page');
+    chip.click();
+    if (!S.ratings[lessons[0].id] || S.ratings[lessons[0].id].r !== 8 || !fb || fb.rating !== 8 || !$('.modal .rate[aria-pressed="true"]')) throw new Error('rating chip did not store the rating and open the form');
+    const fbBefore = S.feedback.length; $('[data-act="fb-save"]').click();
+    if (fb || S.feedback.length !== fbBefore + 1 || S.feedback[S.feedback.length - 1].rating !== 8) throw new Error('rating-only feedback did not save');
+    if (!feedbackReport().includes('Lesson ratings')) throw new Error('feedback report lacks the ratings section');
+    log.push(`rating ${lessons[0].id}=${S.ratings[lessons[0].id].r}/10 saved as feedback item ${S.feedback.length}`);
     const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
     if (unsureId) { const second = unsureId; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
@@ -1062,6 +1193,17 @@
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
     const callouts = document.querySelectorAll('.callout').length;
     log.push(`lesson view callouts=${callouts}`);
+    // Acronym links in lessons (never inside code or fenced blocks), the modal, and the cheat sheet's Acronyms section.
+    if (ACR_KEYS.length) {
+      let links = 0; for (const l of lessons.slice(0, 5)) { go('lesson', l.id); links += document.querySelectorAll('.lesson-body .acr').length; }
+      if (!links) throw new Error('no acronym links rendered in the first five lessons');
+      if (document.querySelector('.lesson-body pre .acr, .lesson-body code .acr')) throw new Error('acronym links inside code');
+      const withLinks = lessons.find(l => { go('lesson', l.id); return !!document.querySelector('.lesson-body .acr'); }); if (!withLinks) throw new Error('no lesson renders an acronym link');
+      acrOpen = document.querySelector('.lesson-body .acr').dataset.arg; render();
+      if (!$('#acr-title') || !document.body.textContent.includes(ACR[acrOpen].full)) throw new Error('acronym modal did not render'); acrOpen = null;
+      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== ACR_KEYS.length) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${ACR_KEYS.length}`);
+      log.push(`acronyms keys=${ACR_KEYS.length} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
+    } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
     S.plan = null; S.passStreak = 0; S.official = null;
@@ -1069,13 +1211,23 @@
     if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
     S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
     if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
+    // The standard test asks no confidence question: no chips, and Submit works on the option alone.
+    if (!ex.noConf || $('.confidence')) throw new Error('standard test still shows the confidence chips');
+    $(`[data-act="opt"][data-arg="${fat(ex.items[0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');
+    $('[data-act="submit"]').click(); if (ex.i !== 1 || ex.answers[0].conf != null) throw new Error('standard test answer not recorded without confidence');
     allRight(ex);
+    if (!S.exams[S.exams.length - 1].noConf || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results still talk about guesses');
     if (!S.official || stage() !== 'ready') throw new Error(`official pass did not clear the learner: stage ${stage()}`);
     go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
     log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
-    S.active = null; startExam('practice'); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: 2 }; }); failing.i = failing.items.length; render();
+    S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); failing.i = failing.items.length; render();
     if (S.official || S.passStreak !== 0) throw new Error('a failed test did not reset the official pass and streak');
-    log.push(`failed test resets: streak=${S.passStreak} official=${S.official} stage=${stage()}`);
+    // A failed standard test explains every wrong answer with no guess language, and its retraining callouts carry no confidence.
+    const lastRec = S.exams[S.exams.length - 1];
+    if (!lastRec.noConf || !document.body.textContent.includes('Wrong answers explained') || document.querySelectorAll('.review-item').length !== lastRec.total || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results did not explain every wrong answer without guess language');
+    if (!S.plan || S.plan.source !== 'test') throw new Error('failed standard test built no retraining plan');
+    go('lesson', S.plan.lessons[0].id); if ([...document.querySelectorAll('.callout .eyebrow')].some(el => /confidence/.test(el.textContent))) throw new Error('callout shows a confidence for a test that had none');
+    log.push(`failed standard test resets: streak=${S.passStreak} official=${S.official} stage=${stage()} wrong explained=${lastRec.total}`);
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
     document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">OK\n${log.join('\n')}</pre>`);
   }

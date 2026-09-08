@@ -289,6 +289,28 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .field textarea { resize: vertical; min-height: 96px; }
 @media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
 
+/* Acronym links, tooltip, modal, and the cheat sheet's Acronyms section */
+.acr { text-decoration: underline dotted; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; border-radius: 3px; }
+.acr:hover, .acr:focus-visible { color: var(--accent); text-decoration-style: solid; }
+.acr-tip { position: fixed; z-index: 70; display: none; background: var(--ink); color: var(--bg); padding: 9px 12px; border-radius: 8px; font-size: 0.88rem; line-height: 1.4; box-shadow: var(--shadow); pointer-events: none; }
+.acr-tip b { display: block; font-family: var(--font-display); font-weight: 600; margin-bottom: 2px; }
+.acr-modal .acr-big { font-family: var(--font-mono); color: var(--accent); margin-right: 10px; }
+.acr-modal .acr-tip-text { font-size: 1.02rem; }
+.acr-modal .acr-more { font-size: 1rem; }
+.acr-modal .acr-more p:last-child { margin-bottom: 0; }
+.acr-key { font: inherit; font-family: var(--font-mono); font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.acr-table td:first-child { white-space: nowrap; }
+.cs-acr-intro { font-size: 0.95rem; margin-bottom: 8px; }
+
+/* Lesson ratings */
+.rate-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.rate { min-width: 38px; justify-content: center; padding: 6px 0; font-variant-numeric: tabular-nums; display: inline-flex; }
+.chip.rate[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Path choice after the starter test */
+.paths { display: grid; gap: 10px; }
+.option.path { align-items: flex-start; }
+
 /* Print: only the page content, light colors, compact tables */
 @media print {
   @page { margin: 12mm; }
@@ -315,4 +337,10 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .cs-list.two ul { columns: 2; column-gap: 20pt; }
   .tip { border-left: 2pt solid #000; background: none; padding: 3pt 8pt; margin: 6pt 0; font-size: 9.2pt; break-inside: avoid; }
   a { color: inherit; text-decoration: none; }
+  .acr, .acr-key { color: inherit; text-decoration: none; font-weight: 600; }
+  .acr-tip { display: none !important; }
+  .cs-acr-intro { font-size: 9.2pt; margin-bottom: 4pt; }
+  .acr-table { font-size: 7.6pt; line-height: 1.25; }
+  .acr-table td { padding: 1.5pt 3pt; }
+  .acr-table td:first-child { font-family: var(--font-mono); font-size: 7.2pt; }
 }

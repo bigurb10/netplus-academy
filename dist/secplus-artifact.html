@@ -292,6 +292,28 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .field textarea { resize: vertical; min-height: 96px; }
 @media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
 
+/* Acronym links, tooltip, modal, and the cheat sheet's Acronyms section */
+.acr { text-decoration: underline dotted; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; border-radius: 3px; }
+.acr:hover, .acr:focus-visible { color: var(--accent); text-decoration-style: solid; }
+.acr-tip { position: fixed; z-index: 70; display: none; background: var(--ink); color: var(--bg); padding: 9px 12px; border-radius: 8px; font-size: 0.88rem; line-height: 1.4; box-shadow: var(--shadow); pointer-events: none; }
+.acr-tip b { display: block; font-family: var(--font-display); font-weight: 600; margin-bottom: 2px; }
+.acr-modal .acr-big { font-family: var(--font-mono); color: var(--accent); margin-right: 10px; }
+.acr-modal .acr-tip-text { font-size: 1.02rem; }
+.acr-modal .acr-more { font-size: 1rem; }
+.acr-modal .acr-more p:last-child { margin-bottom: 0; }
+.acr-key { font: inherit; font-family: var(--font-mono); font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.acr-table td:first-child { white-space: nowrap; }
+.cs-acr-intro { font-size: 0.95rem; margin-bottom: 8px; }
+
+/* Lesson ratings */
+.rate-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.rate { min-width: 38px; justify-content: center; padding: 6px 0; font-variant-numeric: tabular-nums; display: inline-flex; }
+.chip.rate[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Path choice after the starter test */
+.paths { display: grid; gap: 10px; }
+.option.path { align-items: flex-start; }
+
 /* Print: only the page content, light colors, compact tables */
 @media print {
   @page { margin: 12mm; }
@@ -318,6 +340,12 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .cs-list.two ul { columns: 2; column-gap: 20pt; }
   .tip { border-left: 2pt solid #000; background: none; padding: 3pt 8pt; margin: 6pt 0; font-size: 9.2pt; break-inside: avoid; }
   a { color: inherit; text-decoration: none; }
+  .acr, .acr-key { color: inherit; text-decoration: none; font-weight: 600; }
+  .acr-tip { display: none !important; }
+  .cs-acr-intro { font-size: 9.2pt; margin-bottom: 4pt; }
+  .acr-table { font-size: 7.6pt; line-height: 1.25; }
+  .acr-table td { padding: 1.5pt 3pt; }
+  .acr-table td:first-child { font-family: var(--font-mono); font-size: 7.2pt; }
 }
 
 </style>
@@ -370,6 +398,222 @@ FRA.course = {
   generatedNote: "Port pairs, hash lengths, risk math, CVSS bands, control classification, agreement types, and access control models are generated fresh every time.",
   legacyStoreKeys: []
 };
+
+// SecPlus Academy acronym glossary. Every acronym used in the lessons, deep dives, and cheat sheet, plus those in questions.
+// Rendered by the engine as hover links in tutorials and the cheat sheet (tip on hover, more on click) and as the
+// cheat sheet's Acronyms section. Keys are matched as whole words, case-sensitive, plurals allowed. Original wording.
+// Fields: full (what it stands for), tip (one sentence for the tooltip), more (the longer explanation; blank line = new paragraph).
+window.FRA = window.FRA || {};
+FRA.acronyms = {
+  "3DES": { full: "Triple Data Encryption Standard", tip: "DES applied three times; legacy and slow, replaced by AES.", more: "3DES stretched the old 56-bit DES cipher by running it three times with different keys. It is much slower than AES and now deprecated, seen only in legacy payment and banking systems." },
+  "802.1X": { full: "IEEE 802.1X", tip: "Port-based network access control: a device must authenticate before the switch port or Wi-Fi passes traffic.", more: "With 802.1X the client (supplicant) presents credentials or a certificate through the switch or access point (authenticator) to a RADIUS server (authentication server) using EAP. Until it succeeds, the port only passes authentication traffic. It is the basis of WPA2 and WPA3 Enterprise and of wired NAC." },
+  "AAA": { full: "Authentication, authorization, and accounting", tip: "Prove who you are, decide what you may do, record what you did.", more: "Authentication verifies identity (password, token, certificate), authorization decides which resources or commands are allowed, and accounting logs the session for auditing. RADIUS and TACACS+ are the protocols that deliver AAA to network devices." },
+  "ABAC": { full: "Attribute-based access control", tip: "Access decisions based on attributes of the user, resource, and context, such as time and location.", more: "ABAC policies can say a manager may open records from the office during business hours. It is more flexible than roles and underlies many cloud and zero trust policies." },
+  "ACL": { full: "Access control list", tip: "An ordered list of permit and deny rules on a router, firewall, or file system.", more: "On network devices an ACL filters packets by source, destination, protocol, and port, processed top down with the first match winning and an implicit deny at the end. On file systems an ACL lists which users and groups have which permissions on an object." },
+  "AES": { full: "Advanced Encryption Standard", tip: "The standard symmetric cipher, with 128, 192, or 256-bit keys.", more: "AES encrypts and decrypts with the same key and is fast enough to protect disks, Wi-Fi (WPA2 and WPA3), VPNs, and TLS sessions. AES-128 is secure; AES-256 is used for high-value data. It replaced DES and 3DES." },
+  "AES-128": { full: "AES with a 128-bit key", tip: "The standard-strength AES, secure and fast.", more: "A 128-bit key has more combinations than any brute-force attack can try. AES-128 is the everyday choice; AES-256 adds margin against future advances." },
+  "AES-256": { full: "AES with a 256-bit key", tip: "The high-strength AES used for data at rest and sensitive sessions.", more: "AES-256 doubles the key length of AES-128 for a larger security margin at a small speed cost. It is the common choice for full-disk encryption and government data." },
+  "AES-CCMP": { full: "AES in CCMP mode", tip: "The AES-based encryption WPA2 uses for Wi-Fi.", more: "CCMP is the mode that gives WPA2 both confidentiality and integrity with AES. When a question contrasts WPA2-AES with WPA-TKIP, this is what it means." },
+  "AH": { full: "Authentication Header", tip: "The IPsec protocol that provides integrity and authentication without encryption.", more: "AH signs the packet, including parts of the header, so it cannot be altered, but leaves the contents readable. Because it covers header fields, it breaks under NAT. It is IP protocol 51 and is rarely used alone today; ESP does both jobs." },
+  "ALE": { full: "Annualized loss expectancy", tip: "The expected yearly cost of a risk: SLE times ARO.", more: "ALE is the number that justifies spending. If a control costs less per year than the ALE it prevents, it is worth buying. Exam math questions give asset value, exposure factor, and rate and ask for ALE." },
+  "AP": { full: "Access point", tip: "The radio that bridges Wi-Fi clients onto the wired network.", more: "An access point turns Wi-Fi frames into Ethernet frames and back. Standalone (autonomous) APs are configured one by one; lightweight APs are managed by a wireless LAN controller. Each AP advertises one or more SSIDs, and clients roam between APs that share an SSID. In the CBET course the same letters also appear in anteroposterior X-ray views; read the context." },
+  "API": { full: "Application programming interface", tip: "The defined way one program talks to another, such as the web endpoints a cloud service exposes.", more: "APIs let software request data and actions from other software. Cloud consoles, SDN controllers, and mobile apps all work through APIs. Security concerns include stolen API keys, missing authentication, and rate limiting." },
+  "APT": { full: "Advanced persistent threat", tip: "A well-funded, skilled, patient attacker, usually a nation-state, that stays hidden for a long time.", more: "APTs pursue long-term goals such as espionage, using custom malware and quiet lateral movement. The exam cue is nation-state, sophisticated, and persistent." },
+  "ARO": { full: "Annualized rate of occurrence", tip: "How many times per year an incident is expected to happen.", more: "An ARO of 0.5 means once every two years; 12 means monthly. It is estimated from history and threat intelligence and multiplies SLE to give ALE." },
+  "ARP": { full: "Address Resolution Protocol", tip: "Finds the MAC address that goes with a known IPv4 address on the local segment.", more: "When a host knows the IP address of a neighbor but not its MAC address, it broadcasts an ARP request and the owner replies with its MAC. Hosts cache the answer in an ARP table. Because ARP has no authentication, attackers can poison the cache to redirect traffic, which is why switches offer dynamic ARP inspection. IPv6 replaces ARP with Neighbor Discovery." },
+  "ASLR": { full: "Address space layout randomization", tip: "Randomizes where programs load in memory so exploits cannot predict addresses.", more: "ASLR is an operating system defense that makes memory corruption exploits unreliable by moving code and data to random locations each run." },
+  "AUP": { full: "Acceptable use policy", tip: "The rules for how staff may use company systems and data.", more: "The AUP tells employees what is allowed on company devices and networks and what monitoring to expect. Signing it is usually part of onboarding." },
+  "AV": { full: "Asset value, or antivirus", tip: "In risk math, what an asset is worth; in endpoint security, antivirus software.", more: "Asset value times exposure factor gives the single loss expectancy. Antivirus scans files and behavior for known malware and is now part of endpoint detection and response." },
+  "BEC": { full: "Business email compromise", tip: "Fraud by email impersonating an executive or vendor to redirect payments.", more: "The attacker spoofs or hijacks a trusted mailbox and asks finance to wire money or change bank details. It is social engineering, not malware, so the defenses are verification procedures and DMARC." },
+  "BIA": { full: "Business impact analysis", tip: "Identifies critical functions and what an outage of each would cost, setting RTO and RPO.", more: "The BIA ranks systems by how much their loss would hurt and how fast they must return. Its outputs, recovery time and recovery point objectives, drive the disaster recovery design." },
+  "BPA": { full: "Business partnership agreement", tip: "How partners share responsibilities, profits, and liabilities.", more: "A BPA is the contract between organizations that go into business together, covering decisions, money, and what happens if one leaves." },
+  "BYOD": { full: "Bring your own device", tip: "Staff use personal phones and laptops for work.", more: "BYOD saves the company money but mixes personal and corporate data on devices the company does not control. Mobile device management, containerization, and acceptable use policies define what the company may do on the device and what happens when someone leaves." },
+  "CA": { full: "Certificate authority", tip: "The trusted entity that signs certificates.", more: "A CA verifies that an applicant controls a name or identity and then signs a certificate binding that identity to a public key. Devices ship with a list of trusted root CAs; anything they signed, directly or through intermediates, is trusted. A certificate from an unknown CA produces the browser warning." },
+  "CEO": { full: "Chief executive officer", tip: "The top executive; the person impersonated in whaling and business email compromise.", more: "Attacks that pose as the CEO exploit staff reluctance to question authority. Verification procedures for payment changes are the defense." },
+  "CFO": { full: "Chief financial officer", tip: "The executive in charge of money; a common target and impersonation in payment fraud.", more: "An email from the CFO asking to wire funds to a new account is the classic business email compromise scenario." },
+  "CI": { full: "Continuous integration", tip: "Every code change is automatically built and tested when it is committed.", more: "CI pipelines compile code, run tests, and often run security scans on each commit, catching problems early. Paired with continuous deployment, it pushes approved changes to production automatically." },
+  "CIA": { full: "Confidentiality, integrity, and availability", tip: "The three goals of security: keep data secret, keep it correct, keep it reachable.", more: "Confidentiality means only authorized people can read data (encryption, access control). Integrity means it has not been altered (hashes, signatures). Availability means systems are up when needed (redundancy, backups). Every attack and every control on the exam maps to one or more of the three; ransomware, for instance, attacks availability." },
+  "CIS": { full: "Center for Internet Security", tip: "The organization that publishes hardening benchmarks and the CIS Controls.", more: "CIS Benchmarks are detailed secure configuration guides for operating systems, cloud services, and applications; compliance scanners check systems against them." },
+  "COPE": { full: "Corporate-owned, personally enabled", tip: "The company buys the device and lets staff use it personally.", more: "COPE gives the organization full control of the device while allowing personal use. It sits between BYOD (personal device) and fully locked corporate devices." },
+  "CPU": { full: "Central processing unit", tip: "The processor that executes instructions.", more: "The CPU's cores, threads, clock speed, and cache set a computer's performance. Sudden CPU spikes are a security indicator for crypto mining or malware. In the A+ course you match its socket (LGA, PGA, AM4, AM5) to the motherboard and keep it cool." },
+  "CRL": { full: "Certificate revocation list", tip: "A signed list of revoked certificate serial numbers published by a CA.", more: "Clients download the CRL to check whether a certificate was revoked before it expired, for example because its key was stolen. CRLs grow large and update slowly, which is why OCSP exists." },
+  "CSR": { full: "Certificate signing request", tip: "The file containing a public key and identity that you send to a CA to get a certificate.", more: "You generate a key pair, put the public key and the subject details into a CSR, and the certificate authority signs it into a certificate. The private key never leaves your server." },
+  "CSRF": { full: "Cross-site request forgery", tip: "Tricks a logged-in user's browser into sending a request the user did not intend.", more: "A CSRF attack makes the victim's browser submit a form or link to a site where they are already authenticated, such as changing an email address. Anti-forgery tokens and same-site cookies defeat it." },
+  "CVE": { full: "Common Vulnerabilities and Exposures", tip: "The public identifier for a known vulnerability, such as CVE-2024-12345.", more: "CVE numbers let vendors, scanners, and advisories refer to the same flaw. A vulnerability scanner reports CVEs; the CVSS score tells you how severe each one is." },
+  "CVSS": { full: "Common Vulnerability Scoring System", tip: "A 0 to 10 severity score for a vulnerability.", more: "CVSS rates exploitability and impact into a base score: 9 and above critical, 7 to 8.9 high, 4 to 6.9 medium. It helps prioritize patching, though environmental context matters too." },
+  "CYOD": { full: "Choose your own device", tip: "Staff pick from a list of approved devices the company then owns and manages.", more: "CYOD balances user preference with manageability: the company supports only the approved models but employees get a choice." },
+  "DAC": { full: "Discretionary access control", tip: "The owner of a resource decides who may access it.", more: "In discretionary access control the file's owner sets permissions, as in Windows and Linux file systems. It is flexible but depends on every owner making good choices. Mandatory access control, by contrast, enforces labels the owner cannot override." },
+  "DBA": { full: "Database administrator", tip: "The person who runs the database servers.", more: "On the exam the DBA appears in separation-of-duties scenarios, for example encrypting a column with a key the DBA does not hold." },
+  "DDoS": { full: "Distributed denial of service", tip: "Many sources, usually a botnet, flood a target at once.", more: "DDoS attacks use thousands of compromised machines, or amplification through open DNS and NTP servers, to overwhelm a target. Defenses are upstream scrubbing services, CDNs, and rate limiting." },
+  "DER": { full: "Distinguished Encoding Rules", tip: "The binary format for certificates and keys.", more: "DER is the raw binary encoding of a certificate; PEM is DER wrapped in Base64. Windows often uses .cer or .der files in this form." },
+  "DES": { full: "Data Encryption Standard", tip: "The 1970s 56-bit block cipher; broken by brute force, do not use.", more: "DES's key is short enough to be searched exhaustively in hours. Recognize it as legacy on the exam and never recommend it." },
+  "DHCP": { full: "Dynamic Host Configuration Protocol", tip: "Hands out IP addresses, masks, gateways, and DNS servers automatically (UDP 67 and 68).", more: "A DHCP server leases addresses to clients through the DORA exchange: Discover, Offer, Request, Acknowledge. The lease also carries the subnet mask, default gateway, DNS servers, and options such as a TFTP server. Because Discover is a broadcast, a router needs a relay (IP helper) to reach a server on another subnet. Reservations tie a fixed address to a MAC; scopes and exclusions define the pool." },
+  "DKIM": { full: "DomainKeys Identified Mail", tip: "Outgoing mail is digitally signed; the public key is published in DNS.", more: "DKIM lets a receiving server verify that a message really came from the domain and was not altered, by checking the signature against the key in a DNS TXT record." },
+  "DLP": { full: "Data loss prevention", tip: "Tools that detect and block sensitive data leaving by email, web, USB, or cloud.", more: "DLP inspects content for patterns such as card numbers or classification labels and blocks or logs the transfer. It works on endpoints, email gateways, and cloud services. Files copied to USB drives being blocked is DLP." },
+  "DMARC": { full: "Domain-based Message Authentication, Reporting, and Conformance", tip: "A DNS policy telling receivers what to do with mail that fails SPF or DKIM, and where to send reports.", more: "DMARC ties SPF and DKIM to the visible From address and states a policy: none, quarantine, or reject. Reports show who is sending mail as your domain." },
+  "DMZ": { full: "Demilitarized zone", tip: "A screened subnet between the internet and the internal network for public-facing servers.", more: "A DMZ holds web, mail, and other servers that outsiders must reach. Firewalls allow the internet to reach the DMZ, and tightly restrict the DMZ's access to the inside, so a compromised public server does not give an attacker the internal LAN. The modern term is screened subnet." },
+  "DNS": { full: "Domain Name System", tip: "Translates names such as www.example.com into IP addresses (UDP 53, TCP 53 for zone transfers).", more: "DNS is a distributed database of names. A resolver asks recursive servers, which walk from the root to the top-level domain to the authoritative server for the zone. Record types include A (IPv4), AAAA (IPv6), CNAME (alias), MX (mail), PTR (reverse), TXT (text such as SPF), SRV (service location), NS, and SOA. If a site works by IP address but not by name, DNS is the problem." },
+  "DNSSEC": { full: "DNS Security Extensions", tip: "Digital signatures on DNS records so a resolver can tell an answer was not forged.", more: "DNSSEC adds signature records to a zone and a chain of trust from the root down. A validating resolver checks the signatures and rejects tampered or spoofed answers. It provides integrity and authenticity, not privacy: queries are still readable on the wire, which is what DoT and DoH address." },
+  "DoH": { full: "DNS over HTTPS", tip: "DNS queries carried inside HTTPS on TCP 443 so they cannot be read or altered in transit.", more: "DoH wraps DNS inside an ordinary HTTPS connection to a resolver. Browsers and operating systems support it, and because it looks like web traffic it is hard for a network to block or inspect. It protects privacy between the client and the resolver; it does not sign the records themselves." },
+  "DoS": { full: "Denial of service", tip: "One source floods or crashes a target so it cannot serve users.", more: "A DoS attack exhausts bandwidth, connections, or CPU. Because it comes from one source it can be filtered; distributed attacks from many sources are far harder." },
+  "DoT": { full: "DNS over TLS", tip: "DNS queries encrypted with TLS on TCP 853.", more: "DoT sends DNS over a dedicated TLS connection on port 853. Like DoH it hides queries from anyone on the path, but using its own port makes it easier to identify and manage on a corporate network." },
+  "DSA": { full: "Digital Signature Algorithm", tip: "A government-standard signature algorithm; used less than RSA and ECDSA today.", more: "DSA signs but does not encrypt. It appears on the exam as one of the signature algorithms alongside RSA and ECDSA." },
+  "EAP": { full: "Extensible Authentication Protocol", tip: "The framework that carries authentication methods inside 802.1X.", more: "EAP defines how credentials travel between the supplicant and the authentication server; the method (EAP-TLS, PEAP, EAP-TTLS, EAP-FAST) decides what proof is used." },
+  "EAP-FAST": { full: "EAP Flexible Authentication via Secure Tunneling", tip: "Cisco's tunneled EAP method using a protected access credential instead of a certificate.", more: "EAP-FAST builds its tunnel from a pre-provisioned credential rather than a server certificate. It is mostly seen in Cisco environments." },
+  "EAP-TLS": { full: "EAP with Transport Layer Security", tip: "Certificate-based authentication on both sides; the strongest Wi-Fi and wired 802.1X method.", more: "EAP-TLS requires a certificate on every client as well as the server, so there is no password to phish. It is the gold standard for enterprise wireless." },
+  "EAP-TTLS": { full: "EAP with Tunneled TLS", tip: "A server certificate builds a TLS tunnel, then the client authenticates inside it with a password or other method.", more: "EAP-TTLS needs only a server certificate and can carry legacy password methods safely inside the tunnel." },
+  "ECC": { full: "Elliptic curve cryptography", tip: "Public-key cryptography that gives RSA-level strength with much shorter keys, ideal for phones and IoT.", more: "ECC builds key pairs on elliptic curve math. A 256-bit ECC key is roughly as strong as a 3072-bit RSA key, so it is faster and uses less power. ECDSA signs and ECDHE exchanges keys. In the A+ course ECC means error-correcting code memory." },
+  "ECDHE": { full: "Elliptic Curve Diffie-Hellman Ephemeral", tip: "Key exchange with a fresh elliptic curve key per session, giving forward secrecy.", more: "ECDHE lets two parties agree a session key over an open channel. Because the keys are ephemeral, a later compromise of the server's long-term key cannot decrypt recorded sessions. TLS 1.3 requires ephemeral exchanges." },
+  "ECDSA": { full: "Elliptic Curve Digital Signature Algorithm", tip: "Digital signatures using elliptic curve keys.", more: "ECDSA is the signature counterpart of RSA for elliptic curve keys, used in TLS certificates, code signing, and cryptocurrency. It is fast and its signatures are small." },
+  "EDR": { full: "Endpoint detection and response", tip: "Endpoint agents that record activity, detect attacks, and let responders isolate and clean the machine.", more: "EDR goes beyond antivirus by watching process behavior, collecting telemetry, and giving analysts tools to investigate and contain a compromised host remotely." },
+  "EF": { full: "Exposure factor", tip: "The fraction of an asset's value lost in one incident.", more: "If a flood would destroy 40 percent of a warehouse's value, the exposure factor is 0.4. Asset value times exposure factor gives the single loss expectancy." },
+  "ESP": { full: "Encapsulating Security Payload", tip: "The IPsec protocol that encrypts and authenticates the payload.", more: "ESP provides confidentiality, integrity, and authentication for IPsec traffic and is what nearly every VPN uses. It is IP protocol 50. In tunnel mode the original packet is encrypted inside a new one." },
+  "FIDO2": { full: "Fast Identity Online 2", tip: "Passwordless or second-factor authentication with a hardware security key or device biometrics.", more: "FIDO2 uses public-key cryptography so the server stores only a public key; phishing sites cannot capture anything reusable. Security keys and platform authenticators such as Windows Hello implement it." },
+  "FIM": { full: "File integrity monitoring", tip: "Alerts when critical files or configurations change.", more: "FIM hashes important files and reports any unexpected change, catching tampering with system binaries, web content, or configuration. It is required by standards such as PCI DSS." },
+  "FTP": { full: "File Transfer Protocol", tip: "Plaintext file transfer on TCP 21 (control) and 20 (data); replace with SFTP or FTPS.", more: "FTP sends usernames, passwords, and files in the clear and needs a second connection for data, which complicates firewalls. Active mode has the server connect back to the client; passive mode has the client open both. It survives on legacy systems only." },
+  "FTPS": { full: "FTP Secure", tip: "FTP wrapped in TLS, ports 990 and 989 (implicit) or 21 with an upgrade (explicit).", more: "FTPS adds TLS encryption to ordinary FTP. It is different from SFTP, which runs over SSH. Exam questions test whether you know they are separate protocols on separate ports." },
+  "GB": { full: "Gigabyte", tip: "About a billion bytes; the unit for RAM, storage, and data caps.", more: "A gigabyte is 1,000 or 1,024 megabytes depending on whether the maker counts in decimal or binary. RAM is sold in GB, and 32-bit systems can address only about 4 GB." },
+  "GCMP": { full: "Galois/Counter Mode Protocol", tip: "The stronger AES encryption mode used by WPA3.", more: "GCMP replaces CCMP in WPA3, especially in Enterprise 192-bit mode, providing authenticated encryption with better performance." },
+  "GPS": { full: "Global Positioning System", tip: "Satellite positioning, also used as a stratum 0 time reference.", more: "GPS receivers get both position and extremely accurate time from satellites. Networks use GPS-disciplined clocks as their top-level NTP or PTP reference. Phones use GPS for location, which is also the somewhere-you-are factor in authentication." },
+  "HMAC": { full: "Hash-based message authentication code", tip: "A keyed hash that proves a message came from someone with the key and was not altered.", more: "HMAC combines a secret key with a hash such as SHA-256. Only holders of the key can produce or verify the code, giving integrity and authenticity without a public-key signature. It is used in TLS, API authentication, and time-based one-time passwords." },
+  "HR": { full: "Human resources", tip: "The department that hires and separates staff; its system should drive account provisioning and removal.", more: "Tying account creation and deprovisioning to HR records closes the gap where former employees keep access." },
+  "HSM": { full: "Hardware security module", tip: "A tamper-resistant appliance or card that generates, stores, and uses cryptographic keys.", more: "An HSM performs signing and encryption inside protected hardware so private keys are never exposed, even to administrators. Certificate authorities, payment systems, and cloud key services use them. In the A+ course an HSM header on a motherboard connects such a module." },
+  "HTTP": { full: "Hypertext Transfer Protocol", tip: "Web traffic in the clear on TCP 80.", more: "HTTP carries web pages and API calls without encryption, so anything sent can be read on the path. HTTPS on 443 is the secure form, and modern sites redirect to it." },
+  "HTTPS": { full: "Hypertext Transfer Protocol Secure", tip: "HTTP inside TLS on TCP 443.", more: "HTTPS encrypts web traffic and lets the browser verify the server's certificate. The padlock means the connection to that server is private, not that the site is honest. DoH also rides on 443." },
+  "IaaS": { full: "Infrastructure as a service", tip: "The provider supplies virtual machines, storage, and networks; you manage the operating system and up.", more: "IaaS rents raw computing. You install and patch the OS and applications while the provider runs the hardware. The exam cue is you manage the OS, they manage the hardware." },
+  "IaC": { full: "Infrastructure as code", tip: "Defining networks and servers in files that tools build automatically and repeatably.", more: "With IaC the configuration lives in version-controlled text, and a tool applies it, so environments are consistent and changes are reviewed like software. Drift between the files and reality is detected rather than accumulated." },
+  "ICS": { full: "Industrial control system", tip: "The general term for computers that run physical processes; SCADA is one kind.", more: "ICS covers programmable logic controllers, distributed control systems, and SCADA. Their priorities are safety and availability, so security must come from segmentation and monitoring rather than frequent patching." },
+  "ID": { full: "Identifier or identification", tip: "A name or number that uniquely labels a user, device, session, or record.", more: "IDs appear everywhere: user IDs, VLAN IDs, process IDs, patient IDs, and caller ID, which can be spoofed. The exam mostly tests that an ID by itself is not proof of identity." },
+  "IDS": { full: "Intrusion detection system", tip: "Watches a copy of the traffic and alerts on attacks; cannot block them.", more: "An IDS sits out of band, usually on a SPAN port or tap, and compares traffic against signatures and behavior baselines. It detects and reports but does not stop anything. A host-based IDS does the same on one machine's logs and files." },
+  "IKE": { full: "Internet Key Exchange", tip: "Negotiates the keys and security associations for IPsec; UDP 500, and 4500 through NAT.", more: "IKE authenticates the two ends of a VPN with pre-shared keys or certificates and agrees the encryption keys for ESP. IKEv2 is the current version. NAT traversal moves it to UDP 4500 so it survives address translation." },
+  "IMAP": { full: "Internet Message Access Protocol", tip: "Reads mail that stays on the server, synced across devices; TCP 143, secure 993.", more: "IMAP leaves messages on the server and mirrors folders and read status to every client, which is what phones and laptops need. It replaced POP3 for most users." },
+  "IMAPS": { full: "IMAP Secure", tip: "IMAP over TLS on TCP 993.", more: "IMAPS encrypts the connection between a mail client and server. It is the port to allow when a question asks for secure mail retrieval." },
+  "iOS": { full: "iPhone operating system", tip: "Apple's mobile operating system for iPhone.", more: "iOS is tightly controlled: apps come from the App Store and are sandboxed. Jailbreaking removes those restrictions and the protection that comes with them. iPadOS is the tablet variant." },
+  "IoT": { full: "Internet of Things", tip: "Networked devices such as cameras, sensors, thermostats, and smart TVs.", more: "IoT devices are small computers with limited security: default passwords, rare patches, and long lifetimes. They belong on their own segmented network with access limited to what they need." },
+  "IP": { full: "Internet Protocol", tip: "The Layer 3 protocol that addresses and routes packets between networks.", more: "IP gives every host a logical address and lets routers forward packets from network to network using that address. Version 4 uses 32-bit addresses written as four numbers; version 6 uses 128-bit addresses written in hex. IP itself is best effort: it does not guarantee delivery, which is why TCP exists above it." },
+  "IPS": { full: "Intrusion prevention system", tip: "Sits inline and blocks attacks as they pass.", more: "An IPS is an IDS placed in the traffic path so it can drop malicious packets and reset connections. Being inline means it can also block legitimate traffic if a signature is wrong or it fails closed. In the A+ course the same letters name in-plane switching LCD panels; read the context." },
+  "IPsec": { full: "Internet Protocol Security", tip: "The suite that encrypts and authenticates IP packets for VPNs.", more: "IPsec uses AH for integrity, ESP for encryption plus integrity, and IKE to negotiate keys. Transport mode protects the payload between two hosts; tunnel mode wraps the whole packet for site-to-site VPNs. ESP is IP protocol 50, AH is 51, IKE uses UDP 500 and 4500 for NAT traversal." },
+  "ISAC": { full: "Information sharing and analysis center", tip: "An industry group where members share threat intelligence.", more: "ISACs exist for finance, health, energy, and other sectors so organizations facing the same attackers can exchange indicators and warnings." },
+  "IT": { full: "Information technology", tip: "Computers, networks, and the people who run them.", more: "IT is the department and the discipline that runs business systems. On the exam it appears in shadow IT (systems staff set up without approval) and in the contrast with operational technology." },
+  "KMS": { full: "Key management service", tip: "A managed, usually cloud-hosted, service that creates, stores, rotates, and controls access to encryption keys.", more: "A KMS centralizes key lifecycle: generation, storage backed by HSMs, rotation, access policies, and audit logs. Applications call it to encrypt data instead of handling raw keys themselves. In Windows the same letters also name the Key Management Service for volume activation." },
+  "LACP": { full: "Link Aggregation Control Protocol", tip: "Negotiates bundling several physical links into one logical link (802.1AX, formerly 802.3ad).", more: "LACP lets two devices agree to combine parallel links into one channel for more bandwidth and redundancy. Both ends must be configured, and the links must match in speed and duplex. If one physical link fails the bundle keeps working with the rest." },
+  "LAN": { full: "Local area network", tip: "One site's network: a building, floor, or campus that one organization owns and runs.", more: "A LAN is the network inside one location, usually built from switches and Ethernet or Wi-Fi, running at high speed because the organization owns every piece of it. When a question says one office, one building, or one campus, it is describing a LAN. Anything that crosses a provider's link to reach another city is no longer a LAN." },
+  "LDAP": { full: "Lightweight Directory Access Protocol", tip: "Queries a directory such as Active Directory for users and groups; TCP 389, secure 636.", more: "LDAP is how applications look up accounts, group memberships, and attributes in a directory. Plain LDAP sends binds in the clear, so LDAPS on 636 or StartTLS should be used. Kerberos handles the actual Windows logon; LDAP handles lookups." },
+  "LDAPS": { full: "LDAP Secure", tip: "LDAP over TLS on TCP 636.", more: "LDAPS encrypts directory queries and the credentials used to bind. It is the secure pair for plain LDAP on 389." },
+  "LTE": { full: "Long-Term Evolution", tip: "4G cellular data; the workhorse mobile broadband standard.", more: "LTE carries all-IP data at tens of megabits per second and remains the fallback under 5G. Phones, hotspots, and SD-WAN backup links use it." },
+  "MAC": { full: "Media access control address, or mandatory access control", tip: "The Layer 2 hardware address of a network interface; in access control, the model where the system enforces labels.", more: "As an address, a MAC is the 48-bit identifier a switch uses to forward frames; port security limits which addresses a port accepts, and they can be spoofed. As an access control model, mandatory access control assigns classification labels that users cannot change, as in military systems and SELinux. Read the sentence to tell which is meant." },
+  "MD5": { full: "Message Digest 5", tip: "A 128-bit hash that is broken: collisions can be manufactured; recognize, never recommend.", more: "MD5 was the workhorse hash of the 1990s. Because attackers can craft two different files with the same MD5, it must not be used for signatures or integrity checks. It survives only for non-security checksums." },
+  "MDM": { full: "Mobile device management", tip: "Software that enrolls phones and tablets and enforces policy: passcodes, encryption, apps, remote wipe.", more: "An MDM platform lets the organization configure and secure mobile devices, corporate or personal. It can push settings, restrict apps, locate devices, and wipe a lost one, either fully or just the corporate container." },
+  "MFA": { full: "Multi-factor authentication", tip: "Two or more different kinds of proof: something you know, have, are, or where you are.", more: "MFA combines factors from different categories, such as a password plus a code from a phone app. Two passwords are still one factor. It defeats stolen passwords because the attacker lacks the second factor, and it is the standard fix for account takeover in exam scenarios." },
+  "MIME": { full: "Multipurpose Internet Mail Extensions", tip: "The standard that lets email carry attachments and non-text content.", more: "MIME defines how files, images, and rich text are encoded inside email. S/MIME adds signing and encryption to messages." },
+  "MOA": { full: "Memorandum of agreement", tip: "A more formal, sometimes binding, statement of what parties agree to do.", more: "An MOA is a step up from a memorandum of understanding: it spells out specific commitments and responsibilities between parties." },
+  "MOU": { full: "Memorandum of understanding", tip: "A non-binding statement of intent and roles between parties.", more: "An MOU records what two organizations expect from each other before or instead of a binding contract. It shows intent and shared understanding but is not enforceable the way an SLA or MSA is." },
+  "MPLS": { full: "Multiprotocol Label Switching", tip: "A provider WAN that forwards by short labels instead of IP lookups, with traffic engineering and QoS.", more: "MPLS carriers put a label on each packet at the edge and switch on the label through the core, which lets them build private WANs with guaranteed performance for customers. It is reliable and expensive, and SD-WAN is often used to replace or supplement it with cheap internet links." },
+  "ms": { full: "Millisecond", tip: "One thousandth of a second; latency and response times.", more: "Network latency is quoted in ms. Satellite links add 500 to 600 ms, which hurts voice and interactive traffic. Monitors also quote response time in ms." },
+  "MSA": { full: "Master service agreement", tip: "The umbrella contract covering a whole vendor relationship; individual jobs hang off it.", more: "An MSA sets the general terms, liability, and payment rules once, so each new project needs only a short statement of work." },
+  "MTBF": { full: "Mean time between failures", tip: "The average running time before a component fails; a reliability measure.", more: "MTBF is a statistical estimate of how long a device runs between failures. A higher MTBF means a more reliable part. It is used with MTTR to plan spares and redundancy." },
+  "MTTR": { full: "Mean time to repair", tip: "The average time to fix a failure and restore service.", more: "MTTR measures how quickly you recover. Spares on site, documentation, and remote access all lower it. Together with MTBF it drives availability calculations." },
+  "NAC": { full: "Network access control", tip: "Checks a device's identity and health before letting it onto the network.", more: "NAC combines 802.1X authentication with posture checks such as patch level and antivirus status, then places the device in the right VLAN or quarantines it. Agent-based NAC installs software on the endpoint; agentless NAC inspects it from the network." },
+  "NAT-T": { full: "NAT traversal", tip: "Wraps IPsec in UDP 4500 so it can pass through address translation.", more: "Because NAT rewrites addresses and ESP has no ports, IPsec normally breaks behind a home router. NAT-T detects the translator and encapsulates ESP in UDP so the tunnel works." },
+  "NDA": { full: "Non-disclosure agreement", tip: "A contract that keeps shared information confidential.", more: "NDAs protect trade secrets and sensitive data when vendors, partners, or new employees are given access. Violations are a legal matter, which is why they appear alongside other agreements on the exam." },
+  "NGFW": { full: "Next-generation firewall", tip: "A firewall that identifies applications and users, and includes intrusion prevention.", more: "An NGFW inspects traffic beyond ports, recognizing applications such as a specific cloud service, applying user-based rules, and running IPS signatures, often with TLS inspection." },
+  "NTP": { full: "Network Time Protocol", tip: "Synchronizes clocks across the network (UDP 123); wrong time breaks Kerberos, certificates, and logs.", more: "NTP keeps every device's clock aligned to a reference. Stratum 0 is the reference clock (GPS, atomic), stratum 1 servers connect to it, and each hop adds one. Kerberos fails when clocks differ by more than five minutes, certificates look expired, and logs cannot be correlated. NTS adds authentication. In the CBET course the same letters also name the National Toxicology Program; read the context." },
+  "NTS": { full: "Network Time Security", tip: "Authentication and integrity for NTP so time cannot be spoofed.", more: "NTS uses TLS to set up keys and then authenticates NTP packets, defeating attackers who would shift a network's clocks to break authentication or hide their tracks." },
+  "OAuth": { full: "Open Authorization", tip: "Lets a user grant an application limited access to their account on another service without sharing the password.", more: "OAuth issues access tokens with specific scopes, which is how a calendar app can read your email provider's calendar without your password. OpenID Connect adds login on top of it." },
+  "OCSP": { full: "Online Certificate Status Protocol", tip: "A real-time query to the CA asking whether one certificate is revoked.", more: "Instead of downloading a whole CRL, the client asks the OCSP responder about one serial number. OCSP stapling has the web server include a recent signed answer in the TLS handshake, saving the client the lookup and protecting privacy." },
+  "OS": { full: "Operating system", tip: "The software that manages hardware and runs applications: Windows, macOS, Linux, iOS, Android.", more: "The OS controls processes, memory, files, and devices. Keeping it patched and hardened is the first endpoint defense. In cloud terms, with IaaS you manage the OS and the provider manages the hardware." },
+  "OSINT": { full: "Open-source intelligence", tip: "Information gathered from public sources: websites, social media, records, DNS.", more: "Attackers and penetration testers use OSINT to learn names, email formats, technologies, and physical details before an attack. It is passive reconnaissance; nothing touches the target's systems." },
+  "P7B": { full: "PKCS #7 bundle", tip: "A file holding a certificate chain with no private key.", more: "P7B files carry a certificate and its intermediates so a server or client can build the trust chain. They never contain the private key." },
+  "PBKDF2": { full: "Password-Based Key Derivation Function 2", tip: "Stretches a password with many hash rounds so guessing is slow.", more: "PBKDF2 hashes the password with a salt thousands of times, so each guess costs the attacker real time while a legitimate login stays fast. bcrypt, scrypt, and Argon2 do the same job with more resistance to hardware attacks." },
+  "PEAP": { full: "Protected EAP", tip: "A server certificate creates a TLS tunnel and the user's password is checked inside it.", more: "PEAP is the common enterprise Wi-Fi method for username and password logins: the server proves itself with a certificate, then the client sends credentials through the encrypted tunnel." },
+  "PEM": { full: "Privacy Enhanced Mail (format)", tip: "The Base64 text format for certificates and keys, with BEGIN and END lines.", more: "PEM files are readable text that can be pasted into configuration. They may hold a certificate, a chain, or a private key. DER is the same content in binary." },
+  "PFX": { full: "Personal Information Exchange", tip: "A password-protected bundle holding a certificate and its private key (also .p12).", more: "PFX or PKCS #12 files move a certificate together with its private key between systems, protected by a password. Because they contain the private key they must be handled carefully." },
+  "PIN": { full: "Personal identification number", tip: "A short numeric secret, a something-you-know factor.", more: "A PIN unlocks a phone, a SIM, or a smart card. A password plus a PIN is still one factor because both are things you know." },
+  "PKI": { full: "Public key infrastructure", tip: "The system of certificate authorities, certificates, and revocation that makes public keys trustworthy.", more: "PKI ties a public key to an identity through a certificate signed by a certificate authority. Browsers and devices trust root CAs, which sign intermediates, which sign server and user certificates. Revocation lists and OCSP handle certificates that must be withdrawn early." },
+  "POP3": { full: "Post Office Protocol version 3", tip: "Downloads mail to one device and usually deletes it from the server; TCP 110, secure 995.", more: "POP3 pulls messages to a single client and typically removes them from the server, so mail does not sync across devices. It is simple and old; IMAP is the modern choice." },
+  "POP3S": { full: "POP3 Secure", tip: "POP3 over TLS on TCP 995.", more: "POP3S is the encrypted form of POP3. Use it or IMAPS instead of the plaintext ports when a client must fetch mail." },
+  "PSK": { full: "Pre-shared key", tip: "One shared passphrase for everyone on a Wi-Fi network (Personal mode).", more: "A PSK is the Wi-Fi password typed into every device. It is simple but weak for organizations: everyone knows it, and revoking one person means changing it everywhere. Enterprise mode with 802.1X and RADIUS gives each user their own credentials." },
+  "RA": { full: "Registration authority", tip: "The part of a PKI that verifies identities before the CA signs.", more: "The RA checks that an applicant is who they claim, then passes the approved request to the certificate authority." },
+  "RADIUS": { full: "Remote Authentication Dial-In User Service", tip: "The AAA server behind Wi-Fi Enterprise, VPNs, and 802.1X; UDP 1812 and 1813.", more: "A RADIUS server checks credentials for network access devices (switches, APs, VPN gateways) and tells them what the user is allowed. It encrypts only the password, uses UDP, and combines authentication and authorization, which is why TACACS+ is preferred for device administration." },
+  "RAID": { full: "Redundant array of independent disks", tip: "Combining disks for speed, capacity, or fault tolerance: 0 stripe, 1 mirror, 5 stripe with parity, 6 double parity, 10 mirrored stripes.", more: "RAID 0 stripes data across disks for speed with no redundancy; one failure loses everything. RAID 1 mirrors two disks. RAID 5 stripes with one parity block and survives one disk failure (three disks minimum). RAID 6 has two parity blocks and survives two failures (four disks). RAID 10 mirrors pairs then stripes, needing four disks. RAID is availability, not backup." },
+  "RAM": { full: "Random-access memory", tip: "The working memory that holds running programs and data; lost at power off.", more: "RAM speed and capacity limit how much a system can do at once. Because it is volatile, forensics collects it first (order of volatility) before the machine is powered down." },
+  "RAT": { full: "Remote access trojan", tip: "Malware that opens a back door so an attacker can control the machine.", more: "A RAT hides as legitimate software and gives the attacker remote control: files, keystrokes, camera, and a foothold for more attacks. Endpoint protection and egress filtering detect and contain it." },
+  "RBAC": { full: "Role-based access control", tip: "Permissions are assigned to roles, and users get roles.", more: "RBAC simplifies administration: a new accountant gets the accountant role rather than dozens of individual permissions. It is the most common model in business systems." },
+  "RC4": { full: "Rivest Cipher 4", tip: "A fast stream cipher used in WEP and old TLS; broken and deprecated.", more: "RC4's weaknesses are why WEP fell and why TLS banned it. It appears on the exam only as an example of an algorithm to replace." },
+  "RDP": { full: "Remote Desktop Protocol", tip: "Microsoft's remote graphical desktop on TCP 3389.", more: "RDP gives a full Windows desktop over the network. Exposed directly to the internet it is a frequent attack target, so it should sit behind a VPN or gateway with MFA and network level authentication." },
+  "RFID": { full: "Radio-frequency identification", tip: "Tags read by radio for badges, inventory, and asset tracking.", more: "RFID badges open doors, and RFID tags track assets. Because tags answer any reader, cloning is possible, so high-security doors combine a badge with a PIN or biometric." },
+  "RPO": { full: "Recovery point objective", tip: "The maximum acceptable data loss, measured in time.", more: "An RPO of one hour means backups or replication must run at least hourly, because after a disaster you may lose everything since the last copy. It drives how often you back up." },
+  "RSA": { full: "Rivest, Shamir, Adleman", tip: "The classic public-key algorithm for encryption and digital signatures.", more: "RSA uses a public and private key pair based on the difficulty of factoring large numbers. It encrypts session keys, signs certificates, and authenticates SSH users. Keys of 2048 bits or more are required today; ECC gives the same strength with shorter keys." },
+  "RTO": { full: "Recovery time objective", tip: "The maximum acceptable time to restore a service after failure.", more: "An RTO of four hours means the service must be back within four hours. It drives what recovery site you need: a hot site restores in minutes, a cold site in days." },
+  "RTOS": { full: "Real-time operating system", tip: "An operating system that guarantees responses within strict time limits, used in embedded and control devices.", more: "RTOS-based devices such as medical equipment, vehicle controllers, and industrial sensors prioritize timing over features and are hard to patch, so they need network isolation." },
+  "RTP": { full: "Real-time Transport Protocol", tip: "Carries the actual voice and video packets of a call, over UDP.", more: "After SIP sets up a call, RTP streams the audio and video with sequence numbers and timestamps so the receiver can play them in order and measure jitter. SRTP is the encrypted version." },
+  "SaaS": { full: "Software as a service", tip: "Complete applications delivered over the web, such as email and office suites.", more: "With SaaS you log in and use the software; the provider runs everything. It is the model with the least customer responsibility and the least control." },
+  "SAE": { full: "Simultaneous authentication of equals", tip: "The WPA3 Personal handshake that resists offline password guessing.", more: "SAE is a password-authenticated key exchange, sometimes called Dragonfly. Both sides prove they know the passphrase without ever sending anything an eavesdropper could attack offline, and each session gets a fresh key. It is why WPA3 Personal is safe with a weaker passphrase than WPA2 would be." },
+  "SAML": { full: "Security Assertion Markup Language", tip: "An XML standard for passing authentication between an identity provider and a web application (enterprise SSO).", more: "With SAML the application sends the user to the identity provider, which authenticates and returns a signed assertion listing who the user is and their attributes. It is the classic protocol for enterprise web single sign-on and federation." },
+  "SAN": { full: "Subject alternative name, or storage area network", tip: "On a certificate, the list of hostnames it covers; in infrastructure, a dedicated block-storage network.", more: "A certificate's SAN field lists every hostname it is valid for, which is how one certificate covers www and mail. A storage area network gives servers block-level access to disk arrays over Fibre Channel or iSCSI. Read the context." },
+  "SASE": { full: "Secure access service edge", tip: "SD-WAN networking plus cloud-delivered security (firewall, web gateway, ZTNA, CASB) as one service.", more: "SASE moves the security stack into the cloud close to users and branches, so remote workers and sites get the same policy without backhauling traffic to a data center. It bundles SD-WAN with the security functions that SSE describes." },
+  "SCADA": { full: "Supervisory control and data acquisition", tip: "Systems that monitor and control industrial processes such as power, water, and manufacturing.", more: "SCADA gathers data from field sensors and sends commands to controllers over networks that were designed long before internet threats. It runs on old software, cannot tolerate downtime, and must be isolated from the corporate network and the internet." },
+  "SCAP": { full: "Security Content Automation Protocol", tip: "Standard formats that let tools check systems against security benchmarks automatically.", more: "SCAP bundles standards such as CVE, CVSS, and configuration checklists so scanners can measure compliance and vulnerabilities consistently across vendors." },
+  "SD-WAN": { full: "Software-defined wide area network", tip: "Steers traffic across several cheap links (broadband, LTE, MPLS) by policy from a central controller.", more: "SD-WAN puts an appliance at each site, builds encrypted tunnels over whatever links exist, and lets a central controller choose the best path per application based on measured loss and latency. It cuts cost versus MPLS and makes cloud access direct rather than backhauled." },
+  "SDLC": { full: "Software development life cycle", tip: "The phases of building software: plan, design, code, test, deploy, maintain.", more: "Secure SDLC builds security into each phase rather than testing for it at the end: threat modeling in design, code review and static analysis in development, dynamic testing before release, and patching in maintenance." },
+  "SDN": { full: "Software-defined networking", tip: "Separates the control plane (decisions) from the data plane (forwarding) and centralizes control.", more: "In SDN a controller programs many switches through APIs instead of each device running its own configuration. The control plane decides paths; the data plane forwards packets; the management plane is where administrators talk to the controller. It enables automation and fast policy changes." },
+  "SFTP": { full: "SSH File Transfer Protocol", tip: "File transfer inside an SSH session, TCP 22.", more: "SFTP is not FTP with encryption bolted on; it is a separate protocol carried over SSH. It uses one port, 22, which makes it firewall friendly, and it is the usual secure replacement for FTP." },
+  "SHA": { full: "Secure Hash Algorithm", tip: "The family of hash functions: SHA-1 (deprecated), SHA-2 (SHA-256, the standard), SHA-3.", more: "Hashes turn any input into a fixed-length fingerprint. SHA-256 and the SHA-2 family are current; SHA-1 is deprecated because collisions have been demonstrated; SHA-3 is a newer alternative design." },
+  "SHA-1": { full: "Secure Hash Algorithm 1", tip: "A 160-bit hash, deprecated because collisions have been found.", more: "SHA-1 should not be used for certificates or signatures. Browsers reject SHA-1 certificates. It appears on the exam as the deprecated choice next to SHA-256." },
+  "SHA-2": { full: "Secure Hash Algorithm 2", tip: "The current hash family, including SHA-256 and SHA-512.", more: "SHA-2 is the standard for certificates, signatures, and integrity checks. SHA-256 is its most common member." },
+  "SHA-256": { full: "Secure Hash Algorithm 256-bit", tip: "The standard hash today: a 256-bit fingerprint of any input.", more: "SHA-256 is used in TLS certificates, code signing, file integrity, and password storage (with salting and stretching). Any change to the input changes the output completely, which is what makes it useful for integrity." },
+  "SHA-3": { full: "Secure Hash Algorithm 3", tip: "A newer hash standard with a different internal design from SHA-2.", more: "SHA-3 was standardized as an alternative in case weaknesses appear in SHA-2. Both are acceptable; SHA-2 remains more common." },
+  "SIEM": { full: "Security information and event management", tip: "Collects logs from everything, correlates them, and raises alerts.", more: "A SIEM ingests syslog, Windows events, firewall and IDS logs, normalizes them, and looks for patterns across sources, such as one account failing logins on many hosts. It provides dashboards, alerting, and the searchable history investigators need." },
+  "SIP": { full: "Session Initiation Protocol", tip: "Sets up and tears down voice and video calls; port 5060, or 5061 with TLS.", more: "SIP is the signaling protocol for VoIP: it registers phones, rings the far end, and negotiates the media session. The voice itself travels in RTP. Because SIP often needs many ports and passes through NAT, VoIP problems frequently trace to firewalls or NAT helpers." },
+  "SLA": { full: "Service level agreement", tip: "The contract stating measurable service commitments, such as 99.9% uptime.", more: "An SLA defines what a provider promises (availability, response time, repair time) and the penalties for missing it. Guaranteed uptime from the ISP is an SLA. Internal IT also uses SLAs for help desk response." },
+  "SLE": { full: "Single loss expectancy", tip: "The cost of one occurrence of a risk: asset value times exposure factor.", more: "SLE puts a dollar figure on one incident. Multiply it by the annualized rate of occurrence to get the yearly expected loss, which is what you compare against the cost of a control." },
+  "SMB": { full: "Server Message Block", tip: "Windows file and printer sharing on TCP 445.", more: "SMB is the protocol behind mapped drives and shared printers. Version 1 is insecure and should be disabled; versions 2 and 3 add signing and encryption. Blocking 445 at the perimeter stops most worm-style spread." },
+  "SMS": { full: "Short Message Service", tip: "Text messages; used for one-time codes and also a phishing channel (smishing).", more: "SMS codes are a common but weak second factor because SIM swapping and interception can steal them. Smishing is phishing by text message." },
+  "SMTP": { full: "Simple Mail Transfer Protocol", tip: "Sends email between servers on TCP 25; clients submit on 587 with TLS.", more: "SMTP moves mail toward its destination. Server-to-server delivery uses port 25; client submission uses 587 (or legacy 465) with authentication and TLS. Receiving and reading mail uses POP3 or IMAP, not SMTP." },
+  "SMTPS": { full: "SMTP Secure", tip: "SMTP with TLS, port 465 (implicit) or 587 with STARTTLS.", more: "SMTPS protects mail submission between a client and its mail server. Port 587 with STARTTLS is the modern standard; 465 is the older implicit-TLS port." },
+  "SNMP": { full: "Simple Network Management Protocol", tip: "Polls and receives alerts from network devices (UDP 161 polls, 162 traps).", more: "An SNMP manager polls agents on devices for values in their MIB, such as interface counters and CPU load, and agents send traps when something happens. Versions 1 and 2c use a plaintext community string; version 3 adds authentication and encryption and is the only version to recommend." },
+  "SOW": { full: "Statement of work", tip: "Defines one specific piece of work: deliverables, timeline, and price.", more: "A SOW sits under an MSA and describes a single project in detail. A work order is the smaller cousin for routine tasks." },
+  "SPF": { full: "Sender Policy Framework", tip: "A DNS TXT record listing which servers may send mail for a domain.", more: "Receiving servers check the sender's IP against the domain's SPF record and reject or flag mail from elsewhere. It is one of the three email authentication records with DKIM and DMARC." },
+  "SQL": { full: "Structured Query Language", tip: "The language used to query databases; also the name of the servers on TCP 1433 (Microsoft) and 3306 (MySQL).", more: "SQL is how applications read and write relational databases. On the exam it appears as the database server ports and, in security, as SQL injection, where untrusted input is pasted into a query and changes what it does." },
+  "SRTP": { full: "Secure Real-time Transport Protocol", tip: "Encrypted RTP for voice and video.", more: "SRTP adds encryption and authentication to RTP media streams so calls cannot be eavesdropped or altered. Pair it with SIP over TLS for a fully protected call." },
+  "SSH": { full: "Secure Shell", tip: "Encrypted remote command-line access and file transfer on TCP 22; replaces Telnet and FTP.", more: "SSH authenticates with passwords or keys and encrypts the whole session. SFTP and SCP ride on it for file copies. Any question about managing a switch or server securely from the command line wants SSH." },
+  "SSID": { full: "Service set identifier", tip: "The Wi-Fi network name that access points broadcast and clients join.", more: "The SSID is the human-readable network name, up to 32 characters. One AP can advertise several SSIDs, each mapped to a different VLAN, for example staff and guest. Hiding the SSID stops it appearing in scan lists but is not security, because clients still send it in the clear when they connect." },
+  "SSL": { full: "Secure Sockets Layer", tip: "The predecessor of TLS; every version is deprecated.", more: "SSL 2.0 and 3.0 are broken and must be disabled. People still say SSL certificate, but the protocol in use is TLS." },
+  "SSO": { full: "Single sign-on", tip: "Log in once and reach many systems without signing in again.", more: "SSO lets an identity provider vouch for the user to every application, using protocols such as SAML, OAuth, and OpenID Connect. It improves convenience and lets one strong login with MFA protect everything, at the cost of that login becoming a high-value target." },
+  "SSRF": { full: "Server-side request forgery", tip: "Makes the web server itself fetch a URL the attacker supplies, often reaching internal systems.", more: "In SSRF the attacker feeds a server a URL and the server requests it, letting the attacker reach internal addresses and cloud metadata services that are unreachable from outside. Allow-listing destinations is the fix." },
+  "SY0-701": { full: "CompTIA Security+ exam SY0-701", tip: "The current version of the Security+ certification exam.", more: "SY0-701 covers general security concepts, threats and vulnerabilities, architecture, operations, and governance. It has up to 90 questions in 90 minutes with a passing score of 750 on a 100 to 900 scale." },
+  "TACACS+": { full: "Terminal Access Controller Access-Control System Plus", tip: "Cisco's AAA protocol for device administration on TCP 49; encrypts the whole payload and separates authentication from authorization.", more: "TACACS+ is used to control who can log in to routers and switches and which commands they may run. Compared with RADIUS it uses TCP, encrypts the entire packet, and handles authorization command by command, which suits administrative access rather than user network access." },
+  "TCP": { full: "Transmission Control Protocol", tip: "Reliable, ordered, connection-based transport: three-way handshake, acknowledgments, retransmission.", more: "TCP sets up a connection with a SYN, SYN-ACK, ACK handshake, numbers every segment, acknowledges what arrives, and resends what does not. That reliability costs overhead, so it suits web pages, email, and file transfer rather than live voice. Port numbers at Layer 4 identify which application on the host the data is for." },
+  "TFTP": { full: "Trivial File Transfer Protocol", tip: "Bare-bones UDP 69 file transfer with no login, used for firmware and config files.", more: "TFTP has no authentication and no directory listing, so it is only for trusted networks: pushing switch firmware, backing up configurations, and network booting (PXE). It should be blocked at the perimeter." },
+  "TKIP": { full: "Temporal Key Integrity Protocol", tip: "WPA's per-packet keying scheme; deprecated.", more: "TKIP wrapped the old RC4 cipher with changing keys so WEP hardware could be patched. It is now considered broken and WPA2 with AES-CCMP or WPA3 should be used instead." },
+  "TLS": { full: "Transport Layer Security", tip: "The encryption layer under HTTPS and most secure protocols; use 1.2 or 1.3.", more: "TLS authenticates the server with a certificate, agrees session keys, and then encrypts the connection. It replaced SSL, whose versions are all deprecated. TLS 1.0 and 1.1 are also retired. It works at the presentation and session layers in OSI terms and protects web, mail, LDAP, and VPN traffic." },
+  "TOC": { full: "Time of check", tip: "The moment a program verifies a condition; in a race condition, before it acts on it.", more: "A time-of-check to time-of-use flaw lets an attacker change something between the check and the use, for example swapping a file after it was validated but before it was opened." },
+  "TOU": { full: "Time of use", tip: "The moment a program acts on a condition it checked earlier.", more: "TOC/TOU race conditions exploit the gap between checking and using. The defense is to make the check and the use one atomic operation." },
+  "TPM": { full: "Trusted Platform Module", tip: "A security chip on the motherboard that stores keys and measurements; required for BitLocker and Windows 11.", more: "The TPM holds encryption keys that never leave the chip and records boot measurements so it can refuse to release keys if the firmware or boot loader changed. Full-disk encryption keys, device identity certificates, and attestation all rely on it." },
+  "TV": { full: "Television", tip: "A display or broadcast receiver; smart TVs are IoT devices.", more: "Cable TV shares the coax with the cable modem. Smart TVs join the network and should be segmented like other IoT." },
+  "UBA": { full: "User behavior analytics", tip: "Baselines what each user normally does and flags deviations.", more: "UBA, or UEBA including entities, learns normal login times, locations, and data volumes and alerts when an account suddenly behaves differently, which catches stolen credentials and insiders." },
+  "UEFI": { full: "Unified Extensible Firmware Interface", tip: "Modern firmware that replaces BIOS: GPT disks, Secure Boot, mouse-driven setup.", more: "UEFI boots from GPT disks of any size, verifies boot loaders with Secure Boot, and offers a graphical setup. A compatibility mode (CSM) boots legacy BIOS-style systems. Windows 11 requires UEFI with Secure Boot and a TPM." },
+  "UPS": { full: "Uninterruptible power supply", tip: "A battery unit that keeps equipment running through a power cut and conditions the power.", more: "A UPS sits between the wall and the equipment, taking over instantly when power fails and giving time to shut down or for a generator to start. It is sized in VA or watts against the load for the runtime needed. In medical settings a UPS covers the transfer gap to emergency power." },
+  "URL": { full: "Uniform resource locator", tip: "A web address such as https://www.example.com/page.", more: "The URL names the protocol, host, port, path, and query. URL filtering blocks sites by address or category; attackers hide malicious URLs behind look-alike domains and shortened links." },
+  "USB": { full: "Universal Serial Bus", tip: "The standard port for peripherals, storage, and charging.", more: "USB versions set speed: 2.0 at 480 Mbps, 3.0 at 5 Gbps, 3.1 at 10 Gbps, 3.2 at 20 Gbps, USB4 at 40 Gbps. Connectors include A, B, mini, micro, and the reversible C. Unknown USB drives are a malware vector, which DLP and device control address." },
+  "UTM": { full: "Unified threat management", tip: "One appliance bundling firewall, IDS/IPS, antivirus, content filtering, and VPN.", more: "UTM devices give small and mid-sized organizations a full security stack in one box. The trade-off is that one device becomes a bottleneck and a single point of failure." },
+  "VLAN": { full: "Virtual local area network", tip: "A logical LAN on a switch: ports in different VLANs are separate broadcast domains.", more: "A VLAN splits one physical switch into several logical switches. Ports in VLAN 10 cannot talk to ports in VLAN 20 without a router or Layer 3 switch, which contains broadcasts and separates traffic such as voice, data, and guests. Trunk links carry many VLANs between switches using 802.1Q tags. A native VLAN is the untagged one on a trunk, and a voice VLAN lets a phone tag its traffic while the PC behind it stays untagged." },
+  "VM": { full: "Virtual machine", tip: "A complete computer running as software on a hypervisor.", more: "A VM has its own operating system and virtual hardware but shares the physical host with others. Type 1 hypervisors run on bare metal; type 2 run on a host OS. VM escape, where code in a guest reaches the host, is the serious virtualization vulnerability; VM sprawl is the management one." },
+  "VPN": { full: "Virtual private network", tip: "An encrypted tunnel across an untrusted network such as the internet.", more: "A VPN makes a remote user or site appear to be on the private network by encrypting traffic between the endpoints. Site-to-site VPNs join offices, usually with IPsec; remote-access VPNs connect individual users with IPsec or TLS clients. Split tunneling sends only corporate traffic through the tunnel; full tunneling sends everything." },
+  "WAF": { full: "Web application firewall", tip: "A firewall that understands HTTP and blocks attacks on web applications such as SQL injection and XSS.", more: "A WAF sits in front of web servers and inspects requests and responses at the application layer. It is the control for web attacks that a network firewall, which only sees ports and addresses, cannot recognize." },
+  "WAN": { full: "Wide area network", tip: "Connects LANs across cities or countries, usually over links leased from a provider.", more: "A WAN joins sites that are far apart. Because the organization cannot run its own cable between cities, it rents circuits or internet connections from a carrier, which is why WAN links are slower and cost per month. The internet is the largest WAN. Routers sit at the edge of each site to send traffic across the WAN." },
+  "WEP": { full: "Wired Equivalent Privacy", tip: "The original Wi-Fi encryption, broken in minutes; never use it.", more: "WEP used the RC4 cipher with short, badly managed keys, and tools can recover the key from captured traffic in minutes. Any question describing WEP wants you to replace it with WPA2 or WPA3." },
+  "Wi-Fi": { full: "Wireless fidelity", tip: "The trade name for IEEE 802.11 wireless networking.", more: "Wi-Fi is the brand the Wi-Fi Alliance gives to interoperable 802.11 equipment. Generations are numbered: Wi-Fi 4 is 802.11n, Wi-Fi 5 is 802.11ac, Wi-Fi 6 and 6E are 802.11ax (6E adds the 6 GHz band), and Wi-Fi 7 is 802.11be. Bands are 2.4 GHz (range, interference), 5 GHz (speed, more channels), and 6 GHz." },
+  "WO": { full: "Work order", tip: "A short authorization for one specific job.", more: "Work orders define individual tasks under a broader agreement, such as installing ten access points on a given date." },
+  "WPA": { full: "Wi-Fi Protected Access", tip: "The interim fix for WEP that used TKIP; deprecated.", more: "WPA kept WEP-era hardware working by adding per-packet keys with TKIP. It was a stopgap until WPA2 brought AES and is now considered insecure." },
+  "WPA2": { full: "Wi-Fi Protected Access 2", tip: "Wi-Fi security using AES with CCMP; still common and acceptable.", more: "WPA2 replaced TKIP with AES-CCMP encryption. Personal mode uses a pre-shared passphrase; Enterprise mode authenticates each user through 802.1X and RADIUS. Its weakness is that a captured handshake can be attacked offline with password guessing, which WPA3 fixes." },
+  "WPA3": { full: "Wi-Fi Protected Access 3", tip: "The current Wi-Fi security standard: SAE in Personal mode, stronger encryption, protected management frames.", more: "WPA3 Personal replaces the pre-shared key handshake with SAE (simultaneous authentication of equals), which stops offline password cracking and adds forward secrecy. Enterprise mode still uses 802.1X. Protected management frames are mandatory, blocking deauthentication attacks." },
+  "XDR": { full: "Extended detection and response", tip: "EDR extended across endpoints, network, cloud, and email into one correlated view.", more: "XDR pulls detections from many sources together so an attack that touches email, an endpoint, and a server shows as one incident." },
+  "XML": { full: "Extensible Markup Language", tip: "A text format for structured data, used by SAML, HL7 version 3, and many configuration files.", more: "XML wraps data in nested tags. It is verbose but readable, and its parsers can be attacked (XML injection, external entity attacks), which is why input validation matters." },
+  "XSS": { full: "Cross-site scripting", tip: "An attacker's script runs in other users' browsers because a site echoes untrusted input.", more: "In XSS the attacker stores or reflects script through a web page so that it executes in the victim's browser, stealing sessions or acting as the user. Input validation and output encoding are the defenses." }
+};
+// Uppercase words in the course text that are not acronyms (emphasis, registry key names, model numbers, formula symbols).
+FRA.acronymIgnore = ["BEST","FIRST","LEAST","MOST","MUST","NEXT","NOT","OR"];
 
 // SecPlus Academy memorization sheet for CompTIA Security+ SY0-701. Everything that must be recalled cold:
 // control matrices, numbers, orders of steps, formulas, protocol pairs, and one-line distinctions. Original content.
@@ -6319,7 +6563,10 @@ FRA.questions.push(
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
    retraining tutorial built from the misses -> practice tests until three in a row at 85% or better.
-   Every test ends with an explanation of each wrong answer and each lucky guess. */
+   Every test ends with an explanation of each wrong answer and each lucky guess.
+   After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
+   Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
+   standard-format tests (the real exam's format) ask no confidence question. */
 (function () {
   'use strict';
 
@@ -6378,7 +6625,16 @@ FRA.questions.push(
   const pct = (c, t) => t ? Math.round(100 * c / t) : 0;
   const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const letters = ['A', 'B', 'C', 'D'];
-  const inline = s => esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // ---------- acronyms ----------
+  // FRA.acronyms: { KEY: { full, tip, more } }. Every key found in tutorial and cheat sheet text becomes a hover link
+  // (tooltip: full + tip) that opens the deeper explanation on click. Whole words only, plurals allowed, longest key wins.
+  // Never applied inside {{code}} spans or fenced blocks, and never to question text.
+  const ACR = FRA.acronyms || {};
+  const ACR_KEYS = Object.keys(ACR).filter(k => ACR[k] && ACR[k].full).sort((a, b) => b.length - a.length || a.localeCompare(b));
+  const ACR_RE = ACR_KEYS.length ? new RegExp('(^|[^A-Za-z0-9_])(' + ACR_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('|') + ')(s|es)?(?![A-Za-z0-9_])', 'g') : null;
+  const acrWrap = html => !ACR_RE ? html : html.split(/(<code>[\s\S]*?<\/code>)/).map(part => part.startsWith('<code>') ? part
+    : part.replace(ACR_RE, (m, pre, key, pl) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
+  const inline = s => acrWrap(esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
   function renderBody(md) {
@@ -6404,7 +6660,7 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -6552,12 +6808,26 @@ FRA.questions.push(
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
-      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: r.conf, source: 'test' }); }
+      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
     const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
       .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
     return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, pts };
   }
+  // Path choice after the starter test: the tailored plan, or every lesson in course order. Entries tied to a missed or
+  // guessed question keep their reasons either way, so those lessons still open with the learner's answer.
+  function applyScope(plan, scope) {
+    if (scope === 'full') { const have = {}; plan.lessons.forEach(e => { have[e.id] = e; }); plan.lessons = lessons.map(l => have[l.id] || { id: l.id, reasons: [{ kind: 'all' }] }); }
+    plan.scope = scope; return plan;
+  }
+  function choosePath(scope, idx) {
+    const rec = S.exams[idx]; if (!rec || rec.kind !== 'starter') return;
+    const createdAt = S.plan && S.plan.examIdx === idx ? S.plan.createdAt : Date.now();
+    const plan = applyScope(planFromStarter(rec, idx), scope); plan.createdAt = createdAt;
+    S.plan = plan.lessons.length ? plan : null; S.path = { examIdx: idx, scope }; save();
+  }
+  const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
+  const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
   const planEntry = id => S.plan ? S.plan.lessons.find(e => e.id === id) : null;
   const planDone = id => { const ls = S.lessons[id]; return !!(ls && ls.status === 'passed' && S.plan && ls.passedAt >= S.plan.createdAt); };
   const planRemaining = () => S.plan ? S.plan.lessons.filter(e => !planDone(e.id)) : [];
@@ -6598,7 +6868,7 @@ FRA.questions.push(
     if (S.active) return { label: S.active.kind === 'train' ? 'Resume drills' : S.active.kind === 'checkpoint' ? 'Resume the lesson checkpoint' : 'Resume your test', act: 'resume', arg: '' };
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
-    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
+    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${PASS_PCT}% or better within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
@@ -6611,6 +6881,7 @@ FRA.questions.push(
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
+  let acrOpen = null; // acronym whose deeper explanation is open
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
@@ -6618,8 +6889,8 @@ FRA.questions.push(
 
   function render() {
     const v = S.view || { name: 'home' };
-    fbReg = [];
-    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal(); return; }
+    fbReg = []; acrHide();
+    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
     let main = '';
     switch (v.name) {
       case 'home': main = viewHome(); break;
@@ -6655,7 +6926,7 @@ FRA.questions.push(
         <nav class="mobile-nav">
           ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
-      </div>${fbModal()}`;
+      </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function navBtn(name, label) {
@@ -6694,7 +6965,7 @@ FRA.questions.push(
         <h3>How the path works</h3>
         <ol style="margin:0;padding-left:22px;line-height:1.7">
           <li><strong>Starter test.</strong> ${STARTER_N} questions with confidence ratings. Wrong answers are explained at the end.</li>
-          <li><strong>Your tutorial.</strong> Lessons chosen from your results. Miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and you get that domain from the ground up.</li>
+          <li><strong>Your path.</strong> Right after the starter test you choose: a tutorial built from your results, or the whole course in order. Either way, miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and the tailored tutorial gives you that domain from the ground up.</li>
           <li><strong>The ${EXAM_N}-question test.</strong> Weighted like the real exam, explained at the end.</li>
           <li><strong>Retraining.</strong> A second tutorial built only from what you missed or guessed, worst first.</li>
           <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row.</li>
@@ -6729,7 +7000,7 @@ FRA.questions.push(
       <div class="stats">
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
-        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
+        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
@@ -6763,6 +7034,7 @@ FRA.questions.push(
 
   // ---------- tutorial (plan) ----------
   function reasonLabel(r) {
+    if (r.kind === 'all') return 'Part of the whole course';
     if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: ${ALL_WORD} starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
     const src = r.source === 'starter' ? 'starter test' : 'last test';
     return `${KIND_LABEL[r.kind]} on the ${src}`;
@@ -6773,24 +7045,28 @@ FRA.questions.push(
     if (kinds.includes('wrong-confident')) return '<span class="pill bad">Wrong, confident</span>';
     if (kinds.includes('wrong')) return '<span class="pill bad">Wrong</span>';
     if (kinds.includes('guess')) return '<span class="pill warn">Guessed</span>';
+    if (kinds.includes('all')) return '<span class="pill">Whole course</span>';
     const d = e.reasons.find(r => r.kind === 'domain');
     if (d) return `<span class="pill">${d.level === 'rebuild' ? 'Whole domain' : 'Core lesson'}</span>`;
     return '<span class="pill">Review</span>';
   }
   function viewTutorial() {
     if (!S.plan) {
+      const sIdx = lastStarterIdx();
       return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Tutorial</div><h1>No tutorial yet</h1><p class="ink2" style="margin-top:6px">${stage() === 'starter' ? 'Take the starter test and your tutorial will be built from the results.' : 'Your last test had no misses or guesses, so there is nothing to retrain. Take a practice test to find new gaps.'}</p></div>
-        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button><button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
+        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button>${sIdx >= 0 && stage() !== 'starter' ? `<button class="btn" data-act="path" data-arg="full:${sIdx}">Do the whole course instead</button>` : ''}<button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
     }
     const rem = planRemaining(); const done = S.plan.lessons.length - rem.length;
-    const src = S.exams[S.plan.examIdx];
+    const src = S.exams[S.plan.examIdx]; const full = S.plan.scope === 'full';
+    const tailoredN = S.plan.source === 'starter' && src ? planFromStarter(src, S.plan.examIdx).lessons.length : 0;
     const byUnit = {}; S.plan.lessons.forEach(e => { const u = L[e.id].unit; (byUnit[u.id] = byUnit[u.id] || { u, list: [] }).list.push(e); });
     const groups = Object.values(byUnit).sort((a, b) => S.plan.source === 'starter' ? a.u.n - b.u.n : Math.min(...a.list.map(e => S.plan.lessons.indexOf(e))) - Math.min(...b.list.map(e => S.plan.lessons.indexOf(e))));
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">${S.plan.source === 'starter' ? 'Your tutorial' : 'Retraining tutorial'} · built from your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
-        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
+      <div><div class="eyebrow">${S.plan.source === 'starter' ? (full ? 'The whole course' : 'Your tutorial') : 'Retraining tutorial'} · ${full ? 'chosen after' : 'built from'} your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
+        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
-      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
+      ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
@@ -6825,7 +7101,7 @@ FRA.questions.push(
     const idx = lessons.indexOf(l); const nextLesson = lessons[idx + 1]; const prevLesson = lessons[idx - 1];
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
-      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'} · confidence ${r.conf}/5</div>
+      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
         <div class="stem">${esc(q.q)}</div>
         <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
@@ -6858,6 +7134,7 @@ FRA.questions.push(
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
       ${deepSection(id)}
       ${quiz}
+      ${ratingRow(id)}
       <div class="row" style="justify-content:flex-end"><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}">&#9873; Something wrong or unclear in this lesson? Send feedback</button></div>
       <div class="row spread">
         ${prevLesson ? `<button class="btn ghost" data-act="lesson" data-arg="${prevLesson.id}">← ${esc(prevLesson.title)}</button>` : '<span></span>'}
@@ -6866,26 +7143,33 @@ FRA.questions.push(
     </div>`;
   }
 
-  // Shared question card. sess: { items, i, answers, sel, conf, submitted }
+  // Lesson rating: ten chips, 1 confusing to 10 great. The same chips appear on the lesson page and in the lesson feedback form.
+  function ratingChips(id, cur) { return `<div class="rate-row" role="group" aria-label="Rate this lesson from 1 to 10">${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button class="chip rate" data-act="rate" data-arg="${n}" data-lesson="${id}" aria-pressed="${cur === n ? 'true' : 'false'}">${n}</button>`).join('')}</div>`; }
+  function ratingRow(id) {
+    const r = S.ratings && S.ratings[id];
+    return `<div class="card soft stack rate-card" style="gap:8px"><div><div class="eyebrow">Rate this lesson</div><span class="ink2" style="font-size:.95rem">1 is confusing, 10 is great.${r ? ` You rated it ${r.r}/10.` : ' Your rating helps refine the course.'}</span></div>${ratingChips(id, r ? r.r : null)}</div>`;
+  }
+
+  // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
   function questionCard(sess, opts) {
     const q = fat(sess.items[sess.i]); const n = sess.items.length;
-    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf;
+    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf; const hasConf = !sess.noConf;
     const l = L[q.t];
     const optionsHtml = q.a.map((opt, k) => {
       let cls = 'option'; const pressed = sel === k ? 'true' : 'false';
       if (submitted && opts.immediate) { if (k === q.c) cls += ' correct'; else if (k === sel) cls += ' wrong'; }
       return `<button class="${cls}" data-act="opt" data-arg="${k}" aria-pressed="${pressed}" ${submitted ? 'disabled' : ''}><span class="key">${letters[k]}</span><span>${esc(opt)}</span></button>`;
     }).join('');
-    const confHtml = `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>`;
+    const confHtml = hasConf ? `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>` : '';
     let feedback = '';
     if (submitted && opts.immediate) {
       const correct = sel === q.c;
       feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
-    const canSubmit = sel != null && conf != null;
+    const canSubmit = sel != null && (conf != null || !hasConf);
     const controls = submitted
       ? `<div class="row spread"><span class="kbd-hint"><kbd>Enter</kbd> continue</span><button class="btn primary" data-act="next">Continue</button></div>`
-      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, <kbd>1</kbd>–<kbd>5</kbd> confidence, <kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
+      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, ${hasConf ? '<kbd>1</kbd>–<kbd>5</kbd> confidence, ' : ''}<kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
     return `<div class="quiz">
       <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span><span class="row" style="gap:6px">${opts.right || ''}${fbBtn(q, sess.kind)}</span></div>
       <div class="q-stem">${esc(q.q)}</div>
@@ -6911,7 +7195,7 @@ FRA.questions.push(
     return `<div class="content">
       <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every wrong answer and every guess is explained on the results page. ${answered} answered so far.</p>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -6924,7 +7208,7 @@ FRA.questions.push(
       ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
-          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
+          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${e.noConf ? 'no confidence ratings' : `${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}`}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
       </tbody></table></div></div>` : ''}
     </div>`;
   }
@@ -6932,7 +7216,7 @@ FRA.questions.push(
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
       <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
@@ -6944,7 +7228,8 @@ FRA.questions.push(
     if (kind === 'starter') items = buildStarter();
     else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
     const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta };
+    // Standard-format tests (the real exam's format) ask no confidence question.
+    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: !!(setup && setup.mode === 'standard') };
     go('exam');
   }
   function finishExam() {
@@ -6953,14 +7238,16 @@ FRA.questions.push(
     const review = [];
     items.forEach((q, k) => {
       const a = ex.answers[k] || { choice: -1, conf: 1, skipped: true };
-      const res = recordAnswer(q, a.choice, a.conf);
+      // Without a confidence rating, a right answer counts as sure (4) and a wrong one as plain wrong (3).
+      const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
+      const res = recordAnswer(q, a.choice, conf);
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
-      review.push({ q: slim(q), choice: a.choice, conf: a.conf, correct: res.correct });
+      review.push({ q: slim(q), choice: a.choice, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null };
+    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
-    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; }
+    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
     else if (ex.kind === 'custom') {
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
@@ -6988,25 +7275,40 @@ FRA.questions.push(
     let headline, planCard;
     if (isStarter) {
       headline = e.pct >= 90 && !guesses.length ? 'Strong start.' : e.pct >= 60 ? 'A solid base with clear gaps.' : 'Starting from the ground up, which is fine.';
-      planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
+      const latest = idx === lastStarterIdx(); const chosen = S.path && S.path.examIdx === idx ? S.path.scope : null;
+      if (latest && !chosen) {
+        // The path choice: the tailored tutorial or the whole course, whatever the score.
+        const tailored = planFromStarter(e, idx).lessons;
+        planCard = `<div class="card lift stack path-choice"><div><div class="eyebrow">Choose your path</div><h3>A tailored tutorial, or the whole course?</h3><p class="ink2">Pick either one, whatever your score. Every lesson ends with a checkpoint, and the ${EXAM_N}-question test comes after the lessons. You can switch later from the Tutorial tab.</p></div>
+          <div class="paths">
+            <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
+            <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
+          </div></div>`;
+      } else if (planIsFromThis && S.plan.scope === 'full') {
+        planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
+        <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="tailored:${idx}">Switch to the tailored tutorial</button>` : ''}</div></div>`;
+      } else {
+        planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
         <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
-        <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
-        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="full:${idx}">Switch to the whole course</button>` : ''}</div></div>`
+        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button>${latest ? `<button class="btn small" data-act="path" data-arg="full:${idx}" style="margin-left:8px">Do the whole course instead</button>` : ''}</div>`;
+      }
     } else {
       headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
-        : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
+        : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
     const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
-        <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
-        <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
+        <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
+        <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
@@ -7113,6 +7415,36 @@ FRA.questions.push(
     if (b.type === 'note') return `<div class="tip">${inline(b.text)}</div>`;
     return '';
   }
+  // The Acronyms section: every glossary entry, alphabetical, with the acronym clickable for the deeper explanation.
+  function acrSection(n) {
+    if (!ACR_KEYS.length) return '';
+    const keys = ACR_KEYS.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
+    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}">${esc(k)}</button></td><td>${esc(ACR[k].full)}</td><td>${esc(ACR[k].tip)}</td></tr>`).join('')}</tbody></table></div></section>`;
+  }
+  function acrModal() {
+    if (!acrOpen || !ACR[acrOpen]) return '';
+    const a = ACR[acrOpen];
+    return `<div class="modal-back" data-act="acr-close"><div class="modal stack acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-title">
+      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen)}</span>${esc(a.full)}</h3></div>
+      <p class="acr-tip-text"><strong>${esc(a.tip)}</strong></p>
+      <div class="lesson-body acr-more">${renderBody(a.more || '')}</div>
+      <div class="row spread"><button class="btn ghost small" data-act="acr-all">All acronyms</button><button class="btn primary" data-act="acr-close">Close</button></div>
+    </div></div>`;
+  }
+  // Hover tooltip: one shared element, positioned under the acronym and kept inside the viewport.
+  let acrTipEl = null;
+  function acrShow(el) {
+    const a = ACR[el.dataset.arg]; if (!a) return;
+    if (!acrTipEl) { acrTipEl = document.createElement('div'); acrTipEl.className = 'acr-tip'; acrTipEl.id = 'acr-tip'; acrTipEl.setAttribute('role', 'tooltip'); document.body.appendChild(acrTipEl); }
+    acrTipEl.innerHTML = `<b>${esc(el.dataset.arg)}: ${esc(a.full)}</b>${esc(a.tip)}`;
+    acrTipEl.style.maxWidth = Math.min(340, window.innerWidth - 16) + 'px'; acrTipEl.style.display = 'block';
+    const r = el.getBoundingClientRect(); const tw = acrTipEl.offsetWidth, th = acrTipEl.offsetHeight;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+    let top = r.bottom + 8; if (top + th > window.innerHeight - 8) top = r.top - th - 8;
+    acrTipEl.style.left = left + 'px'; acrTipEl.style.top = Math.max(8, top) + 'px';
+  }
+  function acrHide() { if (acrTipEl) acrTipEl.style.display = 'none'; }
+
   function viewCheatsheet() {
     const cs = FRA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
     const intro = S.view.arg === 'intro';
@@ -7124,9 +7456,10 @@ FRA.questions.push(
         <div class="row">${printBtn}</div>
       </div>
       ${intro ? `<div class="callout accent no-print"><strong>Start here.</strong><div class="ans">This sheet is everything the exam expects you to recall from memory. Print it now, or save it as a PDF, and keep it beside you through the course. When you are ready, the ${STARTER_N}-question starter test builds your tutorial.</div><div class="row" style="margin-top:6px"><button class="btn primary" data-act="cheat-continue">Continue to the starter test</button><button class="btn ghost" data-act="go" data-arg="home">Skip for now</button></div></div>` : ''}
-      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}</nav>
+      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}${ACR_KEYS.length ? `<a href="#cs-acronyms">${cs.sections.length + 1}. Acronyms</a>` : ''}</nav>
       <div class="print-only cs-print-head"><h1>${esc(cs.title)}</h1><p>${esc(cs.intro)}</p></div>
       ${cs.sections.map((s, i) => `<section class="cs-section" id="cs-${s.id}"><h2><span class="cs-num">${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</h2>${s.blocks.map(csBlock).join('')}</section>`).join('')}
+      ${acrSection(cs.sections.length + 1)}
       <div class="row no-print">${printBtn}${intro ? `<button class="btn" data-act="cheat-continue">Continue to the starter test</button>` : `<button class="btn ghost" data-act="go" data-arg="home">Home</button>`}</div>
     </div>`;
   }
@@ -7140,9 +7473,10 @@ FRA.questions.push(
     if (!fb) return '';
     const cats = FB_CATS[fb.kind === 'question' ? 'question' : fb.kind === 'lesson' ? 'lesson' : 'overall'];
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
-      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}</div>
+      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
+      ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
       <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
-      <label class="field">Details<textarea id="fb-text" rows="4" placeholder="What is wrong, and what should it say instead?"></textarea></label>
+      <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;
   }
@@ -7164,28 +7498,31 @@ FRA.questions.push(
     return f.kind === 'site' ? 'The website' : 'The course overall';
   }
   function feedbackReport() {
-    const items = S.feedback || [];
-    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    const items = S.feedback || []; const rated = ratedLessons();
+    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, ${plural(rated.length, 'lesson rating')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    if (rated.length) { lines.push('## Lesson ratings (1 confusing to 10 great)', ''); rated.forEach(id => lines.push(`- ${L[id].title} (${id}): ${S.ratings[id].r}/10`)); lines.push(''); }
     items.forEach((f, i) => {
       const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null;
       lines.push(`## ${i + 1}. ${FB_KIND[f.kind] || f.kind} · ${f.cat || 'Uncategorized'} · ${new Date(f.ts).toISOString().slice(0, 10)}`);
       lines.push(`- About: ${fbContext(f)}`);
       if (l) lines.push(`- Lesson id: ${l.id}`);
+      if (f.rating != null) lines.push(`- Rating: ${f.rating}/10`);
       if (r.stem) { lines.push(`- Question${r.qid ? ' ' + r.qid : ' (generated at run time)'}: ${r.stem}`); (r.options || []).forEach((o, k) => lines.push(`  - ${letters[k]}. ${o}${k === r.correct ? ' (marked correct)' : ''}`)); }
-      lines.push(`- Feedback: ${f.text}`, '');
+      lines.push(`- Feedback: ${f.text || '(rating only)'}`, '');
     });
     return lines.join('\n');
   }
+  const ratedLessons = () => Object.keys(S.ratings || {}).filter(id => L[id] && S.ratings[id] && S.ratings[id].r >= 1).sort((a, b) => L[a].index - L[b].index);
   function copyText(txt, msg) {
     const done = () => toast(msg || 'Copied');
     try { navigator.clipboard.writeText(txt).then(done, () => fallback()); } catch (err) { fallback(); }
     function fallback() { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Could not copy'); } ta.remove(); }
   }
   function viewFeedback() {
-    const items = (S.feedback || []).slice().reverse();
+    const items = (S.feedback || []).slice().reverse(); const rated = ratedLessons(); const any = items.length || rated.length;
     const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(course.name + ' feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, any lesson from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
+      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, rate any lesson from 1 to 10 at the end of the lesson or from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
       <div class="card lift stack">
         <h3>Send feedback</h3>
         <label class="field">About<select id="fb-area"><option value="overall">The course overall</option><option value="site">The website: bugs, design, usability</option><optgroup label="Units">${units.map(u => `<option value="unit:${u.id}">Unit ${u.n}: ${esc(u.title)}</option>`).join('')}</optgroup><optgroup label="Lessons">${lessons.map(l => `<option value="lesson:${l.id}">${esc(l.title)}</option>`).join('')}</optgroup></select></label>
@@ -7193,9 +7530,10 @@ FRA.questions.push(
         <label class="field">Your feedback<textarea id="fb-text" rows="5" placeholder="What should change, and why?"></textarea></label>
         <div class="row"><button class="btn primary" data-act="fb-save-page">Save feedback</button></div>
       </div>
+      ${rated.length ? `<div class="card stack"><h3>Lesson ratings (${rated.length})</h3><div class="topic-list">${rated.map(id => `<div class="topic-item"><div><div class="t-title">${esc(L[id].title)}</div><div class="t-sub">Unit ${L[id].unit.n} · ${fmtDate(S.ratings[id].ts)}</div></div><div class="row"><span class="pill ${S.ratings[id].r >= 7 ? 'good' : S.ratings[id].r >= 4 ? 'warn' : 'bad'}">${S.ratings[id].r}/10</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`).join('')}</div></div>` : ''}
       <div class="card stack">
-        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${items.length ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${items.length ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
-        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span><span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${esc(f.text)}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
+        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${any ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${any ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
+        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span>${f.rating != null ? `<span class="pill ${f.rating >= 7 ? 'good' : f.rating >= 4 ? 'warn' : 'bad'}">${f.rating}/10</span>` : ''}<span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${f.text ? esc(f.text) : '<span class="muted">(rating only)</span>'}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
         <p class="muted" style="font-size:.85rem">Feedback stays in this browser and travels with the progress code on the Progress page. Copy the report and paste it into a message to the course author.</p>
       </div>
     </div>`;
@@ -7224,7 +7562,7 @@ FRA.questions.push(
   }
   function submitAnswer(sess, skipped) {
     const q = fat(sess.items[sess.i]);
-    const choice = skipped ? -1 : sess.sel; const conf = skipped ? 1 : sess.conf;
+    const choice = skipped ? -1 : sess.sel; const conf = sess.noConf ? null : skipped ? 1 : sess.conf;
     if (isTest(sess.kind)) {
       sess.answers[sess.i] = { choice, conf, skipped: !!skipped };
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
@@ -7271,7 +7609,17 @@ FRA.questions.push(
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
-      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || s.conf == null) return; submitAnswer(s, false); return; }
+      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
+      case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'rate': {
+        const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
+        S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();
+        if (fb && fb.kind === 'lesson' && fb.ref.lesson === id) { fb.rating = r; btn.closest('.rate-row').querySelectorAll('.rate').forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false')); return; }
+        const l = L[id]; fb = { kind: 'lesson', ref: { lesson: id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: r, note: `Rating ${r}/10 saved. Add a comment if you like, or just close this.` };
+        render(); const ta = $('#fb-text'); if (ta) ta.focus(); toast(`Rated ${r}/10`); return; }
+      case 'acr': { if (!ACR[arg]) return; acrOpen = arg; fb = null; render(); return; }
+      case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
+      case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
       case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
       case 'start-exam': {
@@ -7304,18 +7652,21 @@ FRA.questions.push(
         const kind = btn.dataset.kind;
         if (kind === 'question') { const r = fbReg[parseInt(arg, 10)]; if (!r) return; const q = r.q; const l = L[q.t];
           fb = { kind, ref: { qid: q.gen ? null : q.id, gen: !!q.gen, lesson: q.t, stem: q.q, options: q.a, correct: q.c, where: r.where, view: S.view.name }, title: 'Flag this question', sub: `${l ? l.title : ''} · ${WHERE_LABEL[r.where] || r.where}` }; }
-        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}` }; }
+        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: S.ratings && S.ratings[l.id] ? S.ratings[l.id].r : null }; }
         else fb = { kind: 'page', ref: { view: S.view.name, arg: S.view.arg }, title: 'Feedback on this page', sub: '' };
         render(); const ta = $('#fb-text'); if (ta) ta.focus(); return; }
       case 'fb-cancel': { if (btn.classList.contains('modal-back') && e.target !== btn) return; fb = null; render(); return; }
-      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; if (!text) { toast('Write a sentence or two first.'); return; } saveFeedback({ kind: fb.kind, ref: fb.ref, cat, text }); fb = null; render(); toast('Feedback saved'); return; }
+      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || '';
+        if (!text && !(fb.kind === 'lesson' && fb.rating != null)) { toast(fb.kind === 'lesson' ? 'Pick a rating or write a sentence first.' : 'Write a sentence or two first.'); return; }
+        const item = { kind: fb.kind, ref: fb.ref, cat, text }; if (fb.kind === 'lesson' && fb.rating != null) item.rating = fb.rating;
+        saveFeedback(item); fb = null; render(); toast('Feedback saved'); return; }
       case 'fb-save-page': { const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; const area = ($('#fb-area') || {}).value || 'overall'; if (!text) { toast('Write a sentence or two first.'); return; }
         const kind = area.startsWith('lesson:') ? 'lesson' : area.startsWith('unit:') ? 'unit' : area; const ref = area.startsWith('lesson:') ? { lesson: area.slice(7) } : area.startsWith('unit:') ? { unit: area.slice(5) } : {};
         saveFeedback({ kind, ref, cat, text }); render(); toast('Feedback saved'); return; }
       case 'fb-delete': { S.feedback = (S.feedback || []).filter(f => f.id !== arg); save(); render(); return; }
       case 'fb-clear': { if (!confirm('Delete all saved feedback in this browser?')) return; S.feedback = []; save(); render(); return; }
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
-      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
+      case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
       case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
@@ -7325,13 +7676,20 @@ FRA.questions.push(
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
+    if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = e.target.dataset.arg; render(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
     if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
-    if (!s.submitted && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && s.conf != null) submitAnswer(s, false); }
+    if (!s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
   });
+  app.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  app.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  window.addEventListener('scroll', acrHide, true);
   document.addEventListener('click', e => { if (railOpen && !e.target.closest('.rail') && !e.target.closest('.rail-toggle')) { railOpen = false; const r = $('.rail'); if (r) r.classList.remove('open'); } });
 
   // Developer self-test: only when opened as a local file with #selftest. Drives the whole flow without clicks.
@@ -7342,6 +7700,15 @@ FRA.questions.push(
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
+    // Path choice: the results page offers tailored versus the whole course; "full" covers every lesson, "tailored" restores the list.
+    go('results', 'results:0'); if (document.querySelectorAll('[data-act="path"]').length < 2) throw new Error('path choice not offered on starter results');
+    const tailoredN = S.plan.lessons.length; choosePath('full', 0); render();
+    if (!S.plan || S.plan.lessons.length !== lessons.length || S.plan.scope !== 'full' || !S.path || S.path.scope !== 'full') throw new Error('whole-course path did not cover every lesson');
+    if ($('.path-choice')) throw new Error('path choice still offered after choosing');
+    if (!S.plan.lessons.some(e => e.reasons.some(r => r.q))) throw new Error('whole-course plan lost the starter-test reasons');
+    go('tutorial'); if (!document.body.textContent.includes('whole course')) throw new Error('tutorial page does not show the whole-course path');
+    choosePath('tailored', 0); render(); if (!S.plan || S.plan.lessons.length !== tailoredN || S.plan.scope !== 'tailored') throw new Error('switching back to tailored did not restore the plan');
+    log.push(`path choice tailored=${tailoredN} full=${lessons.length} switch ok`);
     const first = S.plan.lessons[0].id; go('lesson', first);
     const items = pickForLesson(first, CHECKPOINT_N, new Set(), 0.3);
     S.active = { kind: 'checkpoint', lesson: first, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
@@ -7363,6 +7730,14 @@ FRA.questions.push(
     go('exam'); if (!$('#su-n')) throw new Error('test setup card did not render');
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
+    // Ratings: a chip click stores the rating and opens the lesson feedback form; saving with no comment keeps the rating.
+    go('lesson', lessons[0].id); const chip = document.querySelector('.rate-card .rate[data-arg="8"]'); if (!chip) throw new Error('rating chips missing on the lesson page');
+    chip.click();
+    if (!S.ratings[lessons[0].id] || S.ratings[lessons[0].id].r !== 8 || !fb || fb.rating !== 8 || !$('.modal .rate[aria-pressed="true"]')) throw new Error('rating chip did not store the rating and open the form');
+    const fbBefore = S.feedback.length; $('[data-act="fb-save"]').click();
+    if (fb || S.feedback.length !== fbBefore + 1 || S.feedback[S.feedback.length - 1].rating !== 8) throw new Error('rating-only feedback did not save');
+    if (!feedbackReport().includes('Lesson ratings')) throw new Error('feedback report lacks the ratings section');
+    log.push(`rating ${lessons[0].id}=${S.ratings[lessons[0].id].r}/10 saved as feedback item ${S.feedback.length}`);
     const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
     if (unsureId) { const second = unsureId; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
@@ -7380,6 +7755,17 @@ FRA.questions.push(
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
     const callouts = document.querySelectorAll('.callout').length;
     log.push(`lesson view callouts=${callouts}`);
+    // Acronym links in lessons (never inside code or fenced blocks), the modal, and the cheat sheet's Acronyms section.
+    if (ACR_KEYS.length) {
+      let links = 0; for (const l of lessons.slice(0, 5)) { go('lesson', l.id); links += document.querySelectorAll('.lesson-body .acr').length; }
+      if (!links) throw new Error('no acronym links rendered in the first five lessons');
+      if (document.querySelector('.lesson-body pre .acr, .lesson-body code .acr')) throw new Error('acronym links inside code');
+      const withLinks = lessons.find(l => { go('lesson', l.id); return !!document.querySelector('.lesson-body .acr'); }); if (!withLinks) throw new Error('no lesson renders an acronym link');
+      acrOpen = document.querySelector('.lesson-body .acr').dataset.arg; render();
+      if (!$('#acr-title') || !document.body.textContent.includes(ACR[acrOpen].full)) throw new Error('acronym modal did not render'); acrOpen = null;
+      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== ACR_KEYS.length) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${ACR_KEYS.length}`);
+      log.push(`acronyms keys=${ACR_KEYS.length} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
+    } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
     S.plan = null; S.passStreak = 0; S.official = null;
@@ -7387,13 +7773,23 @@ FRA.questions.push(
     if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
     S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
     if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
+    // The standard test asks no confidence question: no chips, and Submit works on the option alone.
+    if (!ex.noConf || $('.confidence')) throw new Error('standard test still shows the confidence chips');
+    $(`[data-act="opt"][data-arg="${fat(ex.items[0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');
+    $('[data-act="submit"]').click(); if (ex.i !== 1 || ex.answers[0].conf != null) throw new Error('standard test answer not recorded without confidence');
     allRight(ex);
+    if (!S.exams[S.exams.length - 1].noConf || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results still talk about guesses');
     if (!S.official || stage() !== 'ready') throw new Error(`official pass did not clear the learner: stage ${stage()}`);
     go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
     log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
-    S.active = null; startExam('practice'); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: 2 }; }); failing.i = failing.items.length; render();
+    S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); failing.i = failing.items.length; render();
     if (S.official || S.passStreak !== 0) throw new Error('a failed test did not reset the official pass and streak');
-    log.push(`failed test resets: streak=${S.passStreak} official=${S.official} stage=${stage()}`);
+    // A failed standard test explains every wrong answer with no guess language, and its retraining callouts carry no confidence.
+    const lastRec = S.exams[S.exams.length - 1];
+    if (!lastRec.noConf || !document.body.textContent.includes('Wrong answers explained') || document.querySelectorAll('.review-item').length !== lastRec.total || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results did not explain every wrong answer without guess language');
+    if (!S.plan || S.plan.source !== 'test') throw new Error('failed standard test built no retraining plan');
+    go('lesson', S.plan.lessons[0].id); if ([...document.querySelectorAll('.callout .eyebrow')].some(el => /confidence/.test(el.textContent))) throw new Error('callout shows a confidence for a test that had none');
+    log.push(`failed standard test resets: streak=${S.passStreak} official=${S.official} stage=${stage()} wrong explained=${lastRec.total}`);
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
     document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">OK\n${log.join('\n')}</pre>`);
   }
