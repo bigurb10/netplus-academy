@@ -255,5 +255,79 @@ r = M.mergeState(
 check('plan remaps against its own source side, not the newer one',
   r.exams[r.plan.examIdx].id === 'plan-diverge-a', JSON.stringify(r.plan));
 
+// ---------- round trip through the real engine ----------
+// Every check above runs against synthetic fixtures. This one takes a state the real engine
+// produced, merges it, and feeds the result back through the engine's own import path, so it is
+// the only test that connects mergeState to real engine output.
+const path = require('path');
+const { boot, ROOT } = require('./lib');
+const dir = path.join(ROOT, 'courses', 'netplus');
+const readState = w => JSON.parse(w.localStorage.getItem('fra.netplus.state.v3'));
+
+let w = boot({ courseDir: dir });
+w.click(w.$('[data-act="go"][data-arg="home"]'));            // cheat sheet intro -> welcome page
+w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+const QI = {}; w.FRA.questions.forEach(q => { QI[q.id] = q; });
+const fatten = x => typeof x === 'string' ? QI[x] : x;
+readState(w).active.items.map(fatten).forEach(q => {
+  w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`));
+  w.click(w.$('[data-act="conf"][data-arg="5"]'));
+  w.click(w.$('[data-act="submit"]'));
+});
+const real = readState(w);
+check('the engine produced a state with a starter exam', real.exams.length === 1, real.exams.length);
+check('the engine stamped touchedAt', real.touchedAt > 0, real.touchedAt);
+check('the engine gave the exam an id', typeof real.exams[0].id === 'string' && real.exams[0].id.length > 0, real.exams[0].id);
+// Every question was answered with its correct choice, so the score is a known, non-trivial
+// value (not 0, not accidentally equal to some default) that later checks can track through the
+// merge and back out the other side of the import path.
+check('the starter exam was answered correctly, giving a known score to track through the merge',
+  real.exams[0].pct === 100, real.exams[0].pct);
+
+const T = w.FRA.course.test;
+const selfMerged = M.mergeState(real, real, { passPct: T.passPct, streakNeeded: T.streakNeeded });
+check('merging a real state with itself keeps one exam', selfMerged.exams.length === 1, selfMerged.exams.length);
+check('the merged exam is still the engine\'s own record, not a synthesized duplicate',
+  JSON.stringify(selfMerged.exams[0]) === JSON.stringify(real.exams[0]),
+  JSON.stringify(selfMerged.exams[0]));
+// lessons stays {} for a starter-only run (the starter test never touches S.lessons), so a count
+// check there would pass even if mergeMaps dropped every entry - it has nothing to drop. qstats
+// and topics are the maps the starter flow actually populates (recordAnswer updates both for
+// every question), so a merge bug that drops, sums, or otherwise mangles a keyed map shows up
+// here instead.
+check('merging a real state with itself preserves qstats exactly',
+  JSON.stringify(selfMerged.qstats) === JSON.stringify(real.qstats),
+  JSON.stringify({ merged: selfMerged.qstats, real: real.qstats }));
+check('merging a real state with itself preserves topics exactly',
+  JSON.stringify(selfMerged.topics) === JSON.stringify(real.topics),
+  JSON.stringify({ merged: selfMerged.topics, real: real.topics }));
+
+// Feed the merged state back through the engine's own import path. The import box lives on the
+// Progress page (viewProgress), not the Feedback page - #io is the "move your progress to
+// another device" textarea. Go straight there from the boot render: the initial view is the
+// cheat-sheet intro, which (like 'progress') is exempt from the pre-starter welcome-page
+// redirect, so the normal shell with its .nav bar is already on screen - unlike 'home', which
+// before a starter test renders the standalone welcome screen with no nav at all.
+let w2 = boot({ courseDir: dir });
+w2.click(w2.$('.nav [data-act="nav"][data-arg="progress"]'));
+const box = w2.$('#io');
+check('the import box is present', !!box);
+if (box) {
+  box.value = JSON.stringify(selfMerged);
+  w2.click(w2.$('[data-act="import"]'));
+  const after = readState(w2);
+  check('the engine imported the merged state', after.exams.length === 1, after.exams.length);
+  check('the imported exam is the same record that went into the merge',
+    JSON.stringify(after.exams[0]) === JSON.stringify(selfMerged.exams[0]),
+    after.exams[0] && JSON.stringify(after.exams[0]));
+  // A generic "did it throw" check would also pass if import silently failed and left the old
+  // fresh() state on screen (fresh() renders fine too). Assert the home page actually shows this
+  // exam's score/total, so the check fails if the import path renders anything other than the
+  // state that was just merged in.
+  check('the imported state renders the merged exam\'s score on the home page',
+    !!after.exams[0] && w2.text().includes(`${after.exams[0].score} of ${after.exams[0].total}`),
+    w2.text().slice(0, 200));
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
