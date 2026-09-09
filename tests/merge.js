@@ -244,5 +244,16 @@ check('created keeps the real value when the other side is missing it', r.create
 r = M.mergeState(full({ created: undefined }), full({ created: undefined }), OPTS);
 check('created falls back to 0, not Infinity or null, when neither side has one', r.created === 0, r.created);
 
+// plan must remap against its own source side (planSide), not the more-recently-touched side
+// (newer), even when they differ. The bug would be invisible if every fixture had planSide === newer.
+// This test ensures planSide and newer are different sides with different exam arrays.
+const planExamA = exam({ id: 'plan-diverge-a', date: 9 });
+const pathExamB = exam({ id: 'plan-diverge-b', date: 1 });
+r = M.mergeState(
+  full({ exams: [planExamA], plan: { examIdx: 0, createdAt: 100, lessons: [] }, touchedAt: 10 }),
+  full({ exams: [pathExamB], touchedAt: 99 }), OPTS);
+check('plan remaps against its own source side, not the newer one',
+  r.exams[r.plan.examIdx].id === 'plan-diverge-a', JSON.stringify(r.plan));
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
