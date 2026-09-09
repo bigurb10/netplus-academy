@@ -115,9 +115,17 @@ exams[]       union by id, then sort by date
 seen          union
 ratings[id]   per key, take the entry with the greater `ts`
 feedback      union by id, preserving any `sent: true`
-plan          take the whole plan with the greater `createdAt`
-path          take from the side with the greater `touchedAt`
-settings      take from the side with the greater `touchedAt`
+plan          take the whole plan with the greater `createdAt`, then remap its examIdx (a side
+              with no plan never wins: any non-null plan beats a null one regardless of
+              `createdAt` - the same null-guard `path` uses below)
+path          take from the side with the greater `touchedAt` *that has a non-null path*, then
+              remap its examIdx (a side that has only been opened has `path: null` and never
+              wins over a real choice made on the other side, regardless of `touchedAt`)
+settings      take from the side with the greater `touchedAt`, falling back to whichever side
+              has settings at all, and finally to `{}` - never `undefined`, because the sync
+              layer will assign the merged object in memory where `settings: undefined` would
+              overwrite the `fresh()` default and make `S.settings.timer` throw
+course        whichever side carries it, else `null` (blobs are per-course, so they always agree)
 view, active  never synced; always device-local
 passStreak    discarded and recomputed
 official      discarded and recomputed
@@ -179,6 +187,27 @@ the streak untouched.
 This also fixes a latent bug: `official.examIdx` is an array index into `exams`. Any merge that
 reorders or extends that array silently repoints it at a different record. Recomputing after the
 merge resolves the index against the merged array.
+
+### plan and path carry the same kind of index
+
+`official` is not the only field holding a position in `exams`. Both of these do too, and an
+earlier draft of this design wrongly treated them as opaque values:
+
+- `engine/app.js:280` — `S.path = { examIdx: idx, scope }`, an object, not a string
+- `engine/app.js:258` and `:268` — a plan is `{ source, examIdx, createdAt, lessons, ... }`
+- `engine/app.js:532` — `const src = S.exams[S.plan.examIdx];` rebuilds the tutorial from that record
+
+Copying either verbatim across a merge that re-sorts `exams` points the learner's tutorial at a
+different test. Unlike `official`, these cannot simply be recomputed — they encode a choice the
+learner made, not a derived fact.
+
+So they are **remapped** instead: look up the record the old index referenced in its own source
+state, then find that record's position in the merged array by `examId`. Each is remapped against
+the exam array it came from, which is not necessarily the same side — `plan` is chosen by
+`createdAt` and `path` by `touchedAt`.
+
+If the referenced record cannot be found in the merged array, the field becomes `null`. An
+orphaned plan is better than one silently pointing at the wrong test.
 
 ### Exam ids
 

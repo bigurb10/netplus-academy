@@ -48,7 +48,7 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 1. Copy `courses/netplus/course.js` to `courses/<id>/course.js` and fill in every field. Domain ids are what lessons reference.
 2. Write `cheatsheet.js`, then `curriculum-*.js`, then `questions-*.js` (five or more per lesson), then `deep-*.js` (one entry per lesson; the self-test fails if any lesson lacks one), then `generators.js` if anything is computable.
 3. Write `acronyms.js`: run `node tests/acronyms.js courses/<id>` and add an entry for every token it reports (copy shared ones from another pack's `acronyms.js`, checking that the meaning fits this course), or put non-acronym uppercase words on the ignore list, until it passes.
-4. Create `<id>/index.html` from `netplus/index.html` with the new script list, and add a card to `index.html`.
+4. Create `<id>/index.html` from `netplus/index.html` with the new script list, keeping both `../engine/merge.js` and `../engine/app.js` (in that order, `merge.js` first) after the course scripts, and add a card to `index.html`.
 5. Run `npm test` and `python build.py <id>`.
 
 ## Testing

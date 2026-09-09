@@ -103,7 +103,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, touchedAt: 0, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -117,7 +117,7 @@
     } catch (e) { /* storage unavailable */ }
     return fresh();
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
 
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
@@ -658,7 +658,7 @@
   const testLabel = e => e.setup && e.setup.mode === 'standard' ? `Standard test (${e.setup.count || e.setup.n} questions)` : e.setup && e.setup.mode === 'custom' ? `Custom test (${e.setup.count || e.setup.n} questions)` : TEST_LABEL[e.kind];
   const examMinutes = ex => ex.minutes == null ? (ex.kind === 'starter' ? 0 : EXAM_MINUTES) : ex.minutes;
   // An official-format test: the real exam's format with a time limit. It is always timed and is the course's final gate.
-  const isOfficial = ex => !!(ex && ex.setup && ex.setup.mode === 'standard' && ex.minutes > 0);
+  const isOfficial = FRAMerge.isOfficialRecord;
   function viewExam() {
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
@@ -717,18 +717,17 @@
       review.push({ q: slim(q), choice: a.choice, pick: a.choice >= 0 ? q.a[a.choice] : null, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
+    const rec = { id: 'x-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
     if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
     else if (ex.kind === 'custom') {
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
     } else {
-      const prevStreak = S.passStreak; const passed = p >= PASS_PCT;
-      S.passStreak = passed ? prevStreak + 1 : 0;
-      // The official pass counts only once the streak was already complete; any failed test sends the learner back through the streak.
-      if (!passed) S.official = null;
-      else if (isOfficial(ex) && prevStreak >= STREAK_NEEDED) S.official = { examIdx, date: rec.date, pct: p };
+      // Recomputed from the whole log rather than incremented, so this path and the merge
+      // replay in engine/merge.js can never disagree about the streak.
+      const r = FRAMerge.recomputeStreak(S.exams, { passPct: PASS_PCT, streakNeeded: STREAK_NEEDED });
+      S.passStreak = r.passStreak; S.official = r.official;
       const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null;
     }
     S.active = null;
@@ -1242,7 +1241,9 @@
     } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
-    S.plan = null; S.passStreak = 0; S.official = null;
+    // Resetting the streak without trimming the log would leave state the replay cannot
+    // reproduce: recomputeStreak would still see the earlier full/custom passes and recount them.
+    S.plan = null; S.passStreak = 0; S.official = null; S.exams = S.exams.filter(e => e.kind === 'starter');
     for (let r = 0; r < STREAK_NEEDED; r++) { S.active = null; startExam('practice'); allRight(S.active); }
     if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
     S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
