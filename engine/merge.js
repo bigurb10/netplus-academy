@@ -15,6 +15,11 @@
   // devices - taking the larger of two streaks would invent one nobody earned - so they are
   // always recomputed from the merged, date-ordered exam log.
   function recomputeStreak(exams, opts) {
+    // e.pct >= undefined is false for every record, so a malformed opts would silently replay to
+    // passStreak: 0 - the exact number this function exists to never invent - with no error.
+    if (!opts || typeof opts.passPct !== 'number' || typeof opts.streakNeeded !== 'number') {
+      throw new Error('recomputeStreak requires opts.passPct and opts.streakNeeded as numbers');
+    }
     const passPct = opts.passPct, streakNeeded = opts.streakNeeded;
     let passStreak = 0, official = null;
     for (let i = 0; i < exams.length; i++) {

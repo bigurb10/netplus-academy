@@ -48,6 +48,20 @@ check('examIdx counts skipped records',
 check('official award requires prior complete streak, not the current exam itself',
   M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:85})], OPTS).official === null);
 
+// A malformed opts must throw, not silently replay to passStreak: 0 - e.pct >= undefined is
+// false for every record, so a missing passPct would otherwise erase a real streak with no error.
+const throws = fn => { try { fn(); return false; } catch (e) { return true; } };
+check('recomputeStreak throws when opts is missing entirely',
+  throws(() => M.recomputeStreak([exam({date:1})], undefined)));
+check('recomputeStreak throws when passPct is missing',
+  throws(() => M.recomputeStreak([exam({date:1})], { streakNeeded: 3 })));
+check('recomputeStreak throws when streakNeeded is missing',
+  throws(() => M.recomputeStreak([exam({date:1})], { passPct: 80 })));
+check('recomputeStreak does not throw when both opts fields are present',
+  !throws(() => M.recomputeStreak([exam({date:1})], OPTS)));
+check('mergeState propagates the same guard through to its opts argument',
+  throws(() => M.mergeState({ exams: [] }, { exams: [] }, {})));
+
 // ---------- examId ----------
 check('an explicit id is preserved', M.examId(exam({ id: 'x1' })) === 'x1');
 check('a synthesized id is deterministic',
