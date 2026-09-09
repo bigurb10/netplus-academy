@@ -1,4 +1,6 @@
-// Unit tests for engine/merge.js. Pure functions only - no jsdom, no DOM, no network.
+// Unit tests for engine/merge.js. Pure functions only - no jsdom, no DOM, no network - except
+// the round-trip block at the end of this file, which boots the real engine in jsdom to produce
+// genuine state to merge.
 const M = require('../engine/merge.js');
 const fails = [];
 const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== undefined ? '  [' + x + ']' : ''}`); if (!ok) fails.push(n); };
@@ -327,6 +329,84 @@ if (box) {
   check('the imported state renders the merged exam\'s score on the home page',
     !!after.exams[0] && w2.text().includes(`${after.exams[0].score} of ${after.exams[0].total}`),
     w2.text().slice(0, 200));
+}
+
+// ---------- round trip through the real engine: two genuinely different states ----------
+// The block above only ever merges `real` with itself. A `mergeState = (a, b) => a` stub would
+// satisfy every check up there too: unionBy degenerates to identity when a === b, and the import
+// checks only prove the import path can round-trip whatever it is handed - not that mergeState
+// computed it. Boot a second window against the same course and drive its own starter test with
+// a deliberately different answer pattern, so this run's exam id, score, and qstats content
+// genuinely diverge from `real`'s, then merge the two real states.
+let w3 = boot({ courseDir: dir });
+w3.click(w3.$('[data-act="go"][data-arg="home"]'));
+w3.click(w3.$('[data-act="start-exam"][data-arg="starter"]'));
+const items3 = readState(w3).active.items.map(fatten);
+const wrongCut = Math.round(items3.length * 0.6);
+items3.forEach((q, k) => {
+  const choice = k < wrongCut ? (q.c + 1) % 4 : q.c;   // first 60% wrong, like the engine's own dev self-test
+  w3.click(w3.$(`[data-act="opt"][data-arg="${choice}"]`));
+  w3.click(w3.$('[data-act="conf"][data-arg="5"]'));
+  w3.click(w3.$('[data-act="submit"]'));
+});
+const real2 = readState(w3);
+check('the second window produced its own starter exam', real2.exams.length === 1, real2.exams.length);
+check('the two real runs have different exam ids',
+  real2.exams[0].id !== real.exams[0].id, JSON.stringify([real.exams[0].id, real2.exams[0].id]));
+check('the second run scored differently from the all-correct first run, so the two real states genuinely diverge',
+  real2.exams[0].pct !== real.exams[0].pct, JSON.stringify([real.exams[0].pct, real2.exams[0].pct]));
+
+const twoMerged = M.mergeState(real, real2, { passPct: T.passPct, streakNeeded: T.streakNeeded });
+// This is the assertion a `return a` stub cannot satisfy: it would hand back real's own
+// one-exam log and real2's record would simply be gone.
+check('merging two genuinely different real states keeps both exam records',
+  twoMerged.exams.length === 2, twoMerged.exams.length);
+check('both original exam ids survive the merge',
+  twoMerged.exams.some(e => e.id === real.exams[0].id) && twoMerged.exams.some(e => e.id === real2.exams[0].id),
+  JSON.stringify(twoMerged.exams.map(e => e.id)));
+
+// qstats: assert the merge produced the union of the keys the two runs actually populated -
+// computed from what each run really drew, not assumed, so the check holds whatever the starter
+// test's random question selection happened to pick this run. A `return a` stub yields exactly
+// real's own key count, which is smaller than this union whenever real2 saw any question real
+// did not (near-certain across two independent draws from a five-domain, multi-lesson pool).
+const qKeysA = Object.keys(real.qstats), qKeysB = Object.keys(real2.qstats);
+const expectedQstatKeys = Array.from(new Set(qKeysA.concat(qKeysB)));
+check('merging two real states unions their qstats keys',
+  Object.keys(twoMerged.qstats).length === expectedQstatKeys.length,
+  JSON.stringify({ merged: Object.keys(twoMerged.qstats).length, expected: expectedQstatKeys.length }));
+const sharedQ = qKeysA.find(k => qKeysB.includes(k));
+if (sharedQ) {
+  check(`the question both runs shared (${sharedQ}) keeps the max of each run's counters`,
+    twoMerged.qstats[sharedQ].seen === Math.max(real.qstats[sharedQ].seen, real2.qstats[sharedQ].seen) &&
+    twoMerged.qstats[sharedQ].correct === Math.max(real.qstats[sharedQ].correct, real2.qstats[sharedQ].correct) &&
+    twoMerged.qstats[sharedQ].wrong === Math.max(real.qstats[sharedQ].wrong, real2.qstats[sharedQ].wrong),
+    JSON.stringify({ merged: twoMerged.qstats[sharedQ], a: real.qstats[sharedQ], b: real2.qstats[sharedQ] }));
+} else {
+  // The two runs happened not to draw a common question this time; fall back to the other form
+  // the brief allows - every key the second run alone contributed still made it into the merge.
+  check('every qstats key unique to the second run made it into the merge',
+    qKeysB.every(k => k in twoMerged.qstats), JSON.stringify(expectedQstatKeys));
+}
+
+// Feed the two-state merge through the same import path exercised above for the self-merge.
+let w4 = boot({ courseDir: dir });
+w4.click(w4.$('.nav [data-act="nav"][data-arg="progress"]'));
+const box2 = w4.$('#io');
+check('the import box is present for the two-state merge', !!box2);
+if (box2) {
+  box2.value = JSON.stringify(twoMerged);
+  w4.click(w4.$('[data-act="import"]'));
+  const after2 = readState(w4);
+  check('the engine imported the two-state merge keeping both exams', after2.exams.length === 2, after2.exams.length);
+  check('the imported exams are the same two records that went into the merge',
+    JSON.stringify(after2.exams) === JSON.stringify(twoMerged.exams),
+    JSON.stringify(after2.exams.map(e => e.id)));
+  // As above, assert the home page actually renders one of the two merged exams' score/total
+  // (whichever sorts last), rather than just checking that import did not throw.
+  const scoreTexts = [real, real2].map(e => `${e.exams[0].score} of ${e.exams[0].total}`);
+  check('the imported two-exam state renders one of the merged exams\' score on the home page',
+    scoreTexts.some(t => w4.text().includes(t)), w4.text().slice(0, 200));
 }
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
