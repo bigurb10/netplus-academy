@@ -33,5 +33,46 @@
   // before sync existed does not, so derive one from fields that never change after submit.
   const examId = rec => rec && rec.id ? rec.id : rec ? 'x-' + [rec.date, rec.kind, rec.total, rec.pct].join('-') : '';
 
-  return { VERSION, isOfficialRecord, recomputeStreak, examId };
+  const STATUS_RANK = { new: 0, read: 1, passed: 2 };
+  const rank = s => STATUS_RANK[s] || 0;
+  const max = (x, y) => (x || 0) > (y || 0) ? (x || 0) : (y || 0);
+  const keys = (a, b) => Object.keys(Object.assign({}, a || {}, b || {}));
+
+  // Merge one keyed map with a per-entry rule. Entries present on one side only pass through.
+  function mergeBy(a, b, rule) {
+    const out = {};
+    keys(a, b).forEach(k => {
+      const x = (a || {})[k], y = (b || {})[k];
+      out[k] = x && y ? rule(x, y) : (x || y);
+    });
+    return out;
+  }
+
+  const mergeLesson = (x, y) => ({
+    status: rank(x.status) >= rank(y.status) ? x.status : y.status,
+    best: max(x.best, y.best),
+    attempts: max(x.attempts, y.attempts),
+    passedAt: max(x.passedAt, y.passedAt)
+  });
+
+  const mergeQstat = (x, y) => ({
+    seen: max(x.seen, y.seen), correct: max(x.correct, y.correct),
+    wrong: max(x.wrong, y.wrong), last: max(x.last, y.last)
+  });
+
+  // Whole-record, because combining hist/streak/correct field-by-field can produce a record
+  // that never existed - a streak of 3 attached to a history whose last entry is a miss.
+  const laterOf = (x, y, field) => (y[field] || 0) > (x[field] || 0) ? y : x;
+
+  function mergeMaps(a, b) {
+    return {
+      lessons: mergeBy(a.lessons, b.lessons, mergeLesson),
+      topics: mergeBy(a.topics, b.topics, (x, y) => laterOf(x, y, 'last')),
+      qstats: mergeBy(a.qstats, b.qstats, mergeQstat),
+      seen: Object.assign({}, a.seen || {}, b.seen || {}),
+      ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts'))
+    };
+  }
+
+  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps };
 }));
