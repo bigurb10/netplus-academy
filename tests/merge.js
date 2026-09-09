@@ -203,8 +203,33 @@ check('active is never synced', r.active === undefined, JSON.stringify(r.active)
 const one = full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2})], lessons: { a: { status:'passed', best:90, attempts:1, passedAt:5 } } });
 check('merge is idempotent', JSON.stringify(M.mergeState(one, one, OPTS)) === JSON.stringify(M.mergeState(M.mergeState(one, one, OPTS), one, OPTS)));
 
-const A = full({ exams: [exam({id:'a1',date:1})], lessons: { a: { status:'passed', best:90, attempts:2, passedAt:5 } } });
-const B = full({ exams: [exam({id:'b1',date:2})], lessons: { a: { status:'read', best:40, attempts:1, passedAt:0 } } });
+// topics/qstats/ratings are populated on both sides so a "return the other side" or "return one
+// side's raw field" bug (which only the argument order to mergeBy would expose) shows up as an
+// asymmetry between mergeState(A, B) and mergeState(B, A). The recency-bearing field (last for
+// topics, ts for ratings) favours A on one key and B on another so neither side wins outright,
+// and qstats' single record has different counters winning from different sides (A has the
+// bigger seen and wrong, B has the bigger correct and last). Both sides use the same key sets in
+// the same insertion order (t1/t2, q1, r1/r2) - mergeBy's key list comes from
+// Object.assign({}, a, b), so disjoint keys would reorder between call directions and fail this
+// JSON.stringify comparison even when the merged content is identical.
+const A = full({
+  exams: [exam({id:'a1',date:1})], lessons: { a: { status:'passed', best:90, attempts:2, passedAt:5 } },
+  topics: {
+    t1: { hist:[1], attempts:1, correct:1, streak:1, last:100 },
+    t2: { hist:[0], attempts:1, correct:0, streak:0, last:20 }
+  },
+  qstats: { q1: { seen:5, correct:1, wrong:4, last:1 } },
+  ratings: { r1: { r:5, ts:100 }, r2: { r:3, ts:20 } }
+});
+const B = full({
+  exams: [exam({id:'b1',date:2})], lessons: { a: { status:'read', best:40, attempts:1, passedAt:0 } },
+  topics: {
+    t1: { hist:[0], attempts:2, correct:0, streak:0, last:10 },
+    t2: { hist:[1,1], attempts:3, correct:3, streak:3, last:200 }
+  },
+  qstats: { q1: { seen:2, correct:6, wrong:1, last:9 } },
+  ratings: { r1: { r:2, ts:10 }, r2: { r:8, ts:200 } }
+});
 check('merge is commutative',
   JSON.stringify(M.mergeState(A, B, OPTS)) === JSON.stringify(M.mergeState(B, A, OPTS)));
 
