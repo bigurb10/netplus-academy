@@ -146,6 +146,7 @@ r = M.mergeState(
 check('official.examIdx is recomputed against the merged array', r.official.examIdx === 4,
   JSON.stringify(r.official));
 check('the exam it points at is the official one', r.exams[r.official.examIdx].id === 'a4');
+check('passStreak is replayed, not inherited from either input', r.passStreak === 4, r.passStreak);
 
 r = M.mergeState(full({ path: 'fast', touchedAt: 10 }), full({ path: 'thorough', touchedAt: 99 }), OPTS);
 check('path comes from the more recently touched side', r.path === 'thorough', r.path);
