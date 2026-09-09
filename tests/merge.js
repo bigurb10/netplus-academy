@@ -46,5 +46,19 @@ check('examIdx counts skipped records',
 check('official award requires prior complete streak, not the current exam itself',
   M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:85})], OPTS).official === null);
 
+// ---------- examId ----------
+check('an explicit id is preserved', M.examId(exam({ id: 'x1' })) === 'x1');
+check('a synthesized id is deterministic',
+  M.examId(exam({ date: 7, pct: 82 })) === M.examId(exam({ date: 7, pct: 82 })));
+check('records differing by date get different ids',
+  M.examId(exam({ date: 7 })) !== M.examId(exam({ date: 8 })));
+check('records differing by kind get different ids',
+  M.examId(exam({ date: 7, kind: 'practice' })) !== M.examId(exam({ date: 7, kind: 'starter' })));
+check('records differing by total get different ids',
+  M.examId(exam({ date: 7, total: 50 })) !== M.examId(exam({ date: 7, total: 60 })));
+check('records differing by pct get different ids',
+  M.examId(exam({ date: 7, pct: 82 })) !== M.examId(exam({ date: 7, pct: 83 })));
+check('a synthesized id is a string', typeof M.examId(exam({})) === 'string');
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');

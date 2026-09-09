@@ -717,7 +717,7 @@
       review.push({ q: slim(q), choice: a.choice, pick: a.choice >= 0 ? q.a[a.choice] : null, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
+    const rec = { id: 'x-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
     if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
     else if (ex.kind === 'custom') {

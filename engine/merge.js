@@ -29,5 +29,9 @@
     return { passStreak, official };
   }
 
-  return { VERSION, isOfficialRecord, recomputeStreak };
+  // Identity for union-merging exam logs. New records carry an explicit id; anything saved
+  // before sync existed does not, so derive one from fields that never change after submit.
+  const examId = rec => rec && rec.id ? rec.id : 'x-' + [rec.date, rec.kind, rec.total, rec.pct].join('-');
+
+  return { VERSION, isOfficialRecord, recomputeStreak, examId };
 }));
