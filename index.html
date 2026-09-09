@@ -298,6 +298,28 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .field textarea { resize: vertical; min-height: 96px; }
 @media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
 
+/* Acronym links, tooltip, modal, and the cheat sheet's Acronyms section */
+.acr { text-decoration: underline dotted; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; border-radius: 3px; }
+.acr:hover, .acr:focus-visible { color: var(--accent); text-decoration-style: solid; }
+.acr-tip { position: fixed; z-index: 70; display: none; background: var(--ink); color: var(--bg); padding: 9px 12px; border-radius: 8px; font-size: 0.88rem; line-height: 1.4; box-shadow: var(--shadow); pointer-events: none; }
+.acr-tip b { display: block; font-family: var(--font-display); font-weight: 600; margin-bottom: 2px; }
+.acr-modal .acr-big { font-family: var(--font-mono); color: var(--accent); margin-right: 10px; }
+.acr-modal .acr-tip-text { font-size: 1.02rem; }
+.acr-modal .acr-more { font-size: 1rem; }
+.acr-modal .acr-more p:last-child { margin-bottom: 0; }
+.acr-key { font: inherit; font-family: var(--font-mono); font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.acr-table td:first-child { white-space: nowrap; }
+.cs-acr-intro { font-size: 0.95rem; margin-bottom: 8px; }
+
+/* Lesson ratings */
+.rate-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.rate { min-width: 38px; justify-content: center; padding: 6px 0; font-variant-numeric: tabular-nums; display: inline-flex; }
+.chip.rate[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Path choice after the starter test */
+.paths { display: grid; gap: 10px; }
+.option.path { align-items: flex-start; }
+
 /* Print: only the page content, light colors, compact tables */
 @media print {
   @page { margin: 12mm; }
@@ -324,6 +346,12 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .cs-list.two ul { columns: 2; column-gap: 20pt; }
   .tip { border-left: 2pt solid #000; background: none; padding: 3pt 8pt; margin: 6pt 0; font-size: 9.2pt; break-inside: avoid; }
   a { color: inherit; text-decoration: none; }
+  .acr, .acr-key { color: inherit; text-decoration: none; font-weight: 600; }
+  .acr-tip { display: none !important; }
+  .cs-acr-intro { font-size: 9.2pt; margin-bottom: 4pt; }
+  .acr-table { font-size: 7.6pt; line-height: 1.25; }
+  .acr-table td { padding: 1.5pt 3pt; }
+  .acr-table td:first-child { font-family: var(--font-mono); font-size: 7.2pt; }
 }
 
 </style>
@@ -381,6 +409,332 @@ FRA.course = {
   generatedNote: "Subnetting, ports, OSI, route-selection, and PoE items are generated fresh every time.",
   legacyStoreKeys: ["npa.state.v2"]
 };
+
+// NetPlus Academy acronym glossary. Every acronym used in the lessons, deep dives, and cheat sheet, plus those in questions.
+// Rendered by the engine as hover links in tutorials and the cheat sheet (tip on hover, more on click) and as the
+// cheat sheet's Acronyms section. Keys are matched as whole words, case-sensitive, plurals allowed. Original wording.
+// Fields: full (what it stands for), tip (one sentence for the tooltip), more (the longer explanation; blank line = new paragraph).
+window.FRA = window.FRA || {};
+FRA.acronyms = {
+  "1000BASE-LX": { full: "Gigabit Ethernet, long wavelength", tip: "1 Gbps over single-mode fiber to 10 km (also works on multimode for short runs).", more: "1000BASE-LX uses 1310 nm lasers, normally on single-mode fiber for longer links between buildings." },
+  "1000BASE-SX": { full: "Gigabit Ethernet, short wavelength", tip: "1 Gbps over multimode fiber to about 550 m.", more: "1000BASE-SX uses 850 nm lasers on multimode fiber for in-building gigabit links." },
+  "1000BASE-T": { full: "Gigabit Ethernet over twisted pair", tip: "1 Gbps over Cat 5e or better to 100 m, using all four pairs.", more: "1000BASE-T is the everyday desktop and access-switch standard. It needs all four pairs, which is why a cable with two damaged pairs may still link at 100 Mbps but not at 1 Gbps." },
+  "100BASE-TX": { full: "Fast Ethernet over twisted pair", tip: "100 Mbps over Cat 5 or better using two pairs.", more: "100BASE-TX was the desktop standard before gigabit. It uses only two of the four pairs, which is why some old cabling and some PoE tricks work at 100 Mbps but not at 1 Gbps." },
+  "10BASE-T": { full: "Ethernet over twisted pair", tip: "The original 10 Mbps twisted-pair Ethernet.", more: "10BASE-T introduced the star topology with a hub or switch in the middle and RJ45 plugs, replacing coaxial bus Ethernet." },
+  "10GBASE-ER": { full: "10 Gigabit Ethernet, extended reach", tip: "10 Gbps over single-mode fiber to 40 km.", more: "ER optics use 1550 nm lasers for metro-distance single-mode links." },
+  "10GBASE-LR": { full: "10 Gigabit Ethernet, long reach", tip: "10 Gbps over single-mode fiber to 10 km.", more: "LR optics use 1310 nm lasers on single-mode fiber for building-to-building and campus links." },
+  "10GBASE-SR": { full: "10 Gigabit Ethernet, short reach", tip: "10 Gbps over multimode fiber, about 300 m on OM3, 400 m on OM4.", more: "The name reads speed, signaling (BASE for baseband), and medium code. SR is the multimode option with the shortest reach and cheapest optics." },
+  "10GBASE-T": { full: "10 Gigabit Ethernet over twisted pair", tip: "10 Gbps over Cat 6A to 100 m (Cat 6 to 55 m).", more: "10GBASE-T runs 10 Gbps over copper. It needs Cat 6A for the full 100 m and uses more power than fiber optics, but it reuses RJ45 cabling." },
+  "40GBASE-T": { full: "40 Gigabit Ethernet over twisted pair", tip: "40 Gbps over Cat 8 to 30 m.", more: "40GBASE-T runs over Cat 8 cabling for very short data center links, the limit being 30 m." },
+  "4G": { full: "Fourth-generation cellular", tip: "The LTE generation of mobile broadband.", more: "4G LTE is all-IP data at tens of megabits per second and remains the fallback under 5G." },
+  "5G": { full: "Fifth-generation cellular", tip: "The current mobile network generation with higher speed and lower latency than LTE.", more: "5G uses new spectrum including millimeter wave for very high speeds over short range. Phones fall back to LTE where 5G is absent." },
+  "802.11": { full: "IEEE 802.11", tip: "The family of Wi-Fi standards.", more: "802.11 defines wireless LANs. Its amendments are the generations you memorize: a, b, g, n (Wi-Fi 4), ac (Wi-Fi 5), ax (Wi-Fi 6 and 6E), and be (Wi-Fi 7), each with its bands, channel widths, and top speeds. Other amendments cover security (802.11i) and protected management frames (802.11w)." },
+  "802.1AX": { full: "IEEE 802.1AX", tip: "The current standard for link aggregation, using LACP.", more: "802.1AX took over link aggregation from the older 802.3ad designation. It defines how several Ethernet links are bundled into one logical link and how LACP negotiates the bundle." },
+  "802.1D": { full: "IEEE 802.1D", tip: "The original spanning tree standard.", more: "802.1D defined the classic Spanning Tree Protocol with its slow timers, up to 50 seconds to reconverge. It has been superseded by rapid spanning tree (802.1w) and multiple spanning tree (802.1s), both now folded into 802.1Q." },
+  "802.1Q": { full: "IEEE 802.1Q", tip: "The VLAN tagging standard: a 4-byte tag in the Ethernet frame carries the VLAN ID on trunks.", more: "802.1Q inserts a tag into each frame on a trunk link so the receiving switch knows which VLAN it belongs to. The tag holds a 12-bit VLAN ID (1 to 4094) and a priority field used for QoS. Frames on the native VLAN cross the trunk untagged." },
+  "802.1s": { full: "IEEE 802.1s", tip: "Multiple Spanning Tree Protocol.", more: "802.1s defined MSTP, which runs one spanning tree instance per group of VLANs so that redundant links can all carry traffic." },
+  "802.1w": { full: "IEEE 802.1w", tip: "Rapid Spanning Tree Protocol.", more: "802.1w is the amendment that defined RSTP, which reconverges in seconds by replacing timers with handshakes between switches." },
+  "802.1X": { full: "IEEE 802.1X", tip: "Port-based network access control: a device must authenticate before the switch port or Wi-Fi passes traffic.", more: "With 802.1X the client (supplicant) presents credentials or a certificate through the switch or access point (authenticator) to a RADIUS server (authentication server) using EAP. Until it succeeds, the port only passes authentication traffic. It is the basis of WPA2 and WPA3 Enterprise and of wired NAC." },
+  "802.3ad": { full: "IEEE 802.3ad", tip: "The original link aggregation standard, now part of 802.1AX.", more: "802.3ad was the first IEEE definition of link aggregation and LACP. Many devices still use the name in their configuration even though the standard now lives under 802.1AX." },
+  "802.3af": { full: "IEEE 802.3af", tip: "The original Power over Ethernet standard: about 15.4 W at the switch, 12.95 W at the device.", more: "802.3af, plain PoE, powers phones, small cameras, and basic access points over two pairs of the data cable. If a device needs more than about 13 W, it needs 802.3at or 802.3bt." },
+  "802.3at": { full: "IEEE 802.3at", tip: "PoE+: about 30 W at the switch, 25.5 W at the device.", more: "802.3at raised the power budget for devices such as multi-radio access points and pan-tilt cameras. A question that says the access point needs 25 watts is asking for at least 802.3at." },
+  "802.3bt": { full: "IEEE 802.3bt", tip: "PoE++: 60 W (Type 3) or up to 90 W (Type 4) using all four pairs.", more: "802.3bt powers larger loads such as video conferencing units, LED lighting, and thin clients by using all four pairs of the cable. Type 3 delivers about 60 W and Type 4 about 90 W at the switch." },
+  "8P8C": { full: "Eight position, eight contact", tip: "The formal name of the connector everyone calls RJ45.", more: "8P8C describes the modular plug's physical form. RJ45 originally named a specific telephone wiring scheme that used it, and the name stuck to the connector." },
+  "AAA": { full: "Authentication, authorization, and accounting", tip: "Prove who you are, decide what you may do, record what you did.", more: "Authentication verifies identity (password, token, certificate), authorization decides which resources or commands are allowed, and accounting logs the session for auditing. RADIUS and TACACS+ are the protocols that deliver AAA to network devices." },
+  "AAAA": { full: "Quad-A record", tip: "The DNS record that maps a name to an IPv6 address.", more: "An A record holds a 32-bit IPv4 address; an AAAA record is four times as long, holding a 128-bit IPv6 address, hence the name. A host that only has an A record cannot be reached by name from an IPv6-only client unless something such as DNS64 synthesizes a AAAA answer." },
+  "ACK": { full: "Acknowledgment", tip: "The TCP flag or message confirming data arrived.", more: "TCP acknowledges received segments so the sender knows what to keep and what to resend. The ACK also finishes the three-way handshake. In the CBET course HL7 ACK messages confirm that an interface received a message." },
+  "ACL": { full: "Access control list", tip: "An ordered list of permit and deny rules on a router, firewall, or file system.", more: "On network devices an ACL filters packets by source, destination, protocol, and port, processed top down with the first match winning and an implicit deny at the end. On file systems an ACL lists which users and groups have which permissions on an object." },
+  "AD": { full: "Administrative distance", tip: "A router's trust ranking for route sources; the lowest wins when two protocols offer the same prefix.", more: "Connected routes are 0, static 1, EIGRP 90, OSPF 110, RIP 120. If a static route and an OSPF route cover the same prefix, the static route (AD 1) is installed. In the A+ course the same letters mean Active Directory; read the context." },
+  "AES": { full: "Advanced Encryption Standard", tip: "The standard symmetric cipher, with 128, 192, or 256-bit keys.", more: "AES encrypts and decrypts with the same key and is fast enough to protect disks, Wi-Fi (WPA2 and WPA3), VPNs, and TLS sessions. AES-128 is secure; AES-256 is used for high-value data. It replaced DES and 3DES." },
+  "AH": { full: "Authentication Header", tip: "The IPsec protocol that provides integrity and authentication without encryption.", more: "AH signs the packet, including parts of the header, so it cannot be altered, but leaves the contents readable. Because it covers header fields, it breaks under NAT. It is IP protocol 51 and is rarely used alone today; ESP does both jobs." },
+  "AP": { full: "Access point", tip: "The radio that bridges Wi-Fi clients onto the wired network.", more: "An access point turns Wi-Fi frames into Ethernet frames and back. Standalone (autonomous) APs are configured one by one; lightweight APs are managed by a wireless LAN controller. Each AP advertises one or more SSIDs, and clients roam between APs that share an SSID. In the CBET course the same letters also appear in anteroposterior X-ray views; read the context." },
+  "APC": { full: "Angled physical contact", tip: "A fiber connector polish with an 8-degree angle (green) that reflects less light.", more: "APC polishes the fiber end at an angle so reflected light is bounced out of the core, which matters for long-haul and passive optical networks. Green connectors are APC, blue are UPC, and the two must never be mated." },
+  "API": { full: "Application programming interface", tip: "The defined way one program talks to another, such as the web endpoints a cloud service exposes.", more: "APIs let software request data and actions from other software. Cloud consoles, SDN controllers, and mobile apps all work through APIs. Security concerns include stolen API keys, missing authentication, and rate limiting." },
+  "APIPA": { full: "Automatic Private IP Addressing", tip: "The 169.254.x.x address a host gives itself when it cannot reach a DHCP server.", more: "When DHCP fails, Windows and other systems self-assign an address in 169.254.0.0/16 so hosts on the same segment can still talk. Seeing a 169.254 address is the classic sign that a client could not get a lease, which points at the DHCP server, the relay, or the link." },
+  "ARP": { full: "Address Resolution Protocol", tip: "Finds the MAC address that goes with a known IPv4 address on the local segment.", more: "When a host knows the IP address of a neighbor but not its MAC address, it broadcasts an ARP request and the owner replies with its MAC. Hosts cache the answer in an ARP table. Because ARP has no authentication, attackers can poison the cache to redirect traffic, which is why switches offer dynamic ARP inspection. IPv6 replaces ARP with Neighbor Discovery." },
+  "AS": { full: "Autonomous system", tip: "A network under one administration with its own routing policy, identified by a number for BGP.", more: "An AS is what BGP routes between: a provider, a large company, a university. Each has an AS number, and the AS path a route carries is how BGP avoids loops and applies policy." },
+  "ASCII": { full: "American Standard Code for Information Interchange", tip: "The character encoding that maps letters and symbols to numbers 0 to 127.", more: "ASCII is a presentation-layer concept on the exam: character encoding and formats such as JPEG and MPEG belong to Layer 6." },
+  "AUP": { full: "Acceptable use policy", tip: "The rules for how staff may use company systems and data.", more: "The AUP tells employees what is allowed on company devices and networks and what monitoring to expect. Signing it is usually part of onboarding." },
+  "BASE": { full: "Baseband", tip: "The middle of Ethernet names: the cable carries one digital signal at a time.", more: "In names such as 1000BASE-T, BASE means baseband signaling, one channel using the whole cable, as opposed to broadband, which carries many channels such as cable TV. The number is the speed and the suffix the medium." },
+  "BGP": { full: "Border Gateway Protocol", tip: "The path-vector routing protocol of the internet, between autonomous systems.", more: "BGP exchanges routes between organizations and providers and chooses paths by policy and AS path length rather than speed. It scales to the whole internet, and it is what a company runs when it has its own address space and two ISPs." },
+  "BNC": { full: "Bayonet Neill-Concelman connector", tip: "The twist-lock coax connector used on older LANs, test equipment, and CCTV.", more: "BNC connectors lock with a quarter turn. Thin-net Ethernet used them in the 1990s, and they remain on oscilloscopes, signal generators, and some camera systems." },
+  "BPDU": { full: "Bridge protocol data unit", tip: "The frames switches exchange to build the spanning tree.", more: "Switches send BPDUs to elect the root bridge and learn path costs. BPDU guard shuts down an access port that receives one, because a switch or loop appeared where only an end device should be. Root guard stops a port from accepting a superior BPDU that would move the root." },
+  "BSSID": { full: "Basic service set identifier", tip: "The MAC address of one access point radio, which identifies that specific cell.", more: "Where an SSID is the shared network name, the BSSID is the unique address of the radio a client is actually associated with. Site survey tools list BSSIDs to show which AP a client is on and how many APs serve one SSID." },
+  "BYOD": { full: "Bring your own device", tip: "Staff use personal phones and laptops for work.", more: "BYOD saves the company money but mixes personal and corporate data on devices the company does not control. Mobile device management, containerization, and acceptable use policies define what the company may do on the device and what happens when someone leaves." },
+  "CA": { full: "Certificate authority", tip: "The trusted entity that signs certificates.", more: "A CA verifies an applicant and signs a certificate binding an identity to a public key. Devices trust a list of root CAs; a certificate from an unknown CA produces the browser warning." },
+  "CAM": { full: "Content-addressable memory (table)", tip: "The switch's MAC address table.", more: "The CAM table maps MAC addresses to ports. Flooding it with fake addresses (MAC flooding) makes a switch behave like a hub." },
+  "CAN": { full: "Campus area network", tip: "A network spanning several buildings on one campus.", more: "A CAN joins the LANs of buildings that share a site, such as a university or hospital campus, with the organization owning the cabling between them." },
+  "CASB": { full: "Cloud access security broker", tip: "Sits between users and cloud apps to enforce policy, visibility, and data protection.", more: "A CASB discovers which cloud services staff use, applies access and data loss prevention rules, and detects risky behavior, whether by API integration with the cloud provider or by proxying traffic." },
+  "CCMP": { full: "Counter Mode with Cipher Block Chaining Message Authentication Code Protocol", tip: "The AES-based encryption WPA2 uses.", more: "CCMP provides confidentiality and integrity for Wi-Fi frames using AES. When a question contrasts WPA2 with AES against WPA with TKIP, CCMP is the AES mode being referenced." },
+  "CDN": { full: "Content delivery network", tip: "Caches content on servers around the world so users fetch it from nearby.", more: "A CDN copies static files and even whole sites to edge servers close to users, cutting latency and absorbing traffic spikes and DDoS attacks. Large sites and video services depend on them." },
+  "CDP": { full: "Cisco Discovery Protocol", tip: "Cisco's Layer 2 protocol for learning what device is on the other end of a link.", more: "CDP lets a Cisco switch see the name, model, IP address, and port of its directly connected neighbors, which is useful for mapping and for phones to learn their voice VLAN. LLDP is the vendor-neutral equivalent." },
+  "CIA": { full: "Confidentiality, integrity, and availability", tip: "The three goals of security: keep data secret, keep it correct, keep it reachable.", more: "Confidentiality means only authorized people can read data (encryption, access control). Integrity means it has not been altered (hashes, signatures). Availability means systems are up when needed (redundancy, backups). Every attack and every control on the exam maps to one or more of the three; ransomware, for instance, attacks availability." },
+  "CIDR": { full: "Classless inter-domain routing", tip: "Prefix notation for subnets, such as /24, replacing the old A, B, C classes.", more: "CIDR writes the mask as the number of network bits after a slash: 192.168.1.0/24 means the first 24 bits identify the network. It lets networks be any size, allows route summarization, and is how subnetting is expressed today. Converting between prefix length, dotted mask, and host count is core exam math." },
+  "CNAME": { full: "Canonical name record", tip: "A DNS alias: one name points to another name.", more: "A CNAME says this name is really that other name, so www.example.com might be an alias for the real hostname of a web server. Lookups then continue with the target name. A CNAME cannot sit at the zone apex alongside other records, which is a common configuration mistake." },
+  "CPU": { full: "Central processing unit", tip: "The processor that executes instructions.", more: "The CPU's cores, threads, clock speed, and cache set a computer's performance. Sudden CPU spikes are a security indicator for crypto mining or malware. In the A+ course you match its socket (LGA, PGA, AM4, AM5) to the motherboard and keep it cool." },
+  "CRC": { full: "Cyclic redundancy check", tip: "The checksum in an Ethernet frame trailer; CRC errors mean the frame was damaged in transit.", more: "The sender computes a CRC over the frame and puts it in the frame check sequence; the receiver recomputes it and drops the frame if they differ. Rising CRC error counters on a port point to a bad cable, a bad connector, interference, or a duplex mismatch." },
+  "CRM": { full: "Customer relationship management", tip: "Software for tracking customers and sales, usually SaaS.", more: "CRM systems such as hosted sales platforms are the exam's example of software as a service." },
+  "CSMA/CD": { full: "Carrier sense multiple access with collision detection", tip: "The original Ethernet rule: listen before sending, and back off if a collision is heard.", more: "On shared or half-duplex Ethernet, a station listens for a carrier, transmits when the wire is quiet, and if two stations collide both stop, wait a random time, and retry. Full-duplex switched links have no collisions, so CSMA/CD is mostly historical, but it is why half-duplex mismatches cause late collisions and errors." },
+  "DaaS": { full: "Desktop as a service", tip: "VDI hosted by a cloud provider.", more: "DaaS delivers virtual desktops from the cloud with the provider running the infrastructure." },
+  "DAC": { full: "Direct attach cable", tip: "A twinaxial copper cable with transceivers permanently attached at both ends, for short 10 to 100 Gbps links.", more: "A DAC plugs straight into SFP+ or QSFP cages and links devices a few meters apart, such as a server to a top-of-rack switch, cheaper than two optics plus fiber. In Security+ the same letters mean discretionary access control and in the CBET course a digital-to-analog converter; read the context." },
+  "DDoS": { full: "Distributed denial of service", tip: "Many sources, usually a botnet, flood a target at once.", more: "DDoS attacks use thousands of compromised machines, or amplification through open DNS and NTP servers, to overwhelm a target. Defenses are upstream scrubbing services, CDNs, and rate limiting." },
+  "DFS": { full: "Dynamic frequency selection", tip: "Wi-Fi channels in the 5 GHz band that must yield to radar.", more: "Some 5 GHz channels are shared with weather and military radar. An access point using a DFS channel must listen for radar and move off the channel if it hears any, which can cause sudden client disconnects. In the A+ course the same letters may also appear for Windows Distributed File System; read the context." },
+  "DHCP": { full: "Dynamic Host Configuration Protocol", tip: "Hands out IP addresses, masks, gateways, and DNS servers automatically (UDP 67 and 68).", more: "A DHCP server leases addresses to clients through the DORA exchange: Discover, Offer, Request, Acknowledge. The lease also carries the subnet mask, default gateway, DNS servers, and options such as a TFTP server. Because Discover is a broadcast, a router needs a relay (IP helper) to reach a server on another subnet. Reservations tie a fixed address to a MAC; scopes and exclusions define the pool." },
+  "DKIM": { full: "DomainKeys Identified Mail", tip: "Outgoing mail is digitally signed; the public key is published in DNS.", more: "DKIM lets a receiving server verify that a message really came from the domain and was not altered, by checking the signature against the key in a DNS TXT record." },
+  "DMARC": { full: "Domain-based Message Authentication, Reporting, and Conformance", tip: "A DNS policy telling receivers what to do with mail that fails SPF or DKIM, and where to send reports.", more: "DMARC ties SPF and DKIM to the visible From address and states a policy: none, quarantine, or reject. Reports show who is sending mail as your domain." },
+  "DMZ": { full: "Demilitarized zone", tip: "A screened subnet between the internet and the internal network for public-facing servers.", more: "A DMZ holds web, mail, and other servers that outsiders must reach. Firewalls allow the internet to reach the DMZ, and tightly restrict the DMZ's access to the inside, so a compromised public server does not give an attacker the internal LAN. The modern term is screened subnet." },
+  "DNS": { full: "Domain Name System", tip: "Translates names such as www.example.com into IP addresses (UDP 53, TCP 53 for zone transfers).", more: "DNS is a distributed database of names. A resolver asks recursive servers, which walk from the root to the top-level domain to the authoritative server for the zone. Record types include A (IPv4), AAAA (IPv6), CNAME (alias), MX (mail), PTR (reverse), TXT (text such as SPF), SRV (service location), NS, and SOA. If a site works by IP address but not by name, DNS is the problem." },
+  "DNS64": { full: "DNS 6 to 4", tip: "Synthesizes AAAA records for IPv4-only names so IPv6-only clients can reach them through NAT64.", more: "When an IPv6-only client asks for a name that only has an IPv4 address, a DNS64 resolver builds a fake AAAA record that points into the NAT64 gateway's prefix. The client then talks IPv6 to the gateway, which translates to IPv4 for the real server." },
+  "DNSSEC": { full: "DNS Security Extensions", tip: "Digital signatures on DNS records so a resolver can tell an answer was not forged.", more: "DNSSEC adds signature records to a zone and a chain of trust from the root down. A validating resolver checks the signatures and rejects tampered or spoofed answers. It provides integrity and authenticity, not privacy: queries are still readable on the wire, which is what DoT and DoH address." },
+  "DoH": { full: "DNS over HTTPS", tip: "DNS queries carried inside HTTPS on TCP 443 so they cannot be read or altered in transit.", more: "DoH wraps DNS inside an ordinary HTTPS connection to a resolver. Browsers and operating systems support it, and because it looks like web traffic it is hard for a network to block or inspect. It protects privacy between the client and the resolver; it does not sign the records themselves." },
+  "DORA": { full: "Discover, Offer, Request, Acknowledge", tip: "The four-step DHCP lease exchange.", more: "A client with no address broadcasts a Discover, servers answer with an Offer, the client broadcasts a Request for one offer, and that server confirms with an Acknowledge. Remembering DORA answers most DHCP sequence questions." },
+  "DoS": { full: "Denial of service", tip: "One source floods or crashes a target so it cannot serve users.", more: "A DoS attack exhausts bandwidth, connections, or CPU. Because it comes from one source it can be filtered; distributed attacks from many sources are far harder." },
+  "DoT": { full: "DNS over TLS", tip: "DNS queries encrypted with TLS on TCP 853.", more: "DoT sends DNS over a dedicated TLS connection on port 853. Like DoH it hides queries from anyone on the path, but using its own port makes it easier to identify and manage on a corporate network." },
+  "DR": { full: "Disaster recovery", tip: "The plans and sites for restoring IT after a major outage.", more: "DR covers backups, alternate sites (hot, warm, cold), and the runbooks to fail over. A tabletop exercise walks through the DR plan on paper to find gaps before a real event." },
+  "DSS": { full: "Data Security Standard", tip: "The PCI DSS rules for protecting payment card data.", more: "PCI DSS requires firewalls, encryption of card data, access control, monitoring, and testing, with the cardholder data environment segmented from the rest of the network." },
+  "EGP": { full: "Exterior gateway protocol", tip: "A routing protocol between organizations; today that means BGP.", more: "EGP is the category name for routing between autonomous systems. The only one in use is BGP." },
+  "EIGRP": { full: "Enhanced Interior Gateway Routing Protocol", tip: "Cisco's advanced distance-vector protocol with fast convergence and a composite metric.", more: "EIGRP keeps backup routes ready, converges quickly, and uses bandwidth and delay in its metric. Originally Cisco-only, it is common in Cisco shops. Administrative distance 90." },
+  "EMI": { full: "Electromagnetic interference", tip: "Noise from motors, power lines, fluorescent lights, and radios that corrupts signals on copper cable.", more: "EMI induces unwanted voltage on cables and shows up as errors, CRC failures, or dropped links, especially on long unshielded runs near electrical equipment. Shielded cable, better routing, or fiber (which is immune) are the fixes. In the CBET course it also explains noisy ECG and EEG traces." },
+  "EOL": { full: "End of life", tip: "The vendor stops selling the product.", more: "At end of life a product is no longer sold but may still receive support for a while. It is the first warning that planning for replacement should start." },
+  "EOS": { full: "End of support", tip: "The vendor stops providing patches and help.", more: "After end of support there are no more security fixes, so the device becomes a permanent vulnerability. Anything past EOS should be replaced or isolated." },
+  "ER": { full: "Extended reach", tip: "The single-mode 10 Gbps optic for 40 km.", more: "10GBASE-ER uses a 1550 nm laser to reach about 40 km over single-mode fiber, for campus and metro links." },
+  "ESP": { full: "Encapsulating Security Payload", tip: "The IPsec protocol that encrypts and authenticates the payload.", more: "ESP provides confidentiality, integrity, and authentication for IPsec traffic and is what nearly every VPN uses. It is IP protocol 50. In tunnel mode the original packet is encrypted inside a new one." },
+  "ESSID": { full: "Extended service set identifier", tip: "The SSID shared by several access points so clients can roam between them.", more: "An extended service set is a group of APs on the same wired network advertising the same name. The ESSID is that shared name; each AP inside it still has its own BSSID. Roaming works because the SSID and security settings match across the set." },
+  "EU": { full: "European Union", tip: "The political union whose GDPR privacy law reaches any company holding its residents' data.", more: "On the exam the EU appears through GDPR and data sovereignty questions about keeping data within certain borders." },
+  "EUI-64": { full: "Extended unique identifier, 64-bit", tip: "A way to build an IPv6 interface ID from a 48-bit MAC address.", more: "EUI-64 takes the MAC address, inserts the hex value FFFE in the middle, and flips one bit, producing a 64-bit interface identifier that joins the network prefix to make a full IPv6 address. Because it exposes the MAC, many systems use random or privacy identifiers instead." },
+  "FCC": { full: "Federal Communications Commission", tip: "The US regulator of radio spectrum, including Wi-Fi bands and transmit power.", more: "The FCC sets which frequencies are unlicensed and the power limits for Wi-Fi and other radios in the United States." },
+  "FHRP": { full: "First-hop redundancy protocol", tip: "Lets two routers share one virtual gateway address so hosts keep working if one fails.", more: "Hosts point at a single default gateway. FHRPs such as HSRP, VRRP, and GLBP make that gateway a virtual address that a standby router takes over when the active one dies, with no client change." },
+  "FIN": { full: "Finish flag", tip: "The TCP flag that closes a connection gracefully.", more: "Each side sends FIN when it is done and the other acknowledges, closing the connection in an orderly way. A reset (RST) aborts instead." },
+  "FTP": { full: "File Transfer Protocol", tip: "Plaintext file transfer on TCP 21 (control) and 20 (data); replace with SFTP or FTPS.", more: "FTP sends usernames, passwords, and files in the clear and needs a second connection for data, which complicates firewalls. Active mode has the server connect back to the client; passive mode has the client open both. It survives on legacy systems only." },
+  "FTPS": { full: "FTP Secure", tip: "FTP wrapped in TLS, ports 990 and 989 (implicit) or 21 with an upgrade (explicit).", more: "FTPS adds TLS encryption to ordinary FTP. It is different from SFTP, which runs over SSH. Exam questions test whether you know they are separate protocols on separate ports." },
+  "GBIC": { full: "Gigabit interface converter", tip: "The older, larger hot-swappable transceiver replaced by the SFP.", more: "GBIC modules did the same job as SFPs at 1 Gbps but were about twice the size. SFPs were originally called mini-GBICs." },
+  "Gbps": { full: "Gigabits per second", tip: "Billions of bits per second; gigabit Ethernet is 1 Gbps.", more: "Gigabit Ethernet runs at 1 Gbps over Cat 5e, 10 Gbps over Cat 6A or fiber, and 40 to 400 Gbps in data centers. Divide by 8 for bytes." },
+  "GDPR": { full: "General Data Protection Regulation", tip: "The European Union's privacy law for personal data of EU residents.", more: "GDPR requires consent or another lawful basis, breach notification, data minimization, and rights such as erasure, with heavy fines. It applies to any organization handling EU residents' data." },
+  "GG45": { full: "GG45 connector", tip: "A backward-compatible Cat 7 and Cat 8 connector that also accepts RJ45 plugs.", more: "GG45 is one of the shielded connectors specified for Cat 7 and Cat 8 cabling. It is rare in practice; most 10 Gbps installations simply use Cat 6A with ordinary RJ45 plugs." },
+  "GHz": { full: "Gigahertz", tip: "Billions of cycles per second; CPU clock speed and Wi-Fi band frequency.", more: "A 3.5 GHz CPU ticks 3.5 billion times a second. Wi-Fi uses the 2.4, 5, and 6 GHz bands, where higher frequency means more bandwidth but shorter range and worse wall penetration." },
+  "GLBP": { full: "Gateway Load Balancing Protocol", tip: "Cisco's first-hop redundancy that also spreads traffic across several gateways.", more: "GLBP answers ARP for the virtual gateway with different routers' MAC addresses so that hosts are balanced across all of them, rather than idling the standby as HSRP does." },
+  "GPS": { full: "Global Positioning System", tip: "Satellite positioning, also used as a stratum 0 time reference.", more: "GPS receivers get both position and extremely accurate time from satellites. Networks use GPS-disciplined clocks as their top-level NTP or PTP reference. Phones use GPS for location, which is also the somewhere-you-are factor in authentication." },
+  "GRE": { full: "Generic Routing Encapsulation", tip: "A simple tunnel that wraps one packet inside another, with no encryption.", more: "GRE carries any protocol across an IP network by adding an outer IP header, which is why it is used to move multicast or routing protocol traffic across the internet. It offers no security on its own, so it is often combined with IPsec. GRE is IP protocol 47." },
+  "GUI": { full: "Graphical user interface", tip: "Windows, icons, and a mouse, as opposed to a command line.", more: "Most management tools have a GUI and a command-line equivalent. Web interfaces on network devices are GUIs over HTTPS." },
+  "HIPAA": { full: "Health Insurance Portability and Accountability Act", tip: "The US law protecting health information and setting privacy and security rules.", more: "HIPAA's Privacy Rule governs use of protected health information and its Security Rule requires administrative, physical, and technical safeguards. Breaches must be reported, and business associates that handle the data are directly liable." },
+  "HSRP": { full: "Hot Standby Router Protocol", tip: "Cisco's first-hop redundancy protocol: one active router, one standby, one virtual IP.", more: "HSRP routers elect an active forwarder for the virtual gateway address and a standby that takes over on failure. It is Cisco proprietary; VRRP is the open equivalent." },
+  "HTTP": { full: "Hypertext Transfer Protocol", tip: "Web traffic in the clear on TCP 80.", more: "HTTP carries web pages and API calls without encryption, so anything sent can be read on the path. HTTPS on 443 is the secure form, and modern sites redirect to it." },
+  "HTTPS": { full: "Hypertext Transfer Protocol Secure", tip: "HTTP inside TLS on TCP 443.", more: "HTTPS encrypts web traffic and lets the browser verify the server's certificate. The padlock means the connection to that server is private, not that the site is honest. DoH also rides on 443." },
+  "IaaS": { full: "Infrastructure as a service", tip: "The provider supplies virtual machines, storage, and networks; you manage the operating system and up.", more: "IaaS rents raw computing. You install and patch the OS and applications while the provider runs the hardware. The exam cue is you manage the OS, they manage the hardware." },
+  "IaC": { full: "Infrastructure as code", tip: "Defining networks and servers in files that tools build automatically and repeatably.", more: "With IaC the configuration lives in version-controlled text, and a tool applies it, so environments are consistent and changes are reviewed like software. Drift between the files and reality is detected rather than accumulated." },
+  "IBSS": { full: "Independent basic service set", tip: "An ad hoc Wi-Fi network between devices with no access point.", more: "In an IBSS, clients talk directly to each other. It is used for quick device-to-device connections and is contrasted on the exam with infrastructure mode, where all traffic passes through an AP." },
+  "ICMP": { full: "Internet Control Message Protocol", tip: "The messaging protocol behind ping and traceroute, and behind unreachable and time-exceeded errors.", more: "ICMP carries control and error messages for IP: echo request and reply (ping), destination unreachable, time exceeded (used by traceroute), and redirect. Firewalls often block some ICMP, which is why ping can fail even when a host is up. ICMPv6 also carries neighbor discovery." },
+  "ICS": { full: "Industrial control system", tip: "The general term for computers that run physical processes; SCADA is one kind.", more: "ICS covers programmable logic controllers, distributed control systems, and SCADA. Their priorities are safety and availability, so security must come from segmentation and monitoring rather than frequent patching." },
+  "ID": { full: "Identifier or identification", tip: "A name or number that uniquely labels a user, device, session, or record.", more: "IDs appear everywhere: user IDs, VLAN IDs, process IDs, patient IDs, and caller ID, which can be spoofed. The exam mostly tests that an ID by itself is not proof of identity." },
+  "IDF": { full: "Intermediate distribution frame", tip: "A smaller wiring closet on a floor or wing that feeds back to the MDF.", more: "IDFs hold the access switches and patch panels for their area, keeping copper runs under the 100 m limit. Each IDF links to the MDF over fiber or high-speed copper." },
+  "IDS": { full: "Intrusion detection system", tip: "Watches a copy of the traffic and alerts on attacks; cannot block them.", more: "An IDS sits out of band, usually on a SPAN port or tap, and compares traffic against signatures and behavior baselines. It detects and reports but does not stop anything. A host-based IDS does the same on one machine's logs and files." },
+  "IEEE": { full: "Institute of Electrical and Electronics Engineers", tip: "The engineering body behind Ethernet (802.3), Wi-Fi (802.11), and many device standards.", more: "IEEE numbers appear throughout networking: 802.1Q VLAN tagging, 802.1X port authentication, 802.3af/at/bt Power over Ethernet, 802.11 Wi-Fi, and 1588 Precision Time Protocol. In healthcare, IEEE 11073 covers medical device communication." },
+  "IGMP": { full: "Internet Group Management Protocol", tip: "How hosts join and leave IPv4 multicast groups.", more: "IGMP lets a host tell its router which multicast streams it wants. Switches use IGMP snooping to send multicast only to ports that asked for it." },
+  "IGP": { full: "Interior gateway protocol", tip: "A routing protocol used inside one organization: OSPF, EIGRP, RIP, IS-IS.", more: "IGPs find the best paths within a single administrative domain and converge quickly. Between domains, the exterior gateway protocol BGP takes over." },
+  "IIoT": { full: "Industrial Internet of Things", tip: "Networked sensors and controllers in factories and utilities.", more: "IIoT brings connectivity to industrial equipment. Like SCADA and other operational technology it must be segmented from business networks because it cannot be patched or rebooted freely." },
+  "IKE": { full: "Internet Key Exchange", tip: "Negotiates the keys and security associations for IPsec; UDP 500, and 4500 through NAT.", more: "IKE authenticates the two ends of a VPN with pre-shared keys or certificates and agrees the encryption keys for ESP. IKEv2 is the current version. NAT traversal moves it to UDP 4500 so it survives address translation." },
+  "IMAP": { full: "Internet Message Access Protocol", tip: "Reads mail that stays on the server, synced across devices; TCP 143, secure 993.", more: "IMAP leaves messages on the server and mirrors folders and read status to every client, which is what phones and laptops need. It replaced POP3 for most users." },
+  "IMAPS": { full: "IMAP Secure", tip: "IMAP over TLS on TCP 993.", more: "IMAPS encrypts the connection between a mail client and server. It is the port to allow when a question asks for secure mail retrieval." },
+  "IoT": { full: "Internet of Things", tip: "Networked devices such as cameras, sensors, thermostats, and smart TVs.", more: "IoT devices are small computers with limited security: default passwords, rare patches, and long lifetimes. They belong on their own segmented network with access limited to what they need." },
+  "IP": { full: "Internet Protocol", tip: "The Layer 3 protocol that addresses and routes packets between networks.", more: "IP gives every host a logical address and lets routers forward packets from network to network using that address. Version 4 uses 32-bit addresses written as four numbers; version 6 uses 128-bit addresses written in hex. IP itself is best effort: it does not guarantee delivery, which is why TCP exists above it." },
+  "IPAM": { full: "IP address management", tip: "Software that tracks which addresses and subnets are in use.", more: "IPAM keeps the authoritative record of subnets, static assignments, DHCP scopes, and DNS names so addresses are not duplicated and space is planned. Larger networks cannot run on a spreadsheet." },
+  "IPFIX": { full: "IP Flow Information Export", tip: "The standard flow-export protocol, the successor of NetFlow.", more: "Flow exporters on routers and switches send summaries of conversations (who talked to whom, how much, over which ports) to a collector for capacity planning and security analysis." },
+  "IPS": { full: "Intrusion prevention system", tip: "Sits inline and blocks attacks as they pass.", more: "An IPS is an IDS placed in the traffic path so it can drop malicious packets and reset connections. Being inline means it can also block legitimate traffic if a signature is wrong or it fails closed. In the A+ course the same letters name in-plane switching LCD panels; read the context." },
+  "IPsec": { full: "Internet Protocol Security", tip: "The suite that encrypts and authenticates IP packets for VPNs.", more: "IPsec uses AH for integrity, ESP for encryption plus integrity, and IKE to negotiate keys. Transport mode protects the payload between two hosts; tunnel mode wraps the whole packet for site-to-site VPNs. ESP is IP protocol 50, AH is 51, IKE uses UDP 500 and 4500 for NAT traversal." },
+  "IPv4": { full: "Internet Protocol version 4", tip: "32-bit addresses written as four decimal octets, such as 192.168.1.10.", more: "IPv4 addresses are 32 bits split into four octets. A subnet mask or CIDR prefix says which bits name the network and which name the host. Because there are only about four billion addresses, private ranges plus NAT are used inside organizations. Most subnetting math on the exam is IPv4." },
+  "IPv6": { full: "Internet Protocol version 6", tip: "128-bit addresses in eight hex groups; no broadcast, built-in autoconfiguration.", more: "IPv6 uses 128-bit addresses written as hex groups separated by colons, with rules for shortening runs of zeros. There is no broadcast; multicast and neighbor discovery take its place. Hosts can build their own address from a router advertisement (SLAAC). Link-local addresses start with fe80, and the loopback is ::1." },
+  "IS-IS": { full: "Intermediate System to Intermediate System", tip: "A link-state interior routing protocol used mainly by large providers.", more: "IS-IS works much like OSPF but runs directly over Layer 2 rather than IP, which some carriers prefer. On the exam it is the other link-state IGP." },
+  "ISATAP": { full: "Intra-Site Automatic Tunnel Addressing Protocol", tip: "A tunneling method that carries IPv6 inside IPv4 within one organization.", more: "ISATAP treats the IPv4 network as a link layer and builds IPv6 addresses that embed the IPv4 address, so dual-stack hosts can reach an IPv6 router across an IPv4-only network. It is one of several transition tunnels along with 6to4, Teredo, and GRE." },
+  "iSCSI": { full: "Internet SCSI", tip: "SCSI storage commands over a TCP/IP network, giving block-level storage without Fibre Channel.", more: "iSCSI lets a server mount a disk on a storage array across ordinary Ethernet, usually on a dedicated storage VLAN. It is the low-cost way to build a SAN." },
+  "ISP": { full: "Internet service provider", tip: "The company that connects you to the internet.", more: "The ISP supplies the WAN link, public addresses, and often DNS. Guaranteed uptime from the ISP is an SLA." },
+  "IT": { full: "Information technology", tip: "Computers, networks, and the people who run them.", more: "IT is the department and the discipline that runs business systems. On the exam it appears in shadow IT (systems staff set up without approval) and in the contrast with operational technology." },
+  "JPEG": { full: "Joint Photographic Experts Group (image format)", tip: "The common compressed photo format.", more: "JPEG is an example of a presentation-layer format: data formatting and compression." },
+  "LACP": { full: "Link Aggregation Control Protocol", tip: "Negotiates bundling several physical links into one logical link (802.1AX, formerly 802.3ad).", more: "LACP lets two devices agree to combine parallel links into one channel for more bandwidth and redundancy. Both ends must be configured, and the links must match in speed and duplex. If one physical link fails the bundle keeps working with the rest." },
+  "LAN": { full: "Local area network", tip: "One site's network: a building, floor, or campus that one organization owns and runs.", more: "A LAN is the network inside one location, usually built from switches and Ethernet or Wi-Fi, running at high speed because the organization owns every piece of it. When a question says one office, one building, or one campus, it is describing a LAN. Anything that crosses a provider's link to reach another city is no longer a LAN." },
+  "LC": { full: "Lucent connector", tip: "The small square snap-in fiber connector, the most common on modern transceivers.", more: "LC is a small form-factor fiber connector, usually installed as a duplex pair. Its size is why SFP modules use it. It clicks in like a miniature RJ45." },
+  "LDAP": { full: "Lightweight Directory Access Protocol", tip: "Queries a directory such as Active Directory for users and groups; TCP 389, secure 636.", more: "LDAP is how applications look up accounts, group memberships, and attributes in a directory. Plain LDAP sends binds in the clear, so LDAPS on 636 or StartTLS should be used. Kerberos handles the actual Windows logon; LDAP handles lookups." },
+  "LDAPS": { full: "LDAP Secure", tip: "LDAP over TLS on TCP 636.", more: "LDAPS encrypts directory queries and the credentials used to bind. It is the secure pair for plain LDAP on 389." },
+  "LED": { full: "Light-emitting diode", tip: "A small light source: the status lights on a port, the lamp in cheap fiber transmitters, and modern display backlights.", more: "On network gear the link and activity LEDs are the first thing to check. In fiber, LEDs are the low-cost light source for older multimode links. In displays and medical devices LEDs provide backlights and the red and infrared light in pulse oximeter probes." },
+  "LLC": { full: "Logical link control", tip: "The upper sublayer of the data link layer that identifies which network protocol a frame carries.", more: "Layer 2 splits into MAC (addressing and media access) and LLC (identifying the upper protocol and handling flow and error control). LLC is what lets IP and other protocols share the same Ethernet link." },
+  "LLDP": { full: "Link Layer Discovery Protocol", tip: "The vendor-neutral neighbor discovery protocol (IEEE 802.1AB).", more: "LLDP advertises a device's identity, capabilities, and port to its neighbors so management tools can draw the topology. LLDP-MED extends it for IP phones." },
+  "LR": { full: "Long reach", tip: "The single-mode 10 Gbps optic, 10 km.", more: "10GBASE-LR modules use 1310 nm lasers over single-mode fiber for links up to 10 km. Both ends must be LR on single-mode glass." },
+  "LTE": { full: "Long-Term Evolution", tip: "4G cellular data; the workhorse mobile broadband standard.", more: "LTE carries all-IP data at tens of megabits per second and remains the fallback under 5G. Phones, hotspots, and SD-WAN backup links use it." },
+  "MAC": { full: "Media access control (address)", tip: "The 48-bit hardware address burned into a network interface, used at Layer 2.", more: "A MAC address is the physical address of a network card, written as six pairs of hex digits. The first half is the manufacturer code (OUI). Switches build a table of which MAC address is on which port and forward frames by it. MAC addresses only matter within one LAN segment; routers use IP addresses to move packets between networks. In Security+ the same letters can also mean mandatory access control." },
+  "macOS": { full: "Mac operating system", tip: "Apple's desktop operating system.", more: "macOS runs on Apple hardware, uses APFS, installs apps from the App Store or disk images, and offers Time Machine backups, Keychain, FileVault encryption, and Spotlight search." },
+  "MAN": { full: "Metropolitan area network", tip: "A city-sized network: bigger than a LAN, smaller than a WAN.", more: "A MAN connects several sites within one metro area, for example a hospital's buildings across town joined by fiber that runs under the streets. It is larger than one campus but does not span regions or countries. Exam questions use it as the middle size between LAN and WAN." },
+  "Mbps": { full: "Megabits per second", tip: "Millions of bits per second; the unit for network link speed.", more: "Divide by 8 to get megabytes per second. A 100 Mbps link moves about 12.5 MB per second at best. Speeds, not sizes, are quoted in bits." },
+  "MDF": { full: "Main distribution frame", tip: "The building's main wiring closet where outside lines and the core equipment land.", more: "The MDF holds the demarcation point, the core switches and routers, and the backbone connections to every intermediate closet. Everything else in the building cables back toward it." },
+  "MDIX": { full: "Medium-dependent interface crossover", tip: "Auto-MDIX ports sense the cable and swap transmit and receive pairs, so crossover cables are rarely needed.", more: "Older switch-to-switch and host-to-host links needed a crossover cable. Modern ports detect the pairing and adjust automatically, which is why a straight-through cable works almost everywhere." },
+  "MFA": { full: "Multi-factor authentication", tip: "Two or more different kinds of proof: something you know, have, are, or where you are.", more: "MFA combines factors from different categories, such as a password plus a code from a phone app. Two passwords are still one factor. It defeats stolen passwords because the attacker lacks the second factor, and it is the standard fix for account takeover in exam scenarios." },
+  "MHz": { full: "Megahertz", tip: "Millions of cycles per second; memory speed, radio channels, and older CPU clocks.", more: "Memory is rated in MHz or megatransfers, Wi-Fi channels are 20 to 160 MHz wide, and medical telemetry uses the WMTS bands in the 600 and 1400 MHz ranges." },
+  "MIB": { full: "Management information base", tip: "The database of variables an SNMP agent exposes.", more: "The MIB defines every value a device can report, organized in a tree. Each leaf has an object identifier. Vendors publish MIB files so management tools know what to ask for." },
+  "MIMO": { full: "Multiple input, multiple output", tip: "Using several antennas at once to send parallel data streams for more speed.", more: "MIMO, introduced with 802.11n, lets an access point and client use multiple antennas to carry separate spatial streams over the same channel. More streams mean higher throughput, which is why an AP is sold as 4x4 or 8x8." },
+  "MMF": { full: "Multimode fiber", tip: "A wider core (50 or 62.5 microns) carrying many light paths, for hundreds of meters.", more: "Multimode fiber uses cheaper LED or VCSEL sources but the many light paths spread the signal, limiting distance to roughly 300 to 550 m depending on grade. OM1 and OM2 are orange, OM3 and OM4 aqua, OM5 lime green." },
+  "MOU": { full: "Memorandum of understanding", tip: "A non-binding statement of intent and roles between parties.", more: "An MOU records what two organizations expect from each other before or instead of a binding contract. It shows intent and shared understanding but is not enforceable the way an SLA or MSA is." },
+  "MPEG": { full: "Moving Picture Experts Group (video format)", tip: "The family of compressed video formats.", more: "MPEG, like JPEG, is used on the exam as an example of presentation-layer formatting and compression." },
+  "MPLS": { full: "Multiprotocol Label Switching", tip: "A provider WAN that forwards by short labels instead of IP lookups, with traffic engineering and QoS.", more: "MPLS carriers put a label on each packet at the edge and switch on the label through the core, which lets them build private WANs with guaranteed performance for customers. It is reliable and expensive, and SD-WAN is often used to replace or supplement it with cheap internet links." },
+  "MPO": { full: "Multi-fiber push-on connector", tip: "A ribbon connector carrying 12 or 24 fibers, used for 40 and 100 Gbps parallel optics.", more: "MPO connectors terminate many fibers at once so a single plug carries several parallel lanes. MTP is a brand-name version of the same connector." },
+  "ms": { full: "Millisecond", tip: "One thousandth of a second; latency and response times.", more: "Network latency is quoted in ms. Satellite links add 500 to 600 ms, which hurts voice and interactive traffic. Monitors also quote response time in ms." },
+  "MSTP": { full: "Multiple Spanning Tree Protocol", tip: "Runs one spanning tree instance for a group of VLANs instead of one per VLAN.", more: "MSTP (802.1s) maps VLANs to a small number of spanning tree instances. Each instance can have a different root and blocked links, which lets both redundant links carry traffic for different VLAN groups while keeping the CPU load low." },
+  "MTBF": { full: "Mean time between failures", tip: "The average running time before a component fails; a reliability measure.", more: "MTBF is a statistical estimate of how long a device runs between failures. A higher MTBF means a more reliable part. It is used with MTTR to plan spares and redundancy." },
+  "MTP": { full: "Multi-fiber termination push-on connector", tip: "A brand-name, higher-precision version of the MPO connector.", more: "MTP is US Conec's trademark for an improved MPO. The two mate together and appear together on the exam as MPO/MTP." },
+  "MTTR": { full: "Mean time to repair", tip: "The average time to fix a failure and restore service.", more: "MTTR measures how quickly you recover. Spares on site, documentation, and remote access all lower it. Together with MTBF it drives availability calculations." },
+  "MTU": { full: "Maximum transmission unit", tip: "The largest packet a link can carry, 1500 bytes on standard Ethernet.", more: "If a packet is bigger than the MTU of a link it must be fragmented or dropped. Tunnels such as VPNs and VXLAN add headers and shrink the usable MTU, which shows up as large transfers failing while pings work. Jumbo frames raise the MTU to about 9000 bytes on links that all support it." },
+  "MU-MIMO": { full: "Multi-user MIMO", tip: "The access point serves several clients at the same time with separate streams.", more: "Single-user MIMO speeds up one client; MU-MIMO (from 802.11ac Wave 2 and 802.11ax) lets the AP transmit to several clients simultaneously, improving capacity in crowded areas." },
+  "MX": { full: "Mail exchanger record", tip: "The DNS record that says which server accepts email for a domain.", more: "MX records list the mail servers for a domain with a priority number; lower is preferred. Sending mail servers look up the MX record of the recipient's domain to know where to deliver. A domain with a broken MX record can send mail but never receives it." },
+  "NAC": { full: "Network access control", tip: "Checks a device's identity and health before letting it onto the network.", more: "NAC combines 802.1X authentication with posture checks such as patch level and antivirus status, then places the device in the right VLAN or quarantines it. Agent-based NAC installs software on the endpoint; agentless NAC inspects it from the network." },
+  "NACL": { full: "Network access control list", tip: "A stateless rule set applied to a cloud subnet.", more: "In cloud networking a NACL filters traffic entering or leaving a subnet with numbered allow and deny rules. Because it is stateless, return traffic must be allowed explicitly, unlike a security group, which is stateful and applies to a single instance." },
+  "NAS": { full: "Network-attached storage", tip: "A file server appliance that shares folders over the regular network using SMB or NFS.", more: "A NAS is a box of disks with its own small operating system that shares files over the LAN. Clients see shared folders, not raw disks, which is the file-level versus block-level distinction from a SAN. Small offices use a NAS for shared documents and backups." },
+  "NAT": { full: "Network address translation", tip: "Rewrites private inside addresses to a public address at the router so many hosts can share it.", more: "NAT lets a network use private RFC 1918 addresses internally while presenting one or a few public addresses to the internet. The router keeps a table mapping each inside connection to the outside address and port. Static NAT maps one address to one; dynamic NAT uses a pool; PAT (port address translation) lets a whole network share one public address by varying ports." },
+  "NAT-T": { full: "NAT traversal", tip: "Wraps IPsec in UDP 4500 so it can pass through address translation.", more: "Because NAT rewrites addresses and ESP has no ports, IPsec normally breaks behind a home router. NAT-T detects the translator and encapsulates ESP in UDP so the tunnel works." },
+  "NAT64": { full: "Network address translation 6 to 4", tip: "Lets IPv6-only hosts reach IPv4-only servers by translating between the two.", more: "A NAT64 gateway rewrites IPv6 packets into IPv4 and back. It usually pairs with DNS64, which invents AAAA answers for names that only have A records so the IPv6 client sends traffic toward the gateway. Together they let a network run IPv6 internally while the rest of the world is still on IPv4." },
+  "NDA": { full: "Non-disclosure agreement", tip: "A contract that keeps shared information confidential.", more: "NDAs protect trade secrets and sensitive data when vendors, partners, or new employees are given access. Violations are a legal matter, which is why they appear alongside other agreements on the exam." },
+  "NDP": { full: "Neighbor Discovery Protocol", tip: "IPv6's replacement for ARP: finds neighbors' MAC addresses and routers using ICMPv6.", more: "NDP uses ICMPv6 messages instead of broadcasts. Neighbor solicitation and advertisement resolve addresses, router solicitation and advertisement let hosts find gateways and prefixes for SLAAC, and duplicate address detection checks that an address is unused." },
+  "NFS": { full: "Network File System", tip: "The Unix and Linux file-sharing protocol.", more: "NFS lets a client mount a directory from a server as if it were local. It is the Unix counterpart of SMB and is common on NAS appliances and virtualization hosts." },
+  "NFV": { full: "Network functions virtualization", tip: "Running routers, firewalls, and load balancers as virtual machines instead of dedicated hardware.", more: "NFV moves network appliances onto standard servers as software, so a new firewall is a deployment rather than a purchase. It pairs with SDN to make networks programmable end to end." },
+  "NIC": { full: "Network interface card", tip: "The adapter that connects a computer to the network, wired or wireless.", more: "A NIC has a MAC address and link lights. Teaming two NICs gives redundancy. A failing NIC, a speed or duplex mismatch, or a bad driver are standard troubleshooting suspects." },
+  "NS": { full: "Name server record", tip: "The DNS record listing the authoritative name servers for a zone.", more: "NS records tell the rest of the internet which servers hold the real data for a domain. The parent zone (such as .com) holds NS records delegating your domain to your servers, and your zone lists them again." },
+  "NTP": { full: "Network Time Protocol", tip: "Synchronizes clocks across the network (UDP 123); wrong time breaks Kerberos, certificates, and logs.", more: "NTP keeps every device's clock aligned to a reference. Stratum 0 is the reference clock (GPS, atomic), stratum 1 servers connect to it, and each hop adds one. Kerberos fails when clocks differ by more than five minutes, certificates look expired, and logs cannot be correlated. NTS adds authentication. In the CBET course the same letters also name the National Toxicology Program; read the context." },
+  "NTS": { full: "Network Time Security", tip: "Authentication and integrity for NTP so time cannot be spoofed.", more: "NTS uses TLS to set up keys and then authenticates NTP packets, defeating attackers who would shift a network's clocks to break authentication or hide their tracks." },
+  "OFDM": { full: "Orthogonal frequency-division multiplexing", tip: "The modulation that sends data across many closely spaced sub-carriers at once.", more: "OFDM underlies 802.11a, g, n, and ac as well as DSL and LTE. Splitting the channel into many sub-carriers makes the signal robust against interference and reflections." },
+  "OFDMA": { full: "Orthogonal frequency-division multiple access", tip: "Wi-Fi 6 splits a channel into small sub-channels so many clients share it efficiently.", more: "OFDMA divides a channel into resource units that can be assigned to different clients in the same transmission. Many small packets from many devices no longer need to wait for the whole channel, which is why Wi-Fi 6 handles dense environments better." },
+  "OID": { full: "Object identifier", tip: "The dotted number that names one value in an SNMP MIB.", more: "Each MIB variable has an OID such as 1.3.6.1.2.1.2.2.1.10, the path down the MIB tree to that value. Managers poll by OID and traps carry them." },
+  "OM1": { full: "Optical multimode 1", tip: "62.5 micron multimode fiber, orange, the oldest grade.", more: "OM1 has a 62.5 micron core and supports 1 Gbps to about 275 m. It is legacy but still installed in older buildings." },
+  "OM2": { full: "Optical multimode 2", tip: "50 micron multimode fiber, orange, 1 Gbps to about 550 m.", more: "OM2 moved to a 50 micron core for better bandwidth than OM1 but is still an older grade with limited 10 Gbps reach." },
+  "OM3": { full: "Optical multimode 3", tip: "Laser-optimized 50 micron multimode fiber, aqua, 10 Gbps to about 300 m.", more: "OM3 is optimized for VCSEL lasers and is the common grade for 10 Gbps inside buildings and data centers." },
+  "OM4": { full: "Optical multimode 4", tip: "Higher-bandwidth 50 micron multimode fiber, aqua, 10 Gbps to about 400 m.", more: "OM4 extends the 10 Gbps reach past OM3 and supports 40 and 100 Gbps parallel optics to about 150 m." },
+  "OS": { full: "Operating system", tip: "The software that manages hardware and runs applications: Windows, macOS, Linux, iOS, Android.", more: "The OS controls processes, memory, files, and devices. Keeping it patched and hardened is the first endpoint defense. In cloud terms, with IaaS you manage the OS and the provider manages the hardware." },
+  "OSFP": { full: "Octal small form-factor pluggable", tip: "An eight-lane 400 Gbps module, slightly larger than QSFP-DD.", more: "OSFP competes with QSFP-DD at 400 Gbps and beyond. Its larger body allows better cooling for high-power optics." },
+  "OSI": { full: "Open Systems Interconnection model", tip: "The seven-layer reference model used to describe where a protocol or device does its work.", more: "The OSI model splits networking into seven layers, from Physical (1) up to Application (7). The exam uses it as a vocabulary: a Layer 2 problem is about switching and MAC addresses, a Layer 3 device is a router, and Layer 4 is where TCP and UDP port numbers live. Real protocol stacks such as TCP/IP do not map perfectly onto it, but the layer numbers are still how questions are asked." },
+  "OSPF": { full: "Open Shortest Path First", tip: "A link-state interior routing protocol that uses cost (bandwidth) as its metric and converges fast.", more: "OSPF routers share a map of the network, each computes shortest paths with Dijkstra's algorithm, and areas keep large networks manageable with area 0 as the backbone. It is the standard open IGP inside organizations. Administrative distance 110." },
+  "OT": { full: "Operational technology", tip: "Hardware and software that controls physical equipment, as opposed to IT.", more: "OT includes building controls, medical devices, factory machinery, and utilities. It is managed for uptime and safety, which conflicts with IT habits such as patching and scanning, so OT networks are segmented and changes are scheduled carefully." },
+  "OTDR": { full: "Optical time-domain reflectometer", tip: "A fiber tester that sends light pulses and measures reflections to find breaks and their distance.", more: "An OTDR shows loss along a fiber and pinpoints where a break, bad splice, or tight bend is, in meters from the tester. It is the fiber counterpart of a copper TDR." },
+  "OUI": { full: "Organizationally unique identifier", tip: "The first 24 bits of a MAC address, which identify the manufacturer.", more: "The IEEE assigns each hardware vendor an OUI, and the vendor fills in the remaining 24 bits to make each interface unique. Looking up an OUI tells you who made a device, which helps when an unknown MAC address shows up on a switch port." },
+  "PaaS": { full: "Platform as a service", tip: "The provider runs the platform (OS, runtime, database); you deploy code.", more: "PaaS gives developers a managed environment to run applications without administering servers. You bring the code and data; the provider handles patching, scaling, and the runtime." },
+  "PAN": { full: "Personal area network", tip: "A network within arm's reach, such as Bluetooth between a phone and earbuds.", more: "A PAN covers one person's space: a few meters at most. Bluetooth, NFC, and a USB tether between a phone and a laptop are all PAN connections. The point of the term is scale, not technology." },
+  "PAT": { full: "Port address translation", tip: "Many inside hosts share one public IP address, told apart by port numbers.", more: "PAT, also called NAT overload, is the NAT most home and office routers do. Every outbound connection is rewritten to the single public address with a unique source port, and replies are mapped back by that port. It is why inbound connections need explicit port forwarding." },
+  "PC": { full: "Personal computer", tip: "A desktop or laptop for one user.", more: "The PC is the machine the A+ exam takes apart: motherboard, CPU, RAM, storage, power supply, and ports. In networking questions it is the client behind the phone or on the switch port." },
+  "PCI": { full: "Peripheral Component Interconnect", tip: "The older expansion bus; PCIe (PCI Express) is its modern serial successor.", more: "PCIe slots come in x1, x4, x8, and x16 lengths, with x16 for graphics cards and x4 for NVMe drives. A card works in a longer slot. In Security+ PCI refers to the payment card industry; read the context." },
+  "PDU": { full: "Protocol data unit", tip: "The name of the chunk of data at each layer: bits, frames, packets, segments or datagrams, data.", more: "Each OSI layer wraps data in its own header and gives the result a name. Layer 1 moves bits, Layer 2 frames, Layer 3 packets, and Layer 4 segments (TCP) or datagrams (UDP). Layers 5 to 7 just call it data. Knowing the PDU names lets you decode questions that say frame or packet instead of naming the layer." },
+  "PIN": { full: "Personal identification number", tip: "A short numeric secret, a something-you-know factor.", more: "A PIN unlocks a phone, a SIM, or a smart card. A password plus a PIN is still one factor because both are things you know." },
+  "PKI": { full: "Public key infrastructure", tip: "The system of certificate authorities, certificates, and revocation that makes public keys trustworthy.", more: "PKI ties a public key to an identity through a certificate signed by a certificate authority. Browsers and devices trust root CAs, which sign intermediates, which sign server and user certificates. Revocation lists and OCSP handle certificates that must be withdrawn early." },
+  "PoE": { full: "Power over Ethernet", tip: "Delivers DC power to devices over the data cable: 802.3af 15.4 W, 802.3at 30 W, 802.3bt 60 to 90 W.", more: "PoE lets phones, access points, and cameras run from the switch port with no separate power supply. A PoE switch (endspan) or an injector (midspan) supplies it. The device negotiates how much it may draw. If a device reboots or will not power up, check the switch's PoE budget and the standard it supports." },
+  "PON": { full: "Passive optical network", tip: "Fiber to the premises using unpowered splitters between the provider and many customers.", more: "A PON shares one fiber from the central office across many homes through passive splitters. APC connectors are used because reflections matter on long shared fiber." },
+  "POP3": { full: "Post Office Protocol version 3", tip: "Downloads mail to one device and usually deletes it from the server; TCP 110, secure 995.", more: "POP3 pulls messages to a single client and typically removes them from the server, so mail does not sync across devices. It is simple and old; IMAP is the modern choice." },
+  "POP3S": { full: "POP3 Secure", tip: "POP3 over TLS on TCP 995.", more: "POP3S is the encrypted form of POP3. Use it or IMAPS instead of the plaintext ports when a client must fetch mail." },
+  "PSK": { full: "Pre-shared key", tip: "One shared passphrase for everyone on a Wi-Fi network (Personal mode).", more: "A PSK is the Wi-Fi password typed into every device. It is simple but weak for organizations: everyone knows it, and revoking one person means changing it everywhere. Enterprise mode with 802.1X and RADIUS gives each user their own credentials." },
+  "PTP": { full: "Precision Time Protocol", tip: "IEEE 1588 clock sync with sub-microsecond accuracy, for finance, telecom, and industrial systems.", more: "Where NTP is accurate to milliseconds, PTP uses hardware timestamps on switches and NICs to reach microseconds or better. It is used where the order of events must be exact, such as trading and power grids." },
+  "PTR": { full: "Pointer record", tip: "The reverse DNS record: IP address back to a name.", more: "PTR records live in special reverse zones and answer the question what name belongs to this address. Mail servers and security tools use reverse lookups to check that a connecting address has a matching name. Forward and reverse zones are maintained separately, so they can disagree." },
+  "PVC": { full: "Polyvinyl chloride", tip: "The ordinary cable jacket, which gives off toxic smoke; plenum cable is required in air spaces.", more: "PVC-jacketed cable is fine inside walls of one floor, but ceilings and raised floors that carry air need plenum-rated jackets that burn slowly and cleanly." },
+  "QSFP": { full: "Quad small form-factor pluggable", tip: "A four-lane module for 40 Gbps.", more: "QSFP bundles four lanes into one module. QSFP+ is the 40 Gbps version, QSFP28 carries 100 Gbps with 25 Gbps lanes, and QSFP-DD doubles the lanes for 400 Gbps." },
+  "QSFP-DD": { full: "Quad small form-factor pluggable double density", tip: "Eight lanes for 400 Gbps.", more: "QSFP-DD doubles the lanes of QSFP28 to reach 400 Gbps while staying backward compatible with QSFP28 modules in the same cage." },
+  "QSFP+": { full: "Quad small form-factor pluggable plus", tip: "Four 10 Gbps lanes: a 40 Gbps module.", more: "QSFP+ modules use four lanes of 10 Gbps, often over MPO ribbon fiber or a breakout cable to four SFP+ ports." },
+  "QSFP28": { full: "Quad small form-factor pluggable 28", tip: "Four 25 Gbps lanes: a 100 Gbps module.", more: "QSFP28 is the common 100 Gbps form factor in data centers, using four lanes of about 25 Gbps each." },
+  "RA": { full: "Router advertisement", tip: "The IPv6 message a router sends with the prefix and gateway information hosts use for SLAAC.", more: "Routers send RAs periodically and in reply to router solicitations. Hosts build their addresses from the advertised prefix and set the sender as their default gateway. Rogue RAs are an IPv6 attack, mitigated by RA guard on switches." },
+  "RADIUS": { full: "Remote Authentication Dial-In User Service", tip: "The AAA server behind Wi-Fi Enterprise, VPNs, and 802.1X; UDP 1812 and 1813.", more: "A RADIUS server checks credentials for network access devices (switches, APs, VPN gateways) and tells them what the user is allowed. It encrypts only the password, uses UDP, and combines authentication and authorization, which is why TACACS+ is preferred for device administration." },
+  "RARP": { full: "Reverse Address Resolution Protocol", tip: "An obsolete protocol for finding an IP address from a MAC address.", more: "RARP let diskless machines ask for their IP address. DHCP replaced it; it appears on the exam only as the reverse of ARP." },
+  "RBAC": { full: "Role-based access control", tip: "Permissions are assigned to roles, and users get roles.", more: "RBAC simplifies administration: a new accountant gets the accountant role rather than dozens of individual permissions. It is the most common model in business systems." },
+  "RC4": { full: "Rivest Cipher 4", tip: "A fast stream cipher used in WEP and old TLS; broken and deprecated.", more: "RC4's weaknesses are why WEP fell and why TLS banned it. It appears on the exam only as an example of an algorithm to replace." },
+  "RDP": { full: "Remote Desktop Protocol", tip: "Microsoft's remote graphical desktop on TCP 3389.", more: "RDP gives a full Windows desktop over the network. Exposed directly to the internet it is a frequent attack target, so it should sit behind a VPN or gateway with MFA and network level authentication." },
+  "RF": { full: "Radio frequency", tip: "Radio signals; the medium of Wi-Fi, cellular, and Bluetooth, and a source of interference and, in medicine, surgical energy.", more: "RF covers everything from Wi-Fi channels and site surveys to RF leakage on an electrosurgical unit. Interference, absorption by walls, and antenna choice all shape RF coverage." },
+  "RFC": { full: "Request for Comments", tip: "The numbered documents that define internet standards, such as RFC 1918 private addresses.", more: "Internet protocols are published as RFCs by the IETF. The exam mostly expects you to know RFC 1918, which reserves 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 for private use, and that a protocol is described by its RFC." },
+  "RFI": { full: "Radio frequency interference", tip: "Electromagnetic interference in the radio bands, from transmitters, microwaves, and other radios.", more: "RFI is EMI at radio frequencies. On Wi-Fi it means cordless phones, microwave ovens, Bluetooth, and neighboring access points degrading the signal; on cables it is noise coupled in from nearby transmitters." },
+  "RG-59": { full: "Radio Guide 59 coaxial cable", tip: "Thinner coax for short runs such as CCTV, often with a BNC connector.", more: "RG-59 is older and thinner than RG-6, with more loss over distance. It survives in short analog camera runs and legacy installations." },
+  "RG-6": { full: "Radio Guide 6 coaxial cable", tip: "The modern coax grade for cable TV and cable modems, with an F-type connector.", more: "RG-6 has a thicker center conductor and better shielding than RG-59, so it carries cable and satellite signals farther with less loss. The screw-on F-type connector is standard on it." },
+  "RIP": { full: "Routing Information Protocol", tip: "The classic distance-vector protocol: hop count metric, 15-hop limit, slow.", more: "RIP sends its whole routing table to neighbors every 30 seconds and picks routes by fewest hops, ignoring bandwidth. It is simple, limited to 15 hops, and slow to converge, so it survives only in small or lab networks. Administrative distance 120." },
+  "RJ11": { full: "Registered jack 11", tip: "The small telephone plug, used for analog phone lines and DSL.", more: "RJ11 has six positions with two or four contacts and connects phones, fax machines, and DSL modems to the phone line. It fits loosely into an RJ45 jack, which is a classic cause of a bad connection." },
+  "RJ45": { full: "Registered jack 45", tip: "The eight-pin plug on Ethernet twisted-pair cables (properly an 8P8C connector).", more: "RJ45 is the everyday name for the Ethernet plug. It has eight positions and eight contacts, crimped onto four twisted pairs following the T568A or T568B pin-out. The smaller RJ11 is the telephone version." },
+  "RPC": { full: "Remote procedure call", tip: "A program calls a function on another computer as if it were local.", more: "RPC is a session-layer example on the exam and the basis of many Windows services; it is also a frequent attack surface." },
+  "RPO": { full: "Recovery point objective", tip: "The maximum acceptable data loss, measured in time.", more: "An RPO of one hour means backups or replication must run at least hourly, because after a disaster you may lose everything since the last copy. It drives how often you back up." },
+  "RST": { full: "Reset flag", tip: "The TCP flag that aborts a connection immediately.", more: "A host sends RST when a packet arrives for a connection it does not recognize or to tear down a session at once, for example when a port is closed. Seeing RSTs in a capture often means a firewall or a closed port." },
+  "RSTP": { full: "Rapid Spanning Tree Protocol", tip: "The faster version of spanning tree (802.1w) that reconverges in seconds.", more: "RSTP keeps the loop-prevention idea of STP but replaces the slow listening and learning timers with handshakes between switches, so a failed link is worked around in a few seconds. Port roles are root, designated, alternate, and backup; edge ports for end devices go straight to forwarding." },
+  "RTO": { full: "Recovery time objective", tip: "The maximum acceptable time to restore a service after failure.", more: "An RTO of four hours means the service must be back within four hours. It drives what recovery site you need: a hot site restores in minutes, a cold site in days." },
+  "RX": { full: "Receive", tip: "The receiving side of a link or the receiving fiber strand.", more: "RX is the receive pin or strand. A TX/RX reversal on fiber, or crossed pairs on copper, means neither side hears the other; loopback tests connect TX to RX to prove a port works." },
+  "SaaS": { full: "Software as a service", tip: "Complete applications delivered over the web, such as email and office suites.", more: "With SaaS you log in and use the software; the provider runs everything. It is the model with the least customer responsibility and the least control." },
+  "SAE": { full: "Simultaneous authentication of equals", tip: "The WPA3 Personal handshake that resists offline password guessing.", more: "SAE is a password-authenticated key exchange, sometimes called Dragonfly. Both sides prove they know the passphrase without ever sending anything an eavesdropper could attack offline, and each session gets a fresh key. It is why WPA3 Personal is safe with a weaker passphrase than WPA2 would be." },
+  "SAML": { full: "Security Assertion Markup Language", tip: "An XML standard for passing authentication between an identity provider and a web application (enterprise SSO).", more: "With SAML the application sends the user to the identity provider, which authenticates and returns a signed assertion listing who the user is and their attributes. It is the classic protocol for enterprise web single sign-on and federation." },
+  "SAN": { full: "Storage area network", tip: "A dedicated network that gives servers block-level access to shared disk arrays.", more: "A SAN is a separate high-speed network, usually Fibre Channel or iSCSI, that connects servers to storage arrays. The server sees SAN storage as if it were a local disk (block level), unlike a NAS, which shares files over the ordinary network. In Security+ the same letters also mean subject alternative name on a certificate; read the context." },
+  "SASE": { full: "Secure access service edge", tip: "SD-WAN networking plus cloud-delivered security (firewall, web gateway, ZTNA, CASB) as one service.", more: "SASE moves the security stack into the cloud close to users and branches, so remote workers and sites get the same policy without backhauling traffic to a data center. It bundles SD-WAN with the security functions that SSE describes." },
+  "SC": { full: "Subscriber connector", tip: "The larger square push-pull fiber connector, common on older gear and patch panels.", more: "SC connectors push in and pull out with a square body. They are bigger than LC and were the standard before small form-factor optics took over." },
+  "SCADA": { full: "Supervisory control and data acquisition", tip: "Systems that monitor and control industrial processes such as power, water, and manufacturing.", more: "SCADA gathers data from field sensors and sends commands to controllers over networks that were designed long before internet threats. It runs on old software, cannot tolerate downtime, and must be isolated from the corporate network and the internet." },
+  "SCP": { full: "Secure Copy Protocol", tip: "Simple file copying over SSH, TCP 22.", more: "SCP copies files between hosts through an SSH connection with a command-line syntax like cp. It lacks SFTP's directory browsing but is quick for single files." },
+  "SD-WAN": { full: "Software-defined wide area network", tip: "Steers traffic across several cheap links (broadband, LTE, MPLS) by policy from a central controller.", more: "SD-WAN puts an appliance at each site, builds encrypted tunnels over whatever links exist, and lets a central controller choose the best path per application based on measured loss and latency. It cuts cost versus MPLS and makes cloud access direct rather than backhauled." },
+  "SDN": { full: "Software-defined networking", tip: "Separates the control plane (decisions) from the data plane (forwarding) and centralizes control.", more: "In SDN a controller programs many switches through APIs instead of each device running its own configuration. The control plane decides paths; the data plane forwards packets; the management plane is where administrators talk to the controller. It enables automation and fast policy changes." },
+  "SFP": { full: "Small form-factor pluggable transceiver", tip: "The hot-swappable module that gives a switch port its fiber or copper interface, 1 Gbps.", more: "An SFP slides into a switch and provides the optic or copper port. Choosing the module (SR, LR, copper) chooses the medium and distance. Both ends must match in wavelength and fiber type." },
+  "SFP+": { full: "Enhanced small form-factor pluggable", tip: "The 10 Gbps version of the SFP module.", more: "SFP+ keeps the same size as SFP but runs at 10 Gbps. Most 10 Gbps switch ports are SFP+ cages, which also accept direct attach copper cables." },
+  "SFTP": { full: "SSH File Transfer Protocol", tip: "File transfer inside an SSH session, TCP 22.", more: "SFTP is not FTP with encryption bolted on; it is a separate protocol carried over SSH. It uses one port, 22, which makes it firewall friendly, and it is the usual secure replacement for FTP." },
+  "SHA-256": { full: "Secure Hash Algorithm 256-bit", tip: "The standard hash today: a 256-bit fingerprint of any input.", more: "SHA-256 is used in TLS certificates, code signing, file integrity, and password storage (with salting and stretching). Any change to the input changes the output completely, which is what makes it useful for integrity." },
+  "SIEM": { full: "Security information and event management", tip: "Collects logs from everything, correlates them, and raises alerts.", more: "A SIEM ingests syslog, Windows events, firewall and IDS logs, normalizes them, and looks for patterns across sources, such as one account failing logins on many hosts. It provides dashboards, alerting, and the searchable history investigators need." },
+  "SIP": { full: "Session Initiation Protocol", tip: "Sets up and tears down voice and video calls; port 5060, or 5061 with TLS.", more: "SIP is the signaling protocol for VoIP: it registers phones, rings the far end, and negotiates the media session. The voice itself travels in RTP. Because SIP often needs many ports and passes through NAT, VoIP problems frequently trace to firewalls or NAT helpers." },
+  "SLA": { full: "Service level agreement", tip: "The contract stating measurable service commitments, such as 99.9% uptime.", more: "An SLA defines what a provider promises (availability, response time, repair time) and the penalties for missing it. Guaranteed uptime from the ISP is an SLA. Internal IT also uses SLAs for help desk response." },
+  "SLAAC": { full: "Stateless address autoconfiguration", tip: "IPv6 hosts build their own address from the router's advertised prefix, no DHCP server needed.", more: "With SLAAC a router advertises the network prefix, and each host appends its own interface identifier (from EUI-64 or a random value) to form a full address. No server keeps state, hence stateless. DHCPv6 can still be used alongside it to hand out DNS servers or to track leases." },
+  "SMB": { full: "Server Message Block", tip: "Windows file and printer sharing on TCP 445.", more: "SMB is the protocol behind mapped drives and shared printers. Version 1 is insecure and should be disabled; versions 2 and 3 add signing and encryption. Blocking 445 at the perimeter stops most worm-style spread." },
+  "SMF": { full: "Single-mode fiber", tip: "A tiny core (about 9 microns) and a laser, for long distances.", more: "Single-mode fiber carries one light path, so the signal does not spread out and can travel kilometers, even tens of kilometers, without regeneration. It uses laser transceivers, is usually yellow, and costs more in optics than in glass." },
+  "SMTP": { full: "Simple Mail Transfer Protocol", tip: "Sends email between servers on TCP 25; clients submit on 587 with TLS.", more: "SMTP moves mail toward its destination. Server-to-server delivery uses port 25; client submission uses 587 (or legacy 465) with authentication and TLS. Receiving and reading mail uses POP3 or IMAP, not SMTP." },
+  "SMTPS": { full: "SMTP Secure", tip: "SMTP with TLS, port 465 (implicit) or 587 with STARTTLS.", more: "SMTPS protects mail submission between a client and its mail server. Port 587 with STARTTLS is the modern standard; 465 is the older implicit-TLS port." },
+  "SNMP": { full: "Simple Network Management Protocol", tip: "Polls and receives alerts from network devices (UDP 161 polls, 162 traps).", more: "An SNMP manager polls agents on devices for values in their MIB, such as interface counters and CPU load, and agents send traps when something happens. Versions 1 and 2c use a plaintext community string; version 3 adds authentication and encryption and is the only version to recommend." },
+  "SNTP": { full: "Simple Network Time Protocol", tip: "A lighter version of NTP for clients that need less accuracy.", more: "SNTP uses the same packet format as NTP without the complex filtering, suitable for embedded devices and simple clients." },
+  "SOA": { full: "Start of authority record", tip: "The record at the top of a DNS zone: primary server, contact, serial number, and timers.", more: "Every zone begins with an SOA record. Its serial number changes whenever the zone is edited, which is how secondary servers know to pull a fresh copy. The refresh, retry, expire, and minimum TTL values control that replication." },
+  "SOX": { full: "Sarbanes-Oxley Act", tip: "The US law requiring accurate financial reporting and controls, with IT audit implications.", more: "SOX makes executives accountable for financial controls, which means IT must protect and log access to financial systems and retain records." },
+  "SPAN": { full: "Switched port analyzer", tip: "A switch feature that mirrors traffic from ports or VLANs to a monitoring port.", more: "A SPAN session, also called port mirroring, copies frames to a port where a packet capture tool or IDS listens. It is how you see traffic on a switched network without a hardware tap." },
+  "SPF": { full: "Sender Policy Framework", tip: "A DNS TXT record listing which servers may send mail for a domain.", more: "Receiving servers check the sender's IP against the domain's SPF record and reject or flag mail from elsewhere. It is one of the three email authentication records with DKIM and DMARC." },
+  "SQL": { full: "Structured Query Language", tip: "The language used to query databases; also the name of the servers on TCP 1433 (Microsoft) and 3306 (MySQL).", more: "SQL is how applications read and write relational databases. On the exam it appears as the database server ports and, in security, as SQL injection, where untrusted input is pasted into a query and changes what it does." },
+  "SR": { full: "Short reach", tip: "The multimode 10 Gbps optic, about 300 m on OM3.", more: "10GBASE-SR modules use 850 nm lasers over multimode fiber. An SR optic at one end and an LR optic at the other will not link, and an SR optic on single-mode fiber will not either." },
+  "SRV": { full: "Service record", tip: "A DNS record that locates a service: host, port, priority, and weight.", more: "SRV records let clients find where a service runs without hard-coding it, for example the SIP server for a domain or the domain controllers in Active Directory. Each record names the target host and port plus priority and weight for choosing among several." },
+  "SSE": { full: "Security service edge", tip: "The security half of SASE: secure web gateway, CASB, zero trust access, delivered from the cloud.", more: "SSE is SASE without the SD-WAN networking piece. It inspects and controls user traffic to the internet and cloud apps from cloud points of presence." },
+  "SSH": { full: "Secure Shell", tip: "Encrypted remote command-line access and file transfer on TCP 22; replaces Telnet and FTP.", more: "SSH authenticates with passwords or keys and encrypts the whole session. SFTP and SCP ride on it for file copies. Any question about managing a switch or server securely from the command line wants SSH." },
+  "SSID": { full: "Service set identifier", tip: "The Wi-Fi network name that access points broadcast and clients join.", more: "The SSID is the human-readable network name, up to 32 characters. One AP can advertise several SSIDs, each mapped to a different VLAN, for example staff and guest. Hiding the SSID stops it appearing in scan lists but is not security, because clients still send it in the clear when they connect." },
+  "SSO": { full: "Single sign-on", tip: "Log in once and reach many systems without signing in again.", more: "SSO lets an identity provider vouch for the user to every application, using protocols such as SAML, OAuth, and OpenID Connect. It improves convenience and lets one strong login with MFA protect everything, at the cost of that login becoming a high-value target." },
+  "ST": { full: "Straight tip connector", tip: "The round bayonet twist-lock fiber connector; legacy.", more: "ST connectors twist on like a BNC and are found on older multimode installations. In the CBET course the same letters refer to the ST segment of an ECG; read the context." },
+  "STP": { full: "Spanning Tree Protocol", tip: "Blocks redundant switch links so frames cannot loop, while keeping them ready as backups.", more: "Switches with redundant links would forward broadcasts around the loop forever, causing a broadcast storm. STP elects a root bridge, calculates the best path from every switch to it, and blocks the extra ports. If a link fails, blocked ports come back into service. Rapid STP (RSTP, 802.1w) converges in seconds instead of up to 50. In cabling, the same letters mean shielded twisted pair; read the context." },
+  "SVI": { full: "Switch virtual interface", tip: "A virtual Layer 3 interface on a switch that gives a VLAN an IP address and routes for it.", more: "On a Layer 3 switch, each VLAN can have an SVI, an interface named after the VLAN with an IP address that acts as the default gateway for hosts in it. Routing between VLANs then happens inside the switch instead of over a router-on-a-stick link." },
+  "SYN": { full: "Synchronize flag", tip: "The first packet of a TCP handshake.", more: "A client opens a connection with a SYN, the server answers SYN-ACK, and the client completes with ACK. A SYN flood sends the first packet endlessly without finishing, exhausting the server's half-open connection table." },
+  "Syslog": { full: "System logging protocol", tip: "Sends device log messages to a central server on UDP 514 with severity levels 0 to 7.", more: "Syslog is the standard way routers, switches, firewalls, and servers ship their logs to one collector or SIEM. Severity runs from 0 (emergency) to 7 (debug). Central logging is what makes troubleshooting and forensics possible." },
+  "T568A": { full: "TIA/EIA 568A wiring standard", tip: "One of the two pin-outs for RJ45 cables; green pair on pins 1 and 2.", more: "T568A and T568B define which wire pair goes to which pin in an eight-position plug. A cable with the same standard on both ends is straight-through; A on one end and B on the other is a crossover. Most new installations use T568B, but the rule is to match whatever the site already uses." },
+  "T568B": { full: "TIA/EIA 568B wiring standard", tip: "The more common RJ45 pin-out; orange pair on pins 1 and 2.", more: "T568B is the pin-out most installers use. Same standard on both ends makes a straight-through patch cable; mixing A and B makes a crossover cable, which modern auto-MDIX ports no longer need." },
+  "TACACS+": { full: "Terminal Access Controller Access-Control System Plus", tip: "Cisco's AAA protocol for device administration on TCP 49; encrypts the whole payload and separates authentication from authorization.", more: "TACACS+ is used to control who can log in to routers and switches and which commands they may run. Compared with RADIUS it uses TCP, encrypts the entire packet, and handles authorization command by command, which suits administrative access rather than user network access." },
+  "TCP": { full: "Transmission Control Protocol", tip: "Reliable, ordered, connection-based transport: three-way handshake, acknowledgments, retransmission.", more: "TCP sets up a connection with a SYN, SYN-ACK, ACK handshake, numbers every segment, acknowledges what arrives, and resends what does not. That reliability costs overhead, so it suits web pages, email, and file transfer rather than live voice. Port numbers at Layer 4 identify which application on the host the data is for." },
+  "TERA": { full: "TERA connector", tip: "A shielded, non-RJ45 connector used with Cat 7 cabling.", more: "TERA is a four-pair shielded connector designed for Cat 7 systems. Like GG45 it is rarely seen in North America, where Cat 6A with RJ45 dominates." },
+  "TFTP": { full: "Trivial File Transfer Protocol", tip: "Bare-bones UDP 69 file transfer with no login, used for firmware and config files.", more: "TFTP has no authentication and no directory listing, so it is only for trusted networks: pushing switch firmware, backing up configurations, and network booting (PXE). It should be blocked at the perimeter." },
+  "TKIP": { full: "Temporal Key Integrity Protocol", tip: "WPA's per-packet keying scheme; deprecated.", more: "TKIP wrapped the old RC4 cipher with changing keys so WEP hardware could be patched. It is now considered broken and WPA2 with AES-CCMP or WPA3 should be used instead." },
+  "TLS": { full: "Transport Layer Security", tip: "The encryption layer under HTTPS and most secure protocols; use 1.2 or 1.3.", more: "TLS authenticates the server with a certificate, agrees session keys, and then encrypts the connection. It replaced SSL, whose versions are all deprecated. TLS 1.0 and 1.1 are also retired. It works at the presentation and session layers in OSI terms and protects web, mail, LDAP, and VPN traffic." },
+  "TOTP": { full: "Time-based one-time password", tip: "A six-digit code from an authenticator app that changes every 30 seconds.", more: "TOTP derives the code from a shared secret and the current time, so the server can verify it without a network connection to the phone. It is the something-you-have factor in most MFA." },
+  "TTL": { full: "Time to live", tip: "A counter that keeps packets and DNS records from living forever.", more: "In an IP header the TTL drops by one at every router, and the packet is discarded at zero, which stops routing loops and is what traceroute exploits. In DNS the TTL is how many seconds a resolver may cache a record before asking again, which is why a changed record can take time to be seen everywhere." },
+  "TV": { full: "Television", tip: "A display or broadcast receiver; smart TVs are IoT devices.", more: "Cable TV shares the coax with the cable modem. Smart TVs join the network and should be segmented like other IoT." },
+  "TX": { full: "Transmit", tip: "The sending side of a link or the sending fiber strand.", more: "TX marks the transmitting pin or strand. A fiber link works only when TX at one end reaches RX at the other, so a swapped pair is a classic no-link cause." },
+  "TXT": { full: "Text record", tip: "A free-text DNS record, used for SPF, DKIM, DMARC, and domain ownership checks.", more: "A TXT record holds arbitrary text under a name. Email authentication policies are published this way: SPF lists allowed senders, DKIM publishes a signing key, and DMARC states what to do with mail that fails. Cloud providers also ask you to add a TXT record to prove you control a domain." },
+  "UDP": { full: "User Datagram Protocol", tip: "Connectionless, fast transport with no delivery guarantee; used for voice, video, DNS, DHCP.", more: "UDP sends datagrams without a handshake, without acknowledgments, and without retransmission. That makes it fast and light, which is what real-time voice and video want, since a late packet is useless anyway. DNS queries, DHCP, TFTP, SNMP, and syslog also ride on UDP." },
+  "UPC": { full: "Ultra physical contact", tip: "The flat, blue fiber connector polish used in most LANs.", more: "UPC is a highly polished flat end face. It has slightly more back-reflection than APC but is the standard for most enterprise fiber. Never mate blue UPC to green APC." },
+  "UPS": { full: "Uninterruptible power supply", tip: "A battery unit that keeps equipment running through a power cut and conditions the power.", more: "A UPS sits between the wall and the equipment, taking over instantly when power fails and giving time to shut down or for a generator to start. It is sized in VA or watts against the load for the runtime needed. In medical settings a UPS covers the transfer gap to emergency power." },
+  "URL": { full: "Uniform resource locator", tip: "A web address such as https://www.example.com/page.", more: "The URL names the protocol, host, port, path, and query. URL filtering blocks sites by address or category; attackers hide malicious URLs behind look-alike domains and shortened links." },
+  "US": { full: "United States", tip: "The country; US standards, 60 Hz mains, and US connector conventions.", more: "The US uses 120 V at 60 Hz, T568B wiring by convention, and FCC rules for unlicensed radio bands." },
+  "USB": { full: "Universal Serial Bus", tip: "The standard port for peripherals, storage, and charging.", more: "USB versions set speed: 2.0 at 480 Mbps, 3.0 at 5 Gbps, 3.1 at 10 Gbps, 3.2 at 20 Gbps, USB4 at 40 Gbps. Connectors include A, B, mini, micro, and the reversible C. Unknown USB drives are a malware vector, which DLP and device control address." },
+  "UTP": { full: "Unshielded twisted pair", tip: "The standard copper network cable: four twisted pairs, no shield.", more: "UTP relies on the twists in each pair to cancel interference. Categories set the performance: Cat 5e for 1 Gbps, Cat 6 for 10 Gbps to 55 m, Cat 6A for 10 Gbps to 100 m, Cat 8 for 25 or 40 Gbps to 30 m. It is cheap and easy to terminate, which is why it is the default." },
+  "VA": { full: "Volt-ampere", tip: "The unit of apparent power used to size a UPS.", more: "A UPS is rated in VA or watts against the total load. Apparent power is voltage times current before the power factor is applied." },
+  "VCSEL": { full: "Vertical-cavity surface-emitting laser", tip: "The cheap laser used in multimode fiber transceivers.", more: "VCSELs are small, inexpensive lasers that drive OM3 and OM4 multimode fiber for short-reach links. Single-mode fiber needs more precise, more expensive lasers." },
+  "VFL": { full: "Visual fault locator", tip: "A visible red laser that lights up a fiber so you can see breaks and trace strands.", more: "A VFL shines visible light into a fiber; a break or sharp bend glows through the jacket, and the far end lights up so you can identify which strand is which." },
+  "VLAN": { full: "Virtual local area network", tip: "A logical LAN on a switch: ports in different VLANs are separate broadcast domains.", more: "A VLAN splits one physical switch into several logical switches. Ports in VLAN 10 cannot talk to ports in VLAN 20 without a router or Layer 3 switch, which contains broadcasts and separates traffic such as voice, data, and guests. Trunk links carry many VLANs between switches using 802.1Q tags. A native VLAN is the untagged one on a trunk, and a voice VLAN lets a phone tag its traffic while the PC behind it stays untagged." },
+  "VLSM": { full: "Variable-length subnet masking", tip: "Using different subnet sizes inside one network so addresses are not wasted.", more: "VLSM lets one address block be carved into subnets of different sizes: a /30 for a point-to-point link, a /26 for a small office, a /23 for a large floor. Each subnet gets a mask that fits its host count. It depends on CIDR-style routing that carries the mask with each route." },
+  "VM": { full: "Virtual machine", tip: "A complete computer running as software on a hypervisor.", more: "A VM has its own operating system and virtual hardware but shares the physical host with others. Type 1 hypervisors run on bare metal; type 2 run on a host OS. VM escape, where code in a guest reaches the host, is the serious virtualization vulnerability; VM sprawl is the management one." },
+  "VNI": { full: "VXLAN network identifier", tip: "The 24-bit segment ID in a VXLAN header.", more: "Each VXLAN segment has a VNI, which is why VXLAN scales to about 16 million logical networks where VLANs stop at 4094." },
+  "VoIP": { full: "Voice over IP", tip: "Telephone calls carried as packets on the data network.", more: "VoIP replaces separate phone wiring with IP phones on the LAN, usually on their own voice VLAN with QoS so speech is not delayed behind downloads. SIP signals the calls and RTP carries the audio. Latency, jitter, and packet loss are what degrade call quality." },
+  "VPC": { full: "Virtual private cloud", tip: "Your isolated virtual network inside a cloud provider.", more: "A VPC is the cloud equivalent of your own data center network: subnets, route tables, gateways, and security groups that you define. Connectivity to on-premises networks comes through VPN or dedicated links." },
+  "VPN": { full: "Virtual private network", tip: "An encrypted tunnel across an untrusted network such as the internet.", more: "A VPN makes a remote user or site appear to be on the private network by encrypting traffic between the endpoints. Site-to-site VPNs join offices, usually with IPsec; remote-access VPNs connect individual users with IPsec or TLS clients. Split tunneling sends only corporate traffic through the tunnel; full tunneling sends everything." },
+  "VRRP": { full: "Virtual Router Redundancy Protocol", tip: "The open-standard first-hop redundancy protocol.", more: "VRRP works like HSRP with a master and backups sharing a virtual address, and it runs on any vendor's routers." },
+  "VTP": { full: "VLAN Trunking Protocol", tip: "Cisco's protocol for distributing VLAN definitions to other switches.", more: "VTP lets one switch create VLANs that propagate to the rest of the domain. A misconfigured switch with a higher revision number can wipe VLANs everywhere, which is why many networks run it in transparent mode." },
+  "VXLAN": { full: "Virtual extensible LAN", tip: "Tunnels Layer 2 segments over a Layer 3 network with a 24-bit ID, giving 16 million segments instead of 4094 VLANs.", more: "VXLAN encapsulates Ethernet frames in UDP so a virtual machine's network can stretch across a routed data center fabric. The VXLAN network identifier (VNI) replaces the VLAN ID and allows millions of tenants. It is the standard overlay in spine-and-leaf data centers." },
+  "WAN": { full: "Wide area network", tip: "Connects LANs across cities or countries, usually over links leased from a provider.", more: "A WAN joins sites that are far apart. Because the organization cannot run its own cable between cities, it rents circuits or internet connections from a carrier, which is why WAN links are slower and cost per month. The internet is the largest WAN. Routers sit at the edge of each site to send traffic across the WAN." },
+  "WEP": { full: "Wired Equivalent Privacy", tip: "The original Wi-Fi encryption, broken in minutes; never use it.", more: "WEP used the RC4 cipher with short, badly managed keys, and tools can recover the key from captured traffic in minutes. Any question describing WEP wants you to replace it with WPA2 or WPA3." },
+  "Wi-Fi": { full: "Wireless fidelity", tip: "The trade name for IEEE 802.11 wireless networking.", more: "Wi-Fi is the brand the Wi-Fi Alliance gives to interoperable 802.11 equipment. Generations are numbered: Wi-Fi 4 is 802.11n, Wi-Fi 5 is 802.11ac, Wi-Fi 6 and 6E are 802.11ax (6E adds the 6 GHz band), and Wi-Fi 7 is 802.11be. Bands are 2.4 GHz (range, interference), 5 GHz (speed, more channels), and 6 GHz." },
+  "WLAN": { full: "Wireless local area network", tip: "A LAN delivered over Wi-Fi instead of cables.", more: "A WLAN is the same idea as a LAN, but the clients connect by radio to access points instead of by cable to a switch. The access points still plug into the wired LAN, so a WLAN is an extension of the LAN rather than a separate network. Wi-Fi is the family of standards (IEEE 802.11) that most WLANs use." },
+  "WLC": { full: "Wireless LAN controller", tip: "A central device that configures and manages many lightweight access points.", more: "A WLC pushes settings, channels, power levels, and security to every AP it controls, and it sees clients roam between them. When every access point at once loses configuration or authentication, the controller is the suspect; when one area drops, it is that AP." },
+  "WPA": { full: "Wi-Fi Protected Access", tip: "The interim fix for WEP that used TKIP; deprecated.", more: "WPA kept WEP-era hardware working by adding per-packet keys with TKIP. It was a stopgap until WPA2 brought AES and is now considered insecure." },
+  "WPA2": { full: "Wi-Fi Protected Access 2", tip: "Wi-Fi security using AES with CCMP; still common and acceptable.", more: "WPA2 replaced TKIP with AES-CCMP encryption. Personal mode uses a pre-shared passphrase; Enterprise mode authenticates each user through 802.1X and RADIUS. Its weakness is that a captured handshake can be attacked offline with password guessing, which WPA3 fixes." },
+  "WPA3": { full: "Wi-Fi Protected Access 3", tip: "The current Wi-Fi security standard: SAE in Personal mode, stronger encryption, protected management frames.", more: "WPA3 Personal replaces the pre-shared key handshake with SAE (simultaneous authentication of equals), which stops offline password cracking and adds forward secrecy. Enterprise mode still uses 802.1X. Protected management frames are mandatory, blocking deauthentication attacks." },
+  "ZTNA": { full: "Zero trust network access", tip: "Every request is authenticated and authorized, regardless of where it comes from.", more: "Zero trust drops the idea that inside the firewall means trusted. ZTNA brokers connect users to specific applications after checking identity, device, and context, instead of dropping them onto the whole network as a VPN does." }
+};
+// Uppercase words in the course text that are not acronyms (emphasis, registry key names, model numbers, formula symbols).
+FRA.acronymIgnore = ["BEST","FIRST","MINIMUM","MOST","NEVER","NEXT","NOT"];
 
 // NetPlus Academy memorization sheet. Everything on the N10-009 exam that must be recalled cold:
 // numbers, tables, orders of steps, and one-line distinctions. Rendered by the Cheat sheet tab and printable.
@@ -5607,7 +5961,10 @@ FRA.questions.push(
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
    retraining tutorial built from the misses -> practice tests until three in a row at 85% or better.
-   Every test ends with an explanation of each wrong answer and each lucky guess. */
+   Every test ends with an explanation of each wrong answer and each lucky guess.
+   After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
+   Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
+   standard-format tests (the real exam's format) ask no confidence question. */
 (function () {
   'use strict';
 
@@ -5666,7 +6023,16 @@ FRA.questions.push(
   const pct = (c, t) => t ? Math.round(100 * c / t) : 0;
   const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const letters = ['A', 'B', 'C', 'D'];
-  const inline = s => esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // ---------- acronyms ----------
+  // FRA.acronyms: { KEY: { full, tip, more } }. Every key found in tutorial and cheat sheet text becomes a hover link
+  // (tooltip: full + tip) that opens the deeper explanation on click. Whole words only, plurals allowed, longest key wins.
+  // Never applied inside {{code}} spans or fenced blocks, and never to question text.
+  const ACR = FRA.acronyms || {};
+  const ACR_KEYS = Object.keys(ACR).filter(k => ACR[k] && ACR[k].full).sort((a, b) => b.length - a.length || a.localeCompare(b));
+  const ACR_RE = ACR_KEYS.length ? new RegExp('(^|[^A-Za-z0-9_])(' + ACR_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('|') + ')(s|es)?(?![A-Za-z0-9_])', 'g') : null;
+  const acrWrap = html => !ACR_RE ? html : html.split(/(<code>[\s\S]*?<\/code>)/).map(part => part.startsWith('<code>') ? part
+    : part.replace(ACR_RE, (m, pre, key, pl) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
+  const inline = s => acrWrap(esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
   function renderBody(md) {
@@ -5692,7 +6058,7 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, active: null, settings: { timer: true }, feedback: [], seen: {}, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -5840,12 +6206,26 @@ FRA.questions.push(
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
-      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: r.conf, source: 'test' }); }
+      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
     const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
       .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
     return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, pts };
   }
+  // Path choice after the starter test: the tailored plan, or every lesson in course order. Entries tied to a missed or
+  // guessed question keep their reasons either way, so those lessons still open with the learner's answer.
+  function applyScope(plan, scope) {
+    if (scope === 'full') { const have = {}; plan.lessons.forEach(e => { have[e.id] = e; }); plan.lessons = lessons.map(l => have[l.id] || { id: l.id, reasons: [{ kind: 'all' }] }); }
+    plan.scope = scope; return plan;
+  }
+  function choosePath(scope, idx) {
+    const rec = S.exams[idx]; if (!rec || rec.kind !== 'starter') return;
+    const createdAt = S.plan && S.plan.examIdx === idx ? S.plan.createdAt : Date.now();
+    const plan = applyScope(planFromStarter(rec, idx), scope); plan.createdAt = createdAt;
+    S.plan = plan.lessons.length ? plan : null; S.path = { examIdx: idx, scope }; save();
+  }
+  const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
+  const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
   const planEntry = id => S.plan ? S.plan.lessons.find(e => e.id === id) : null;
   const planDone = id => { const ls = S.lessons[id]; return !!(ls && ls.status === 'passed' && S.plan && ls.passedAt >= S.plan.createdAt); };
   const planRemaining = () => S.plan ? S.plan.lessons.filter(e => !planDone(e.id)) : [];
@@ -5886,7 +6266,7 @@ FRA.questions.push(
     if (S.active) return { label: S.active.kind === 'train' ? 'Resume drills' : S.active.kind === 'checkpoint' ? 'Resume the lesson checkpoint' : 'Resume your test', act: 'resume', arg: '' };
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
-    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? 'Continue your tutorial' : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
+    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${PASS_PCT}% or better within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
@@ -5899,6 +6279,7 @@ FRA.questions.push(
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
+  let acrOpen = null; // acronym whose deeper explanation is open
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
@@ -5906,8 +6287,8 @@ FRA.questions.push(
 
   function render() {
     const v = S.view || { name: 'home' };
-    fbReg = [];
-    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal(); return; }
+    fbReg = []; acrHide();
+    if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
     let main = '';
     switch (v.name) {
       case 'home': main = viewHome(); break;
@@ -5943,7 +6324,7 @@ FRA.questions.push(
         <nav class="mobile-nav">
           ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
-      </div>${fbModal()}`;
+      </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function navBtn(name, label) {
@@ -5982,7 +6363,7 @@ FRA.questions.push(
         <h3>How the path works</h3>
         <ol style="margin:0;padding-left:22px;line-height:1.7">
           <li><strong>Starter test.</strong> ${STARTER_N} questions with confidence ratings. Wrong answers are explained at the end.</li>
-          <li><strong>Your tutorial.</strong> Lessons chosen from your results. Miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and you get that domain from the ground up.</li>
+          <li><strong>Your path.</strong> Right after the starter test you choose: a tutorial built from your results, or the whole course in order. Either way, miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and the tailored tutorial gives you that domain from the ground up.</li>
           <li><strong>The ${EXAM_N}-question test.</strong> Weighted like the real exam, explained at the end.</li>
           <li><strong>Retraining.</strong> A second tutorial built only from what you missed or guessed, worst first.</li>
           <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row.</li>
@@ -6017,7 +6398,7 @@ FRA.questions.push(
       <div class="stats">
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
-        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong · ${lastMeta.guess} guessed</div>` : ''}</div>
+        <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
@@ -6051,6 +6432,7 @@ FRA.questions.push(
 
   // ---------- tutorial (plan) ----------
   function reasonLabel(r) {
+    if (r.kind === 'all') return 'Part of the whole course';
     if (r.kind === 'domain') return r.level === 'rebuild' ? `${DOMAINS[r.d].short}: ${ALL_WORD} starter questions missed` : `${DOMAINS[r.d].short}: gap on the starter test`;
     const src = r.source === 'starter' ? 'starter test' : 'last test';
     return `${KIND_LABEL[r.kind]} on the ${src}`;
@@ -6061,24 +6443,28 @@ FRA.questions.push(
     if (kinds.includes('wrong-confident')) return '<span class="pill bad">Wrong, confident</span>';
     if (kinds.includes('wrong')) return '<span class="pill bad">Wrong</span>';
     if (kinds.includes('guess')) return '<span class="pill warn">Guessed</span>';
+    if (kinds.includes('all')) return '<span class="pill">Whole course</span>';
     const d = e.reasons.find(r => r.kind === 'domain');
     if (d) return `<span class="pill">${d.level === 'rebuild' ? 'Whole domain' : 'Core lesson'}</span>`;
     return '<span class="pill">Review</span>';
   }
   function viewTutorial() {
     if (!S.plan) {
+      const sIdx = lastStarterIdx();
       return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Tutorial</div><h1>No tutorial yet</h1><p class="ink2" style="margin-top:6px">${stage() === 'starter' ? 'Take the starter test and your tutorial will be built from the results.' : 'Your last test had no misses or guesses, so there is nothing to retrain. Take a practice test to find new gaps.'}</p></div>
-        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button><button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
+        <div class="row"><button class="btn primary" data-act="start-exam" data-arg="${stage() === 'starter' ? 'starter' : 'practice'}">${stage() === 'starter' ? 'Starter test' : 'Practice test'}</button>${sIdx >= 0 && stage() !== 'starter' ? `<button class="btn" data-act="path" data-arg="full:${sIdx}">Do the whole course instead</button>` : ''}<button class="btn" data-act="go" data-arg="course">Browse all lessons</button></div></div>`;
     }
     const rem = planRemaining(); const done = S.plan.lessons.length - rem.length;
-    const src = S.exams[S.plan.examIdx];
+    const src = S.exams[S.plan.examIdx]; const full = S.plan.scope === 'full';
+    const tailoredN = S.plan.source === 'starter' && src ? planFromStarter(src, S.plan.examIdx).lessons.length : 0;
     const byUnit = {}; S.plan.lessons.forEach(e => { const u = L[e.id].unit; (byUnit[u.id] = byUnit[u.id] || { u, list: [] }).list.push(e); });
     const groups = Object.values(byUnit).sort((a, b) => S.plan.source === 'starter' ? a.u.n - b.u.n : Math.min(...a.list.map(e => S.plan.lessons.indexOf(e))) - Math.min(...b.list.map(e => S.plan.lessons.indexOf(e))));
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">${S.plan.source === 'starter' ? 'Your tutorial' : 'Retraining tutorial'} · built from your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
-        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : 'Tutorial complete'}</h1>
+      <div><div class="eyebrow">${S.plan.source === 'starter' ? (full ? 'The whole course' : 'Your tutorial') : 'Retraining tutorial'} · ${full ? 'chosen after' : 'built from'} your ${S.plan.source === 'starter' ? 'starter test' : 'test'} on ${src ? fmtDate(src.date) : ''}</div>
+        <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
-      ${S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
+      ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
@@ -6113,7 +6499,7 @@ FRA.questions.push(
     const idx = lessons.indexOf(l); const nextLesson = lessons[idx + 1]; const prevLesson = lessons[idx - 1];
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
-      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'} · confidence ${r.conf}/5</div>
+      return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
         <div class="stem">${esc(q.q)}</div>
         <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
@@ -6146,6 +6532,7 @@ FRA.questions.push(
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
       ${deepSection(id)}
       ${quiz}
+      ${ratingRow(id)}
       <div class="row" style="justify-content:flex-end"><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}">&#9873; Something wrong or unclear in this lesson? Send feedback</button></div>
       <div class="row spread">
         ${prevLesson ? `<button class="btn ghost" data-act="lesson" data-arg="${prevLesson.id}">← ${esc(prevLesson.title)}</button>` : '<span></span>'}
@@ -6154,26 +6541,33 @@ FRA.questions.push(
     </div>`;
   }
 
-  // Shared question card. sess: { items, i, answers, sel, conf, submitted }
+  // Lesson rating: ten chips, 1 confusing to 10 great. The same chips appear on the lesson page and in the lesson feedback form.
+  function ratingChips(id, cur) { return `<div class="rate-row" role="group" aria-label="Rate this lesson from 1 to 10">${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button class="chip rate" data-act="rate" data-arg="${n}" data-lesson="${id}" aria-pressed="${cur === n ? 'true' : 'false'}">${n}</button>`).join('')}</div>`; }
+  function ratingRow(id) {
+    const r = S.ratings && S.ratings[id];
+    return `<div class="card soft stack rate-card" style="gap:8px"><div><div class="eyebrow">Rate this lesson</div><span class="ink2" style="font-size:.95rem">1 is confusing, 10 is great.${r ? ` You rated it ${r.r}/10.` : ' Your rating helps refine the course.'}</span></div>${ratingChips(id, r ? r.r : null)}</div>`;
+  }
+
+  // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
   function questionCard(sess, opts) {
     const q = fat(sess.items[sess.i]); const n = sess.items.length;
-    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf;
+    const submitted = !!sess.submitted; const sel = sess.sel; const conf = sess.conf; const hasConf = !sess.noConf;
     const l = L[q.t];
     const optionsHtml = q.a.map((opt, k) => {
       let cls = 'option'; const pressed = sel === k ? 'true' : 'false';
       if (submitted && opts.immediate) { if (k === q.c) cls += ' correct'; else if (k === sel) cls += ' wrong'; }
       return `<button class="${cls}" data-act="opt" data-arg="${k}" aria-pressed="${pressed}" ${submitted ? 'disabled' : ''}><span class="key">${letters[k]}</span><span>${esc(opt)}</span></button>`;
     }).join('');
-    const confHtml = `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>`;
+    const confHtml = hasConf ? `<div class="confidence"><span class="eyebrow">How sure are you?</span>${CONF.map(([v, name]) => `<button class="chip" data-act="conf" data-arg="${v}" aria-pressed="${conf === v ? 'true' : 'false'}" ${submitted ? 'disabled' : ''}><span class="k">${v}</span>${name}</button>`).join('')}</div>` : '';
     let feedback = '';
     if (submitted && opts.immediate) {
       const correct = sel === q.c;
       feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
-    const canSubmit = sel != null && conf != null;
+    const canSubmit = sel != null && (conf != null || !hasConf);
     const controls = submitted
       ? `<div class="row spread"><span class="kbd-hint"><kbd>Enter</kbd> continue</span><button class="btn primary" data-act="next">Continue</button></div>`
-      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, <kbd>1</kbd>–<kbd>5</kbd> confidence, <kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
+      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, ${hasConf ? '<kbd>1</kbd>–<kbd>5</kbd> confidence, ' : ''}<kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
     return `<div class="quiz">
       <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span><span class="row" style="gap:6px">${opts.right || ''}${fbBtn(q, sess.kind)}</span></div>
       <div class="q-stem">${esc(q.q)}</div>
@@ -6199,7 +6593,7 @@ FRA.questions.push(
     return `<div class="content">
       <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every wrong answer and every guess is explained on the results page. ${answered} answered so far.</p>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -6212,7 +6606,7 @@ FRA.questions.push(
       ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
-          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
+          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${e.noConf ? 'no confidence ratings' : `${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}`}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
       </tbody></table></div></div>` : ''}
     </div>`;
   }
@@ -6220,7 +6614,7 @@ FRA.questions.push(
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
       <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
@@ -6232,7 +6626,8 @@ FRA.questions.push(
     if (kind === 'starter') items = buildStarter();
     else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
     const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta };
+    // Standard-format tests (the real exam's format) ask no confidence question.
+    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: !!(setup && setup.mode === 'standard') };
     go('exam');
   }
   function finishExam() {
@@ -6241,14 +6636,16 @@ FRA.questions.push(
     const review = [];
     items.forEach((q, k) => {
       const a = ex.answers[k] || { choice: -1, conf: 1, skipped: true };
-      const res = recordAnswer(q, a.choice, a.conf);
+      // Without a confidence rating, a right answer counts as sure (4) and a wrong one as plain wrong (3).
+      const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
+      const res = recordAnswer(q, a.choice, conf);
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
-      review.push({ q: slim(q), choice: a.choice, conf: a.conf, correct: res.correct });
+      review.push({ q: slim(q), choice: a.choice, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
-    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null };
+    const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
-    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; }
+    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
     else if (ex.kind === 'custom') {
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
@@ -6276,25 +6673,40 @@ FRA.questions.push(
     let headline, planCard;
     if (isStarter) {
       headline = e.pct >= 90 && !guesses.length ? 'Strong start.' : e.pct >= 60 ? 'A solid base with clear gaps.' : 'Starting from the ground up, which is fine.';
-      planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
+      const latest = idx === lastStarterIdx(); const chosen = S.path && S.path.examIdx === idx ? S.path.scope : null;
+      if (latest && !chosen) {
+        // The path choice: the tailored tutorial or the whole course, whatever the score.
+        const tailored = planFromStarter(e, idx).lessons;
+        planCard = `<div class="card lift stack path-choice"><div><div class="eyebrow">Choose your path</div><h3>A tailored tutorial, or the whole course?</h3><p class="ink2">Pick either one, whatever your score. Every lesson ends with a checkpoint, and the ${EXAM_N}-question test comes after the lessons. You can switch later from the Tutorial tab.</p></div>
+          <div class="paths">
+            <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
+            <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
+          </div></div>`;
+      } else if (planIsFromThis && S.plan.scope === 'full') {
+        planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
+        <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="tailored:${idx}">Switch to the tailored tutorial</button>` : ''}</div></div>`;
+      } else {
+        planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
         <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
-        <button class="btn ghost small" data-act="go" data-arg="tutorial" style="align-self:flex-start">See the full plan</button></div>`
-        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button></div>`;
+        <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="full:${idx}">Switch to the whole course</button>` : ''}</div></div>`
+        : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button>${latest ? `<button class="btn small" data-act="path" data-arg="full:${idx}" style="margin-left:8px">Do the whole course instead</button>` : ''}</div>`;
+      }
     } else {
       headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
-        : `<div class="ready-banner"><strong>No misses and no guesses.</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
+        : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
     const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong> (${e.score - guesses.length} sure, ${guesses.length} guessed), ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
-        <div class="row" style="gap:8px"><span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
-        <div class="muted" style="font-size:.9rem">A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.</div></div></div></div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
+        <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
+        <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
@@ -6401,6 +6813,36 @@ FRA.questions.push(
     if (b.type === 'note') return `<div class="tip">${inline(b.text)}</div>`;
     return '';
   }
+  // The Acronyms section: every glossary entry, alphabetical, with the acronym clickable for the deeper explanation.
+  function acrSection(n) {
+    if (!ACR_KEYS.length) return '';
+    const keys = ACR_KEYS.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
+    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}">${esc(k)}</button></td><td>${esc(ACR[k].full)}</td><td>${esc(ACR[k].tip)}</td></tr>`).join('')}</tbody></table></div></section>`;
+  }
+  function acrModal() {
+    if (!acrOpen || !ACR[acrOpen]) return '';
+    const a = ACR[acrOpen];
+    return `<div class="modal-back" data-act="acr-close"><div class="modal stack acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-title">
+      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen)}</span>${esc(a.full)}</h3></div>
+      <p class="acr-tip-text"><strong>${esc(a.tip)}</strong></p>
+      <div class="lesson-body acr-more">${renderBody(a.more || '')}</div>
+      <div class="row spread"><button class="btn ghost small" data-act="acr-all">All acronyms</button><button class="btn primary" data-act="acr-close">Close</button></div>
+    </div></div>`;
+  }
+  // Hover tooltip: one shared element, positioned under the acronym and kept inside the viewport.
+  let acrTipEl = null;
+  function acrShow(el) {
+    const a = ACR[el.dataset.arg]; if (!a) return;
+    if (!acrTipEl) { acrTipEl = document.createElement('div'); acrTipEl.className = 'acr-tip'; acrTipEl.id = 'acr-tip'; acrTipEl.setAttribute('role', 'tooltip'); document.body.appendChild(acrTipEl); }
+    acrTipEl.innerHTML = `<b>${esc(el.dataset.arg)}: ${esc(a.full)}</b>${esc(a.tip)}`;
+    acrTipEl.style.maxWidth = Math.min(340, window.innerWidth - 16) + 'px'; acrTipEl.style.display = 'block';
+    const r = el.getBoundingClientRect(); const tw = acrTipEl.offsetWidth, th = acrTipEl.offsetHeight;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+    let top = r.bottom + 8; if (top + th > window.innerHeight - 8) top = r.top - th - 8;
+    acrTipEl.style.left = left + 'px'; acrTipEl.style.top = Math.max(8, top) + 'px';
+  }
+  function acrHide() { if (acrTipEl) acrTipEl.style.display = 'none'; }
+
   function viewCheatsheet() {
     const cs = FRA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
     const intro = S.view.arg === 'intro';
@@ -6412,9 +6854,10 @@ FRA.questions.push(
         <div class="row">${printBtn}</div>
       </div>
       ${intro ? `<div class="callout accent no-print"><strong>Start here.</strong><div class="ans">This sheet is everything the exam expects you to recall from memory. Print it now, or save it as a PDF, and keep it beside you through the course. When you are ready, the ${STARTER_N}-question starter test builds your tutorial.</div><div class="row" style="margin-top:6px"><button class="btn primary" data-act="cheat-continue">Continue to the starter test</button><button class="btn ghost" data-act="go" data-arg="home">Skip for now</button></div></div>` : ''}
-      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}</nav>
+      <nav class="cs-toc no-print" aria-label="Sections">${cs.sections.map((s, i) => `<a href="#cs-${s.id}">${i + 1}. ${esc(s.title)}</a>`).join('')}${ACR_KEYS.length ? `<a href="#cs-acronyms">${cs.sections.length + 1}. Acronyms</a>` : ''}</nav>
       <div class="print-only cs-print-head"><h1>${esc(cs.title)}</h1><p>${esc(cs.intro)}</p></div>
       ${cs.sections.map((s, i) => `<section class="cs-section" id="cs-${s.id}"><h2><span class="cs-num">${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</h2>${s.blocks.map(csBlock).join('')}</section>`).join('')}
+      ${acrSection(cs.sections.length + 1)}
       <div class="row no-print">${printBtn}${intro ? `<button class="btn" data-act="cheat-continue">Continue to the starter test</button>` : `<button class="btn ghost" data-act="go" data-arg="home">Home</button>`}</div>
     </div>`;
   }
@@ -6428,9 +6871,10 @@ FRA.questions.push(
     if (!fb) return '';
     const cats = FB_CATS[fb.kind === 'question' ? 'question' : fb.kind === 'lesson' ? 'lesson' : 'overall'];
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
-      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}</div>
+      <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
+      ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
       <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
-      <label class="field">Details<textarea id="fb-text" rows="4" placeholder="What is wrong, and what should it say instead?"></textarea></label>
+      <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;
   }
@@ -6452,28 +6896,31 @@ FRA.questions.push(
     return f.kind === 'site' ? 'The website' : 'The course overall';
   }
   function feedbackReport() {
-    const items = S.feedback || [];
-    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    const items = S.feedback || []; const rated = ratedLessons();
+    const lines = [`# ${course.name} feedback (${plural(items.length, 'item')}, ${plural(rated.length, 'lesson rating')}, exported ${new Date().toISOString().slice(0, 10)})`, ''];
+    if (rated.length) { lines.push('## Lesson ratings (1 confusing to 10 great)', ''); rated.forEach(id => lines.push(`- ${L[id].title} (${id}): ${S.ratings[id].r}/10`)); lines.push(''); }
     items.forEach((f, i) => {
       const r = f.ref || {}; const l = r.lesson ? L[r.lesson] : null;
       lines.push(`## ${i + 1}. ${FB_KIND[f.kind] || f.kind} · ${f.cat || 'Uncategorized'} · ${new Date(f.ts).toISOString().slice(0, 10)}`);
       lines.push(`- About: ${fbContext(f)}`);
       if (l) lines.push(`- Lesson id: ${l.id}`);
+      if (f.rating != null) lines.push(`- Rating: ${f.rating}/10`);
       if (r.stem) { lines.push(`- Question${r.qid ? ' ' + r.qid : ' (generated at run time)'}: ${r.stem}`); (r.options || []).forEach((o, k) => lines.push(`  - ${letters[k]}. ${o}${k === r.correct ? ' (marked correct)' : ''}`)); }
-      lines.push(`- Feedback: ${f.text}`, '');
+      lines.push(`- Feedback: ${f.text || '(rating only)'}`, '');
     });
     return lines.join('\n');
   }
+  const ratedLessons = () => Object.keys(S.ratings || {}).filter(id => L[id] && S.ratings[id] && S.ratings[id].r >= 1).sort((a, b) => L[a].index - L[b].index);
   function copyText(txt, msg) {
     const done = () => toast(msg || 'Copied');
     try { navigator.clipboard.writeText(txt).then(done, () => fallback()); } catch (err) { fallback(); }
     function fallback() { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Could not copy'); } ta.remove(); }
   }
   function viewFeedback() {
-    const items = (S.feedback || []).slice().reverse();
+    const items = (S.feedback || []).slice().reverse(); const rated = ratedLessons(); const any = items.length || rated.length;
     const mailto = FEEDBACK_EMAIL ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(course.name + ' feedback')}&body=${encodeURIComponent(feedbackReport().slice(0, 1800))}` : '';
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, any lesson from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
+      <div><div class="eyebrow">Feedback</div><h1>Help refine this course</h1><p class="ink2" style="margin-top:6px">Flag any question from its &#9873; button, rate any lesson from 1 to 10 at the end of the lesson or from its feedback button, or write anything here about a unit, a lesson, the site, or the course overall.</p></div>
       <div class="card lift stack">
         <h3>Send feedback</h3>
         <label class="field">About<select id="fb-area"><option value="overall">The course overall</option><option value="site">The website: bugs, design, usability</option><optgroup label="Units">${units.map(u => `<option value="unit:${u.id}">Unit ${u.n}: ${esc(u.title)}</option>`).join('')}</optgroup><optgroup label="Lessons">${lessons.map(l => `<option value="lesson:${l.id}">${esc(l.title)}</option>`).join('')}</optgroup></select></label>
@@ -6481,9 +6928,10 @@ FRA.questions.push(
         <label class="field">Your feedback<textarea id="fb-text" rows="5" placeholder="What should change, and why?"></textarea></label>
         <div class="row"><button class="btn primary" data-act="fb-save-page">Save feedback</button></div>
       </div>
+      ${rated.length ? `<div class="card stack"><h3>Lesson ratings (${rated.length})</h3><div class="topic-list">${rated.map(id => `<div class="topic-item"><div><div class="t-title">${esc(L[id].title)}</div><div class="t-sub">Unit ${L[id].unit.n} · ${fmtDate(S.ratings[id].ts)}</div></div><div class="row"><span class="pill ${S.ratings[id].r >= 7 ? 'good' : S.ratings[id].r >= 4 ? 'warn' : 'bad'}">${S.ratings[id].r}/10</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`).join('')}</div></div>` : ''}
       <div class="card stack">
-        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${items.length ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${items.length ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
-        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span><span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${esc(f.text)}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
+        <div class="row spread"><h3>Saved feedback (${items.length})</h3><div class="row"><button class="btn small" data-act="fb-copy" ${any ? '' : 'disabled'}>Copy report</button><button class="btn small" data-act="fb-download" ${any ? '' : 'disabled'}>Download JSON</button>${mailto ? `<a class="btn small" href="${mailto}">Email</a>` : ''}${items.length ? `<button class="btn small danger" data-act="fb-clear">Clear all</button>` : ''}</div></div>
+        ${items.length ? items.map(f => `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill accent">${FB_KIND[f.kind] || f.kind}</span><span class="pill">${esc(f.cat || '')}</span>${f.rating != null ? `<span class="pill ${f.rating >= 7 ? 'good' : f.rating >= 4 ? 'warn' : 'bad'}">${f.rating}/10</span>` : ''}<span class="muted" style="font-size:.85rem">${fmtDate(f.ts)}${f.sent ? ' · sent' : ''}</span><span style="flex:1"></span><button class="btn small ghost" data-act="fb-delete" data-arg="${f.id}">Delete</button></div><div class="stem">${esc(fbContext(f))}</div>${f.ref && f.ref.stem ? `<div class="ans muted">${esc(f.ref.stem)}</div>` : ''}<div class="ans">${f.text ? esc(f.text) : '<span class="muted">(rating only)</span>'}</div></div>`).join('') : '<p class="muted">Nothing saved yet.</p>'}
         <p class="muted" style="font-size:.85rem">Feedback stays in this browser and travels with the progress code on the Progress page. Copy the report and paste it into a message to the course author.</p>
       </div>
     </div>`;
@@ -6512,7 +6960,7 @@ FRA.questions.push(
   }
   function submitAnswer(sess, skipped) {
     const q = fat(sess.items[sess.i]);
-    const choice = skipped ? -1 : sess.sel; const conf = skipped ? 1 : sess.conf;
+    const choice = skipped ? -1 : sess.sel; const conf = sess.noConf ? null : skipped ? 1 : sess.conf;
     if (isTest(sess.kind)) {
       sess.answers[sess.i] = { choice, conf, skipped: !!skipped };
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
@@ -6559,7 +7007,17 @@ FRA.questions.push(
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
-      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || s.conf == null) return; submitAnswer(s, false); return; }
+      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
+      case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'rate': {
+        const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
+        S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();
+        if (fb && fb.kind === 'lesson' && fb.ref.lesson === id) { fb.rating = r; btn.closest('.rate-row').querySelectorAll('.rate').forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false')); return; }
+        const l = L[id]; fb = { kind: 'lesson', ref: { lesson: id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: r, note: `Rating ${r}/10 saved. Add a comment if you like, or just close this.` };
+        render(); const ta = $('#fb-text'); if (ta) ta.focus(); toast(`Rated ${r}/10`); return; }
+      case 'acr': { if (!ACR[arg]) return; acrOpen = arg; fb = null; render(); return; }
+      case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
+      case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
       case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
       case 'start-exam': {
@@ -6592,18 +7050,21 @@ FRA.questions.push(
         const kind = btn.dataset.kind;
         if (kind === 'question') { const r = fbReg[parseInt(arg, 10)]; if (!r) return; const q = r.q; const l = L[q.t];
           fb = { kind, ref: { qid: q.gen ? null : q.id, gen: !!q.gen, lesson: q.t, stem: q.q, options: q.a, correct: q.c, where: r.where, view: S.view.name }, title: 'Flag this question', sub: `${l ? l.title : ''} · ${WHERE_LABEL[r.where] || r.where}` }; }
-        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}` }; }
+        else if (kind === 'lesson') { const l = L[arg]; if (!l) return; fb = { kind, ref: { lesson: l.id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: S.ratings && S.ratings[l.id] ? S.ratings[l.id].r : null }; }
         else fb = { kind: 'page', ref: { view: S.view.name, arg: S.view.arg }, title: 'Feedback on this page', sub: '' };
         render(); const ta = $('#fb-text'); if (ta) ta.focus(); return; }
       case 'fb-cancel': { if (btn.classList.contains('modal-back') && e.target !== btn) return; fb = null; render(); return; }
-      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; if (!text) { toast('Write a sentence or two first.'); return; } saveFeedback({ kind: fb.kind, ref: fb.ref, cat, text }); fb = null; render(); toast('Feedback saved'); return; }
+      case 'fb-save': { if (!fb) return; const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || '';
+        if (!text && !(fb.kind === 'lesson' && fb.rating != null)) { toast(fb.kind === 'lesson' ? 'Pick a rating or write a sentence first.' : 'Write a sentence or two first.'); return; }
+        const item = { kind: fb.kind, ref: fb.ref, cat, text }; if (fb.kind === 'lesson' && fb.rating != null) item.rating = fb.rating;
+        saveFeedback(item); fb = null; render(); toast('Feedback saved'); return; }
       case 'fb-save-page': { const text = (($('#fb-text') || {}).value || '').trim(); const cat = ($('#fb-cat') || {}).value || ''; const area = ($('#fb-area') || {}).value || 'overall'; if (!text) { toast('Write a sentence or two first.'); return; }
         const kind = area.startsWith('lesson:') ? 'lesson' : area.startsWith('unit:') ? 'unit' : area; const ref = area.startsWith('lesson:') ? { lesson: area.slice(7) } : area.startsWith('unit:') ? { unit: area.slice(5) } : {};
         saveFeedback({ kind, ref, cat, text }); render(); toast('Feedback saved'); return; }
       case 'fb-delete': { S.feedback = (S.feedback || []).filter(f => f.id !== arg); save(); render(); return; }
       case 'fb-clear': { if (!confirm('Delete all saved feedback in this browser?')) return; S.feedback = []; save(); render(); return; }
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
-      case 'fb-download': { try { const blob = new Blob([JSON.stringify(S.feedback || [], null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
+      case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
       case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
@@ -6613,13 +7074,20 @@ FRA.questions.push(
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
+    if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = e.target.dataset.arg; render(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
     if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
-    if (!s.submitted && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && s.conf != null) submitAnswer(s, false); }
+    if (!s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
   });
+  app.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  app.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
+  app.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
+  window.addEventListener('scroll', acrHide, true);
   document.addEventListener('click', e => { if (railOpen && !e.target.closest('.rail') && !e.target.closest('.rail-toggle')) { railOpen = false; const r = $('.rail'); if (r) r.classList.remove('open'); } });
 
   // Developer self-test: only when opened as a local file with #selftest. Drives the whole flow without clicks.
@@ -6630,6 +7098,15 @@ FRA.questions.push(
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
+    // Path choice: the results page offers tailored versus the whole course; "full" covers every lesson, "tailored" restores the list.
+    go('results', 'results:0'); if (document.querySelectorAll('[data-act="path"]').length < 2) throw new Error('path choice not offered on starter results');
+    const tailoredN = S.plan.lessons.length; choosePath('full', 0); render();
+    if (!S.plan || S.plan.lessons.length !== lessons.length || S.plan.scope !== 'full' || !S.path || S.path.scope !== 'full') throw new Error('whole-course path did not cover every lesson');
+    if ($('.path-choice')) throw new Error('path choice still offered after choosing');
+    if (!S.plan.lessons.some(e => e.reasons.some(r => r.q))) throw new Error('whole-course plan lost the starter-test reasons');
+    go('tutorial'); if (!document.body.textContent.includes('whole course')) throw new Error('tutorial page does not show the whole-course path');
+    choosePath('tailored', 0); render(); if (!S.plan || S.plan.lessons.length !== tailoredN || S.plan.scope !== 'tailored') throw new Error('switching back to tailored did not restore the plan');
+    log.push(`path choice tailored=${tailoredN} full=${lessons.length} switch ok`);
     const first = S.plan.lessons[0].id; go('lesson', first);
     const items = pickForLesson(first, CHECKPOINT_N, new Set(), 0.3);
     S.active = { kind: 'checkpoint', lesson: first, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
@@ -6651,6 +7128,14 @@ FRA.questions.push(
     go('exam'); if (!$('#su-n')) throw new Error('test setup card did not render');
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
     log.push(`feedback items=${S.feedback.length} report=${feedbackReport().length} chars`);
+    // Ratings: a chip click stores the rating and opens the lesson feedback form; saving with no comment keeps the rating.
+    go('lesson', lessons[0].id); const chip = document.querySelector('.rate-card .rate[data-arg="8"]'); if (!chip) throw new Error('rating chips missing on the lesson page');
+    chip.click();
+    if (!S.ratings[lessons[0].id] || S.ratings[lessons[0].id].r !== 8 || !fb || fb.rating !== 8 || !$('.modal .rate[aria-pressed="true"]')) throw new Error('rating chip did not store the rating and open the form');
+    const fbBefore = S.feedback.length; $('[data-act="fb-save"]').click();
+    if (fb || S.feedback.length !== fbBefore + 1 || S.feedback[S.feedback.length - 1].rating !== 8) throw new Error('rating-only feedback did not save');
+    if (!feedbackReport().includes('Lesson ratings')) throw new Error('feedback report lacks the ratings section');
+    log.push(`rating ${lessons[0].id}=${S.ratings[lessons[0].id].r}/10 saved as feedback item ${S.feedback.length}`);
     const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
     if (unsureId) { const second = unsureId; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
@@ -6668,6 +7153,17 @@ FRA.questions.push(
     go('results', 'results:1'); go('results', 'results:0'); go('lesson', S.plan.lessons[0].id);
     const callouts = document.querySelectorAll('.callout').length;
     log.push(`lesson view callouts=${callouts}`);
+    // Acronym links in lessons (never inside code or fenced blocks), the modal, and the cheat sheet's Acronyms section.
+    if (ACR_KEYS.length) {
+      let links = 0; for (const l of lessons.slice(0, 5)) { go('lesson', l.id); links += document.querySelectorAll('.lesson-body .acr').length; }
+      if (!links) throw new Error('no acronym links rendered in the first five lessons');
+      if (document.querySelector('.lesson-body pre .acr, .lesson-body code .acr')) throw new Error('acronym links inside code');
+      const withLinks = lessons.find(l => { go('lesson', l.id); return !!document.querySelector('.lesson-body .acr'); }); if (!withLinks) throw new Error('no lesson renders an acronym link');
+      acrOpen = document.querySelector('.lesson-body .acr').dataset.arg; render();
+      if (!$('#acr-title') || !document.body.textContent.includes(ACR[acrOpen].full)) throw new Error('acronym modal did not render'); acrOpen = null;
+      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== ACR_KEYS.length) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${ACR_KEYS.length}`);
+      log.push(`acronyms keys=${ACR_KEYS.length} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
+    } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
     S.plan = null; S.passStreak = 0; S.official = null;
@@ -6675,13 +7171,23 @@ FRA.questions.push(
     if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
     S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
     if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
+    // The standard test asks no confidence question: no chips, and Submit works on the option alone.
+    if (!ex.noConf || $('.confidence')) throw new Error('standard test still shows the confidence chips');
+    $(`[data-act="opt"][data-arg="${fat(ex.items[0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');
+    $('[data-act="submit"]').click(); if (ex.i !== 1 || ex.answers[0].conf != null) throw new Error('standard test answer not recorded without confidence');
     allRight(ex);
+    if (!S.exams[S.exams.length - 1].noConf || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results still talk about guesses');
     if (!S.official || stage() !== 'ready') throw new Error(`official pass did not clear the learner: stage ${stage()}`);
     go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
     log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
-    S.active = null; startExam('practice'); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: 2 }; }); failing.i = failing.items.length; render();
+    S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); failing.i = failing.items.length; render();
     if (S.official || S.passStreak !== 0) throw new Error('a failed test did not reset the official pass and streak');
-    log.push(`failed test resets: streak=${S.passStreak} official=${S.official} stage=${stage()}`);
+    // A failed standard test explains every wrong answer with no guess language, and its retraining callouts carry no confidence.
+    const lastRec = S.exams[S.exams.length - 1];
+    if (!lastRec.noConf || !document.body.textContent.includes('Wrong answers explained') || document.querySelectorAll('.review-item').length !== lastRec.total || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results did not explain every wrong answer without guess language');
+    if (!S.plan || S.plan.source !== 'test') throw new Error('failed standard test built no retraining plan');
+    go('lesson', S.plan.lessons[0].id); if ([...document.querySelectorAll('.callout .eyebrow')].some(el => /confidence/.test(el.textContent))) throw new Error('callout shows a confidence for a test that had none');
+    log.push(`failed standard test resets: streak=${S.passStreak} official=${S.official} stage=${stage()} wrong explained=${lastRec.total}`);
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
     document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">OK\n${log.join('\n')}</pre>`);
   }
