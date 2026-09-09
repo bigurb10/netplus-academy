@@ -59,6 +59,8 @@ check('records differing by total get different ids',
 check('records differing by pct get different ids',
   M.examId(exam({ date: 7, pct: 82 })) !== M.examId(exam({ date: 7, pct: 83 })));
 check('a synthesized id is a string', typeof M.examId(exam({})) === 'string');
+check('null record returns empty string', M.examId(null) === '');
+check('undefined record returns empty string', M.examId(undefined) === '');
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
