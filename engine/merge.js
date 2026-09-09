@@ -110,7 +110,10 @@
   }
 
   // Merge two complete state blobs. Commutative and idempotent: the result depends on the
-  // contents, never on which side is passed first.
+  // contents, never on which side is passed first - except an exact tie on touchedAt (for path
+  // and settings) or createdAt (for plan) with the two sides' path/settings/plan actually
+  // differing, where the pick falls back to argument order. Accepted: real clocks essentially
+  // never tie, and the fallback still always resolves to one side's real value, never a mix.
   function mergeState(a, b, opts) {
     const maps = mergeMaps(a, b);
     const exams = unionBy(a.exams, b.exams, examId, (x, y) => (y.pct || 0) > (x.pct || 0) ? y : x)
