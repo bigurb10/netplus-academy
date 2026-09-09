@@ -139,6 +139,15 @@ r = M.mergeState(full({ exams: [exam({ id: 'e1', date: 1 })] }),
                  full({ exams: [exam({ id: 'e1', date: 1 })] }), OPTS);
 check('the same exam on both sides appears once', r.exams.length === 1, r.exams.length);
 
+// Two distinct exams sharing a date, on opposite sides, so the sort's date comparison alone is 0
+// and the examId tie-break is the only thing giving the order a defined, examId-based result
+// rather than depending on Array.prototype.sort's stability plus the concat order of a/b.
+r = M.mergeState(full({ exams: [exam({ id: 'z-exam', date: 5 })] }),
+                 full({ exams: [exam({ id: 'a-exam', date: 5 })] }), OPTS);
+check('exams sharing a date break the tie by examId, ascending',
+  r.exams[0].id === 'a-exam' && r.exams[1].id === 'z-exam',
+  JSON.stringify(r.exams.map(e => e.id)));
+
 // The case the whole design exists for: A has a three-pass streak, B has a later failure.
 r = M.mergeState(
   full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2}), exam({id:'a3',date:3})], passStreak: 3 }),
