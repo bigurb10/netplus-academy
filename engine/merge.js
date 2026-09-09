@@ -83,9 +83,10 @@
   // merged exam log is re-sorted (see mergeState), so an index inherited verbatim can end up
   // pointing at a different record than the one it was built from. Remap it to the same
   // underlying record - matched by identity via examId, not position - so a merge can't
-  // silently rebuild the learner's tutorial from the wrong test. Always returns a new object
-  // (or null), never the input, so mergeState never hands back something aliased to a caller's
-  // state.
+  // silently rebuild the learner's tutorial from the wrong test. Always returns a new object (or
+  // null), never the input object itself - but the copy is shallow (Object.assign), so a nested
+  // value such as plan.lessons is still the same array reference as the caller's; only the top
+  // level (and examIdx) is safe to mutate without touching the source state.
   function remapExamIdx(ref, fromExams, toExams) {
     if (ref == null) return null;
     if (typeof ref.examIdx !== 'number') return Object.assign({}, ref);
