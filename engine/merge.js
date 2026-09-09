@@ -132,7 +132,7 @@
 
     return {
       v: 3,
-      course: a.course || b.course,
+      course: a.course || b.course || null,
       lessons: maps.lessons, topics: maps.topics, qstats: maps.qstats,
       seen: maps.seen, ratings: maps.ratings,
       exams: exams,
@@ -141,7 +141,7 @@
       official: streak.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
       path: remapExamIdx(pathSide.path, pathSide.exams, exams),
-      settings: newer.settings || a.settings || b.settings,
+      settings: newer.settings || a.settings || b.settings || {},
       touchedAt: max(a.touchedAt, b.touchedAt),
       created: isFinite(born) ? born : 0
     };

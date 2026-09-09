@@ -300,6 +300,13 @@ check('created keeps the real value when the other side is missing it', r.create
 r = M.mergeState(full({ created: undefined }), full({ created: undefined }), OPTS);
 check('created falls back to 0, not Infinity or null, when neither side has one', r.created === 0, r.created);
 
+// settings/course must never come back as undefined: harmless through JSON, but the sync layer
+// assigns the merged object straight into live state, where `settings: undefined` overwrites the
+// default and the next `S.settings.timer` read throws.
+r = M.mergeState(full({ settings: undefined, course: undefined }), full({ settings: undefined, course: undefined }), OPTS);
+check('settings falls back to {} when neither side has one', JSON.stringify(r.settings) === '{}', JSON.stringify(r.settings));
+check('course falls back to null when neither side has one', r.course === null, r.course);
+
 // plan must remap against its own source side (planSide), not the more-recently-touched side
 // (newer), even when they differ. The bug would be invisible if every fixture had planSide === newer.
 // This test ensures planSide and newer are different sides with different exam arrays.
