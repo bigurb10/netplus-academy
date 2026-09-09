@@ -74,5 +74,46 @@
     };
   }
 
-  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps };
+  // Union two arrays of records by a key function, keeping the entry that reports more progress.
+  function unionBy(a, b, keyOf, prefer) {
+    const out = {}; const order = [];
+    (a || []).concat(b || []).forEach(item => {
+      if (!item) return;
+      const k = keyOf(item);
+      if (!(k in out)) { out[k] = item; order.push(k); }
+      else if (prefer) out[k] = prefer(out[k], item);
+    });
+    return order.map(k => out[k]);
+  }
+
+  // Merge two complete state blobs. Commutative and idempotent: the result depends on the
+  // contents, never on which side is passed first.
+  function mergeState(a, b, opts) {
+    const maps = mergeMaps(a, b);
+    const exams = unionBy(a.exams, b.exams, examId, (x, y) => (y.pct || 0) > (x.pct || 0) ? y : x)
+      .slice().sort((x, y) => (x.date || 0) - (y.date || 0) || examId(x).localeCompare(examId(y)));
+    const feedback = unionBy(a.feedback, b.feedback, f => f.id, (x, y) => x.sent ? x : y);
+    const newer = (b.touchedAt || 0) > (a.touchedAt || 0) ? b : a;
+    const streak = recomputeStreak(exams, opts);
+    // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
+    const born = Math.min(a.created || Infinity, b.created || Infinity);
+
+    return {
+      v: 3,
+      course: a.course || b.course,
+      lessons: maps.lessons, topics: maps.topics, qstats: maps.qstats,
+      seen: maps.seen, ratings: maps.ratings,
+      exams: exams,
+      feedback: feedback,
+      passStreak: streak.passStreak,
+      official: streak.official,
+      plan: (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b.plan : a.plan,
+      path: newer.path,
+      settings: newer.settings || a.settings || b.settings,
+      touchedAt: max(a.touchedAt, b.touchedAt),
+      created: isFinite(born) ? born : 0
+    };
+  }
+
+  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, mergeState };
 }));
