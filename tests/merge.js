@@ -148,8 +148,46 @@ check('official.examIdx is recomputed against the merged array', r.official.exam
 check('the exam it points at is the official one', r.exams[r.official.examIdx].id === 'a4');
 check('passStreak is replayed, not inherited from either input', r.passStreak === 4, r.passStreak);
 
-r = M.mergeState(full({ path: 'fast', touchedAt: 10 }), full({ path: 'thorough', touchedAt: 99 }), OPTS);
-check('path comes from the more recently touched side', r.path === 'thorough', r.path);
+// ---------- plan/path examIdx remap ----------
+// plan.examIdx and path.examIdx carry the same hazard official.examIdx does above: the merged
+// exam log is re-sorted, so an index inherited verbatim can end up pointing at a different
+// record. Exercise a case where the other device's exams sort *before* the referenced exam, so
+// the correct index differs from the inherited one.
+const planTargetExam = exam({ id: 'plan-target', date: 5 });
+r = M.mergeState(
+  full({ exams: [planTargetExam], plan: { examIdx: 0, createdAt: 100, lessons: [] } }),
+  full({ exams: [exam({ id: 'plan-earlier', date: 1 })] }), OPTS);
+check('plan.examIdx is remapped after the merged exams resort', r.plan.examIdx === 1, JSON.stringify(r.plan));
+check('the plan still points at the exam it was originally built from',
+  r.exams[r.plan.examIdx].id === 'plan-target', JSON.stringify(r.exams[r.plan.examIdx]));
+
+const pathTargetExam = exam({ id: 'path-target', date: 5 });
+r = M.mergeState(
+  full({ exams: [exam({ id: 'path-earlier', date: 1 })], touchedAt: 10 }),
+  full({ exams: [pathTargetExam], path: { examIdx: 0, scope: 'tailored' }, touchedAt: 50 }), OPTS);
+check('path.examIdx is remapped after the merged exams resort', r.path.examIdx === 1, JSON.stringify(r.path));
+check('the path still points at the exam it was originally built from',
+  r.exams[r.path.examIdx].id === 'path-target', JSON.stringify(r.exams[r.path.examIdx]));
+
+r = M.mergeState(full({ plan: null, path: null }), full({ plan: null, path: null }), OPTS);
+check('a null plan and a null path pass through without throwing',
+  r.plan === null && r.path === null, JSON.stringify({ plan: r.plan, path: r.path }));
+
+const planRefA = { examIdx: 0, createdAt: 5, lessons: [] };
+const stateWithPlanA = full({ exams: [exam({ id: 'plan-ref', date: 1 })], plan: planRefA });
+const stateWithPlanB = full({ exams: [] });
+r = M.mergeState(stateWithPlanA, stateWithPlanB, OPTS);
+check('the merged plan is not the same object reference as either input',
+  r.plan !== stateWithPlanA.plan && r.plan !== stateWithPlanB.plan, JSON.stringify(r.plan));
+
+// The path tests below use the real { examIdx, scope } shape - previously modeled as a bare
+// string, which is what let the un-remapped examIdx bug through undetected.
+const tailoredExam = exam({ id: 'path-tailored', date: 1 });
+const fullExam = exam({ id: 'path-full', date: 2 });
+r = M.mergeState(
+  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], touchedAt: 10 }),
+  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], touchedAt: 99 }), OPTS);
+check('path comes from the more recently touched side', r.path.scope === 'full', JSON.stringify(r.path));
 
 r = M.mergeState(full({ feedback: [{ id: 'f1', ts: 1, sent: false }] }),
                  full({ feedback: [{ id: 'f1', ts: 1, sent: true }, { id: 'f2', ts: 2 }] }), OPTS);
@@ -188,9 +226,11 @@ check('a sent feedback flag survives no matter which side reports it first', r.f
 
 // The brief's path test only exercises the more-recently-touched side being `b`. Swap it to `a`
 // so an "always take b's path" bug (which would also pass the brief's own case) gets caught.
-r = M.mergeState(full({ path: 'thorough', touchedAt: 99 }), full({ path: 'fast', touchedAt: 10 }), OPTS);
+r = M.mergeState(
+  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], touchedAt: 99 }),
+  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], touchedAt: 10 }), OPTS);
 check('path still comes from the more recently touched side when that side is passed first',
-  r.path === 'thorough', r.path);
+  r.path.scope === 'full', JSON.stringify(r.path));
 
 // `created` uses Infinity as a sentinel for "missing" so a real 0 never wins the Math.min by
 // accident; isFinite() must convert that sentinel back to 0 rather than leaking Infinity (which

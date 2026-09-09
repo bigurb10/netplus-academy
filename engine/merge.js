@@ -74,6 +74,24 @@
     };
   }
 
+  // plan and path each carry an examIdx pointed at the exam array they were built against. The
+  // merged exam log is re-sorted (see mergeState), so an index inherited verbatim can end up
+  // pointing at a different record than the one it was built from. Remap it to the same
+  // underlying record - matched by identity via examId, not position - so a merge can't
+  // silently rebuild the learner's tutorial from the wrong test. Always returns a new object
+  // (or null), never the input, so mergeState never hands back something aliased to a caller's
+  // state.
+  function remapExamIdx(ref, fromExams, toExams) {
+    if (ref == null) return null;
+    if (typeof ref.examIdx !== 'number') return Object.assign({}, ref);
+    const src = (fromExams || [])[ref.examIdx];
+    if (!src) return null;
+    const id = examId(src);
+    const idx = (toExams || []).findIndex(e => examId(e) === id);
+    if (idx < 0) return null;
+    return Object.assign({}, ref, { examIdx: idx });
+  }
+
   // Union two arrays of records by a key function, keeping the entry that reports more progress.
   function unionBy(a, b, keyOf, prefer) {
     const out = {}; const order = [];
@@ -94,6 +112,7 @@
       .slice().sort((x, y) => (x.date || 0) - (y.date || 0) || examId(x).localeCompare(examId(y)));
     const feedback = unionBy(a.feedback, b.feedback, f => f.id, (x, y) => x.sent ? x : y);
     const newer = (b.touchedAt || 0) > (a.touchedAt || 0) ? b : a;
+    const planSide = (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b : a;
     const streak = recomputeStreak(exams, opts);
     // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
     const born = Math.min(a.created || Infinity, b.created || Infinity);
@@ -107,13 +126,13 @@
       feedback: feedback,
       passStreak: streak.passStreak,
       official: streak.official,
-      plan: (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b.plan : a.plan,
-      path: newer.path,
+      plan: remapExamIdx(planSide.plan, planSide.exams, exams),
+      path: remapExamIdx(newer.path, newer.exams, exams),
       settings: newer.settings || a.settings || b.settings,
       touchedAt: max(a.touchedAt, b.touchedAt),
       created: isFinite(born) ? born : 0
     };
   }
 
-  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, mergeState };
+  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, remapExamIdx, mergeState };
 }));
