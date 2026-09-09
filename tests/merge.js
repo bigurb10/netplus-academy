@@ -77,6 +77,10 @@ m = M.mergeMaps(st({ lessons: { a: { status: 'passed', best: 90, attempts: 1, pa
                 st({ lessons: { b: { status: 'read', best: 10, attempts: 1, passedAt: 0 } } }));
 check('disjoint lessons union', !!m.lessons.a && !!m.lessons.b);
 
+m = M.mergeMaps(st({ lessons: { a: { status: 'passed', best: 90, attempts: 1, passedAt: 5 } } }),
+                st({ lessons: { a: { status: 'read', best: 10, attempts: 1, passedAt: 0 } } }));
+check('lesson status-rank test reversed: x has higher rank (passed), y lower (read)', m.lessons.a.status === 'passed', m.lessons.a.status);
+
 m = M.mergeMaps(st({ qstats: { q1: { seen: 5, correct: 3, wrong: 2, last: 10 } } }),
                 st({ qstats: { q1: { seen: 2, correct: 2, wrong: 0, last: 99 } } }));
 check('qstats take the max of each counter',
@@ -88,8 +92,17 @@ m = M.mergeMaps(st({ topics: { t1: { hist: [1,1], attempts: 2, correct: 0, strea
 check('topics take the whole more recent record', m.topics.t1.streak === 3 && m.topics.t1.hist.length === 3,
   JSON.stringify(m.topics.t1));
 
+m = M.mergeMaps(st({ topics: { t1: { hist: [1,1,1], attempts: 5, correct: 5, streak: 5, last: 10 } } }),
+                st({ topics: { t1: { hist: [0], attempts: 1, correct: 0, streak: 0, last: 50 } } }));
+check('topics whole-record merge: newer record with lower streak wins', m.topics.t1.streak === 0 && m.topics.t1.attempts === 1,
+  JSON.stringify(m.topics.t1));
+
 m = M.mergeMaps(st({ ratings: { a: { r: 4, ts: 10 } } }), st({ ratings: { a: { r: 9, ts: 99 } } }));
 check('ratings take the entry with the later ts', m.ratings.a.r === 9, m.ratings.a.r);
+
+m = M.mergeMaps(st({ ratings: { a: { r: 9, ts: 10 } } }), st({ ratings: { a: { r: 2, ts: 99 } } }));
+check('ratings recency-based: later ts with lower r wins', m.ratings.a.r === 2 && m.ratings.a.ts === 99,
+  JSON.stringify(m.ratings.a));
 
 m = M.mergeMaps(st({ seen: { a: true } }), st({ seen: { b: true } }));
 check('seen unions', m.seen.a === true && m.seen.b === true);
