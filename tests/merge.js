@@ -191,6 +191,21 @@ r = M.mergeState(
   full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], touchedAt: 99 }), OPTS);
 check('path comes from the more recently touched side', r.path.scope === 'full', JSON.stringify(r.path));
 
+// A device that has been merely opened has touchedAt = Date.now() and path: null from fresh(),
+// with no path choice of its own. Taking path from `newer` with no fallback lets that null win
+// and erases a real path choice made on the other, less-recently-touched device - the starter
+// results page would re-prompt "Choose your path" for a decision already made.
+const laptopPathExam = exam({ id: 'laptop-exam', date: 5 });
+const phonePathExam = exam({ id: 'phone-exam', date: 1 });
+r = M.mergeState(
+  full({ exams: [laptopPathExam], path: { examIdx: 0, scope: 'full' }, touchedAt: 1000 }),
+  full({ exams: [phonePathExam], path: null, touchedAt: 2000 }), OPTS);
+check('a real path choice survives when the more-recently-touched side never chose one',
+  r.path !== null && r.path.scope === 'full', JSON.stringify(r.path));
+check('the surviving path still resolves to the exam it was originally built from',
+  !!r.path && r.exams[r.path.examIdx].id === 'laptop-exam',
+  r.path && JSON.stringify(r.exams[r.path.examIdx]));
+
 r = M.mergeState(full({ feedback: [{ id: 'f1', ts: 1, sent: false }] }),
                  full({ feedback: [{ id: 'f1', ts: 1, sent: true }, { id: 'f2', ts: 2 }] }), OPTS);
 check('feedback unions by id', r.feedback.length === 2, r.feedback.length);

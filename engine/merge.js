@@ -113,6 +113,11 @@
     const feedback = unionBy(a.feedback, b.feedback, f => f.id, (x, y) => x.sent ? x : y);
     const newer = (b.touchedAt || 0) > (a.touchedAt || 0) ? b : a;
     const planSide = (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b : a;
+    // A device that has only been opened has path: null from fresh() with no choice of its own.
+    // Prefer the more-recently-touched side only when it actually made a choice, so opening the
+    // app on a second device can never null out a real path chosen elsewhere - mirrors the
+    // null-guard planSide already applies above.
+    const pathSide = newer.path ? newer : (a.path ? a : b);
     const streak = recomputeStreak(exams, opts);
     // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
     const born = Math.min(a.created || Infinity, b.created || Infinity);
@@ -127,7 +132,7 @@
       passStreak: streak.passStreak,
       official: streak.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
-      path: remapExamIdx(newer.path, newer.exams, exams),
+      path: remapExamIdx(pathSide.path, pathSide.exams, exams),
       settings: newer.settings || a.settings || b.settings,
       touchedAt: max(a.touchedAt, b.touchedAt),
       created: isFinite(born) ? born : 0

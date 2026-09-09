@@ -116,7 +116,9 @@ seen          union
 ratings[id]   per key, take the entry with the greater `ts`
 feedback      union by id, preserving any `sent: true`
 plan          take the whole plan with the greater `createdAt`, then remap its examIdx
-path          take from the side with the greater `touchedAt`, then remap its examIdx
+path          take from the side with the greater `touchedAt` *that has a non-null path*, then
+              remap its examIdx (a side that has only been opened has `path: null` and never
+              wins over a real choice made on the other side, regardless of `touchedAt`)
 settings      take from the side with the greater `touchedAt`
 view, active  never synced; always device-local
 passStreak    discarded and recomputed
