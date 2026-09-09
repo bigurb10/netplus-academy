@@ -121,7 +121,11 @@ plan          take the whole plan with the greater `createdAt`, then remap its e
 path          take from the side with the greater `touchedAt` *that has a non-null path*, then
               remap its examIdx (a side that has only been opened has `path: null` and never
               wins over a real choice made on the other side, regardless of `touchedAt`)
-settings      take from the side with the greater `touchedAt`
+settings      take from the side with the greater `touchedAt`, falling back to whichever side
+              has settings at all, and finally to `{}` - never `undefined`, because the sync
+              layer will assign the merged object in memory where `settings: undefined` would
+              overwrite the `fresh()` default and make `S.settings.timer` throw
+course        whichever side carries it, else `null` (blobs are per-course, so they always agree)
 view, active  never synced; always device-local
 passStreak    discarded and recomputed
 official      discarded and recomputed

@@ -17,7 +17,9 @@
   function recomputeStreak(exams, opts) {
     // e.pct >= undefined is false for every record, so a malformed opts would silently replay to
     // passStreak: 0 - the exact number this function exists to never invent - with no error.
-    if (!opts || typeof opts.passPct !== 'number' || typeof opts.streakNeeded !== 'number') {
+    // Number.isFinite, not typeof: typeof NaN is 'number', and a NaN passPct makes every
+    // comparison false, reproducing the exact silent zeroing this guard exists to stop.
+    if (!opts || !Number.isFinite(opts.passPct) || !Number.isFinite(opts.streakNeeded)) {
       throw new Error('recomputeStreak requires opts.passPct and opts.streakNeeded as numbers');
     }
     const passPct = opts.passPct, streakNeeded = opts.streakNeeded;

@@ -57,6 +57,12 @@ check('recomputeStreak throws when passPct is missing',
   throws(() => M.recomputeStreak([exam({date:1})], { streakNeeded: 3 })));
 check('recomputeStreak throws when streakNeeded is missing',
   throws(() => M.recomputeStreak([exam({date:1})], { passPct: 80 })));
+// typeof NaN is 'number', so a typeof guard would let NaN through - and a NaN passPct makes
+// every comparison false, reproducing the exact silent zeroing the guard exists to stop.
+check('recomputeStreak throws when passPct is NaN',
+  throws(() => M.recomputeStreak([exam({date:1})], { passPct: NaN, streakNeeded: 3 })));
+check('recomputeStreak throws when streakNeeded is NaN',
+  throws(() => M.recomputeStreak([exam({date:1})], { passPct: 80, streakNeeded: NaN })));
 check('recomputeStreak does not throw when both opts fields are present',
   !throws(() => M.recomputeStreak([exam({date:1})], OPTS)));
 check('mergeState propagates the same guard through to its opts argument',
