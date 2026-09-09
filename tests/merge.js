@@ -43,5 +43,8 @@ check('examIdx counts skipped records',
   M.recomputeStreak([exam({date:1, kind:'starter', pct:20}), exam({date:2}), exam({date:3}), exam({date:4}),
                      exam({date:5, minutes:90, setup:std, pct:85})], OPTS).official.examIdx === 4);
 
+check('official award requires prior complete streak, not the current exam itself',
+  M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:85})], OPTS).official === null);
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
