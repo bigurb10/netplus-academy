@@ -417,7 +417,7 @@ FRA.acronyms = {
   "ACGIH": { full: "American Conference of Governmental Industrial Hygienists", tip: "The organization that publishes threshold limit values.", more: "ACGIH TLVs are the most widely used exposure guidelines even though OSHA's PELs are the legal limits." },
   "ACHC": { full: "Accreditation Commission for Health Care", tip: "An accrediting body that absorbed the HFAP hospital program.", more: "ACHC, The Joint Commission, DNV, and CIHQ all hold CMS deeming authority for hospitals." },
   "ACI": { full: "AAMI Credentials Institute", tip: "The body within AAMI that administers the CBET and related certifications.", more: "ACI sets the exam content, eligibility, and recertification rules for CBET, CRES, CLES, and CHTM." },
-  "ACK": { full: "Acknowledgment", tip: "The TCP flag or message confirming data arrived.", more: "TCP acknowledges received segments so the sender knows what to keep and what to resend. The ACK also finishes the three-way handshake. In the CBET course HL7 ACK messages confirm that an interface received a message." },
+  "ACK": { full: "Acknowledgment (HL7 message)", tip: "The reply an HL7 interface sends to confirm it received a message, carrying an accept or error code.", more: "Every HL7 message expects an ACK from the receiving system. Its MSA segment carries the code: AA for accepted, AE for an application error, AR for rejected. When results stop flowing between a monitor gateway and the EMR, the ACK log is the first place to look: messages being rejected point to a mapping or content problem, and no ACK at all points to the network or the interface engine." },
   "ADC": { full: "Analog-to-digital converter", tip: "Turns a continuous voltage into digital samples.", more: "The ADC's resolution (bits) and sampling rate set how faithfully a signal is captured; sampling must be at least twice the highest frequency (Nyquist)." },
   "ADT": { full: "Admit, discharge, transfer", tip: "The HL7 messages that tell every system who is in which bed.", more: "ADT feeds keep monitors, pumps, and labs matched to the right patient. A missing ADT feed is why a device cannot find a patient by bed." },
   "AE": { full: "Application entity", tip: "A DICOM node, identified by its AE title, IP address, and port.", more: "A modality must be configured with the PACS AE title, address, and port, and the PACS must know the modality's, or images will not transfer. A C-ECHO verifies the association." },
@@ -431,7 +431,7 @@ FRA.acronyms = {
   "API": { full: "Application programming interface", tip: "The defined way one program talks to another, such as the web endpoints a cloud service exposes.", more: "APIs let software request data and actions from other software. Cloud consoles, SDN controllers, and mobile apps all work through APIs. Security concerns include stolen API keys, missing authentication, and rate limiting." },
   "APIPA": { full: "Automatic Private IP Addressing", tip: "The 169.254.x.x address a host gives itself when it cannot reach a DHCP server.", more: "When DHCP fails, Windows and other systems self-assign an address in 169.254.0.0/16 so hosts on the same segment can still talk. Seeing a 169.254 address is the classic sign that a client could not get a lease, which points at the DHCP server, the relay, or the link." },
   "ASME": { full: "American Society of Mechanical Engineers", tip: "The standards body for pressure vessels and boilers.", more: "Bulk oxygen tanks and sterilizer chambers are built to ASME codes." },
-  "AV": { full: "Atrioventricular node", tip: "The relay between atria and ventricles that delays the impulse so the ventricles fill.", more: "The AV node introduces the PR interval delay, then passes the impulse to the bundle of His and Purkinje fibers. Blocks at the AV node lengthen the PR interval or drop beats. In Security+ AV means asset value or antivirus; read the context." },
+  "AV": { full: "Atrioventricular node", tip: "The relay between atria and ventricles that delays the impulse so the ventricles fill.", more: "The AV node introduces the PR interval delay, then passes the impulse to the bundle of His and Purkinje fibers. Blocks at the AV node lengthen the PR interval or drop beats." },
   "AWG": { full: "American Wire Gauge", tip: "The wire size scale; smaller numbers are thicker wire with higher ampacity.", more: "AWG 10 wire carries more current than AWG 14. Ampacity tables set the maximum safe current for each gauge and insulation." },
   "BAA": { full: "Business associate agreement", tip: "The HIPAA contract a vendor signs before handling protected health information.", more: "Any vendor that touches PHI, including remote service providers, must sign a BAA and is directly liable under HITECH." },
   "BF": { full: "Body floating (applied part)", tip: "An applied part that touches the patient but not the heart, isolated from ground; stick-figure-in-a-box symbol.", more: "Type BF parts are electrically isolated (floating) from ground with tighter leakage limits than Type B. ECG electrodes and pulse oximeter probes are typically BF." },
@@ -443,7 +443,7 @@ FRA.acronyms = {
   "CBET": { full: "Certified Biomedical Equipment Technician", tip: "The AAMI credential for biomedical equipment technicians.", more: "The CBET exam, run by the AAMI Credentials Institute, covers anatomy and physiology, electricity and electronics, safety, medical equipment function, problem solving, and healthcare IT. It has 165 questions in three hours." },
   "CDA": { full: "Clinical Document Architecture", tip: "HL7's XML standard for clinical documents such as discharge summaries.", more: "CDA documents carry structured and narrative content and are the basis of continuity-of-care documents exchanged between providers." },
   "CDC": { full: "Centers for Disease Control and Prevention", tip: "The US public health agency that sets infection control guidance such as standard precautions.", more: "The CDC defined standard precautions in 1996, treating all body fluids as potentially infectious." },
-  "CF": { full: "Cardiac floating (applied part)", tip: "An applied part that may connect directly to the heart, with the strictest leakage limits; heart-in-a-box symbol.", more: "Type CF parts allow only 10 microamps of patient leakage in normal conditions because current delivered to the heart can cause fibrillation at microamp levels. Cardiac catheters and pacing leads are CF. In the A+ course CF is the CompactFlash card; read the context." },
+  "CF": { full: "Cardiac floating (applied part)", tip: "An applied part that may connect directly to the heart, with the strictest leakage limits; heart-in-a-box symbol.", more: "Type CF parts allow only 10 microamps of patient leakage in normal conditions because current delivered to the heart can cause fibrillation at microamp levels. Cardiac catheters and pacing leads are CF." },
   "CFR": { full: "Code of Federal Regulations", tip: "The codified US federal rules; 29 CFR 1910 holds OSHA standards, 21 CFR the FDA's.", more: "The Hazard Communication Standard is 29 CFR 1910.1200; medical device reporting is in 21 CFR 803." },
   "CHIP": { full: "Children's Health Insurance Program", tip: "Federal and state health coverage for children, run by CMS.", more: "CHIP is one of the programs CMS administers alongside Medicare and Medicaid." },
   "CIA": { full: "Confidentiality, integrity, and availability", tip: "The three goals of security: keep data secret, keep it correct, keep it reachable.", more: "Confidentiality means only authorized people can read data (encryption, access control). Integrity means it has not been altered (hashes, signatures). Availability means systems are up when needed (redundancy, backups). Every attack and every control on the exam maps to one or more of the three; ransomware, for instance, attacks availability." },
@@ -457,9 +457,9 @@ FRA.acronyms = {
   "COPD": { full: "Chronic obstructive pulmonary disease", tip: "Long-term airway obstruction, usually from smoking, with a low FEV1/FVC ratio.", more: "COPD patients retain CO2 and may depend on low oxygen levels to drive breathing, which affects how oxygen is delivered." },
   "CPAP": { full: "Continuous positive airway pressure", tip: "A constant pressure applied to the airway of a spontaneously breathing patient.", more: "CPAP holds the airway open for sleep apnea and supports oxygenation in respiratory distress. It provides no breaths; the patient does all the work." },
   "CPR": { full: "Cardiopulmonary resuscitation", tip: "Chest compressions and breaths to keep blood moving during cardiac arrest.", more: "Capnography during CPR confirms that compressions are producing circulation, because exhaled CO2 rises when blood reaches the lungs." },
-  "CPU": { full: "Central processing unit", tip: "The processor that executes instructions.", more: "The CPU's cores, threads, clock speed, and cache set a computer's performance. Sudden CPU spikes are a security indicator for crypto mining or malware. In the A+ course you match its socket (LGA, PGA, AM4, AM5) to the motherboard and keep it cool." },
+  "CPU": { full: "Central processing unit", tip: "The processor that executes instructions.", more: "The CPU's cores, threads, clock speed, and cache set a computer's performance. Sudden CPU spikes are a security indicator for crypto mining or malware." },
   "CT": { full: "Computed tomography", tip: "Cross-sectional X-ray imaging from a rotating tube and detector array.", more: "CT reconstructs slices from many X-ray projections. It delivers a higher dose than plain radiography and uses power injectors for contrast." },
-  "DAC": { full: "Digital-to-analog converter", tip: "Turns digital values back into a voltage to drive displays, speakers, or outputs.", more: "A DAC does the reverse of an ADC. In Network+ the letters mean direct attach cable and in Security+ discretionary access control; read the context." },
+  "DAC": { full: "Digital-to-analog converter", tip: "Turns digital values back into a voltage to drive displays, speakers, or outputs.", more: "A DAC does the reverse of an ADC: it turns a stream of numbers back into a voltage, for example to drive an analog output, a speaker, or a display waveform. Its resolution in bits sets the smallest step it can produce." },
   "dB": { full: "Decibel", tip: "A logarithmic ratio unit for signal levels, gain, and sound.", more: "Every 3 dB doubles power and every 10 dB multiplies it by ten. Audiometers report hearing thresholds in dB HL; amplifiers quote CMRR in dB; Wi-Fi signal is in dBm." },
   "DBP": { full: "Diastolic blood pressure", tip: "The arterial pressure between beats, while the heart fills.", more: "Diastolic pressure is the last Korotkoff sound and the bottom number. It lasts longer than systole, which is why mean arterial pressure sits closer to it." },
   "DC": { full: "Direct current", tip: "Current in one direction: batteries and power supply outputs.", more: "Capacitors block DC and pass AC, which is how they smooth ripple in power supplies and couple signals in amplifiers." },
@@ -481,7 +481,7 @@ FRA.acronyms = {
   "EHR": { full: "Electronic health record", tip: "The patient's longitudinal digital record, shared across providers.", more: "EHR emphasizes exchange between organizations; EMR is one organization's record. In practice the terms overlap." },
   "EM": { full: "Electromagnetic", tip: "Electric and magnetic fields; EM interference disrupts monitors and telemetry.", more: "Noise from motors, ESUs, and radios enters through cables and electrodes. Shielding, filtering, and distance reduce it." },
   "EMG": { full: "Electromyogram", tip: "The recording of muscle electrical activity.", more: "EMG measures muscle signals with surface or needle electrodes and is used with nerve conduction studies. Its interference is also what corrupts ECG traces when a patient shivers." },
-  "EMI": { full: "Electromagnetic interference", tip: "Noise from motors, power lines, fluorescent lights, and radios that corrupts signals on copper cable.", more: "EMI induces unwanted voltage on cables and shows up as errors, CRC failures, or dropped links, especially on long unshielded runs near electrical equipment. Shielded cable, better routing, or fiber (which is immune) are the fixes. In the CBET course it also explains noisy ECG and EEG traces." },
+  "EMI": { full: "Electromagnetic interference", tip: "Noise from motors, power lines, fluorescent lights, and radios that corrupts signals on copper cable.", more: "EMI induces unwanted voltage on cables and shows up as errors, CRC failures, or dropped links, especially on long unshielded runs near electrical equipment. Shielded cable, better routing, or fiber (which is immune) are the fixes. It also explains noisy ECG and EEG traces: correlate the noise with a source such as an electrosurgical unit, a motor, or a fluorescent light, then fix the source or the routing." },
   "EMR": { full: "Electronic medical record", tip: "The hospital's clinical record system: orders, notes, results, medications.", more: "Monitors, pumps, and labs integrate with the EMR through HL7 interfaces. EMR and EHR are used interchangeably on the exam." },
   "EQ": { full: "AAMI EQ series", tip: "AAMI's equipment management standards: EQ56, EQ89, EQ93, EQ103.", more: "The EQ standards define how a medical equipment management program is built, how maintenance is scheduled, the vocabulary used, and how alternative maintenance is justified." },
   "EQ103": { full: "ANSI/AAMI EQ103", tip: "Guidance for alternative equipment maintenance programs.", more: "EQ103 explains how to justify and document AEM intervals with data." },
@@ -542,7 +542,7 @@ FRA.acronyms = {
   "kHz": { full: "Kilohertz", tip: "One thousand cycles per second.", more: "Electrosurgical units operate above about 100 kHz, faster than nerves can respond, which is why they cut without shocking. Ultrasound and some telemetry also use kilohertz ranges." },
   "kV": { full: "Kilovolt", tip: "One thousand volts; X-ray tube voltage and defibrillator charge levels.", more: "In an X-ray tube the kV sets how penetrating the beam is. Defibrillators charge capacitors to a few kilovolts to deliver 120 to 360 joules." },
   "KVL": { full: "Kirchhoff's voltage law", tip: "The voltages around any closed loop sum to zero.", more: "KVL solves series circuits: the drops across each component add up to the source voltage." },
-  "KVM": { full: "Keyboard, video, mouse (switch)", tip: "One keyboard, monitor, and mouse shared among several computers.", more: "A KVM switch lets one console control many servers or a technician's bench machines. IP-based KVMs do it over the network for remote server rooms. In the A+ course KVM can also mean the Linux kernel virtual machine hypervisor; read the context." },
+  "KVM": { full: "Keyboard, video, mouse (switch)", tip: "One keyboard, monitor, and mouse shared among several computers.", more: "A KVM switch lets one console control many servers or a technician's bench machines. IP-based KVMs do it over the network for remote server rooms." },
   "KVO": { full: "Keep vein open", tip: "A very low infusion rate that keeps an IV line from clotting.", more: "KVO rates of a few mL per hour maintain patency when no active infusion is running." },
   "kW": { full: "Kilowatt", tip: "One thousand watts of power.", more: "Large equipment such as MRI, CT, and sterilizers draws kilowatts. A 60 kWh battery charged at 0.5 C draws 30 kW." },
   "kWh": { full: "Kilowatt-hour", tip: "The energy unit on the electric bill: one kilowatt for one hour.", more: "Energy is power times time. A 60 W lamp for 8 hours uses 480 watt-hours, 0.48 kWh." },
@@ -560,7 +560,7 @@ FRA.acronyms = {
   "LV": { full: "Left ventricle", tip: "The chamber that pumps blood to the body at systemic pressure.", more: "The left ventricle has the thickest wall because it drives blood through the whole body. Its contraction produces systolic pressure." },
   "LVP": { full: "Large-volume pump", tip: "An infusion pump for bags of fluid, usually peristaltic, accurate to about 5 percent.", more: "LVPs detect occlusions upstream and downstream, air in line, and door open, and they protect against free flow when the set is removed." },
   "mA": { full: "Milliampere", tip: "One thousandth of an ampere; the unit for shock thresholds and leakage currents.", more: "Perception is about 1 mA, let-go about 10 to 20 mA, and ventricular fibrillation 100 to 300 mA through the body. Chassis leakage limits are in the hundreds of microamps, and microshock through a cardiac catheter needs only 10 microamps." },
-  "MAC": { full: "Media access control (address)", tip: "The 48-bit hardware address burned into a network interface, used at Layer 2.", more: "A MAC address is the physical address of a network card, written as six pairs of hex digits. The first half is the manufacturer code (OUI). Switches build a table of which MAC address is on which port and forward frames by it. MAC addresses only matter within one LAN segment; routers use IP addresses to move packets between networks. In Security+ the same letters can also mean mandatory access control." },
+  "MAC": { full: "Media access control (address)", tip: "The 48-bit hardware address burned into a network interface, used at Layer 2.", more: "A MAC address is the physical address of a network card, written as six pairs of hex digits. The first half is the manufacturer code (OUI). Switches build a table of which MAC address is on which port and forward frames by it. MAC addresses only matter within one LAN segment; routers use IP addresses to move packets between networks." },
   "MAP": { full: "Mean arterial pressure", tip: "The average arterial pressure: diastolic plus one third of the pulse pressure.", more: "MAP = DBP + (SBP - DBP) / 3, because diastole lasts about twice as long as systole. A MAP of at least 60 to 65 mmHg is needed to perfuse organs, and it is the number vasopressor drips are titrated to." },
   "MDDS": { full: "Medical device data system", tip: "Software or hardware that transfers, stores, or displays device data without changing it.", more: "MDDS products are low risk and lightly regulated as long as they do not interpret the data or control the device." },
   "MDS2": { full: "Manufacturer Disclosure Statement for Medical Device Security", tip: "The standard form describing a device's security capabilities.", more: "The MDS2 tells the hospital whether a device can be patched, encrypted, and logged, and what it needs from the network. It is requested before purchase." },
@@ -585,7 +585,7 @@ FRA.acronyms = {
   "NPN": { full: "Negative-positive-negative transistor", tip: "A bipolar transistor that conducts when its base is pulled positive.", more: "A small base current controls a larger collector current. NPN and PNP are the two bipolar types; PNP is the mirror image." },
   "NPSG": { full: "National Patient Safety Goals", tip: "The Joint Commission's annual list of safety priorities, including alarm management.", more: "NPSGs drive policies such as clinical alarm safety and patient identification." },
   "NTC": { full: "Negative temperature coefficient (thermistor)", tip: "A thermistor whose resistance falls as temperature rises; the sensor in patient temperature probes.", more: "NTC probes follow curve standards such as YSI 400 and YSI 700, which are not interchangeable; the monitor must match the probe." },
-  "NTP": { full: "National Toxicology Program, or Network Time Protocol", tip: "The US program that lists carcinogens; in the networking lessons, the protocol that keeps device clocks synchronized.", more: "In the hazards lessons, NTP is the National Toxicology Program, which publishes the Report on Carcinogens alongside IARC and OSHA listings. In the healthcare IT lessons, NTP is the Network Time Protocol (UDP 123) that synchronizes clocks across monitors, servers, and network gear so logs and alarms line up. Read the sentence to tell which is meant." },
+  "NTP": { full: "National Toxicology Program", tip: "The US program that publishes the Report on Carcinogens, one of the carcinogen listings cited on a safety data sheet.", more: "Section 11 of a safety data sheet cites the NTP, IARC, and OSHA carcinogen listings. The NTP Report on Carcinogens classes substances as known or reasonably anticipated to be human carcinogens, which is what the exam expects you to associate with the letters in a hazard question.", alt: { full: "Network Time Protocol", tip: "The protocol (UDP 123) that keeps device clocks synchronized so logs, alarms, and records line up.", more: "Networked monitors, servers, and switches all point at the same time source over NTP. When clocks drift, alarm logs from different systems cannot be correlated, records land in the wrong order, and certificate and Kerberos checks can fail. Time synchronization is part of the integration checklist for any device that sends data to the EMR.", when: /time|clock|synchron|network|server|integrat|\bUDP\b/i } },
   "OBR": { full: "Observation request segment", tip: "The HL7 segment describing the order a result answers.", more: "OBR identifies which test or observation the following OBX segments belong to." },
   "OBX": { full: "Observation segment", tip: "The HL7 segment holding one observation and its value.", more: "Each vital sign or lab value is an OBX segment with an identifier, value, and units." },
   "OCR": { full: "Office for Civil Rights", tip: "The HHS office that enforces HIPAA privacy and security rules.", more: "OCR investigates complaints and breaches and issues penalties." },
@@ -598,7 +598,7 @@ FRA.acronyms = {
   "PaaS": { full: "Platform as a service", tip: "The provider runs the platform (OS, runtime, database); you deploy code.", more: "PaaS gives developers a managed environment to run applications without administering servers. You bring the code and data; the provider handles patching, scaling, and the runtime." },
   "PACS": { full: "Picture archiving and communication system", tip: "The server that stores and distributes medical images using DICOM.", more: "Imaging modalities send studies to PACS, and workstations retrieve them. Patient demographics come from the RIS or EMR through HL7." },
   "PASS": { full: "Pull, aim, squeeze, sweep", tip: "How to use a fire extinguisher.", more: "Pull the pin, aim at the base of the fire, squeeze the handle, sweep side to side. Use a class C or ABC extinguisher on energized electrical equipment; never water." },
-  "PC": { full: "Personal computer", tip: "A desktop or laptop for one user.", more: "The PC is the machine the A+ exam takes apart: motherboard, CPU, RAM, storage, power supply, and ports. In networking questions it is the client behind the phone or on the switch port." },
+  "PC": { full: "Personal computer", tip: "A desktop or laptop for one user.", more: "The PC is the everyday desktop or laptop: motherboard, CPU, RAM, storage, power supply, and ports. In networking questions it is the client behind the phone or on the switch port." },
   "PCA": { full: "Patient-controlled analgesia", tip: "An infusion pump that lets the patient self-dose pain medication within programmed limits.", more: "PCA pumps enforce a lockout interval and dose limits. Programming errors, such as a wrong concentration, are the classic PCA incident; drug libraries and independent double checks prevent them." },
   "PCB": { full: "Printed circuit board", tip: "The board that holds and connects a device's components.", more: "A faulty input PCB is the answer when one parameter fails while others work. Boards are replaced as units in most field service." },
   "PDCA": { full: "Plan, do, check, act", tip: "The continuous improvement cycle.", more: "PDCA structures quality projects: plan a change, try it, measure, then standardize or adjust." },
@@ -607,7 +607,7 @@ FRA.acronyms = {
   "PET": { full: "Positron emission tomography", tip: "Nuclear imaging of metabolic activity using a positron-emitting tracer such as FDG.", more: "PET detects pairs of gamma photons produced when positrons meet electrons. It is usually combined with CT for anatomy and used mainly in oncology." },
   "pH": { full: "Potential of hydrogen", tip: "The acidity scale; blood is normally 7.35 to 7.45.", more: "Blowing off CO2 raises blood pH; retaining it lowers pH. Blood gas analyzers measure pH with a glass electrode." },
   "PHI": { full: "Protected health information", tip: "Any health information tied to an identifiable person.", more: "PHI on devices must be encrypted, access limited, and sanitized before the device leaves the facility. Vendors handling it sign a BAA." },
-  "PID": { full: "Patient identification segment", tip: "The HL7 segment carrying patient name, ID, and demographics.", more: "PID is how a system matches a message to a patient, by medical record number. In the A+ course PID is a process identifier; read the context." },
+  "PID": { full: "Patient identification segment", tip: "The HL7 segment carrying patient name, ID, and demographics.", more: "PID is how a system matches a message to a patient, by medical record number." },
   "PM": { full: "Preventive maintenance", tip: "Scheduled inspection and testing of equipment before it fails.", more: "PM intervals come from manufacturer recommendations or an alternative equipment maintenance program. A PM includes safety tests, performance checks, battery runtime tests, and documentation in the CMMS." },
   "PNP": { full: "Positive-negative-positive transistor", tip: "A bipolar transistor that conducts when its base is pulled negative.", more: "PNP transistors are the complement of NPN. Together they form push-pull output stages." },
   "PoE": { full: "Power over Ethernet", tip: "Delivers DC power to devices over the data cable: 802.3af 15.4 W, 802.3at 30 W, 802.3bt 60 to 90 W.", more: "PoE lets phones, access points, and cameras run from the switch port with no separate power supply. A PoE switch (endspan) or an injector (midspan) supplies it. The device negotiates how much it may draw. If a device reboots or will not power up, check the switch's PoE budget and the standard it supports." },
@@ -622,7 +622,7 @@ FRA.acronyms = {
   "QC": { full: "Quality control", tip: "Running known samples to verify an analyzer is reading correctly.", more: "Lab analyzers run QC material each shift; results outside limits stop patient testing until fixed." },
   "QRS": { full: "QRS complex", tip: "The sharp ECG spike of ventricular depolarization; normally under 0.12 seconds wide.", more: "The QRS is the largest feature on the ECG and what monitors and defibrillators detect for heart rate and synchronization. A wide QRS suggests a ventricular origin or a conduction block." },
   "QT": { full: "QT interval", tip: "The ECG interval from the start of the QRS to the end of the T wave, under about 0.44 seconds.", more: "A prolonged QT interval raises the risk of dangerous arrhythmias and is watched when giving certain drugs." },
-  "RA": { full: "Right arm electrode (also right atrium)", tip: "The white ECG electrode on the right arm; in heart anatomy, the right atrium.", more: "In the AHA color code the right arm lead is white. In blood-flow shorthand RA is the right atrium, which receives venous blood before the right ventricle. In Security+ RA is a registration authority and in Network+ a router advertisement; read the context." },
+  "RA": { full: "Right arm electrode (also right atrium)", tip: "The white ECG electrode on the right arm; in heart anatomy, the right atrium.", more: "In the AHA color code the right arm lead is white. In blood-flow shorthand RA is the right atrium, which receives venous blood before the right ventricle." },
   "RACE": { full: "Rescue, alarm, confine, extinguish or evacuate", tip: "The order of actions when a fire is discovered.", more: "Rescue anyone in immediate danger, activate the alarm, confine the fire by closing doors, then extinguish if small or evacuate." },
   "RADIUS": { full: "Remote Authentication Dial-In User Service", tip: "The AAA server behind Wi-Fi Enterprise, VPNs, and 802.1X; UDP 1812 and 1813.", more: "A RADIUS server checks credentials for network access devices (switches, APs, VPN gateways) and tells them what the user is allowed. It encrypts only the password, uses UDP, and combines authentication and authorization, which is why TACACS+ is preferred for device administration." },
   "RAID": { full: "Redundant array of independent disks", tip: "Combining disks for speed, capacity, or fault tolerance: 0 stripe, 1 mirror, 5 stripe with parity, 6 double parity, 10 mirrored stripes.", more: "RAID 0 stripes data across disks for speed with no redundancy; one failure loses everything. RAID 1 mirrors two disks. RAID 5 stripes with one parity block and survives one disk failure (three disks minimum). RAID 6 has two parity blocks and survives two failures (four disks). RAID 10 mirrors pairs then stripes, needing four disks. RAID is availability, not backup." },
@@ -637,7 +637,7 @@ FRA.acronyms = {
   "RJ45": { full: "Registered jack 45", tip: "The eight-pin plug on Ethernet twisted-pair cables (properly an 8P8C connector).", more: "RJ45 is the everyday name for the Ethernet plug. It has eight positions and eight contacts, crimped onto four twisted pairs following the T568A or T568B pin-out. The smaller RJ11 is the telephone version." },
   "RL": { full: "Right leg electrode", tip: "The green ECG electrode on the right leg, the reference or driven ground.", more: "The right leg lead is not used for a trace; it is the reference that the driven-right-leg circuit uses to cancel common-mode interference." },
   "RMS": { full: "Root mean square", tip: "The effective value of an AC voltage or current, the DC equivalent for heating; 120 V mains is RMS.", more: "RMS equals peak divided by 1.414 for a sine wave. Multimeters read RMS; oscilloscopes show peak values. True-RMS meters are needed for non-sine waveforms such as ESU output." },
-  "RPM": { full: "Revolutions per minute", tip: "Rotation speed: hard drive platters at 5400 or 7200, fans, and laboratory centrifuges.", more: "Faster platters mean quicker access. In the CBET course centrifuge speed is set in RPM, but the force that separates samples is the relative centrifugal force, which also depends on the rotor radius." },
+  "RPM": { full: "Revolutions per minute", tip: "Rotation speed: hard drive platters at 5400 or 7200, fans, and laboratory centrifuges.", more: "Faster platters mean quicker access. Centrifuge speed is set in RPM, but the force that separates samples is the relative centrifugal force, which also depends on the rotor radius." },
   "RS-232": { full: "Recommended Standard 232 serial", tip: "The classic serial port: slow, simple, and still used for console access and legacy devices.", more: "RS-232 uses a DB9 connector on PCs and RJ45 or USB console cables on network gear. Older medical devices and lab analyzers still use it for data output." },
   "RTLS": { full: "Real-time location system", tip: "Tags and receivers that track equipment location inside the hospital.", more: "RTLS uses Wi-Fi, RFID, infrared, or ultrasound tags so staff can find pumps and biomeds can find devices due for PM." },
   "RV": { full: "Right ventricle", tip: "The chamber that pumps blood to the lungs.", more: "Blood flows body, right atrium, right ventricle, lungs, left atrium, left ventricle, body. The right ventricle works at low pressure." },
@@ -657,7 +657,7 @@ FRA.acronyms = {
   "SpO2": { full: "Peripheral oxygen saturation", tip: "The percentage of hemoglobin carrying oxygen, measured by a pulse oximeter.", more: "A pulse oximeter shines red (about 660 nm) and infrared (about 940 nm) light through a fingertip and compares absorption to compute saturation, normally 95 to 100 percent. Carbon monoxide poisoning reads falsely high; poor perfusion, motion, and nail polish cause errors." },
   "SSD": { full: "Solid-state drive", tip: "Flash storage with no moving parts: fast, silent, and shock resistant.", more: "SATA SSDs reach about 550 MB/s; NVMe SSDs several thousand MB/s. TRIM keeps them fast by telling the drive which blocks are free. They wear with writes but far outlast most systems." },
   "SSH": { full: "Secure Shell", tip: "Encrypted remote command-line access and file transfer on TCP 22; replaces Telnet and FTP.", more: "SSH authenticates with passwords or keys and encrypts the whole session. SFTP and SCP ride on it for file copies. Any question about managing a switch or server securely from the command line wants SSH." },
-  "ST": { full: "ST segment", tip: "The ECG segment between the QRS and the T wave, where injury and ischemia show as elevation or depression.", more: "Monitors measure ST deviation to detect heart attacks. In networking courses ST is a fiber connector; read the context." },
+  "ST": { full: "ST segment", tip: "The ECG segment between the QRS and the T wave, where injury and ischemia show as elevation or depression.", more: "Monitors measure ST deviation to detect heart attacks." },
   "STEL": { full: "Short-term exposure limit", tip: "The maximum average exposure over a 15-minute period.", more: "A STEL protects against brief high exposures that an 8-hour average would hide." },
   "SVT": { full: "Supraventricular tachycardia", tip: "A fast, regular rhythm originating above the ventricles, with narrow QRS.", more: "SVT is rapid and regular with normal-width QRS complexes, which distinguishes it from ventricular tachycardia." },
   "TC": { full: "Transport Canada", tip: "The Canadian counterpart of the DOT for cylinder rules.", more: "Cylinders in Canada carry TC markings equivalent to US DOT markings." },
@@ -684,7 +684,7 @@ FRA.acronyms = {
   "VLAN": { full: "Virtual local area network", tip: "A logical LAN on a switch: ports in different VLANs are separate broadcast domains.", more: "A VLAN splits one physical switch into several logical switches. Ports in VLAN 10 cannot talk to ports in VLAN 20 without a router or Layer 3 switch, which contains broadcasts and separates traffic such as voice, data, and guests. Trunk links carry many VLANs between switches using 802.1Q tags. A native VLAN is the untagged one on a trunk, and a voice VLAN lets a phone tag its traffic while the PC behind it stays untagged." },
   "VM": { full: "Virtual machine", tip: "A complete computer running as software on a hypervisor.", more: "A VM has its own operating system and virtual hardware but shares the physical host with others. Type 1 hypervisors run on bare metal; type 2 run on a host OS. VM escape, where code in a guest reaches the host, is the serious virtualization vulnerability; VM sprawl is the management one." },
   "VPN": { full: "Virtual private network", tip: "An encrypted tunnel across an untrusted network such as the internet.", more: "A VPN makes a remote user or site appear to be on the private network by encrypting traffic between the endpoints. Site-to-site VPNs join offices, usually with IPsec; remote-access VPNs connect individual users with IPsec or TLS clients. Split tunneling sends only corporate traffic through the tunnel; full tunneling sends everything." },
-  "VT": { full: "Ventricular tachycardia", tip: "A fast rhythm from the ventricles with wide QRS complexes; pulseless VT is shockable.", more: "VT is rapid and wide. With a pulse it may be treated with drugs or synchronized cardioversion; without a pulse it is defibrillated. In the A+ course VT is Intel's virtualization technology; read the context." },
+  "VT": { full: "Ventricular tachycardia", tip: "A fast rhythm from the ventricles with wide QRS complexes; pulseless VT is shockable.", more: "VT is rapid and wide. With a pulse it may be treated with drugs or synchronized cardioversion; without a pulse it is defibrillated like ventricular fibrillation, and an AED will advise a shock.", alt: { full: "Tidal volume", tip: "The volume of one breath, set on a ventilator at about 6 to 8 mL per kilogram of ideal body weight.", more: "Tidal volume times respiratory rate gives minute volume, the total air moved each minute. Ventilators deliver a set tidal volume in volume-control modes or let it vary with pressure in pressure-control modes; too large a volume injures the lungs, which is why the 6 to 8 mL/kg rule exists. Test lungs and volume testers check that the delivered volume matches the set one.", when: /tidal|ventilat|mL\/kg|breath|minute volume|\bPEEP\b|\bVE\b|volume|respirat|\bEtCO2\b|oxygenat/i } },
   "WAN": { full: "Wide area network", tip: "Connects LANs across cities or countries, usually over links leased from a provider.", more: "A WAN joins sites that are far apart. Because the organization cannot run its own cable between cities, it rents circuits or internet connections from a carrier, which is why WAN links are slower and cost per month. The internet is the largest WAN. Routers sit at the edge of each site to send traffic across the WAN." },
   "WEP": { full: "Wired Equivalent Privacy", tip: "The original Wi-Fi encryption, broken in minutes; never use it.", more: "WEP used the RC4 cipher with short, badly managed keys, and tools can recover the key from captured traffic in minutes. Any question describing WEP wants you to replace it with WPA2 or WPA3." },
   "Wi-Fi": { full: "Wireless fidelity", tip: "The trade name for IEEE 802.11 wireless networking.", more: "Wi-Fi is the brand the Wi-Fi Alliance gives to interoperable 802.11 equipment. Generations are numbered: Wi-Fi 4 is 802.11n, Wi-Fi 5 is 802.11ac, Wi-Fi 6 and 6E are 802.11ax (6E adds the 6 GHz band), and Wi-Fi 7 is 802.11be. Bands are 2.4 GHz (range, interference), 5 GHz (speed, more channels), and 6 GHz." },
@@ -8667,8 +8667,13 @@ FRA.questions.push(
   const ACR = FRA.acronyms || {};
   const ACR_KEYS = Object.keys(ACR).filter(k => ACR[k] && ACR[k].full).sort((a, b) => b.length - a.length || a.localeCompare(b));
   const ACR_RE = ACR_KEYS.length ? new RegExp('(^|[^A-Za-z0-9_])(' + ACR_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('|') + ')(s|es)?(?![A-Za-z0-9_])', 'g') : null;
+  // An entry may carry a second meaning (alt: { full, tip, more, when }) that applies when the text around the acronym
+  // matches when: STP is Spanning Tree Protocol in a switching paragraph and shielded twisted pair in a cabling one.
+  ACR_KEYS.forEach(k => { const alt = ACR[k].alt; if (!alt) return; const w = alt.when; alt.when = typeof w === 'string' ? new RegExp(w, 'i') : w && w.source ? new RegExp(w.source, w.flags.replace('g', '')) : null; });
+  const acrSense = (key, text, at) => { const alt = ACR[key].alt; return alt && alt.when && alt.when.test(text.slice(Math.max(0, at - 160), at + 160)) ? 1 : 0; };
+  const acrEntry = (key, sense) => { const a = ACR[key]; return a && String(sense) === '1' && a.alt ? a.alt : a; };
   const acrWrap = html => !ACR_RE ? html : html.split(/(<code>[\s\S]*?<\/code>)/).map(part => part.startsWith('<code>') ? part
-    : part.replace(ACR_RE, (m, pre, key, pl) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
+    : part.replace(ACR_RE, (m, pre, key, pl, at) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" data-sense="${acrSense(key, part, at + pre.length)}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
   const inline = s => acrWrap(esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -8820,6 +8825,16 @@ FRA.questions.push(
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
+  // The learner's answer for a stored record, by option text. Answer keys get rebalanced between builds, so an index
+  // saved by an older build can point at a different option today; records store the text (pick) and are matched by it.
+  // Older records without it fall back to the index, except where that index now lands on the correct answer of a
+  // question marked wrong, which cannot be what the learner chose.
+  function pickText(q, r, wrong) {
+    if (r.pick != null) { const i = q.a.indexOf(r.pick); return i >= 0 ? `${letters[i]}. ${esc(q.a[i])}` : esc(r.pick); }
+    if (!(r.choice >= 0)) return null;
+    if (wrong && r.choice === q.c) return 'a different option (the answer choices have been reordered since this test)';
+    return `${letters[r.choice]}. ${esc(q.a[r.choice])}`;
+  }
 
   // ---------- plan (personalized tutorial) ----------
   function planFromStarter(rec, examIdx) {
@@ -8828,7 +8843,7 @@ FRA.questions.push(
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const d = L[q.t].domain; const p = points(r.correct, r.conf); domPts[d] += p; domCount[d]++;
       const k = kindOf(r.correct, r.conf);
-      if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, conf: r.conf, source: 'starter' });
+      if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, pick: r.pick, conf: r.conf, source: 'starter' });
     });
     const depth = {};
     for (const d of DOMAIN_IDS) {
@@ -8843,7 +8858,7 @@ FRA.questions.push(
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
-      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: rec.noConf ? null : r.conf, source: 'test' }); }
+      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, pick: r.pick, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
     const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
       .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
@@ -8916,13 +8931,32 @@ FRA.questions.push(
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
-  let acrOpen = null; // acronym whose deeper explanation is open
+  let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
-  function render() {
+  // ---------- browser history ----------
+  // Every view change gets a history entry whose hash names the view (#lesson/u3l2), so Back and Forward move within
+  // the course instead of leaving it, and a reload or a shared link opens the view named in the hash.
+  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback'];
+  const viewKey = v => v.name + (v.arg != null && v.arg !== '' ? '/' + v.arg : '');
+  function viewFromHash(h) { const m = /^#([a-z]+)(?:\/([^\s#]+))?$/.exec(h || ''); if (!m || !HASH_VIEWS.includes(m[1])) return null; return m[2] != null ? { name: m[1], arg: decodeURIComponent(m[2]) } : { name: m[1] }; }
+  let histKey = null;
+  function syncHistory() {
+    const v = S.view || { name: 'home' }; const key = viewKey(v); if (key === histKey) return;
+    const method = histKey === null ? 'replaceState' : 'pushState'; histKey = key;
+    try { history[method]({ view: v }, '', location.pathname + location.search + '#' + encodeURI(key)); } catch (e) { /* no history in this context */ }
+  }
+  try { history.scrollRestoration = 'manual'; } catch (e) { /* ignore */ }
+  window.addEventListener('popstate', e => {
+    const v = (e.state && e.state.view) || viewFromHash(location.hash) || { name: 'home' };
+    histKey = viewKey(v); S.view = v; save(); render(); window.scrollTo(0, 0);
+  });
+
+  function render() { paint(); syncHistory(); }
+  function paint() {
     const v = S.view || { name: 'home' };
     fbReg = []; acrHide();
     if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
@@ -9138,7 +9172,7 @@ FRA.questions.push(
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
       return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
         <div class="stem">${esc(q.q)}</div>
-        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
+        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${pickText(q, r, wrong) || 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
     const domainReason = entry ? entry.reasons.find(r => r.kind === 'domain') : null;
     let quiz;
@@ -9277,7 +9311,7 @@ FRA.questions.push(
       const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
       const res = recordAnswer(q, a.choice, conf);
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
-      review.push({ q: slim(q), choice: a.choice, conf, correct: res.correct });
+      review.push({ q: slim(q), choice: a.choice, pick: a.choice >= 0 ? q.a[a.choice] : null, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
     const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
@@ -9337,7 +9371,7 @@ FRA.questions.push(
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
         : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
-    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
+    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${pickText(q, r, wrong) || 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
@@ -9454,13 +9488,13 @@ FRA.questions.push(
   function acrSection(n) {
     if (!ACR_KEYS.length) return '';
     const keys = ACR_KEYS.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
-    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}">${esc(k)}</button></td><td>${esc(ACR[k].full)}</td><td>${esc(ACR[k].tip)}</td></tr>`).join('')}</tbody></table></div></section>`;
+    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => [ACR[k]].concat(ACR[k].alt ? [ACR[k].alt] : []).map((a, i) => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}" data-sense="${i}">${esc(k)}</button></td><td>${esc(a.full)}</td><td>${esc(a.tip)}</td></tr>`).join('')).join('')}</tbody></table></div></section>`;
   }
   function acrModal() {
-    if (!acrOpen || !ACR[acrOpen]) return '';
-    const a = ACR[acrOpen];
+    if (!acrOpen || !ACR[acrOpen.key]) return '';
+    const a = acrEntry(acrOpen.key, acrOpen.sense);
     return `<div class="modal-back" data-act="acr-close"><div class="modal stack acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-title">
-      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen)}</span>${esc(a.full)}</h3></div>
+      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen.key)}</span>${esc(a.full)}</h3></div>
       <p class="acr-tip-text"><strong>${esc(a.tip)}</strong></p>
       <div class="lesson-body acr-more">${renderBody(a.more || '')}</div>
       <div class="row spread"><button class="btn ghost small" data-act="acr-all">All acronyms</button><button class="btn primary" data-act="acr-close">Close</button></div>
@@ -9469,7 +9503,7 @@ FRA.questions.push(
   // Hover tooltip: one shared element, positioned under the acronym and kept inside the viewport.
   let acrTipEl = null;
   function acrShow(el) {
-    const a = ACR[el.dataset.arg]; if (!a) return;
+    const a = acrEntry(el.dataset.arg, el.dataset.sense); if (!a) return;
     if (!acrTipEl) { acrTipEl = document.createElement('div'); acrTipEl.className = 'acr-tip'; acrTipEl.id = 'acr-tip'; acrTipEl.setAttribute('role', 'tooltip'); document.body.appendChild(acrTipEl); }
     acrTipEl.innerHTML = `<b>${esc(el.dataset.arg)}: ${esc(a.full)}</b>${esc(a.tip)}`;
     acrTipEl.style.maxWidth = Math.min(340, window.innerWidth - 16) + 'px'; acrTipEl.style.display = 'block';
@@ -9603,7 +9637,7 @@ FRA.questions.push(
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
     }
     const res = recordAnswer(q, choice, conf);
-    sess.answers[sess.i] = { choice, conf, correct: res.correct, q: slim(q) };
+    sess.answers[sess.i] = { choice, pick: choice >= 0 ? q.a[choice] : null, conf, correct: res.correct, q: slim(q) };
     sess.submitted = true;
     if (sess.kind === 'train') {
       sess.drills++; sess.log.push({ t: q.t, correct: res.correct });
@@ -9652,7 +9686,7 @@ FRA.questions.push(
         if (fb && fb.kind === 'lesson' && fb.ref.lesson === id) { fb.rating = r; btn.closest('.rate-row').querySelectorAll('.rate').forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false')); return; }
         const l = L[id]; fb = { kind: 'lesson', ref: { lesson: id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: r, note: `Rating ${r}/10 saved. Add a comment if you like, or just close this.` };
         render(); const ta = $('#fb-text'); if (ta) ta.focus(); toast(`Rated ${r}/10`); return; }
-      case 'acr': { if (!ACR[arg]) return; acrOpen = arg; fb = null; render(); return; }
+      case 'acr': { if (!ACR[arg]) return; acrOpen = { key: arg, sense: btn.dataset.sense === '1' ? 1 : 0 }; fb = null; render(); return; }
       case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
       case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
@@ -9712,7 +9746,7 @@ FRA.questions.push(
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
     if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
-    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = e.target.dataset.arg; render(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = { key: e.target.dataset.arg, sense: e.target.dataset.sense === '1' ? 1 : 0 }; render(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
@@ -9796,10 +9830,12 @@ FRA.questions.push(
       if (!links) throw new Error('no acronym links rendered in the first five lessons');
       if (document.querySelector('.lesson-body pre .acr, .lesson-body code .acr')) throw new Error('acronym links inside code');
       const withLinks = lessons.find(l => { go('lesson', l.id); return !!document.querySelector('.lesson-body .acr'); }); if (!withLinks) throw new Error('no lesson renders an acronym link');
-      acrOpen = document.querySelector('.lesson-body .acr').dataset.arg; render();
-      if (!$('#acr-title') || !document.body.textContent.includes(ACR[acrOpen].full)) throw new Error('acronym modal did not render'); acrOpen = null;
-      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== ACR_KEYS.length) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${ACR_KEYS.length}`);
-      log.push(`acronyms keys=${ACR_KEYS.length} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
+      const acrEl = document.querySelector('.lesson-body .acr'); acrOpen = { key: acrEl.dataset.arg, sense: acrEl.dataset.sense === '1' ? 1 : 0 }; render();
+      if (!$('#acr-title') || !document.body.textContent.includes(acrEntry(acrOpen.key, acrOpen.sense).full)) throw new Error('acronym modal did not render'); acrOpen = null;
+      // Every key gets a row, and a key with a second meaning gets one row per meaning.
+      const senses = ACR_KEYS.reduce((t, k) => t + (ACR[k].alt ? 2 : 1), 0);
+      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== senses) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${senses}`);
+      log.push(`acronyms keys=${ACR_KEYS.length} senses=${senses} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
     } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
@@ -9831,8 +9867,8 @@ FRA.questions.push(
   if (location.hash === '#selftest' && location.protocol === 'file:') {
     try { runSelfTest(); } catch (err) { document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">FAIL ${esc(err.stack || err)}</pre>`); }
   } else {
-    if (location.hash === '#cheatsheet' || location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
-    else if (location.hash === '#feedback') S.view = { name: 'feedback' };
+    const hv = viewFromHash(location.hash); if (hv) S.view = hv;
+    else if (location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
     render();
     if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }

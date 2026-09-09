@@ -70,8 +70,13 @@
   const ACR = FRA.acronyms || {};
   const ACR_KEYS = Object.keys(ACR).filter(k => ACR[k] && ACR[k].full).sort((a, b) => b.length - a.length || a.localeCompare(b));
   const ACR_RE = ACR_KEYS.length ? new RegExp('(^|[^A-Za-z0-9_])(' + ACR_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('|') + ')(s|es)?(?![A-Za-z0-9_])', 'g') : null;
+  // An entry may carry a second meaning (alt: { full, tip, more, when }) that applies when the text around the acronym
+  // matches when: STP is Spanning Tree Protocol in a switching paragraph and shielded twisted pair in a cabling one.
+  ACR_KEYS.forEach(k => { const alt = ACR[k].alt; if (!alt) return; const w = alt.when; alt.when = typeof w === 'string' ? new RegExp(w, 'i') : w && w.source ? new RegExp(w.source, w.flags.replace('g', '')) : null; });
+  const acrSense = (key, text, at) => { const alt = ACR[key].alt; return alt && alt.when && alt.when.test(text.slice(Math.max(0, at - 160), at + 160)) ? 1 : 0; };
+  const acrEntry = (key, sense) => { const a = ACR[key]; return a && String(sense) === '1' && a.alt ? a.alt : a; };
   const acrWrap = html => !ACR_RE ? html : html.split(/(<code>[\s\S]*?<\/code>)/).map(part => part.startsWith('<code>') ? part
-    : part.replace(ACR_RE, (m, pre, key, pl) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
+    : part.replace(ACR_RE, (m, pre, key, pl, at) => `${pre}<span class="acr" data-act="acr" data-arg="${key}" data-sense="${acrSense(key, part, at + pre.length)}" role="button" tabindex="0">${key}${pl || ''}</span>`)).join('');
   const inline = s => acrWrap(esc(s).replace(/\{\{(.+?)\}\}/g, '<code>$1</code>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -223,6 +228,16 @@
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
+  // The learner's answer for a stored record, by option text. Answer keys get rebalanced between builds, so an index
+  // saved by an older build can point at a different option today; records store the text (pick) and are matched by it.
+  // Older records without it fall back to the index, except where that index now lands on the correct answer of a
+  // question marked wrong, which cannot be what the learner chose.
+  function pickText(q, r, wrong) {
+    if (r.pick != null) { const i = q.a.indexOf(r.pick); return i >= 0 ? `${letters[i]}. ${esc(q.a[i])}` : esc(r.pick); }
+    if (!(r.choice >= 0)) return null;
+    if (wrong && r.choice === q.c) return 'a different option (the answer choices have been reordered since this test)';
+    return `${letters[r.choice]}. ${esc(q.a[r.choice])}`;
+  }
 
   // ---------- plan (personalized tutorial) ----------
   function planFromStarter(rec, examIdx) {
@@ -231,7 +246,7 @@
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const d = L[q.t].domain; const p = points(r.correct, r.conf); domPts[d] += p; domCount[d]++;
       const k = kindOf(r.correct, r.conf);
-      if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, conf: r.conf, source: 'starter' });
+      if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, pick: r.pick, conf: r.conf, source: 'starter' });
     });
     const depth = {};
     for (const d of DOMAIN_IDS) {
@@ -246,7 +261,7 @@
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
-      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, conf: rec.noConf ? null : r.conf, source: 'test' }); }
+      if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, pick: r.pick, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
     const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
       .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
@@ -319,13 +334,32 @@
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
-  let acrOpen = null; // acronym whose deeper explanation is open
+  let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
-  function render() {
+  // ---------- browser history ----------
+  // Every view change gets a history entry whose hash names the view (#lesson/u3l2), so Back and Forward move within
+  // the course instead of leaving it, and a reload or a shared link opens the view named in the hash.
+  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback'];
+  const viewKey = v => v.name + (v.arg != null && v.arg !== '' ? '/' + v.arg : '');
+  function viewFromHash(h) { const m = /^#([a-z]+)(?:\/([^\s#]+))?$/.exec(h || ''); if (!m || !HASH_VIEWS.includes(m[1])) return null; return m[2] != null ? { name: m[1], arg: decodeURIComponent(m[2]) } : { name: m[1] }; }
+  let histKey = null;
+  function syncHistory() {
+    const v = S.view || { name: 'home' }; const key = viewKey(v); if (key === histKey) return;
+    const method = histKey === null ? 'replaceState' : 'pushState'; histKey = key;
+    try { history[method]({ view: v }, '', location.pathname + location.search + '#' + encodeURI(key)); } catch (e) { /* no history in this context */ }
+  }
+  try { history.scrollRestoration = 'manual'; } catch (e) { /* ignore */ }
+  window.addEventListener('popstate', e => {
+    const v = (e.state && e.state.view) || viewFromHash(location.hash) || { name: 'home' };
+    histKey = viewKey(v); S.view = v; save(); render(); window.scrollTo(0, 0);
+  });
+
+  function render() { paint(); syncHistory(); }
+  function paint() {
     const v = S.view || { name: 'home' };
     fbReg = []; acrHide();
     if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
@@ -541,7 +575,7 @@
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
       return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
         <div class="stem">${esc(q.q)}</div>
-        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
+        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${pickText(q, r, wrong) || 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
     const domainReason = entry ? entry.reasons.find(r => r.kind === 'domain') : null;
     let quiz;
@@ -680,7 +714,7 @@
       const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
       const res = recordAnswer(q, a.choice, conf);
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
-      review.push({ q: slim(q), choice: a.choice, conf, correct: res.correct });
+      review.push({ q: slim(q), choice: a.choice, pick: a.choice >= 0 ? q.a[a.choice] : null, conf, correct: res.correct });
     });
     const total = items.length; const p = pct(score, total);
     const rec = { date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
@@ -740,7 +774,7 @@
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
         : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
-    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${r.choice >= 0 ? letters[r.choice] + '. ' + esc(q.a[r.choice]) : 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
+    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${pickText(q, r, wrong) || 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
@@ -857,13 +891,13 @@
   function acrSection(n) {
     if (!ACR_KEYS.length) return '';
     const keys = ACR_KEYS.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
-    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}">${esc(k)}</button></td><td>${esc(ACR[k].full)}</td><td>${esc(ACR[k].tip)}</td></tr>`).join('')}</tbody></table></div></section>`;
+    return `<section class="cs-section cs-acronyms" id="cs-acronyms"><h2><span class="cs-num">${String(n).padStart(2, '0')}</span>Acronyms</h2><p class="ink2 cs-acr-intro">Every acronym used in this course, ${keys.length} in all. In lessons and on this sheet, hover over an acronym for the short version; click it, or click one below, for the longer explanation.</p><div class="table-wrap"><table class="cs-table acr-table"><thead><tr><th>Acronym</th><th>Stands for</th><th>Meaning</th></tr></thead><tbody>${keys.map(k => [ACR[k]].concat(ACR[k].alt ? [ACR[k].alt] : []).map((a, i) => `<tr><td><button class="acr-key" data-act="acr" data-arg="${esc(k)}" data-sense="${i}">${esc(k)}</button></td><td>${esc(a.full)}</td><td>${esc(a.tip)}</td></tr>`).join('')).join('')}</tbody></table></div></section>`;
   }
   function acrModal() {
-    if (!acrOpen || !ACR[acrOpen]) return '';
-    const a = ACR[acrOpen];
+    if (!acrOpen || !ACR[acrOpen.key]) return '';
+    const a = acrEntry(acrOpen.key, acrOpen.sense);
     return `<div class="modal-back" data-act="acr-close"><div class="modal stack acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-title">
-      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen)}</span>${esc(a.full)}</h3></div>
+      <div><div class="eyebrow">Acronym</div><h3 id="acr-title"><span class="acr-big">${esc(acrOpen.key)}</span>${esc(a.full)}</h3></div>
       <p class="acr-tip-text"><strong>${esc(a.tip)}</strong></p>
       <div class="lesson-body acr-more">${renderBody(a.more || '')}</div>
       <div class="row spread"><button class="btn ghost small" data-act="acr-all">All acronyms</button><button class="btn primary" data-act="acr-close">Close</button></div>
@@ -872,7 +906,7 @@
   // Hover tooltip: one shared element, positioned under the acronym and kept inside the viewport.
   let acrTipEl = null;
   function acrShow(el) {
-    const a = ACR[el.dataset.arg]; if (!a) return;
+    const a = acrEntry(el.dataset.arg, el.dataset.sense); if (!a) return;
     if (!acrTipEl) { acrTipEl = document.createElement('div'); acrTipEl.className = 'acr-tip'; acrTipEl.id = 'acr-tip'; acrTipEl.setAttribute('role', 'tooltip'); document.body.appendChild(acrTipEl); }
     acrTipEl.innerHTML = `<b>${esc(el.dataset.arg)}: ${esc(a.full)}</b>${esc(a.tip)}`;
     acrTipEl.style.maxWidth = Math.min(340, window.innerWidth - 16) + 'px'; acrTipEl.style.display = 'block';
@@ -1006,7 +1040,7 @@
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
     }
     const res = recordAnswer(q, choice, conf);
-    sess.answers[sess.i] = { choice, conf, correct: res.correct, q: slim(q) };
+    sess.answers[sess.i] = { choice, pick: choice >= 0 ? q.a[choice] : null, conf, correct: res.correct, q: slim(q) };
     sess.submitted = true;
     if (sess.kind === 'train') {
       sess.drills++; sess.log.push({ t: q.t, correct: res.correct });
@@ -1055,7 +1089,7 @@
         if (fb && fb.kind === 'lesson' && fb.ref.lesson === id) { fb.rating = r; btn.closest('.rate-row').querySelectorAll('.rate').forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false')); return; }
         const l = L[id]; fb = { kind: 'lesson', ref: { lesson: id, view: S.view.name }, title: 'Feedback on this lesson', sub: `${l.title} · Unit ${l.unit.n}`, rating: r, note: `Rating ${r}/10 saved. Add a comment if you like, or just close this.` };
         render(); const ta = $('#fb-text'); if (ta) ta.focus(); toast(`Rated ${r}/10`); return; }
-      case 'acr': { if (!ACR[arg]) return; acrOpen = arg; fb = null; render(); return; }
+      case 'acr': { if (!ACR[arg]) return; acrOpen = { key: arg, sense: btn.dataset.sense === '1' ? 1 : 0 }; fb = null; render(); return; }
       case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
       case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
@@ -1115,7 +1149,7 @@
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
     if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
-    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = e.target.dataset.arg; render(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = { key: e.target.dataset.arg, sense: e.target.dataset.sense === '1' ? 1 : 0 }; render(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
@@ -1199,10 +1233,12 @@
       if (!links) throw new Error('no acronym links rendered in the first five lessons');
       if (document.querySelector('.lesson-body pre .acr, .lesson-body code .acr')) throw new Error('acronym links inside code');
       const withLinks = lessons.find(l => { go('lesson', l.id); return !!document.querySelector('.lesson-body .acr'); }); if (!withLinks) throw new Error('no lesson renders an acronym link');
-      acrOpen = document.querySelector('.lesson-body .acr').dataset.arg; render();
-      if (!$('#acr-title') || !document.body.textContent.includes(ACR[acrOpen].full)) throw new Error('acronym modal did not render'); acrOpen = null;
-      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== ACR_KEYS.length) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${ACR_KEYS.length}`);
-      log.push(`acronyms keys=${ACR_KEYS.length} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
+      const acrEl = document.querySelector('.lesson-body .acr'); acrOpen = { key: acrEl.dataset.arg, sense: acrEl.dataset.sense === '1' ? 1 : 0 }; render();
+      if (!$('#acr-title') || !document.body.textContent.includes(acrEntry(acrOpen.key, acrOpen.sense).full)) throw new Error('acronym modal did not render'); acrOpen = null;
+      // Every key gets a row, and a key with a second meaning gets one row per meaning.
+      const senses = ACR_KEYS.reduce((t, k) => t + (ACR[k].alt ? 2 : 1), 0);
+      go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== senses) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${senses}`);
+      log.push(`acronyms keys=${ACR_KEYS.length} senses=${senses} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
     } else log.push('acronyms: no glossary in this pack');
     // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
@@ -1234,8 +1270,8 @@
   if (location.hash === '#selftest' && location.protocol === 'file:') {
     try { runSelfTest(); } catch (err) { document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">FAIL ${esc(err.stack || err)}</pre>`); }
   } else {
-    if (location.hash === '#cheatsheet' || location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
-    else if (location.hash === '#feedback') S.view = { name: 'feedback' };
+    const hv = viewFromHash(location.hash); if (hv) S.view = hv;
+    else if (location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
     render();
     if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }

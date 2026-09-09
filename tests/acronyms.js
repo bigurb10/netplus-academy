@@ -5,6 +5,8 @@
 const fs = require('fs'); const path = require('path');
 const { JSDOM } = require('jsdom');
 const ROOT = path.resolve(__dirname, '..');
+// How each course names itself. A glossary entry may not name any other course: every pack stands alone.
+const COURSE_NAMES = { netplus: /Network\+|\bNet\+/, secplus: /Security\+|\bSec\+/, cbet: /\bCBET\b/, aplus1: /\bA\+(?!\+)/, aplus2: /\bA\+(?!\+)/ };
 
 function loadPack(dir) {
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort();
@@ -70,6 +72,15 @@ function check(dir) {
     for (const f of ['full', 'tip', 'more']) if (typeof e[f] !== 'string' || e[f].trim().length < 3) problems.push(`${k}: missing ${f}`);
     if (e.tip && e.tip.length > 160) problems.push(`${k}: tip is ${e.tip.length} chars (keep it under 160)`);
     if (ignore.has(k)) problems.push(`${k}: is both a glossary key and on the ignore list`);
+    if (e.alt) {
+      for (const f of ['full', 'tip', 'more']) if (typeof e.alt[f] !== 'string' || e.alt[f].trim().length < 3) problems.push(`${k}: alt missing ${f}`);
+      if (e.alt.tip && e.alt.tip.length > 160) problems.push(`${k}: alt tip is ${e.alt.tip.length} chars (keep it under 160)`);
+      if (Object.prototype.toString.call(e.alt.when) !== '[object RegExp]' && typeof e.alt.when !== 'string') problems.push(`${k}: alt needs a when pattern (RegExp or string)`);
+    }
+    // Each glossary stands alone: no entry may lean on another course, name one, or tell the reader to guess from context.
+    const text = [e.full, e.tip, e.more, e.alt && e.alt.full, e.alt && e.alt.tip, e.alt && e.alt.more].filter(Boolean).join(' ');
+    if (/\bIn (the )?[A-Z][A-Za-z+ ]*courses?\b/.test(text) || /same letters|read the context|networking courses/i.test(text)) problems.push(`${k}: refers to another course or to "the context"`);
+    const named = new Set(); for (const c of Object.keys(COURSE_NAMES)) { const re = COURSE_NAMES[c]; if (c === id || (COURSE_NAMES[id] && re.source === COURSE_NAMES[id].source) || named.has(re.source) || !re.test(text)) continue; named.add(re.source); problems.push(`${k}: names another course (${re.source})`); }
     if (!/^[A-Za-z0-9][A-Za-z0-9+.\/-]*$/.test(k)) problems.push(`${k}: key has characters the matcher cannot handle`);
   }
   const missing = Object.keys(tutorial.counts).filter(t => !keys[t]).sort((a, b) => tutorial.counts[b] - tutorial.counts[a] || a.localeCompare(b));
