@@ -59,9 +59,16 @@ be restartable without taking the other down.
 
 ## Deployment
 
-As of 2026-09-10, the Caddy block and the `api.fieldreadyacademy.com` DNS record are
-not yet in place, so the service is reachable only on loopback (`localhost:8001` on the
-box itself), not from the internet.
+**Live at `https://api.fieldreadyacademy.com` since 2026-09-10.** The DNS A record and the
+Caddy block are both in place, with a production Let's Encrypt certificate. `/healthz`
+returns `{"ok":true}` from the internet and every `/v1/progress` route returns 401 without
+a token; `/v1/feedback` accepts anonymous POSTs.
+
+**Redeploying is not automatic.** The service runs from a copy under `/opt/fieldready-api`,
+so a change under `api/app/` does nothing until it is copied up. This bit once already: the
+box ran pre-review code for hours, detectable only because `/docs` answered 200 when the
+current code disables it. The code tree is read-only to the service and it runs as the
+non-root `fieldready` user, so the chown and the precompile below are not optional.
 
 Runs on the Hetzner box (87.99.151.69) as `fieldready-api.service`, uvicorn bound to
 **127.0.0.1:8001**, reached only through Caddy at `api.fieldreadyacademy.com`. ufw opens
