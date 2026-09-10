@@ -1,0 +1,11 @@
+# Course progress API. Loopback only; this is the only route in. Blobs are
+# capped at PROGRESS_MAX_BLOB_BYTES = 2,000,000 bytes (api/app/config.py /
+# .env). max_size below must stay just above that ceiling -- change the two
+# together, not one without the other.
+api.fieldreadyacademy.com {
+	encode zstd gzip
+	request_body {
+		max_size 2500KB
+	}
+	reverse_proxy localhost:8001
+}

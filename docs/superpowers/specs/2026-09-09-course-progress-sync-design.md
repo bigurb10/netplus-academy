@@ -61,9 +61,14 @@ the AuthKit JWKS by issuer and audience — the same approach as ServiceForge's
 | Route | Behaviour |
 |---|---|
 | `GET /v1/progress/{course_id}` | `{state, version}` with `ETag: "<version>"`. Honours `If-None-Match` → 304. 404 when absent. |
-| `PUT /v1/progress/{course_id}` | Requires `If-Match: "<version>"`. 412 when stale. `If-Match: *` creates. Returns the new version. |
+| `PUT /v1/progress/{course_id}` | Requires a precondition: `If-Match: "<version>"` updates, `If-None-Match: *` creates (`If-Match: *` is accepted as an alias). 428 when neither is sent, 412 when the precondition fails. Returns `{version}` and the new `ETag`; the state is not echoed back. |
 | `DELETE /v1/progress/{course_id}` | Deletes the row. Supports account data deletion. |
 | `GET /v1/progress` | `[{course_id, version, updated_at}]` for the signed-in user. |
+
+The write paths deliberately do not return the state. The client already holds what it sent,
+echoing a blob of up to 2 MB back is waste, and the value the server could cheaply echo is the
+request's own dict rather than a re-read of what jsonb stored (jsonb preserves neither object key
+order nor numeric literal formatting). `GET` is the only source of truth for state.
 
 412 is the entire concurrency mechanism. The client re-GETs, re-merges, and retries, bounded at
 three attempts. Merge is associative and idempotent, so retrying is always safe.

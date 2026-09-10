@@ -1,0 +1,26 @@
+[project]
+name = "fieldready-progress-api"
+version = "1.0.0"
+description = "Course progress blob store for FieldReady Academy"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "psycopg[binary,pool]>=3.2",
+    # auth.py passes issuer=[issuer, issuer + "/"] to jwt.decode(); PyJWT
+    # only accepts a list for `issuer` from 2.10 onward. Below that, every
+    # token is rejected with InvalidIssuerError, which looks exactly like a
+    # WorkOS misconfiguration.
+    "pyjwt[crypto]>=2.10",
+    "pydantic-settings>=2.5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "httpx2>=2.0"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

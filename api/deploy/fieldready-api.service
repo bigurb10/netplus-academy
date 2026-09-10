@@ -1,0 +1,41 @@
+[Unit]
+Description=FieldReady Academy course progress API
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+# 30s Postgres-pool timeouts on a bad PROGRESS_DB_URL outlast systemd's default
+# rate-limit window, so a persistently failing start never trips the limiter.
+# Widen the window explicitly so a broken service eventually stops retrying.
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=fieldready
+Group=fieldready
+WorkingDirectory=/opt/fieldready-api
+EnvironmentFile=/opt/fieldready-api/.env
+# Bound to loopback: Caddy is the only way in, ufw never opens 8001.
+# 8000 belongs to ServiceForge.
+ExecStart=/opt/fieldready-api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001 --limit-concurrency 64
+Restart=always
+RestartSec=3
+# FastAPI buffers and JSON-parses PUT bodies before dependencies (and auth) run,
+# so an anonymous caller can make the box do real parsing work. These caps turn
+# an OOM in this service into a restart of this service, not an OOM that takes
+# the box (and Caddy, and the live course site) down with it.
+MemoryMax=512M
+MemoryHigh=384M
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target
