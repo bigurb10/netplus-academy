@@ -53,3 +53,35 @@ def clean(pool):
     with pool.connection() as conn:
         conn.execute("TRUNCATE progress")
     yield
+
+
+import time
+
+import jwt
+import pytest
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+@pytest.fixture(scope="session")
+def rsa_key():
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+@pytest.fixture(scope="session")
+def mint(rsa_key):
+    """Mint a signed JWT. Every claim is overridable so tests can break one."""
+
+    def _mint(**overrides):
+        now = int(time.time())
+        claims = {
+            "iss": "https://issuer.example",
+            "aud": "https://api.fieldreadyacademy.com",
+            "sub": "user_01TEST",
+            "iat": now,
+            "exp": now + 3600,
+        }
+        claims.update(overrides)
+        claims = {k: v for k, v in claims.items() if v is not None}
+        return jwt.encode(claims, rsa_key, algorithm="RS256")
+
+    return _mint
