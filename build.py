@@ -40,7 +40,10 @@ def build(course_id):
     course_dir = os.path.join(COURSES, course_id)
     m = manifest(course_dir)
     css = read(os.path.join(ENGINE, "styles.css"))
-    scripts = "\n".join(read(p) for p in course_files(course_dir)) + "\n" + read(os.path.join(ENGINE, "merge.js")) + "\n" + read(os.path.join(ENGINE, "app.js"))
+    scripts = ("\n".join(read(p) for p in course_files(course_dir)) + "\n"
+               + read(os.path.join(ENGINE, "merge.js")) + "\n"
+               + read(os.path.join(ENGINE, "auth.js")) + "\n"
+               + read(os.path.join(ENGINE, "app.js")))
     # Guard against accidental script-closing sequences inside inline code
     scripts = scripts.replace("</script", "<\\/script")
     body = f"""<title>{m['name']}</title>
