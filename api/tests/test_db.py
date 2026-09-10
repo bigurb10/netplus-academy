@@ -1,7 +1,7 @@
 def test_schema_creates_progress_table(pool):
     with pool.connection() as conn:
         rows = conn.execute(
-            "SELECT column_name, data_type FROM information_schema.columns "
+            "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
             "WHERE table_name = 'progress' ORDER BY column_name"
         ).fetchall()
     assert [r[0] for r in rows] == [
@@ -11,7 +11,12 @@ def test_schema_creates_progress_table(pool):
         "user_id",
         "version",
     ]
-    assert dict(rows)["state"] == "jsonb"
+    rows_dict = {r[0]: r for r in rows}
+    assert rows_dict["state"][1] == "jsonb"
+    assert rows_dict["version"][1] == "bigint"
+    # user_id, course_id, state, version are NOT NULL
+    for col in ["user_id", "course_id", "state", "version"]:
+        assert rows_dict[col][2] == "NO", f"{col} should be NOT NULL"
 
 
 def test_primary_key_is_user_and_course(pool):

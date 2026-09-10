@@ -39,6 +39,10 @@ def pool():
             "Is the tunnel up? ssh -N -L 55432:127.0.0.1:5433 hetzner\n"
             "Port 5433 is the system cluster; 5432 is ServiceForge's container."
         )
+    # Drop the progress table before applying schema so the DDL assertion tests
+    # the real CREATE statement each run, not just IF NOT EXISTS on a diverged schema.
+    with p.connection() as conn:
+        conn.execute("DROP TABLE IF EXISTS progress")
     apply_schema(p)
     yield p
     p.close()
