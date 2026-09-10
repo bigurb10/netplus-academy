@@ -1,0 +1,9 @@
+# Course progress API. Loopback only; this is the only route in. Blobs are up
+# to 2 MB, so the request body ceiling is set above that with room to spare.
+api.fieldreadyacademy.com {
+	encode zstd gzip
+	request_body {
+		max_size 4MB
+	}
+	reverse_proxy localhost:8001
+}

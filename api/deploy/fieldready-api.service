@@ -1,0 +1,26 @@
+[Unit]
+Description=FieldReady Academy course progress API
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/fieldready-api
+EnvironmentFile=/opt/fieldready-api/.env
+# Bound to loopback: Caddy is the only way in, ufw never opens 8001.
+# 8000 belongs to ServiceForge.
+ExecStart=/opt/fieldready-api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/fieldready-api
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
