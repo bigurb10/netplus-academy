@@ -34,6 +34,7 @@ FRA.course = {
   freeCourse: true,
   free: { lessons: 10 },
   upgradeUrl: "",
+  feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam passes at 675 on a 100 to 900 scale, roughly 64% depending on the scaling.",
   examDay: [
     "Up to 90 questions in 90 minutes with performance-based items; do the multiple choice first if a simulation stalls you, flag it and return.",

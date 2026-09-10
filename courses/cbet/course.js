@@ -37,6 +37,7 @@ FRA.course = {
   freeCourse: true,
   free: { lessons: 10 },
   upgradeUrl: "",
+  feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam requires about 116 of 165 correct, roughly 70%.",
   examDay: [
     "165 questions in 3 hours, closed book, with a simple calculator allowed. That is over a minute per question; do not rush the math items.",
