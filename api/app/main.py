@@ -8,6 +8,7 @@ Everything else about the blob is the client engine's business.
 from __future__ import annotations
 
 import json
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
@@ -19,6 +20,8 @@ from . import store
 from .auth import current_user
 from .config import get_settings
 from .db import apply_schema, make_pool
+
+log = logging.getLogger(__name__)
 
 COURSE_ID = r"^[a-z0-9-]{1,32}$"
 STATE_VERSION = 3
@@ -104,7 +107,8 @@ def healthz(pool: ConnectionPool = Depends(get_pool)) -> dict:
         with pool.connection() as conn:
             conn.execute("SELECT 1")
     except Exception as exc:  # noqa: BLE001 - reported as a 503, not a 500
-        raise HTTPException(status_code=503, detail=f"database unreachable: {exc}")
+        log.exception("Database connection failed in healthz check")
+        raise HTTPException(status_code=503, detail="database unreachable")
     return {"ok": True}
 
 

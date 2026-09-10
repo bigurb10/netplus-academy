@@ -7,6 +7,23 @@ def test_healthz_is_open(client):
     assert r.json() == {"ok": True}
 
 
+def test_healthz_does_not_leak_exception_text(client):
+    from app import main
+
+    class BrokenPool:
+        def connection(self):
+            raise Exception("host=secret-internal-host port=5433")
+
+    main.app.dependency_overrides[main.get_pool] = lambda: BrokenPool()
+    try:
+        r = client.get("/healthz")
+        assert r.status_code == 503
+        assert r.json()["detail"] == "database unreachable"
+        assert "secret-internal-host" not in r.text
+    finally:
+        main.app.dependency_overrides.clear()
+
+
 def test_get_missing_is_404(client):
     assert client.get("/v1/progress/netplus").status_code == 404
 
