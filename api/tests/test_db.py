@@ -29,3 +29,14 @@ def test_primary_key_is_user_and_course(pool):
             "ORDER BY a.attname"
         ).fetchall()
     assert [c[0] for c in cols] == ["course_id", "user_id"]
+
+
+def test_pool_checks_connection_health_before_handing_it_out(pool):
+    # Without check=, a Postgres restart under a live pool hands out a dead
+    # connection and the next request 500s (an unattended-upgrade restart
+    # of postgresql@18-main.service does not propagate through the unit's
+    # Requires=postgresql.service). With it, that request costs a
+    # reconnect instead.
+    from psycopg_pool import ConnectionPool
+
+    assert pool._check is ConnectionPool.check_connection

@@ -65,9 +65,13 @@ def rsa_key():
 
 @pytest.fixture(scope="session")
 def mint(rsa_key):
-    """Mint a signed JWT. Every claim is overridable so tests can break one."""
+    """Mint a signed JWT. Every claim is overridable so tests can break one.
 
-    def _mint(**overrides):
+    `headers` sets JOSE header fields (e.g. `kid`) rather than claims -- it
+    is passed straight through to `jwt.encode`.
+    """
+
+    def _mint(headers=None, **overrides):
         now = int(time.time())
         claims = {
             "iss": "https://issuer.example",
@@ -78,19 +82,28 @@ def mint(rsa_key):
         }
         claims.update(overrides)
         claims = {k: v for k, v in claims.items() if v is not None}
-        return jwt.encode(claims, rsa_key, algorithm="RS256")
+        return jwt.encode(claims, rsa_key, algorithm="RS256", headers=headers)
 
     return _mint
 
 
+# `client` and `client_as` deliberately construct TestClient without `with`.
+# `with TestClient(app) as c:` runs the app's real `lifespan`, which calls
+# `make_pool(get_settings().db_url)` -- the .env value, not necessarily the
+# `pool` fixture's database. With only PROGRESS_TEST_DB_URL set (no .env),
+# db_url is "", so make_pool("") falls back to libpq defaults (port 5432,
+# an unrelated service) and blocks for its full connect timeout before
+# failing, once per test. Since get_pool is overridden below, the app's own
+# app.state.pool (which only lifespan would set) is never read, so skipping
+# lifespan changes nothing tests can observe.
 @pytest.fixture
 def client(pool):
     from app import main
 
     main.app.dependency_overrides[main.get_pool] = lambda: pool
     main.app.dependency_overrides[main.current_user] = lambda: "user_01TEST"
-    with TestClient(main.app) as c:
-        yield c
+    c = TestClient(main.app)
+    yield c
     main.app.dependency_overrides.clear()
 
 
@@ -108,4 +121,24 @@ def client_as(pool):
     yield _as
     from app import main
 
+    main.app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client_anon(pool):
+    """A client with a real pool but the *real* `current_user` dependency.
+
+    `client` and `client_as` both override `current_user`, so no test built
+    on them can tell a real `Depends(current_user)` from a deleted one --
+    every route would behave identically either way. This fixture leaves
+    `current_user` un-overridden (and explicitly drops any leftover
+    override from another fixture on this same, session-wide `app`
+    instance) so tests can assert what happens with no bearer token at all.
+    """
+    from app import main
+
+    main.app.dependency_overrides[main.get_pool] = lambda: pool
+    main.app.dependency_overrides.pop(main.current_user, None)
+    c = TestClient(main.app)
+    yield c
     main.app.dependency_overrides.clear()

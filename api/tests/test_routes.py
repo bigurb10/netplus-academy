@@ -1,4 +1,34 @@
+import contextlib
+
+import psycopg
+import psycopg_pool
+import pytest
+
 STATE = {"v": 3, "course": "netplus", "lessons": {"u1l1": {"status": "done"}}}
+
+
+@contextlib.contextmanager
+def _pool_override(fake_pool):
+    """Temporarily override get_pool, restoring exactly what was there.
+
+    Not `dependency_overrides.clear()`: on the `client` fixture, that also
+    wipes its `current_user` override, not just the `get_pool` one being
+    set here. Nothing later in these tests needs auth, so that landmine
+    never actually goes off -- but save-and-restore is the version that
+    can't leak into the next assertion in the same test, or the next test,
+    however this fixture's usage evolves.
+    """
+    from app import main
+
+    original = main.app.dependency_overrides.get(main.get_pool)
+    main.app.dependency_overrides[main.get_pool] = lambda: fake_pool
+    try:
+        yield
+    finally:
+        if original is not None:
+            main.app.dependency_overrides[main.get_pool] = original
+        else:
+            main.app.dependency_overrides.pop(main.get_pool, None)
 
 
 def test_healthz_is_open(client):
@@ -8,20 +38,115 @@ def test_healthz_is_open(client):
 
 
 def test_healthz_does_not_leak_exception_text(client):
-    from app import main
-
     class BrokenPool:
         def connection(self):
             raise Exception("host=secret-internal-host port=5433")
 
-    main.app.dependency_overrides[main.get_pool] = lambda: BrokenPool()
-    try:
+    with _pool_override(BrokenPool()):
         r = client.get("/healthz")
-        assert r.status_code == 503
-        assert r.json()["detail"] == "database unreachable"
-        assert "secret-internal-host" not in r.text
-    finally:
-        main.app.dependency_overrides.clear()
+    assert r.status_code == 503
+    assert r.json()["detail"] == "database unreachable"
+    assert "secret-internal-host" not in r.text
+
+    # _pool_override restores get_pool rather than clearing every override,
+    # so the client fixture's own current_user override must still be in
+    # place here. A plain dependency_overrides.clear() in _pool_override's
+    # teardown would wipe that too, and this request would 401 instead.
+    r2 = client.get("/v1/progress")
+    assert r2.status_code == 200
+
+
+def test_pool_exhaustion_is_503_with_retry_after_not_500(client):
+    # Simulates a burst that outruns max_size=8: pool.connection() raises
+    # PoolTimeout rather than handing back a connection.
+    class ExhaustedPool:
+        def connection(self):
+            raise psycopg_pool.PoolTimeout(
+                "couldn't get a connection within 30.00 sec"
+            )
+
+    with _pool_override(ExhaustedPool()):
+        r = client.get("/v1/progress")
+    assert r.status_code == 503
+    assert r.headers["retry-after"]
+    assert r.json()["detail"] != ""
+
+
+def test_dead_connection_after_a_postgres_restart_is_503_not_500(client):
+    # Simulates a connection handed out just after Postgres restarted:
+    # psycopg raises OperationalError, not something jsonb/state-shaped.
+    class DownPool:
+        def connection(self):
+            raise psycopg.OperationalError(
+                "connection to server at secret-internal-host, port 5433 failed"
+            )
+
+    with _pool_override(DownPool()):
+        r = client.get("/v1/progress")
+    assert r.status_code == 503
+    assert r.headers["retry-after"]
+    assert r.json()["detail"] == "database unreachable"
+    assert "secret-internal-host" not in r.text
+
+
+def test_nul_byte_in_state_is_422_not_500(client):
+    # Real round trip against the real database (no mocking): jsonb accepts
+    # any valid JSON except a literal NUL inside a string, which
+    # json.dumps happily produces from a Python string containing "\x00".
+    # Without the DataError handler this is an unhandled psycopg error and
+    # a 500 -- and, per the plan-3 sync client's retry-from-dirty-flag
+    # design, a blob that would then fail to sync forever, silently.
+    r = client.put(
+        "/v1/progress/netplus",
+        json={"state": {"v": 3, "note": "bad\x00null"}},
+        headers={"If-None-Match": "*"},
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] != ""
+
+
+def test_data_error_detail_does_not_leak_the_offending_content(client):
+    # The mocked twin of the real test above: pins that the handler's
+    # detail is the static string in main.py, not str(exc) (which for a
+    # real UntranslatableCharacter includes a CONTEXT line quoting the
+    # rejected JSON back -- exactly the free-text content this is meant to
+    # avoid echoing to the client that sent it).
+    class RejectingPool:
+        def connection(self):
+            raise psycopg.errors.UntranslatableCharacter(
+                "unsupported Unicode escape sequence\n"
+                'DETAIL:  \\u0000 cannot be converted to text.\n'
+                'CONTEXT:  JSON data, line 1: {"v": 3, "secret_feedback": '
+                '"very private free-text content"'
+            )
+
+    with _pool_override(RejectingPool()):
+        r = client.put(
+            "/v1/progress/netplus",
+            json={"state": {"v": 3, "note": "whatever"}},
+            headers={"If-None-Match": "*"},
+        )
+    assert r.status_code == 422
+    assert "very private free-text content" not in r.text
+
+
+def test_api_docs_are_disabled(client):
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        assert client.get(path).status_code == 404, path
+
+
+def test_parse_if_match_raises_on_a_star_rather_than_returning_none(client):
+    # Mutation testing / contract test: put_progress only ever calls
+    # _parse_if_match after routing None and "*" to the create path, so
+    # neither is valid input here. Pins that the dead "*" -> None branch
+    # was replaced with a raise (a contract violation), not left silently
+    # swallowed -- which would make the return type `int | None` a lie
+    # again and could re-open a path where "*" is read as "no
+    # precondition" instead of surfacing the caller's own bug.
+    from app.main import _parse_if_match
+
+    with pytest.raises(AssertionError):
+        _parse_if_match("*")
 
 
 def test_get_missing_is_404(client):
