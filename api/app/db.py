@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS progress (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, course_id)
 );
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id          bigserial   PRIMARY KEY,
+  course_id   text        NOT NULL,
+  payload     jsonb       NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS feedback_received_at_idx ON feedback (received_at DESC);
 """
 
 

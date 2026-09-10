@@ -405,3 +405,78 @@ def test_an_unlisted_origin_is_not_allowed(client):
         "/v1/progress", headers={"Origin": "https://evil.example"}
     )
     assert "access-control-allow-origin" not in r.headers
+
+
+# ---------------------------------------------------------------------------
+# /v1/feedback -- anonymous, no authentication.
+# ---------------------------------------------------------------------------
+
+FEEDBACK_ITEM = {
+    "course": "netplus",
+    "id": "fb-abc123",
+    "ts": 1757500000000,
+    "sent": False,
+    "kind": "overall",
+    "cat": "Other",
+    "text": "This lesson was great.",
+}
+
+
+def test_feedback_post_is_202_and_does_not_echo_the_payload(client):
+    r = client.post("/v1/feedback", json=FEEDBACK_ITEM)
+    assert r.status_code == 202
+    assert r.json() == {"ok": True}
+
+
+def test_feedback_post_stores_a_row_that_feedback_since_returns(client, pool):
+    from datetime import datetime, timezone
+
+    from app import store
+
+    r = client.post("/v1/feedback", json=FEEDBACK_ITEM)
+    assert r.status_code == 202
+    rows = store.feedback_since(pool, datetime(1970, 1, 1, tzinfo=timezone.utc))
+    assert len(rows) == 1
+    assert rows[0].course_id == "netplus"
+    assert rows[0].payload == FEEDBACK_ITEM
+
+
+def test_feedback_missing_course_is_422(client):
+    item = dict(FEEDBACK_ITEM)
+    del item["course"]
+    r = client.post("/v1/feedback", json=item)
+    assert r.status_code == 422
+
+
+def test_feedback_malformed_course_is_422(client):
+    item = dict(FEEDBACK_ITEM, course="Not_A-Valid_Course!")
+    r = client.post("/v1/feedback", json=item)
+    assert r.status_code == 422
+
+
+def test_feedback_oversized_payload_is_413(client):
+    item = dict(FEEDBACK_ITEM, text="x" * 20_000)
+    r = client.post("/v1/feedback", json=item)
+    assert r.status_code == 413
+
+
+def test_feedback_works_with_no_authorization_header(client_anon):
+    # This route must never depend on current_user: learners submit
+    # feedback and ratings without ever signing in.
+    r = client_anon.post("/v1/feedback", json=FEEDBACK_ITEM)
+    assert r.status_code != 401
+    assert r.status_code == 202
+
+
+def test_feedback_cors_preflight_allows_post_from_the_course_origin(client):
+    r = client.options(
+        "/v1/feedback",
+        headers={
+            "Origin": "https://fieldreadyacademy.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert r.status_code == 200
+    assert r.headers["access-control-allow-origin"] == "https://fieldreadyacademy.com"
+    assert "POST" in r.headers["access-control-allow-methods"]

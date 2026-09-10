@@ -33,6 +33,14 @@ class Summary:
     updated_at: datetime
 
 
+@dataclass(frozen=True)
+class FeedbackRow:
+    id: int
+    course_id: str
+    payload: dict
+    received_at: datetime
+
+
 def get(pool: ConnectionPool, user_id: str, course_id: str) -> Record | None:
     with pool.connection() as conn:
         row = conn.execute(
@@ -92,3 +100,29 @@ def list_for_user(pool: ConnectionPool, user_id: str) -> list[Summary]:
             (user_id,),
         ).fetchall()
     return [Summary(course_id=r[0], version=r[1], updated_at=r[2]) for r in rows]
+
+
+def add_feedback(pool: ConnectionPool, course_id: str, payload: dict) -> int:
+    # id is bigserial, server-generated -- see db.py. The client's own "id"
+    # field (a browser-minted string) travels inside payload and is never
+    # trusted as a key.
+    with pool.connection() as conn:
+        row = conn.execute(
+            "INSERT INTO feedback (course_id, payload) VALUES (%s, %s) "
+            "RETURNING id",
+            (course_id, Jsonb(payload)),
+        ).fetchone()
+    return row[0]
+
+
+def feedback_since(pool: ConnectionPool, since: datetime) -> list[FeedbackRow]:
+    with pool.connection() as conn:
+        rows = conn.execute(
+            "SELECT id, course_id, payload, received_at FROM feedback "
+            "WHERE received_at >= %s ORDER BY received_at DESC",
+            (since,),
+        ).fetchall()
+    return [
+        FeedbackRow(id=r[0], course_id=r[1], payload=r[2], received_at=r[3])
+        for r in rows
+    ]

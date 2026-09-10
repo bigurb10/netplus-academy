@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from contextlib import asynccontextmanager
 
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
+from fastapi import Body, Depends, FastAPI, HTTPException, Path, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from psycopg_pool import ConnectionPool, PoolTimeout
@@ -26,7 +27,14 @@ from .db import apply_schema, make_pool
 log = logging.getLogger(__name__)
 
 COURSE_ID = r"^[a-z0-9-]{1,32}$"
+_COURSE_ID_RE = re.compile(COURSE_ID)
 STATE_VERSION = 3
+
+# Feedback notes are short free text plus a handful of fixed fields (kind,
+# category, an optional question snippet). This anonymous, unauthenticated
+# route has no other protection against an abusive caller, so the cap is its
+# main defense.
+FEEDBACK_MAX_BYTES = 16_384
 
 # Retry-After values for the 503s below. Pool contention tends to clear in
 # well under a second once the burst passes; a dead connection takes longer
@@ -66,7 +74,10 @@ _settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_settings.allowed_origins,
-    allow_methods=["GET", "PUT", "DELETE", "OPTIONS"],
+    # POST is for /v1/feedback. Without it here, the browser's preflight for
+    # that route fails silently -- no server-side error, because a blocked
+    # preflight never reaches the app -- and no feedback is ever sent.
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "If-Match", "If-None-Match"],
     # Without this the browser gets the ETag but JavaScript cannot read it,
     # so the client could never send If-Match on its second write.
@@ -173,6 +184,36 @@ def healthz(pool: ConnectionPool = Depends(get_pool)) -> dict:
     except Exception as exc:  # noqa: BLE001 - reported as a 503, not a 500
         log.exception("Database connection failed in healthz check")
         raise HTTPException(status_code=503, detail="database unreachable")
+    return {"ok": True}
+
+
+def _feedback_course_id(payload: dict) -> str:
+    course_id = payload.get("course")
+    if not isinstance(course_id, str) or not _COURSE_ID_RE.match(course_id):
+        raise HTTPException(
+            status_code=422,
+            detail="'course' is required and must match ^[a-z0-9-]{1,32}$",
+        )
+    return course_id
+
+
+@app.post("/v1/feedback", status_code=202)
+def post_feedback(
+    payload: dict = Body(...),
+    pool: ConnectionPool = Depends(get_pool),
+) -> dict:
+    # Deliberately anonymous: nothing on this site is paywalled, learners
+    # study without signing in, and feedback gated behind an account would
+    # collect nothing. Do not add Depends(current_user) here.
+    course_id = _feedback_course_id(payload)
+    size = len(json.dumps(payload).encode("utf-8"))
+    if size > FEEDBACK_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"feedback is {size} bytes; the limit is {FEEDBACK_MAX_BYTES}",
+        )
+    # Never log payload contents -- it is untrusted free text from a learner.
+    store.add_feedback(pool, course_id, payload)
     return {"ok": True}
 
 
