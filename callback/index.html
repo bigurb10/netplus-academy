@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signing you in - FieldReady Academy</title>
+<link rel="stylesheet" href="../catalog.css">
+<style>
+  .cb { max-width: 32rem; margin: 12vh auto; padding: 0 1rem; text-align: center; }
+  .cb .err { text-align: left; }
+</style>
+</head>
+<body>
+<main class="cb">
+  <h1 id="msg">Signing you in...</h1>
+  <p id="detail" class="muted"></p>
+  <p id="actions" hidden><a class="btn" href="/">Back to the courses</a></p>
+</main>
+<script src="../engine/auth.js"></script>
+<script>
+(function () {
+  var msg = document.getElementById('msg');
+  var detail = document.getElementById('detail');
+  var actions = document.getElementById('actions');
+  function fail(text) {
+    msg.textContent = 'That sign-in did not complete';
+    detail.textContent = text;
+    detail.className = 'muted err';
+    actions.hidden = false;
+  }
+  try {
+    window.FRAAuth.completeSignIn(window.location.search).then(function (out) {
+      // Same-origin, app-relative only: never send the learner to an absolute URL
+      // that arrived from outside, or this page becomes an open redirect.
+      var to = out.returnTo || '/';
+      if (!/^\/[^/]/.test(to)) to = '/';
+      window.location.replace(to);
+    }, function (err) {
+      fail(String(err && err.message ? err.message : err));
+    });
+  } catch (e) {
+    fail(String(e && e.message ? e.message : e));
+  }
+})();
+</script>
+</body>
+</html>

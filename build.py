@@ -98,7 +98,26 @@ def build(course_id):
     print(f"  wrote dist/{course_id}.html {len(standalone)} bytes; dist/{course_id}-artifact.html {len(body)} bytes")
 
 
+def build_callback():
+    """dist/callback.html - the shared PKCE completion page, fully self-contained."""
+    html = read(os.path.join(ROOT, "callback", "index.html"))
+    html = html.replace(
+        '<link rel="stylesheet" href="../catalog.css">',
+        "<style>\n" + read(os.path.join(ROOT, "catalog.css")) + "\n</style>")
+    html = html.replace(
+        '<script src="../engine/auth.js"></script>',
+        "<script>\n" + read(os.path.join(ENGINE, "auth.js")) + "\n</script>")
+    assert "<style>" in html and "engine/auth.js" not in html, \
+        "callback/index.html no longer matches the strings build_callback() inlines"
+    os.makedirs(DIST, exist_ok=True)
+    out = os.path.join(ROOT, "dist", "callback.html")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  wrote dist/callback.html {len(html)} bytes")
+
+
 if __name__ == "__main__":
     wanted = sys.argv[1:] or sorted(d for d in os.listdir(COURSES) if os.path.exists(os.path.join(COURSES, d, "course.js")))
     for cid in wanted:
         build(cid)
+    build_callback()
