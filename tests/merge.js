@@ -376,6 +376,35 @@ check('plan remaps against its own source side, not the newer one',
   check('settingsAt took the later stamp', m2.settingsAt === 5000, m2.settingsAt);
 }
 
+// pickSettings' tie branch: an exact settingsAt tie with settings differing on each side.
+// pickSettings' own comment says the tie "prefer[s] whichever side actually has settings, then
+// a" - i.e. whichever side is passed first wins. `if (bt > at)` is what keeps a genuine tie out
+// of the "b wins" branch and into that shared fallback; mutating it to `bt >= at` pulls a tie into
+// the "b wins" branch instead, flipping the winner.
+//
+// This is checked in both call orders rather than by asserting mergeState(a, b) === mergeState(b,
+// a): mergeState's own doc comment names an exact settingsAt tie with differing settings as the
+// one documented exception to commutativity ("the pick falls back to argument order"), so the two
+// orders are expected to disagree with each other on which settings object comes out - what must
+// agree, in both orders, is the rule itself: the side passed first wins.
+{
+  const tieA = full();
+  tieA.settings = { timer: false, tag: 'A' };
+  tieA.settingsAt = 4000;
+
+  const tieB = full();
+  tieB.settings = { timer: true, tag: 'B' };
+  tieB.settingsAt = 4000;
+
+  const m3 = M.mergeState(tieA, tieB, OPTS);
+  check('an exact settingsAt tie prefers the side passed first as a',
+    m3.settings.tag === 'A', JSON.stringify(m3.settings));
+
+  const m3b = M.mergeState(tieB, tieA, OPTS);
+  check('the tie-break rule holds with the sides swapped too: the new first side wins',
+    m3b.settings.tag === 'B', JSON.stringify(m3b.settings));
+}
+
 // ---------- round trip through the real engine ----------
 // Every check above runs against synthetic fixtures. This one takes a state the real engine
 // produced, merges it, and feeds the result back through the engine's own import path, so it is

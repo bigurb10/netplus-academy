@@ -91,6 +91,86 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   const rows = w.$$('.acr-table tbody tr').filter(tr => tr.querySelector('.acr-key').textContent === 'STP');
   check('cheat sheet lists both STP meanings', rows.length === 2 && /Spanning Tree Protocol/.test(rows[0].textContent) && /Shielded twisted pair/.test(rows[1].textContent), rows.length);
 
+  // ----- settingsAt stamps only at the three real user-driven settings write-sites -----
+  // Date.now() can return the same millisecond twice in a fast test run; stub the window's clock
+  // so every stamp in a block is a distinct, strictly increasing value instead of leaning on a
+  // real-clock tick that could collide.
+  const stubClock = (ww, start) => { let t = start; ww.Date.now = () => (t += 1); };
+  // The exam view's setup card (#su-n, #su-min, .su-w, toggle-timer) only renders once stage()
+  // has moved past 'starter' - before that, paint() shows the welcome screen instead (WELCOME_EXEMPT
+  // does not include 'exam'). Finish the starter test first, exactly like the round-trip block in
+  // tests/merge.js, so the real setup card is on screen for these tests to drive.
+  function finishStarter(w) {
+    w.click(w.$('[data-act="go"][data-arg="home"]'));
+    w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const QQ = {}; w.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    const fatten = x => typeof x === 'string' ? QQ[x] : x;
+    state(w).active.items.map(fatten).forEach(q => {
+      w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`));
+      w.click(w.$('[data-act="conf"][data-arg="5"]'));
+      w.click(w.$('[data-act="submit"]'));
+    });
+  }
+
+  // 1) Saving the custom test setup (readSetupFromForm, via the "Start custom test" button).
+  {
+    const w3 = boot({ courseDir: dir });
+    finishStarter(w3);
+    act(w3, 'go', 'exam'); // renders the setup card: #su-n, #su-min, .su-w must exist for readSetupFromForm to read them
+    if (!w3.$('#su-n') || !w3.$('#su-min')) throw new Error('setup card did not render');
+    stubClock(w3, 1000);
+    const before = state(w3).settingsAt;
+    act(w3, 'start-custom');
+    const after = state(w3).settingsAt;
+    check('saving the custom test setup advances settingsAt', after > before, `${before} -> ${after}`);
+    // start-custom begins a real, timed exam session, which starts a real setInterval countdown
+    // (engine/app.js's startTimer). Abandon it so that interval is cleared and this window does
+    // not keep the test process alive after the script finishes.
+    act(w3, 'abandon-exam');
+  }
+
+  // 2) Resetting the setup to exam defaults.
+  {
+    const w4 = boot({ courseDir: dir });
+    finishStarter(w4);
+    act(w4, 'go', 'exam');
+    if (!w4.$('[data-act="setup-reset"]')) throw new Error('setup card did not render');
+    stubClock(w4, 1000);
+    const before = state(w4).settingsAt;
+    act(w4, 'setup-reset');
+    const after = state(w4).settingsAt;
+    check('resetting the test setup advances settingsAt', after > before, `${before} -> ${after}`);
+  }
+
+  // 3) Toggling the timer checkbox: a real change event on the input, not a button click.
+  {
+    const w5 = boot({ courseDir: dir });
+    finishStarter(w5);
+    act(w5, 'go', 'exam');
+    const cb = w5.$('input[data-act="toggle-timer"]');
+    if (!cb) throw new Error('timer checkbox did not render');
+    stubClock(w5, 1000);
+    const before = state(w5).settingsAt;
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new w5.Event('change', { bubbles: true }));
+    const after = state(w5).settingsAt;
+    check('toggling the timer checkbox advances settingsAt', after > before, `${before} -> ${after}`);
+  }
+
+  // 4) The negative case, which is the whole point of having a separate field: merely navigating
+  // calls save() (touchedAt advances on every call) but must never call markSettingsChanged().
+  {
+    const w6 = boot({ courseDir: dir });
+    stubClock(w6, 1000);
+    act(w6, 'go', 'home'); // establish a saved baseline under the stubbed clock
+    const s0 = state(w6);
+    const touchedBefore = s0.touchedAt, settingsBefore = s0.settingsAt;
+    act(w6, 'go', 'course');
+    const s1 = state(w6);
+    check('navigating alone advances touchedAt', s1.touchedAt > touchedBefore, `${touchedBefore} -> ${s1.touchedAt}`);
+    check('navigating alone does not advance settingsAt', s1.settingsAt === settingsBefore, `${settingsBefore} -> ${s1.settingsAt}`);
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
 })().catch(e => { console.error(e); process.exit(1); });
