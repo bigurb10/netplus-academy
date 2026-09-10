@@ -923,8 +923,15 @@ The contract:
 | `GET /healthz` | No auth. `{"ok": true}` after a `SELECT 1`. 503 if the database is unreachable. |
 | `GET /v1/progress` | `[{course_id, version, updated_at}]` for the caller, sorted by course id. |
 | `GET /v1/progress/{course_id}` | `{state, version}` plus `ETag: "<version>"`. `If-None-Match` that matches -> 304 with no body. 404 when absent. |
-| `PUT /v1/progress/{course_id}` | Needs a precondition. `If-Match: "<version>"` updates; `If-None-Match: *` (or `If-Match: *`) creates. 428 when neither is present, 412 when it does not hold. Returns `{state, version}` and the new `ETag`. |
+| `PUT /v1/progress/{course_id}` | Needs a precondition. `If-Match: "<version>"` updates; `If-None-Match: *` (or `If-Match: *`) creates. 428 when neither is present, 412 when it does not hold. Returns `{version}` and the new `ETag` -- **not** the state. |
 | `DELETE /v1/progress/{course_id}` | 204 whether or not a row was there. |
+
+**Why PUT does not echo the state back** (decided 2026-09-10): the client just sent that state, so
+returning it is pure waste -- up to 2 MB per write. It also closes a fidelity gap: `store.create`
+and `store.update` build their `Record` from the dict the caller passed in, not from a re-read, and
+Postgres's jsonb does not preserve object key order or numeric literal formatting. By never
+exposing `state` on a write path, the question of whether that echo matches what was stored
+stops existing. `GET` returns the stored value and remains the only source of truth for state.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1042,6 +1049,17 @@ def test_update_with_the_current_etag(client):
     assert r.headers["etag"] == '"2"'
 
 
+def test_put_does_not_echo_the_state_back(client):
+    r = client.put(
+        "/v1/progress/netplus", json={"state": STATE}, headers={"If-None-Match": "*"}
+    )
+    assert r.json() == {"version": 1}
+    r2 = client.put(
+        "/v1/progress/netplus", json={"state": STATE}, headers={"If-Match": '"1"'}
+    )
+    assert r2.json() == {"version": 2}
+
+
 def test_update_with_a_stale_etag_is_412_and_changes_nothing(client):
     client.put(
         "/v1/progress/netplus", json={"state": STATE}, headers={"If-None-Match": "*"}
@@ -1150,6 +1168,7 @@ Everything else about the blob is the client engine's business.
 from __future__ import annotations
 
 import json
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
@@ -1161,6 +1180,8 @@ from . import store
 from .auth import current_user
 from .config import get_settings
 from .db import apply_schema, make_pool
+
+log = logging.getLogger(__name__)
 
 COURSE_ID = r"^[a-z0-9-]{1,32}$"
 STATE_VERSION = 3
@@ -1246,7 +1267,10 @@ def healthz(pool: ConnectionPool = Depends(get_pool)) -> dict:
         with pool.connection() as conn:
             conn.execute("SELECT 1")
     except Exception as exc:  # noqa: BLE001 - reported as a 503, not a 500
-        raise HTTPException(status_code=503, detail=f"database unreachable: {exc}")
+        # /healthz is unauthenticated, so the cause is logged rather than
+        # returned: str(exc) from psycopg carries host and port detail.
+        log.exception("healthz database check failed: %s", exc)
+        raise HTTPException(status_code=503, detail="database unreachable")
     return {"ok": True}
 
 
@@ -1317,7 +1341,10 @@ def put_progress(
         raise HTTPException(status_code=412, detail=str(exc)) from exc
 
     response.headers["ETag"] = _etag(record.version)
-    return {"state": record.state, "version": record.version}
+    # Deliberately no `state`: the client just sent it, and `record.state` is
+    # the dict it passed in rather than a re-read of what jsonb stored. GET is
+    # the only place state comes back.
+    return {"version": record.version}
 
 
 @app.delete("/v1/progress/{course_id}", status_code=204)
@@ -1333,12 +1360,12 @@ def delete_progress(
 - [ ] **Step 4: Run the tests and make sure they pass**
 
 Run: `.venv/Scripts/python -m pytest tests/test_routes.py -v`
-Expected: 18 passed.
+Expected: 19 passed.
 
 Then the whole suite:
 
 Run: `.venv/Scripts/python -m pytest -v`
-Expected: 37 passed.
+Expected: 38 passed.
 
 - [ ] **Step 5: Correct the design doc**
 
@@ -1351,7 +1378,16 @@ In `docs/superpowers/specs/2026-09-09-course-progress-sync-design.md`, in the AP
 with:
 
 ```
-| `PUT /v1/progress/{course_id}` | Requires a precondition: `If-Match: "<version>"` updates, `If-None-Match: *` creates (`If-Match: *` is accepted as an alias). 428 when neither is sent, 412 when the precondition fails. Returns the new version. |
+| `PUT /v1/progress/{course_id}` | Requires a precondition: `If-Match: "<version>"` updates, `If-None-Match: *` creates (`If-Match: *` is accepted as an alias). 428 when neither is sent, 412 when the precondition fails. Returns `{version}` and the new `ETag`; the state is not echoed back. |
+```
+
+Add this note under that table, so the reason survives:
+
+```
+The write paths deliberately do not return the state. The client already holds what it sent,
+echoing a blob of up to 2 MB back is waste, and the value the server could cheaply echo is the
+request's own dict rather than a re-read of what jsonb stored (jsonb preserves neither object key
+order nor numeric literal formatting). `GET` is the only source of truth for state.
 ```
 
 - [ ] **Step 6: Commit**
@@ -1619,7 +1655,7 @@ git commit -m "feat(api): systemd unit, Caddy block, and deployment notes"
 ## Done when
 
 - `npm test` still passes (this plan touches no JavaScript).
-- `cd api && .venv/Scripts/python -m pytest` is green: 37 tests.
+- `cd api && .venv/Scripts/python -m pytest` is green: 46 tests (the plan specified 38; Task 3 added 2 auth tests and Task 4 added 6 route tests, all closing verified discrimination gaps).
 - `curl https://api.fieldreadyacademy.com/healthz` returns `{"ok":true}` from a machine that is not the server.
 - An unauthenticated `GET /v1/progress` returns 401.
 - `https://fieldreadyacademy.com/netplus/` still serves the course.
