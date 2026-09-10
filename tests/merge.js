@@ -133,7 +133,7 @@ check('seen unions', m.seen.a === true && m.seen.b === true);
 const full = (o) => Object.assign({
   v: 3, course: 'netplus', lessons: {}, topics: {}, qstats: {}, seen: {}, ratings: {},
   exams: [], feedback: [], passStreak: 0, official: null, plan: null, path: null,
-  settings: { timer: true }, touchedAt: 0, created: 1
+  settings: { timer: true }, settingsAt: 0, touchedAt: 0, created: 1
 }, o);
 
 let r = M.mergeState(full({ exams: [exam({ id: 'e1', date: 1 })] }),
@@ -332,6 +332,49 @@ r = M.mergeState(
   full({ exams: [pathExamB], touchedAt: 99 }), OPTS);
 check('plan remaps against its own source side, not the newer one',
   r.exams[r.plan.examIdx].id === 'plan-diverge-a', JSON.stringify(r.plan));
+
+// ---------- settings ride on settingsAt, not touchedAt ----------
+// A second device that is merely OPENED must not clobber settings changed on the first.
+// touchedAt is stamped by save(), which go() calls on every navigation, so it means
+// "last opened". Only settingsAt means "last changed".
+{
+  const a = full();                      // device A: the learner turned the timer off
+  a.settings = { timer: false, testSetup: { n: 20, minutes: 15, weights: {} } };
+  a.settingsAt = 1000;
+  a.touchedAt = 1000;
+
+  const b = full();                      // device B: opened later, settings never touched
+  b.settings = { timer: true };
+  b.settingsAt = 0;
+  b.touchedAt = 9999;
+
+  const m1 = M.mergeState(a, b, OPTS);
+  check('timer:false survived a later mere-open on another device', m1.settings.timer === false, m1.settings.timer);
+  check('saved test setup survived', !!(m1.settings.testSetup && m1.settings.testSetup.n === 20),
+    JSON.stringify(m1.settings.testSetup));
+  check('settingsAt carries the real change time', m1.settingsAt === 1000, m1.settingsAt);
+
+  // and commutative
+  const m1b = M.mergeState(b, a, OPTS);
+  check('commutative: timer:false survived either order', m1b.settings.timer === false, m1b.settings.timer);
+}
+
+// A genuine later change on the other device DOES win.
+{
+  const a = full();
+  a.settings = { timer: false };
+  a.settingsAt = 1000;
+  a.touchedAt = 9999;                    // A was opened most recently...
+
+  const b = full();
+  b.settings = { timer: true };
+  b.settingsAt = 5000;                   // ...but B is where the setting was actually changed
+  b.touchedAt = 1000;
+
+  const m2 = M.mergeState(a, b, OPTS);
+  check('the genuinely later settings change won', m2.settings.timer === true, m2.settings.timer);
+  check('settingsAt took the later stamp', m2.settingsAt === 5000, m2.settingsAt);
+}
 
 // ---------- round trip through the real engine ----------
 // Every check above runs against synthetic fixtures. This one takes a state the real engine

@@ -103,7 +103,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -118,6 +118,11 @@
     return fresh();
   }
   function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+
+  // Stamp "settings were genuinely changed", as distinct from touchedAt, which save()
+  // sets on every call and therefore means "last opened". merge.js merges settings on
+  // this. Call it ONLY from real user-driven settings changes.
+  function markSettingsChanged() { S.settingsAt = Date.now(); }
 
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
@@ -224,7 +229,7 @@
   function readSetupFromForm() {
     const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
     const weights = {}; document.querySelectorAll('.su-w').forEach(el => { weights[el.dataset.d] = Math.max(0, parseInt(el.value, 10) || 0); });
-    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; save(); return currentSetup();
+    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; markSettingsChanged(); save(); return currentSetup();
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
@@ -1106,7 +1111,7 @@
         const s = readSetupFromForm() || currentSetup();
         startExam('custom', { mode: 'custom', n: s.n, minutes: s.minutes, weights: s.weights }); return;
       }
-      case 'setup-reset': { S.settings.testSetup = null; save(); render(); return; }
+      case 'setup-reset': { S.settings.testSetup = null; markSettingsChanged(); save(); render(); return; }
       case 'abandon-exam': { if (!confirm('Quit this test? Your answers so far will be discarded.')) return; S.active = null; save(); return go('exam'); }
       case 'resume': { const a = S.active; if (!a) return go('home'); if (a.kind === 'train') return go('train'); if (a.kind === 'checkpoint') return go('lesson', a.lesson); return go('exam'); }
       case 'start-train': { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain(); return; }
@@ -1143,7 +1148,7 @@
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
-  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; save(); } });
+  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; markSettingsChanged(); save(); } });
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
