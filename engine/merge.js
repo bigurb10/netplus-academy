@@ -155,8 +155,11 @@
     };
   }
 
-  // Later real change wins. On an exact tie prefer whichever side actually has
-  // settings, then `a`, so the result does not depend on argument order.
+  // Later real change wins. On an EXACT tie with both sides carrying different settings
+  // the side passed first wins, so this case is order-dependent -- the same documented
+  // exception `path` and `plan` already carry, not an oversight. Two devices changing a
+  // setting in the same millisecond is vanishingly rare and either choice is defensible;
+  // what matters is that a mere open never beats a real change, which settingsAt ensures.
   function pickSettings(a, b) {
     const at = a.settingsAt || 0, bt = b.settingsAt || 0;
     if (bt > at) return b.settings || a.settings || {};
