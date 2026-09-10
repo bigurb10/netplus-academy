@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import os
+import time
 
+import jwt
 import pytest
-
-from app.db import apply_schema, make_pool
+from cryptography.hazmat.primitives.asymmetric import rsa
+from fastapi.testclient import TestClient
 
 from app.config import get_settings
+from app.db import apply_schema, make_pool
 
 DB_URL = os.environ.get("PROGRESS_TEST_DB_URL") or get_settings().db_url
 
@@ -55,13 +58,6 @@ def clean(pool):
     yield
 
 
-import time
-
-import jwt
-import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
-
-
 @pytest.fixture(scope="session")
 def rsa_key():
     return rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -85,3 +81,31 @@ def mint(rsa_key):
         return jwt.encode(claims, rsa_key, algorithm="RS256")
 
     return _mint
+
+
+@pytest.fixture
+def client(pool):
+    from app import main
+
+    main.app.dependency_overrides[main.get_pool] = lambda: pool
+    main.app.dependency_overrides[main.current_user] = lambda: "user_01TEST"
+    with TestClient(main.app) as c:
+        yield c
+    main.app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client_as(pool):
+    """A client signed in as a chosen user, for isolation tests."""
+
+    def _as(user_id):
+        from app import main
+
+        main.app.dependency_overrides[main.get_pool] = lambda: pool
+        main.app.dependency_overrides[main.current_user] = lambda: user_id
+        return TestClient(main.app)
+
+    yield _as
+    from app import main
+
+    main.app.dependency_overrides.clear()
