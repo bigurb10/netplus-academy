@@ -11,9 +11,11 @@ import json
 import logging
 from contextlib import asynccontextmanager
 
+import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from psycopg_pool import ConnectionPool
+from fastapi.responses import JSONResponse
+from psycopg_pool import ConnectionPool, PoolTimeout
 from pydantic import BaseModel
 
 from . import store
@@ -25,6 +27,13 @@ log = logging.getLogger(__name__)
 
 COURSE_ID = r"^[a-z0-9-]{1,32}$"
 STATE_VERSION = 3
+
+# Retry-After values for the 503s below. Pool contention tends to clear in
+# well under a second once the burst passes; a dead connection takes longer
+# to notice and reconnect from (see db.py's `check=`), so it gets a longer
+# suggested wait.
+POOL_TIMEOUT_RETRY_AFTER = 2
+DB_OPERATIONAL_RETRY_AFTER = 10
 
 
 class PutBody(BaseModel):
@@ -43,7 +52,15 @@ async def lifespan(app: FastAPI):
         pool.close()
 
 
-app = FastAPI(title="FieldReady progress", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="FieldReady progress",
+    version="1.0.0",
+    lifespan=lifespan,
+    # No public docs: an anonymous caller gets no route surface or schema.
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
 
 _settings = get_settings()
 app.add_middleware(
@@ -68,17 +85,23 @@ def _etag(version: int) -> str:
     return f'"{version}"'
 
 
-def _parse_if_match(raw: str | None) -> int | None:
-    """The numeric version in an If-Match header, or None for `*`.
+def _parse_if_match(raw: str) -> int:
+    """The numeric version in an If-Match header.
 
     Accepts `"12"` and the weak form `W/"12"`. Anything else is a 400: a
     malformed precondition must never be read as "no precondition".
+
+    `put_progress` only reaches this after routing `None` and `*` to the
+    create path, so neither is a valid input here -- receiving one is a bug
+    in the caller, not a malformed header from the client, and is treated
+    as a contract violation rather than folded into the 400 response.
     """
-    if raw is None:
-        return None
+    if raw is None or raw.strip() == "*":
+        raise AssertionError(
+            "_parse_if_match must not be called with None or '*'; "
+            "put_progress routes both to the create path first"
+        )
     raw = raw.strip()
-    if raw == "*":
-        return None
     if raw.startswith("W/"):
         raw = raw[2:].strip()
     try:
@@ -99,6 +122,47 @@ def _check_state(state: dict) -> None:
         raise HTTPException(
             status_code=413, detail=f"state is {size} bytes; the limit is {limit}"
         )
+
+
+@app.exception_handler(PoolTimeout)
+async def handle_pool_timeout(request: Request, exc: PoolTimeout) -> JSONResponse:
+    # The threadpool (40 slots) can outrun max_size=8 under a burst. That is
+    # contention, not an outage -- log it and ask the client to back off
+    # briefly rather than surfacing psycopg_pool's internals as a 500.
+    log.exception("Connection pool exhausted")
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "service is busy; try again shortly"},
+        headers={"Retry-After": str(POOL_TIMEOUT_RETRY_AFTER)},
+    )
+
+
+@app.exception_handler(psycopg.OperationalError)
+async def handle_operational_error(
+    request: Request, exc: psycopg.OperationalError
+) -> JSONResponse:
+    # Covers a dead connection handed out after Postgres restarts, and any
+    # other failure to reach the database. Same treatment as /healthz: log
+    # the cause (which can carry host/port detail), return a generic detail.
+    log.exception("Database operation failed")
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "database unreachable"},
+        headers={"Retry-After": str(DB_OPERATIONAL_RETRY_AFTER)},
+    )
+
+
+@app.exception_handler(psycopg.DataError)
+async def handle_data_error(request: Request, exc: psycopg.DataError) -> JSONResponse:
+    # jsonb rejects some strings valid JSON permits -- notably a literal NUL (U+0000) inside
+    # a string. Without this, that state fails to store as a 500 and (given
+    # the sync client's retry-from-dirty-flag design) never syncs, silently,
+    # forever. 422 tells the client this write will never succeed as sent.
+    log.exception("Database rejected the request as malformed data")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "state could not be stored: contains data postgres cannot accept"},
+    )
 
 
 @app.get("/healthz")
@@ -127,6 +191,16 @@ def list_progress(
     ]
 
 
+# get_progress and put_progress deliberately carry no return-type
+# annotation. FastAPI only builds a `response_model` -- and so only
+# re-validates and re-serializes the return value -- when a route is
+# annotated. These two routes carry the blob itself (up to
+# max_blob_bytes, 2 MB); annotating them would silently double the cost
+# of every read (and write) by making FastAPI walk and rebuild that dict
+# a second time after the handler already built the response. healthz and
+# list_progress are annotated because their payloads are tiny, not because
+# annotating is generally free here -- keep these two bare when tidying
+# types elsewhere in this file.
 @app.get("/v1/progress/{course_id}")
 def get_progress(
     response: Response,

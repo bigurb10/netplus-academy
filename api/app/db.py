@@ -19,7 +19,19 @@ CREATE TABLE IF NOT EXISTS progress (
 def make_pool(db_url: str) -> ConnectionPool:
     # min_size 1 keeps a warm connection. The service is low-traffic and the
     # box is small, so the ceiling stays far under postgres's default 100.
-    return ConnectionPool(db_url, min_size=1, max_size=8, open=True)
+    #
+    # check=check_connection pings a connection before handing it out. Without
+    # it, a Postgres restart under a live pool (an unattended-upgrade restart
+    # of postgresql@18-main.service does not propagate through the unit's
+    # Requires=postgresql.service) hands out a dead connection and the next
+    # request 500s; with it, that request costs one reconnect instead.
+    return ConnectionPool(
+        db_url,
+        min_size=1,
+        max_size=8,
+        open=True,
+        check=ConnectionPool.check_connection,
+    )
 
 
 def apply_schema(pool: ConnectionPool) -> None:

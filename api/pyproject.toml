@@ -7,7 +7,11 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "psycopg[binary,pool]>=3.2",
-    "pyjwt[crypto]>=2.9",
+    # auth.py passes issuer=[issuer, issuer + "/"] to jwt.decode(); PyJWT
+    # only accepts a list for `issuer` from 2.10 onward. Below that, every
+    # token is rejected with InvalidIssuerError, which looks exactly like a
+    # WorkOS misconfiguration.
+    "pyjwt[crypto]>=2.10",
     "pydantic-settings>=2.5",
 ]
 
