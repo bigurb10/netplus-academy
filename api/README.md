@@ -67,15 +67,44 @@ Runs on the Hetzner box (87.99.151.69) as `fieldready-api.service`, uvicorn boun
 **127.0.0.1:8001**, reached only through Caddy at `api.fieldreadyacademy.com`. ufw opens
 22, 80 and 443 only, so Postgres and the API are unreachable from outside the box.
 
+The service runs as an unprivileged system user, `fieldready` (no login shell, no
+home), not root. A redeploy that copies fresh files in must `chown` them back to
+`fieldready:fieldready`, or the service will fail to start (or fail `/healthz`, since it
+can no longer read `.env`) under the new files' root ownership:
+
 ```bash
 scp -r app pyproject.toml hetzner:/opt/fieldready-api/
+ssh hetzner "chown -R fieldready:fieldready /opt/fieldready-api"
 ssh hetzner "cd /opt/fieldready-api && .venv/bin/pip install -e . && systemctl restart fieldready-api"
 ssh hetzner "curl -s localhost:8001/healthz"
 ```
 
-Config is `/opt/fieldready-api/.env` on the box, `chmod 600`, not in git. The database
-password appears there and nowhere else. After editing it, `systemctl restart
-fieldready-api`.
+Config is `/opt/fieldready-api/.env` on the box, `chmod 600`, owned
+`fieldready:fieldready`, not in git. The database password appears there and nowhere
+else. After editing it, `systemctl restart fieldready-api`.
+
+### Resource limits
+
+The unit sets `MemoryMax=512M` / `MemoryHigh=384M` and uvicorn is started with
+`--limit-concurrency 64`. FastAPI buffers and JSON-parses request bodies before any
+dependency (including auth) runs, so an anonymous, unauthenticated caller can already
+make the box do real parsing work; without a memory ceiling an OOM here is an OOM on
+the box, and the kernel is free to kill ServiceForge (port 8000), Postgres, or Caddy --
+which serves the live course site -- instead of this service. With the ceiling in
+place, this service is the one that gets killed and restarted (`Restart=always`), not
+its neighbors.
+
+The Caddy `request_body { max_size }` in `deploy/Caddyfile.snippet` (once that block is
+live) is set to **2500KB**, just above the app's `PROGRESS_MAX_BLOB_BYTES` of
+2,000,000 bytes (`api/app/config.py` / `.env`). These two numbers exist to track each
+other -- the edge ceiling should sit just above the app ceiling, not far above it -- so
+change them together, never one without the other.
+
+`StartLimitIntervalSec=600` / `StartLimitBurst=5` are set explicitly in `[Unit]`: a
+failed start caused by, say, an empty `PROGRESS_DB_URL` can take ~30s to time out its
+Postgres pool, which outlasts systemd's default rate-limit window. Without an explicit
+window, a persistently failing service would retry forever instead of eventually
+stopping.
 
 Never edit `/etc/caddy/Caddyfile` without running `caddy validate --config
 /etc/caddy/Caddyfile` before `systemctl reload caddy` -- a bad config takes the course
