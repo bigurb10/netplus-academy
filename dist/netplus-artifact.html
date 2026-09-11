@@ -6066,10 +6066,11 @@ FRA.questions.push(
   }
 
   // Merge two complete state blobs. Commutative and idempotent: the result depends on the
-  // contents, never on which side is passed first - except an exact tie on touchedAt (for path
-  // and settings) or createdAt (for plan) with the two sides' path/settings/plan actually
-  // differing, where the pick falls back to argument order. Accepted: real clocks essentially
-  // never tie, and the fallback still always resolves to one side's real value, never a mix.
+  // contents, never on which side is passed first - except an exact tie on touchedAt (for path),
+  // settingsAt (for settings), or createdAt (for plan) with the two sides' path/settings/plan
+  // actually differing, where the pick falls back to argument order. Accepted: real clocks
+  // essentially never tie, and the fallback still always resolves to one side's real value, never
+  // a mix.
   function mergeState(a, b, opts) {
     const maps = mergeMaps(a, b);
     const exams = unionBy(a.exams, b.exams, examId, (x, y) => (y.pct || 0) > (x.pct || 0) ? y : x)
@@ -6097,14 +6098,226 @@ FRA.questions.push(
       official: streak.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
       path: remapExamIdx(pathSide.path, pathSide.exams, exams),
-      settings: newer.settings || a.settings || b.settings || {},
+      // settings rides on settingsAt, NOT touchedAt. touchedAt is stamped by save() on
+      // every navigation, so it means "last opened"; using it here let a second device
+      // that was merely opened wipe a timer or test-setup choice made on the first.
+      settings: pickSettings(a, b),
+      settingsAt: max(a.settingsAt, b.settingsAt),
       touchedAt: max(a.touchedAt, b.touchedAt),
       created: isFinite(born) ? born : 0
     };
   }
 
+  // Later real change wins. On an EXACT tie with both sides carrying different settings
+  // the side passed first wins, so this case is order-dependent -- the same documented
+  // exception `path` and `plan` already carry, not an oversight. Two devices changing a
+  // setting in the same millisecond is vanishingly rare and either choice is defensible;
+  // what matters is that a mere open never beats a real change, which settingsAt ensures.
+  function pickSettings(a, b) {
+    const at = a.settingsAt || 0, bt = b.settingsAt || 0;
+    if (bt > at) return b.settings || a.settings || {};
+    if (at > bt) return a.settings || b.settings || {};
+    return a.settings || b.settings || {};
+  }
+
   return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, remapExamIdx, mergeState };
 }));
+
+'use strict';
+// OAuth 2.1 authorization-code + PKCE against WorkOS AuthKit, for a public browser
+// client. Loaded as a plain script beside merge.js; sets window.FRAAuth.
+//
+// This file is the ONLY place that knows what a token is. engine/sync.js asks it for
+// a bearer token and knows nothing else about auth.
+(function (root) {
+  const DEFAULTS = {
+    issuer: 'https://prepared-song-48-staging.authkit.app',
+    clientId: 'client_01M23KW7MPKGQ3FGVAW836VKBQ',
+    apiBase: 'https://api.fieldreadyacademy.com',
+    // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
+    // so a token minted without this opens the connector, not this API, and every
+    // sync call 401s. Do not remove it from any request below.
+    resource: 'https://api.fieldreadyacademy.com',
+    redirectPath: '/callback',
+    scope: 'openid profile email offline_access'
+  };
+  const CONFIG = Object.assign({}, DEFAULTS, root.FRA_AUTH_CONFIG || {});
+
+  const TOKEN_KEY = 'fra.auth.v1';
+  const PKCE_KEY = 'fra.auth.pkce';
+  const SKEW_MS = 60000;               // refresh a minute early rather than racing expiry
+
+  const redirectUri = () => new URL(CONFIG.redirectPath, root.location.origin).href;
+
+  function readJson(store, key) {
+    try { const raw = store.getItem(key); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+  function writeJson(store, key, val) {
+    try { store.setItem(key, JSON.stringify(val)); } catch (e) { /* private mode */ }
+  }
+  function drop(store, key) { try { store.removeItem(key); } catch (e) { /* ignore */ } }
+
+  const tokens = () => readJson(root.localStorage, TOKEN_KEY);
+
+  function randomString(n) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const bytes = new Uint8Array(n);
+    root.crypto.getRandomValues(bytes);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += chars[bytes[i] % chars.length];
+    return s;
+  }
+
+  function b64url(buf) {
+    const b = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return root.btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function challengeFor(verifier) {
+    const data = new root.TextEncoder().encode(verifier);
+    return root.crypto.subtle.digest('SHA-256', data).then(b64url);
+  }
+
+  function authorizeUrl(verifier, state) {
+    return challengeFor(verifier).then(function (challenge) {
+      const q = new URLSearchParams({
+        response_type: 'code',
+        client_id: CONFIG.clientId,
+        redirect_uri: redirectUri(),
+        scope: CONFIG.scope,
+        state: state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256',
+        resource: CONFIG.resource
+      });
+      return CONFIG.issuer.replace(/\/$/, '') + '/oauth2/authorize?' + q.toString();
+    });
+  }
+
+  function beginSignIn(returnTo) {
+    const verifier = randomString(64);
+    const state = randomString(32);
+    writeJson(root.sessionStorage, PKCE_KEY, {
+      verifier: verifier, state: state,
+      returnTo: returnTo || root.location.pathname + root.location.hash
+    });
+    return authorizeUrl(verifier, state).then(function (url) { root.location.href = url; });
+  }
+
+  function tokenRequest(params) {
+    params.set('client_id', CONFIG.clientId);
+    params.set('resource', CONFIG.resource);
+    return root.fetch(CONFIG.issuer.replace(/\/$/, '') + '/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+  }
+
+  // Display only. The payload is NOT verified here -- the server verifies every token.
+  // Never make an access decision on anything this returns.
+  function claims(accessToken) {
+    try {
+      const part = String(accessToken).split('.')[1];
+      const pad = part.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(root.atob(pad + '==='.slice((pad.length + 3) % 4)));
+    } catch (e) { return {}; }
+  }
+
+  function store(data) {
+    const c = claims(data.access_token);
+    const rec = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token || (tokens() || {}).refresh_token || null,
+      expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+      sub: c.sub || null,
+      email: c.email || null
+    };
+    writeJson(root.localStorage, TOKEN_KEY, rec);
+    return rec;
+  }
+
+  function completeSignIn(search) {
+    const pending = readJson(root.sessionStorage, PKCE_KEY);
+    const q = new URLSearchParams(search || '');
+    if (q.get('error')) {
+      drop(root.sessionStorage, PKCE_KEY);
+      return Promise.reject(new Error('sign-in failed: ' + q.get('error')));
+    }
+    if (!pending) return Promise.reject(new Error('no sign-in is in progress'));
+    if (!q.get('state') || q.get('state') !== pending.state) {
+      drop(root.sessionStorage, PKCE_KEY);
+      return Promise.reject(new Error('state mismatch; sign-in was not started here'));
+    }
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: q.get('code') || '',
+      redirect_uri: redirectUri(),
+      code_verifier: pending.verifier
+    });
+    return tokenRequest(params).then(function (r) {
+      if (!r.ok) throw new Error('token exchange failed: ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      store(data);
+      drop(root.sessionStorage, PKCE_KEY);
+      return { returnTo: pending.returnTo || '/' };
+    }, function (err) {
+      drop(root.sessionStorage, PKCE_KEY);
+      throw err;
+    });
+  }
+
+  function refresh() {
+    const t = tokens();
+    if (!t || !t.refresh_token) { signOut(); return Promise.resolve(null); }
+    return tokenRequest(new URLSearchParams({
+      grant_type: 'refresh_token', refresh_token: t.refresh_token
+    })).then(function (r) {
+      if (!r.ok) throw new Error('refresh rejected: ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      return store(data).access_token;
+    }, function () {
+      // The refresh token is dead. Clearing it is what stops an infinite retry loop.
+      signOut();
+      return null;
+    });
+  }
+
+  function accessToken() {
+    const t = tokens();
+    if (!t || !t.access_token) return Promise.resolve(null);
+    if (Date.now() < (t.expires_at || 0) - SKEW_MS) return Promise.resolve(t.access_token);
+    return refresh();
+  }
+
+  function signOut() {
+    // Deliberately does not touch fra.<courseId>.state.v3 -- signing out must never
+    // destroy the learner's local progress.
+    drop(root.localStorage, TOKEN_KEY);
+    drop(root.sessionStorage, PKCE_KEY);
+  }
+
+  function user() {
+    const t = tokens();
+    return t && t.sub ? { sub: t.sub, email: t.email || null } : null;
+  }
+
+  root.FRAAuth = {
+    CONFIG: CONFIG,
+    isSignedIn: function () { return !!(tokens() || {}).access_token; },
+    user: user,
+    beginSignIn: beginSignIn,
+    authorizeUrl: authorizeUrl,
+    completeSignIn: completeSignIn,
+    accessToken: accessToken,
+    signOut: signOut
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
 
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
@@ -6211,7 +6424,7 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -6226,6 +6439,11 @@ FRA.questions.push(
     return fresh();
   }
   function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+
+  // Stamp "settings were genuinely changed", as distinct from touchedAt, which save()
+  // sets on every call and therefore means "last opened". merge.js merges settings on
+  // this. Call it ONLY from real user-driven settings changes.
+  function markSettingsChanged() { S.settingsAt = Date.now(); }
 
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
@@ -6332,7 +6550,7 @@ FRA.questions.push(
   function readSetupFromForm() {
     const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
     const weights = {}; document.querySelectorAll('.su-w').forEach(el => { weights[el.dataset.d] = Math.max(0, parseInt(el.value, 10) || 0); });
-    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; save(); return currentSetup();
+    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; markSettingsChanged(); save(); return currentSetup();
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
@@ -7214,7 +7432,7 @@ FRA.questions.push(
         const s = readSetupFromForm() || currentSetup();
         startExam('custom', { mode: 'custom', n: s.n, minutes: s.minutes, weights: s.weights }); return;
       }
-      case 'setup-reset': { S.settings.testSetup = null; save(); render(); return; }
+      case 'setup-reset': { S.settings.testSetup = null; markSettingsChanged(); save(); render(); return; }
       case 'abandon-exam': { if (!confirm('Quit this test? Your answers so far will be discarded.')) return; S.active = null; save(); return go('exam'); }
       case 'resume': { const a = S.active; if (!a) return go('home'); if (a.kind === 'train') return go('train'); if (a.kind === 'checkpoint') return go('lesson', a.lesson); return go('exam'); }
       case 'start-train': { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain(); return; }
@@ -7251,7 +7469,7 @@ FRA.questions.push(
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
-  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; save(); } });
+  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; markSettingsChanged(); save(); } });
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
