@@ -20,6 +20,12 @@ const html = fs.readFileSync(path.join(ROOT, 'callback', 'index.html'), 'utf8');
 // is the inline block; the one with `src="..."` never matches this pattern.
 const inlineScript = (/<script>([\s\S]*?)<\/script>/.exec(html) || [])[1];
 if (!inlineScript) throw new Error('could not extract the inline script from callback/index.html');
+// The first-<script> regex above is a heuristic. If the page ever grows another inline
+// block ahead of this one, the extraction would silently capture the wrong text and every
+// test below would assert against something that is not the callback logic. FRA_REDIRECT,
+// the page's own redirect hook, is the marker that it captured the right block.
+check('the extracted inline script really is the callback page logic',
+  inlineScript.indexOf('FRA_REDIRECT') !== -1);
 
 function bootCallback(search) {
   const vc = new VirtualConsole();
@@ -35,17 +41,26 @@ function bootCallback(search) {
 // codebase) -- set before the inline script runs, exactly like the fetch stub below, so
 // it captures the target instead of the page actually navigating. Returns the window,
 // the captured redirect target (if any), and whether the network was touched.
-function run(search, seedSignedIn) {
+// `opts.pkce` seeds the one-time transient completeSignIn() reads back, and `opts.token`
+// scripts the token endpoint's 200 -- together they are what makes the success path
+// testable without a network.
+function run(search, seedSignedIn, opts) {
+  opts = opts || {};
   const w = bootCallback(search);
   if (seedSignedIn) {
     w.localStorage.setItem('fra.auth.v1', JSON.stringify({
       access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'a@b.c'
     }));
   }
+  if (opts.pkce) w.sessionStorage.setItem('fra.auth.pkce', JSON.stringify(opts.pkce));
   let redirectedTo = null;
   w.FRA_REDIRECT = to => { redirectedTo = to; };
   let fetchCalled = false;
-  w.fetch = (...args) => { fetchCalled = true; return Promise.reject(new Error('must not touch the network: ' + JSON.stringify(args))); };
+  w.fetch = (...args) => {
+    fetchCalled = true;
+    if (opts.token) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(opts.token) });
+    return Promise.reject(new Error('must not touch the network: ' + JSON.stringify(args)));
+  };
   w.eval(inlineScript);
   return { w, redirectedTo: () => redirectedTo, fetchCalled: () => fetchCalled };
 }
@@ -80,6 +95,32 @@ function run(search, seedSignedIn) {
       w.document.getElementById('msg').textContent === 'That sign-in did not complete', w.document.getElementById('msg').textContent);
     check('?error=access_denied: the detail names the error', /access_denied/.test(w.document.getElementById('detail').textContent), w.document.getElementById('detail').textContent);
     check('?error=access_denied: the actions link is visible', w.document.getElementById('actions').hidden === false);
+  }
+
+  // 4) The success path: the code is exchanged and the learner is returned where they
+  // came from. returnTo travelled through sessionStorage from before the redirect, so the
+  // page treats it as hostile input -- these three cases are the only coverage the
+  // open-redirect guard has.
+  {
+    const TOKEN = { access_token: 'tok', refresh_token: 'r', expires_in: 3600 };
+    const cases = [
+      ['/cbet/', '/cbet/', 'an app-relative returnTo is honoured'],
+      ['//evil.example.com', '/', 'a protocol-relative returnTo goes to / instead'],
+      ['https://evil.example.com/x', '/', 'an absolute returnTo goes to / instead']
+    ];
+    for (const [returnTo, expected, label] of cases) {
+      const { w, redirectedTo, fetchCalled } = run('?code=the-code&state=st-1', false, {
+        pkce: { verifier: 'v-1', state: 'st-1', returnTo: returnTo },
+        token: TOKEN
+      });
+      await new Promise(r => setTimeout(r, 20)); // the exchange settles on a microtask
+      check(`?code=...: ${label}`, redirectedTo() === expected, `${returnTo} -> ${redirectedTo()}`);
+      check(`?code=... (${returnTo}): the code was actually exchanged`, fetchCalled() === true, fetchCalled());
+      check(`?code=... (${returnTo}): the one-time PKCE transient was cleared`,
+        w.sessionStorage.getItem('fra.auth.pkce') === null, w.sessionStorage.getItem('fra.auth.pkce'));
+      check(`?code=... (${returnTo}): the learner ends up signed in`,
+        w.FRAAuth.isSignedIn() === true, w.FRAAuth.isSignedIn());
+    }
   }
 
   if (fails.length) { console.error(`callback: ${fails.length} failed`); process.exit(1); }
