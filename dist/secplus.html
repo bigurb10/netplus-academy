@@ -7175,7 +7175,9 @@ FRA.questions.push(
             const blank = opts.fresh ? opts.fresh() : null;
             book = { version: null, hash: null, sub: sub, lastPullAt: Date.now() };
             saveBook();
-            if (blank) opts.adopt(blank);
+            // `false`: the previous learner's open exam and current view must not follow
+            // their progress into someone else's account.
+            if (blank) opts.adopt(blank, false);
             cancelPush();
             status('idle');
             return true;
@@ -7207,7 +7209,7 @@ FRA.questions.push(
             stashLocal();
             book = { version: readVersion(r, body), hash: hashOf(body.state), sub: sub, lastPullAt: Date.now() };
             saveBook();
-            opts.adopt(body.state);
+            opts.adopt(body.state, false);   // as above: no device-local carry-over
             cancelPush();
             status('idle');
             return true;
@@ -7259,7 +7261,10 @@ FRA.questions.push(
           if (gen !== generation) return false;
           book.version = readVersion(r, j);
           book.hash = hashOf(body);
-          book.sub = currentSub();
+          // Only ever claim ownership for an account allowed to write this blob. Relabel
+          // it unconditionally and a write that slipped past the guard above would also
+          // erase the evidence, so no later pull would ever stash.
+          if (localBelongsTo(currentSub())) book.sub = currentSub();
           saveBook();
           dirty = false;
           status('idle');
@@ -7303,6 +7308,13 @@ FRA.questions.push(
       // generation that no longer exists.
       if (gen !== generation) return false;
       if (!tok) return false;
+      // The owner rule is a WRITE rule before it is a read rule. A pull that never got to
+      // run -- offline, or a 5xx -- leaves a book still naming the previous learner while
+      // a different account is signed in; pushing then uploads their blob, and worse, the
+      // 412 retry loop re-GETs the new account's row and merges the old learner's progress
+      // into it. Refusing to write until a pull has resolved the identity is what stops
+      // that: the pull stashes and adopts, and this account's own work is pushed after.
+      if (!localBelongsTo(currentSub())) return false;
       const body = payload();
       const h = hashOf(body);
       // Every PUT burns a version. A state that has not actually changed (aside from
@@ -8700,15 +8712,26 @@ FRA.questions.push(
         // the view the learner is on and any exam in progress, and save() would then
         // persist the loss. Both pull() and the 412 retry loop adopt through here, so
         // carrying the two device-local fields across is done once, at the choke point.
-        adopt: function (next) { next.view = S.view; next.active = S.active; S = next; save(); render(); },
+        // keepDeviceLocal === false is the identity-switch path: a different account's
+        // state is landing here, and the previous learner's open exam (their picks and
+        // their confidence) and current view must not follow it, exactly as `import`
+        // lands on home with no session.
+        adopt: function (next, keepDeviceLocal) {
+          if (keepDeviceLocal !== false) { next.view = S.view; next.active = S.active; }
+          else { next.view = { name: 'home' }; next.active = null; }
+          S = next; save(); render();
+        },
         onStatus: function (s) { syncStatus = s; paintSyncBadge(); },
         // Called when a pull finds a DIFFERENT account owns the progress in this browser.
         // The blob is copied aside rather than merged into the new account or thrown away,
         // so nothing a learner did is ever lost to a shared browser.
+        // One slot per stash, keyed by the moment it was taken: a single fixed key meant
+        // a browser passed A -> B -> C silently overwrote A's progress with B's. There is
+        // deliberately no UI for these yet; the point is that nothing is destroyed.
         stash: function () {
           try {
             const raw = localStorage.getItem(STORE_KEY);
-            if (raw != null) localStorage.setItem(STORE_KEY + '.stash', raw);
+            if (raw != null) localStorage.setItem(STORE_KEY + '.stash.' + Date.now(), raw);
           } catch (e) { /* ignore */ }
         },
         fresh: function () { return fresh(); },
