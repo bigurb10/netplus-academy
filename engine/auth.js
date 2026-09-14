@@ -1,0 +1,242 @@
+'use strict';
+// OAuth 2.1 authorization-code + PKCE against WorkOS AuthKit, for a public browser
+// client. Loaded as a plain script beside merge.js; sets window.FRAAuth.
+//
+// This file is the ONLY place that knows what a token is. engine/sync.js asks it for
+// a bearer token and knows nothing else about auth.
+(function (root) {
+  const DEFAULTS = {
+    // PRODUCTION AuthKit (soft-rose-14). The course site and ServiceForge share this
+    // WorkOS environment; sign-in cut over from the staging tenant on 2026-09-14.
+    issuer: 'https://soft-rose-14.authkit.app',
+    // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
+    // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
+    // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
+    // Document. Handing it the environment client id returns `application_not_found`
+    // -- which is what broke the first live sign-in attempt. The environment client
+    // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
+    // tokens carry no `aud` at all and so cannot be audience-bound to this API.
+    clientId: 'client_01M2GJVYVBKESSVDNA0RM9C4AM',
+    apiBase: 'https://api.fieldreadyacademy.com',
+    // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
+    // so a token minted without this opens the connector, not this API, and every
+    // sync call 401s. Do not remove it from any request below.
+    resource: 'https://api.fieldreadyacademy.com',
+    redirectPath: '/callback',
+    scope: 'openid profile email offline_access'
+  };
+  const CONFIG = Object.assign({}, DEFAULTS, root.FRA_AUTH_CONFIG || {});
+
+  const TOKEN_KEY = 'fra.auth.v1';
+  const PKCE_KEY = 'fra.auth.pkce';
+  // Set by signOut(), consumed by the next beginSignIn(). The WorkOS session cookie
+  // outlives our local tokens and this tenant publishes no logout endpoint, so without
+  // this a sign-in right after a sign-out silently reissues a code with no login page.
+  const REAUTH_KEY = 'fra.auth.reauth';
+  const SKEW_MS = 60000;               // refresh a minute early rather than racing expiry
+
+  const redirectUri = () => new URL(CONFIG.redirectPath, root.location.origin).href;
+
+  function readJson(store, key) {
+    try { const raw = store.getItem(key); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+  function writeJson(store, key, val) {
+    try { store.setItem(key, JSON.stringify(val)); } catch (e) { /* private mode */ }
+  }
+  function drop(store, key) { try { store.removeItem(key); } catch (e) { /* ignore */ } }
+
+  const tokens = () => readJson(root.localStorage, TOKEN_KEY);
+
+  function randomString(n) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const bytes = new Uint8Array(n);
+    root.crypto.getRandomValues(bytes);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += chars[bytes[i] % chars.length];
+    return s;
+  }
+
+  function b64url(buf) {
+    const b = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return root.btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function challengeFor(verifier) {
+    const data = new root.TextEncoder().encode(verifier);
+    return root.crypto.subtle.digest('SHA-256', data).then(b64url);
+  }
+
+  function authorizeUrl(verifier, state, opts) {
+    return challengeFor(verifier).then(function (challenge) {
+      const q = new URLSearchParams({
+        response_type: 'code',
+        client_id: CONFIG.clientId,
+        redirect_uri: redirectUri(),
+        scope: CONFIG.scope,
+        state: state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256',
+        resource: CONFIG.resource
+      });
+      // prompt=login forces the AuthKit login page even when a session cookie already
+      // exists -- the only way to make "sign out then sign in" actually prompt here.
+      if (opts && opts.prompt) q.set('prompt', opts.prompt);
+      return CONFIG.issuer.replace(/\/$/, '') + '/oauth2/authorize?' + q.toString();
+    });
+  }
+
+  function beginSignIn(returnTo) {
+    const verifier = randomString(64);
+    const state = randomString(32);
+    // A sign-in that directly follows an explicit sign-out must show the login page.
+    const forcePrompt = readJson(root.localStorage, REAUTH_KEY) ? 'login' : null;
+    drop(root.localStorage, REAUTH_KEY);
+    writeJson(root.sessionStorage, PKCE_KEY, {
+      verifier: verifier, state: state,
+      returnTo: returnTo || root.location.pathname + root.location.hash
+    });
+    return authorizeUrl(verifier, state, { prompt: forcePrompt }).then(function (url) {
+      // Navigation seam, mirroring the callback page's FRA_REDIRECT: production falls back
+      // to a plain location assignment; a test sets root.FRA_NAVIGATE to capture the URL,
+      // since jsdom refuses to redefine location.
+      (root.FRA_NAVIGATE || function (u) { root.location.href = u; })(url);
+    });
+  }
+
+  function tokenRequest(params) {
+    params.set('client_id', CONFIG.clientId);
+    params.set('resource', CONFIG.resource);
+    return root.fetch(CONFIG.issuer.replace(/\/$/, '') + '/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+  }
+
+  // Display only. The payload is NOT verified here -- the server verifies every token.
+  // Never make an access decision on anything this returns.
+  function claims(accessToken) {
+    try {
+      const part = String(accessToken).split('.')[1];
+      const pad = part.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(root.atob(pad + '==='.slice((pad.length + 3) % 4)));
+    } catch (e) { return {}; }
+  }
+
+  function store(data) {
+    const c = claims(data.access_token);
+    const rec = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token || (tokens() || {}).refresh_token || null,
+      expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+      sub: c.sub || null,
+      email: c.email || null
+    };
+    writeJson(root.localStorage, TOKEN_KEY, rec);
+    return rec;
+  }
+
+  function completeSignIn(search) {
+    const pending = readJson(root.sessionStorage, PKCE_KEY);
+    const q = new URLSearchParams(search || '');
+    if (q.get('error')) {
+      drop(root.sessionStorage, PKCE_KEY);
+      return Promise.reject(new Error('sign-in failed: ' + q.get('error')));
+    }
+    if (!pending) return Promise.reject(new Error('no sign-in is in progress'));
+    if (!q.get('state') || q.get('state') !== pending.state) {
+      drop(root.sessionStorage, PKCE_KEY);
+      return Promise.reject(new Error('state mismatch; sign-in was not started here'));
+    }
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: q.get('code') || '',
+      redirect_uri: redirectUri(),
+      code_verifier: pending.verifier
+    });
+    return tokenRequest(params).then(function (r) {
+      if (!r.ok) throw new Error('token exchange failed: ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      store(data);
+      drop(root.sessionStorage, PKCE_KEY);
+      return { returnTo: pending.returnTo || '/' };
+    }, function (err) {
+      drop(root.sessionStorage, PKCE_KEY);
+      throw err;
+    });
+  }
+
+  // The single refresh in flight, if any. Two triggers routinely want a token in the same
+  // tick -- sync's boot pull racing the first save()'s debounced push, or two focus events
+  // -- and with rotating refresh tokens the second request presents a token the first has
+  // already consumed, which comes back 400 and would end a perfectly good session. One
+  // in-flight refresh therefore serves every caller.
+  let refreshing = null;
+
+  function refresh() {
+    const t = tokens();
+    if (!t || !t.refresh_token) { signOut(); return Promise.resolve(null); }
+    if (refreshing) return refreshing;
+    refreshing = tokenRequest(new URLSearchParams({
+      grant_type: 'refresh_token', refresh_token: t.refresh_token
+    })).then(function (r) {
+      // ONLY a dead grant ends the session. 400/401 from the token endpoint means the
+      // refresh token itself is gone, and clearing it is what stops an infinite retry
+      // loop. Everything else -- a 5xx (an issuer outage answers 503, never 401), a
+      // rejected fetch (offline), a body that will not parse -- leaves the stored tokens
+      // exactly where they are so the next trigger can retry.
+      if (r.status === 400 || r.status === 401) { signOut(); return null; }
+      if (!r.ok) return null;
+      return r.json().then(function (data) { return store(data).access_token; },
+        function () { return null; });
+    }, function () { return null; })
+      .then(function (tok) { refreshing = null; return tok; },
+        function () { refreshing = null; return null; });
+    return refreshing;
+  }
+
+  function accessToken() {
+    const t = tokens();
+    if (!t || !t.access_token) return Promise.resolve(null);
+    if (Date.now() < (t.expires_at || 0) - SKEW_MS) return Promise.resolve(t.access_token);
+    return refresh();
+  }
+
+  function signOut() {
+    // Deliberately does not touch fra.<courseId>.state.v3 -- signing out must never
+    // destroy the learner's local progress.
+    drop(root.localStorage, TOKEN_KEY);
+    drop(root.sessionStorage, PKCE_KEY);
+    // Make the next sign-in prompt: the WorkOS session cookie is still live and there is
+    // no logout endpoint to clear it, so beginSignIn() must pass prompt=login next time.
+    // Armed on every sign-out, whether the learner clicked it or a dead/expired session
+    // forced it (sync's sessionEnded, refresh's dead-grant path) -- the only effect is that
+    // their next manual sign-in shows a login screen instead of silent SSO, which is right
+    // after any session actually ended.
+    writeJson(root.localStorage, REAUTH_KEY, true);
+  }
+
+  function user() {
+    const t = tokens();
+    return t && t.sub ? { sub: t.sub, email: t.email || null } : null;
+  }
+
+  root.FRAAuth = {
+    CONFIG: CONFIG,
+    // A stored access token exists -- nothing more. It does NOT mean the token is still
+    // valid or that its refresh will succeed: refresh() deliberately keeps the tokens
+    // through an outage, so treating a network blip as "signed out" would hide the
+    // learner's own account from them until the next reload.
+    isSignedIn: function () { return !!(tokens() || {}).access_token; },
+    user: user,
+    beginSignIn: beginSignIn,
+    authorizeUrl: authorizeUrl,
+    completeSignIn: completeSignIn,
+    accessToken: accessToken,
+    signOut: signOut
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

@@ -21,6 +21,33 @@
 - The API is `https://api.fieldreadyacademy.com`. Its full contract, and the eleven things this client must not assume, are in `.superpowers/sdd/progress.md` under "CARRY FORWARD into plan 3". Read that section before Task 4.
 - Design doc: `docs/superpowers/specs/2026-09-09-course-progress-sync-design.md`.
 
+### The real test harness -- the plan's test code uses a shorthand you must translate
+
+The test snippets below are written for clarity, not copy-paste. **`tests/lib.js` actually exports
+`{ boot, courseFiles, courseDirs, ROOT }`, and `boot` takes an OPTIONS OBJECT, not a course id.**
+Task 1's implementer hit this; do not rediscover it. The real shape, from `tests/engine.js`:
+
+```js
+const path = require('path');
+const { boot, ROOT } = require('./lib');
+const dir = path.join(ROOT, 'courses', 'netplus');
+const w = boot({ courseDir: dir });          // NOT boot('netplus')
+
+// The repo's assertion style: print every check, collect failures, exit non-zero at the end.
+const fails = [];
+const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== undefined ? '  [' + x + ']' : ''}`); if (!ok) fails.push(n); };
+
+// Driving a UI action, also from tests/engine.js:
+const act = (w, a, arg) => { const b = w.document.createElement('button'); b.dataset.act = a; if (arg != null) b.dataset.arg = arg; w.$('#app').appendChild(b); w.click(b); };
+```
+
+Also: `FRAMerge.mergeState` takes a third `opts` argument and throws without it -- see how
+`tests/merge.js` calls it before writing new merge tests.
+
+Translate the snippets in this plan into that style, preserving every value, name and assertion
+they specify. Where a snippet uses `assert.strictEqual(x, y)`, use `check('name', x === y, x)`.
+End each new suite with the repo's exit convention: `process.exit(fails.length ? 1 : 0)`.
+
 ### Non-negotiable API facts (each of these silently breaks the feature)
 
 1. **Always set `Content-Type: application/json` explicitly.** FastAPI runs with `strict_content_type=True`; a bare `fetch(url, {method:'PUT', body: JSON.stringify(s)})` sends `text/plain` and is rejected 422 every time.

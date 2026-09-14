@@ -103,7 +103,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -117,7 +117,12 @@
     } catch (e) { /* storage unavailable */ }
     return fresh();
   }
-  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } if (window.FRASync) FRASync.schedulePush(); }
+
+  // Stamp "settings were genuinely changed", as distinct from touchedAt, which save()
+  // sets on every call and therefore means "last opened". merge.js merges settings on
+  // this. Call it ONLY from real user-driven settings changes.
+  function markSettingsChanged() { S.settingsAt = Date.now(); }
 
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
@@ -224,7 +229,7 @@
   function readSetupFromForm() {
     const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
     const weights = {}; document.querySelectorAll('.su-w').forEach(el => { weights[el.dataset.d] = Math.max(0, parseInt(el.value, 10) || 0); });
-    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; save(); return currentSetup();
+    const s = { n: clampN(nEl.value), minutes: clampMin(mEl.value), weights }; S.settings.testSetup = s; markSettingsChanged(); save(); return currentSetup();
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
@@ -335,9 +340,19 @@
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
+  let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
+  // Shared between the topbar template (so the dot is correct on the render right after
+  // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
+  const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
+  function paintSyncBadge() {
+    const el = $('#syncdot');
+    if (!el) return;
+    el.className = 'syncdot ' + syncStatus;
+    el.title = SYNC_LABEL[syncStatus] || '';
+  }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
   // ---------- browser history ----------
@@ -384,6 +399,7 @@
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
+          ${acctHtml()}
           <nav class="nav">
             ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
@@ -400,6 +416,12 @@
         </nav>
       </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
+  }
+  function acctHtml() {
+    if (!window.FRAAuth) return '';
+    if (!FRAAuth.isSignedIn()) return `<button class="btn small" data-act="sign-in">Save my progress</button>`;
+    const u = FRAAuth.user() || {};
+    return `<div class="acct"><span class="who" title="${esc(u.email || '')}">${esc(u.email || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');
@@ -732,6 +754,7 @@
     }
     S.active = null;
     S.view = { name: 'results', arg: String(examIdx) }; save();
+    if (window.FRASync) FRASync.pushNow();
     return viewResults(String(examIdx));
   }
   function viewResults(arg) {
@@ -754,7 +777,8 @@
           <div class="paths">
             <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
             <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
-          </div></div>`;
+          </div></div>
+          ${window.FRAAuth && !FRAAuth.isSignedIn() ? `<p class="muted">Studying on more than one device? <button class="btn ghost small" data-act="sign-in">Save my progress</button></p>` : ''}`;
       } else if (planIsFromThis && S.plan.scope === 'full') {
         planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
         <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
@@ -1054,8 +1078,9 @@
   function advance(sess) {
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
-      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
-      save(); render(); return;
+      let passedNow = false;
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
+      save(); if (passedNow && window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
@@ -1082,6 +1107,12 @@
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
       case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
       case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
+      case 'sign-out': {
+        // Sign-out clears the token, never the local blob. The learner keeps studying
+        // exactly as an anonymous visitor would, with everything they have done so far.
+        FRAAuth.signOut(); if (window.FRASync) FRASync.reset(); render(); return;
+      }
       case 'rate': {
         const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
         S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();
@@ -1106,7 +1137,7 @@
         const s = readSetupFromForm() || currentSetup();
         startExam('custom', { mode: 'custom', n: s.n, minutes: s.minutes, weights: s.weights }); return;
       }
-      case 'setup-reset': { S.settings.testSetup = null; save(); render(); return; }
+      case 'setup-reset': { S.settings.testSetup = null; markSettingsChanged(); save(); render(); return; }
       case 'abandon-exam': { if (!confirm('Quit this test? Your answers so far will be discarded.')) return; S.active = null; save(); return go('exam'); }
       case 'resume': { const a = S.active; if (!a) return go('home'); if (a.kind === 'train') return go('train'); if (a.kind === 'checkpoint') return go('lesson', a.lesson); return go('exam'); }
       case 'start-train': { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain(); return; }
@@ -1139,11 +1170,11 @@
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
       case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
-      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
+      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; if (window.FRASync) FRASync.forgetOwner(); save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
-  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; save(); } });
+  app.addEventListener('change', e => { const el = e.target.closest('[data-act="toggle-timer"]'); if (el) { S.settings.timer = el.checked; markSettingsChanged(); save(); } });
   app.addEventListener('input', e => { if (e.target.closest && e.target.closest('#su-n, #su-min, .su-w')) { const s = readSetupFromForm(); const p = $('#su-preview'); if (p && s) p.textContent = setupPreview(s); } });
   document.addEventListener('keydown', e => {
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
@@ -1273,6 +1304,50 @@
   } else {
     const hv = viewFromHash(location.hash); if (hv) S.view = hv;
     else if (location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
+    // Sync is optional and additive: everything below is a no-op while signed out, so
+    // anonymous study takes exactly the path it always has.
+    if (window.FRASync && window.FRAAuth) {
+      FRASync.init({
+        courseId: course.id,
+        getState: function () { return S; },
+        // mergeState() (engine/merge.js) returns no view/active -- both are device-local
+        // and deliberately never synced -- so assigning its result wholesale would delete
+        // the view the learner is on and any exam in progress, and save() would then
+        // persist the loss. Both pull() and the 412 retry loop adopt through here, so
+        // carrying the two device-local fields across is done once, at the choke point.
+        // keepDeviceLocal === false is the identity-switch path: a different account's
+        // state is landing here, and the previous learner's open exam (their picks and
+        // their confidence) and current view must not follow it, exactly as `import`
+        // lands on home with no session.
+        adopt: function (next, keepDeviceLocal) {
+          if (keepDeviceLocal !== false) { next.view = S.view; next.active = S.active; }
+          else { next.view = { name: 'home' }; next.active = null; }
+          S = next; save(); render();
+        },
+        onStatus: function (s) { syncStatus = s; paintSyncBadge(); },
+        // Called when a pull finds a DIFFERENT account owns the progress in this browser.
+        // The blob is copied aside rather than merged into the new account or thrown away,
+        // so nothing a learner did is ever lost to a shared browser.
+        // One slot per stash, keyed by the moment it was taken: a single fixed key meant
+        // a browser passed A -> B -> C silently overwrote A's progress with B's. There is
+        // deliberately no UI for these yet; the point is that nothing is destroyed.
+        stash: function () {
+          try {
+            const raw = localStorage.getItem(STORE_KEY);
+            if (raw != null) localStorage.setItem(STORE_KEY + '.stash.' + Date.now(), raw);
+          } catch (e) { /* ignore */ }
+        },
+        fresh: function () { return fresh(); },
+        // A 401 means the session ended mid-pull; the topbar still shows the account until
+        // something repaints it.
+        onSignedOut: function () { render(); }
+      });
+      if (FRAAuth.isSignedIn()) FRASync.pull();
+      window.addEventListener('focus', function () { FRASync.maybePull(); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') FRASync.pushNow();
+      });
+    }
     render();
     if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }

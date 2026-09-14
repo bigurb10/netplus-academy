@@ -67,6 +67,11 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); background: none; border: 0; padding: 0; }
 .brand .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; }
+.acct { display:flex; align-items:center; gap:8px; }
+.acct .who { font-size:.85rem; opacity:.8; max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.syncdot { width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block; }
+.syncdot.syncing { background:var(--accent); }
+.syncdot.error, .syncdot.offline { background:var(--warn); }
 .nav { display: flex; gap: 4px; margin-left: 8px; }
 .nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--ink-2); }
 .nav button:hover { background: var(--surface-2); color: var(--ink); }

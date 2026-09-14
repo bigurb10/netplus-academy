@@ -13,6 +13,12 @@ ENGINE = os.path.join(ROOT, "engine")
 COURSES = os.path.join(ROOT, "courses")
 DIST = os.path.join(ROOT, "dist")
 FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">'
+# The site favicon set lives at the web root next to the catalog; bundles are served
+# from /<id>/ so the paths are absolute. favicon.svg is the crisp one for Chrome and
+# Firefox, favicon.ico (16/32/48) covers everything else, the PNG is for iOS.
+ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
+         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+         '<link rel="apple-touch-icon" href="/apple-touch-icon.png">')
 
 
 def read(p):
@@ -40,10 +46,15 @@ def build(course_id):
     course_dir = os.path.join(COURSES, course_id)
     m = manifest(course_dir)
     css = read(os.path.join(ENGINE, "styles.css"))
-    scripts = "\n".join(read(p) for p in course_files(course_dir)) + "\n" + read(os.path.join(ENGINE, "merge.js")) + "\n" + read(os.path.join(ENGINE, "app.js"))
+    scripts = ("\n".join(read(p) for p in course_files(course_dir)) + "\n"
+               + read(os.path.join(ENGINE, "merge.js")) + "\n"
+               + read(os.path.join(ENGINE, "auth.js")) + "\n"
+               + read(os.path.join(ENGINE, "sync.js")) + "\n"
+               + read(os.path.join(ENGINE, "app.js")))
     # Guard against accidental script-closing sequences inside inline code
     scripts = scripts.replace("</script", "<\\/script")
     body = f"""<title>{m['name']}</title>
+{ICONS}
 {FONTS}
 <style>
 {css}
@@ -60,6 +71,7 @@ def build(course_id):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{m['description']}">
 <title>{m['name']}</title>
+{ICONS}
 {FONTS}
 <style>
 {css}
@@ -95,7 +107,26 @@ def build(course_id):
     print(f"  wrote dist/{course_id}.html {len(standalone)} bytes; dist/{course_id}-artifact.html {len(body)} bytes")
 
 
+def build_callback():
+    """dist/callback.html - the shared PKCE completion page, fully self-contained."""
+    html = read(os.path.join(ROOT, "callback", "index.html"))
+    html = html.replace(
+        '<link rel="stylesheet" href="../catalog.css">',
+        "<style>\n" + read(os.path.join(ROOT, "catalog.css")) + "\n</style>")
+    html = html.replace(
+        '<script src="../engine/auth.js"></script>',
+        "<script>\n" + read(os.path.join(ENGINE, "auth.js")) + "\n</script>")
+    assert "<style>" in html and "engine/auth.js" not in html, \
+        "callback/index.html no longer matches the strings build_callback() inlines"
+    os.makedirs(DIST, exist_ok=True)
+    out = os.path.join(ROOT, "dist", "callback.html")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  wrote dist/callback.html {len(html)} bytes")
+
+
 if __name__ == "__main__":
     wanted = sys.argv[1:] or sorted(d for d in os.listdir(COURSES) if os.path.exists(os.path.join(COURSES, d, "course.js")))
     for cid in wanted:
         build(cid)
+    build_callback()

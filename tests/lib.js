@@ -10,7 +10,7 @@ function courseFiles(courseDir) {
 }
 
 function boot(opts) {
-  const o = Object.assign({ engineDir: path.join(ROOT, 'engine'), hash: '', url: 'http://localhost/', beforeApp: null }, opts);
+  const o = Object.assign({ engineDir: path.join(ROOT, 'engine'), hash: '', url: 'http://localhost/', beforeApp: null, beforeAppJs: null }, opts);
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => { if (!/not implemented|localStorage|SecurityError/.test(String(e))) console.error('JSDOM ERR', e.message); });
   const dom = new JSDOM('<!doctype html><html><head><title>x</title></head><body><div id="app"></div></body></html>',
@@ -21,6 +21,13 @@ function boot(opts) {
   for (const f of courseFiles(o.courseDir)) w.eval(fs.readFileSync(f, 'utf8'));
   if (o.beforeApp) o.beforeApp(w);
   w.eval(fs.readFileSync(path.join(o.engineDir, 'merge.js'), 'utf8'));
+  w.eval(fs.readFileSync(path.join(o.engineDir, 'auth.js'), 'utf8'));
+  w.eval(fs.readFileSync(path.join(o.engineDir, 'sync.js'), 'utf8'));
+  // Runs after merge/auth/sync are loaded (window.FRAAuth/FRASync exist) but before app.js's
+  // boot IIFE executes -- for seeding fra.auth.v1, scripting window.fetch, or wrapping a
+  // FRASync method to spy on it, all of which must be in place before app.js's own boot-time
+  // FRASync.init()/pull() calls run.
+  if (o.beforeAppJs) o.beforeAppJs(w);
   w.eval(fs.readFileSync(path.join(o.engineDir, 'app.js'), 'utf8'));
   w.$ = s => w.document.querySelector(s);
   w.$$ = s => [...w.document.querySelectorAll(s)];

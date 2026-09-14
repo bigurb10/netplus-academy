@@ -254,9 +254,15 @@ def get_progress(
     if record is None:
         raise HTTPException(status_code=404, detail="no progress stored")
     tag = _etag(record.version)
+    # no-store: the progress blob must never sit in the browser's HTTP cache. With only
+    # an ETag and no cache directive it is heuristically cacheable, so the browser starts
+    # auto-revalidating (the 304s in the logs) and can hand stale bodies or a mangled ETag
+    # to the sync client. The client does its own ETag bookkeeping; the HTTP cache must
+    # stay out of it entirely.
     if request.headers.get("if-none-match", "").strip() == tag:
-        return Response(status_code=304, headers={"ETag": tag})
+        return Response(status_code=304, headers={"ETag": tag, "Cache-Control": "no-store"})
     response.headers["ETag"] = tag
+    response.headers["Cache-Control"] = "no-store"
     return {"state": record.state, "version": record.version}
 
 
@@ -294,6 +300,7 @@ def put_progress(
         raise HTTPException(status_code=412, detail=str(exc)) from exc
 
     response.headers["ETag"] = _etag(record.version)
+    response.headers["Cache-Control"] = "no-store"
     # Deliberately no `state`: the client just sent it, and `record.state` is
     # the dict it passed in rather than a re-read of what jsonb stored. GET is
     # the only place state comes back.
