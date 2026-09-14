@@ -4,7 +4,7 @@
   "private": true,
   "description": "FieldReady Academy course engine and course packs",
   "scripts": {
-    "test": "node tests/selftest.js && node tests/gating.js && node tests/acronyms.js && node tests/engine.js && node tests/merge.js && node tests/auth.js && node tests/sync.js",
+    "test": "node tests/selftest.js && node tests/gating.js && node tests/acronyms.js && node tests/engine.js && node tests/merge.js && node tests/auth.js && node tests/sync.js && node tests/callback.js",
     "build": "python build.py"
   },
   "devDependencies": {

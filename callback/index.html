@@ -28,18 +28,35 @@
     detail.className = 'muted err';
     actions.hidden = false;
   }
-  try {
-    window.FRAAuth.completeSignIn(window.location.search).then(function (out) {
-      // Same-origin, app-relative only: never send the learner to an absolute URL
-      // that arrived from outside, or this page becomes an open redirect.
-      var to = out.returnTo || '/';
-      if (!/^\/[^/]/.test(to)) to = '/';
-      window.location.replace(to);
-    }, function (err) {
-      fail(String(err && err.message ? err.message : err));
-    });
-  } catch (e) {
-    fail(String(e && e.message ? e.message : e));
+  var q = new URLSearchParams(window.location.search);
+  if (!q.has('code') && !q.has('state') && !q.has('error')) {
+    // A plain visit, not a sign-in in progress -- this happens twice in a normal
+    // sign-in (once when the learner opens this page, once after the post-exchange
+    // redirect lands back here) and any time the URL is bookmarked or revisited
+    // directly. Neither case is a failure, so completeSignIn is never called here.
+    if (window.FRAAuth && window.FRAAuth.isSignedIn()) {
+      msg.textContent = "You're signed in";
+      window.location.replace('/');
+    } else {
+      msg.textContent = 'Nothing to finish here';
+      detail.textContent = 'There is no sign-in in progress.';
+      detail.className = 'muted';
+      actions.hidden = false;
+    }
+  } else {
+    try {
+      window.FRAAuth.completeSignIn(window.location.search).then(function (out) {
+        // Same-origin, app-relative only: never send the learner to an absolute URL
+        // that arrived from outside, or this page becomes an open redirect.
+        var to = out.returnTo || '/';
+        if (!/^\/[^/]/.test(to)) to = '/';
+        window.location.replace(to);
+      }, function (err) {
+        fail(String(err && err.message ? err.message : err));
+      });
+    } catch (e) {
+      fail(String(e && e.message ? e.message : e));
+    }
   }
 })();
 </script>
