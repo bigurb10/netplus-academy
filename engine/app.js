@@ -1310,7 +1310,12 @@
       FRASync.init({
         courseId: course.id,
         getState: function () { return S; },
-        adopt: function (next) { S = next; save(); render(); },
+        // mergeState() (engine/merge.js) returns no view/active -- both are device-local
+        // and deliberately never synced -- so assigning its result wholesale would delete
+        // the view the learner is on and any exam in progress, and save() would then
+        // persist the loss. Both pull() and the 412 retry loop adopt through here, so
+        // carrying the two device-local fields across is done once, at the choke point.
+        adopt: function (next) { next.view = S.view; next.active = S.active; S = next; save(); render(); },
         onStatus: function (s) { syncStatus = s; paintSyncBadge(); }
       });
       if (FRAAuth.isSignedIn()) FRASync.pull();

@@ -444,6 +444,53 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('signed-in starter results do not repeat the save-progress offer', !offer19, !!offer19);
   }
 
+  // ----- Final review C1: a pull must never delete the device-local view and active -----
+  // Every other signed-in test in this file scripts the boot pull as a 404, which never
+  // reaches adopt(); a 200 is what actually exercises it. mergeState() returns no
+  // view/active by design (both are device-local), so without the carry-over in app.js's
+  // adopt() a learner who is mid-checkpoint when a pull lands loses the session and is
+  // bounced back to Home, and save() persists the loss.
+  {
+    let resolveGet = null;
+    const w20 = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'c1@example.com' }));
+        // Deferred rather than scripted: the boot pull's GET stays pending until the
+        // checkpoint below is live, so the response lands on a genuinely mid-exam learner.
+        x.fetch = () => new Promise(r => { resolveGet = r; });
+      }
+    });
+    const localLesson = w20.FRA.units[0].lessons[0].id;
+    const remoteLesson = w20.FRA.units[1].lessons[0].id;
+    act(w20, 'lesson', localLesson);
+    act(w20, 'start-checkpoint', localLesson);
+    check('setup: a checkpoint is live before the pull response lands',
+      !!(state(w20).active && state(w20).active.kind === 'checkpoint'), JSON.stringify(state(w20).active));
+    await tick();
+    if (typeof resolveGet !== 'function') throw new Error('the boot pull never reached fetch');
+    // A plausible server row: the same course blob from another device, carrying one
+    // lesson this one has never seen, with no view and no active (what payload() sends).
+    const remote = Object.assign(JSON.parse(w20.localStorage.getItem(KEY)), {
+      lessons: { [remoteLesson]: { status: 'passed', best: 90, attempts: 1, passedAt: 5 } },
+      active: null, touchedAt: 1
+    });
+    delete remote.view;
+    resolveGet(res(200, { state: remote, version: 7 }, '"7"'));
+    await tick();
+    const s20 = state(w20);
+    check('a successful pull leaves the learner on the view they were on',
+      !!(s20.view && s20.view.name === 'lesson' && s20.view.arg === localLesson), JSON.stringify(s20.view));
+    check('a successful pull does not abandon the exam in progress',
+      !!(s20.active && s20.active.kind === 'checkpoint' && s20.active.lesson === localLesson),
+      JSON.stringify(s20.active && { kind: s20.active.kind, lesson: s20.active.lesson }));
+    // Asserted on the VALUE, not on the key: render() writes a lazy stub into S.lessons
+    // for every lesson it paints, so the key alone is present with or without a merge.
+    const gotRemote = (s20.lessons || {})[remoteLesson] || {};
+    check('the pull still merged the remote lesson in',
+      gotRemote.status === 'passed' && gotRemote.best === 90, JSON.stringify(gotRemote));
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced
