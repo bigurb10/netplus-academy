@@ -41,7 +41,7 @@ function freshWindow() {
     check('response_type is code', q.get('response_type') === 'code', q.get('response_type'));
     check('code_challenge_method is S256', q.get('code_challenge_method') === 'S256', q.get('code_challenge_method'));
     check('state is passed through', q.get('state') === 'state-xyz', q.get('state'));
-    check('client_id is the public client id', q.get('client_id') === 'client_01M23KW7MPKGQ3FGVAW836VKBQ', q.get('client_id'));
+    check('client_id is the public client id', q.get('client_id') === 'client_01M2FYEZS9JP8VE280TZ0GWHHA', q.get('client_id'));
     check('redirect_uri points at the callback page', q.get('redirect_uri') === 'https://fieldreadyacademy.com/callback', q.get('redirect_uri'));
 
     // The audience binding. Without this the token opens the MCP server, not this API.

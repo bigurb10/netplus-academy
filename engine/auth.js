@@ -7,7 +7,14 @@
 (function (root) {
   const DEFAULTS = {
     issuer: 'https://prepared-song-48-staging.authkit.app',
-    clientId: 'client_01M23KW7MPKGQ3FGVAW836VKBQ',
+    // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
+    // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
+    // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
+    // Document. Handing it the environment client id returns `application_not_found`
+    // -- which is what broke the first live sign-in attempt. The environment client
+    // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
+    // tokens carry no `aud` at all and so cannot be audience-bound to this API.
+    clientId: 'client_01M2FYEZS9JP8VE280TZ0GWHHA',
     apiBase: 'https://api.fieldreadyacademy.com',
     // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
     // so a token minted without this opens the connector, not this API, and every
