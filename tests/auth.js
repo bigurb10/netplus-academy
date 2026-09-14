@@ -36,12 +36,12 @@ function freshWindow() {
     const A = w.FRAAuth;
     const url = new URL(await A.authorizeUrl('verifier-abc', 'state-xyz'));
     check('authorize endpoint is the AuthKit tenant', url.origin + url.pathname ===
-      'https://prepared-song-48-staging.authkit.app/oauth2/authorize', url.origin + url.pathname);
+      'https://soft-rose-14.authkit.app/oauth2/authorize', url.origin + url.pathname);
     const q = url.searchParams;
     check('response_type is code', q.get('response_type') === 'code', q.get('response_type'));
     check('code_challenge_method is S256', q.get('code_challenge_method') === 'S256', q.get('code_challenge_method'));
     check('state is passed through', q.get('state') === 'state-xyz', q.get('state'));
-    check('client_id is the public client id', q.get('client_id') === 'client_01M2G92EW9F8X16GPQCV5598ZS', q.get('client_id'));
+    check('client_id is the public client id', q.get('client_id') === 'client_01M2GJVYVBKESSVDNA0RM9C4AM', q.get('client_id'));
     check('redirect_uri points at the callback page', q.get('redirect_uri') === 'https://fieldreadyacademy.com/callback', q.get('redirect_uri'));
 
     // The audience binding. Without this the token opens the MCP server, not this API.

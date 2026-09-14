@@ -6016,7 +6016,9 @@ FRA.questions.push(
 // a bearer token and knows nothing else about auth.
 (function (root) {
   const DEFAULTS = {
-    issuer: 'https://prepared-song-48-staging.authkit.app',
+    // PRODUCTION AuthKit (soft-rose-14). The course site and ServiceForge share this
+    // WorkOS environment; sign-in cut over from the staging tenant on 2026-09-14.
+    issuer: 'https://soft-rose-14.authkit.app',
     // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
     // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
     // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
@@ -6024,7 +6026,7 @@ FRA.questions.push(
     // -- which is what broke the first live sign-in attempt. The environment client
     // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
     // tokens carry no `aud` at all and so cannot be audience-bound to this API.
-    clientId: 'client_01M2G92EW9F8X16GPQCV5598ZS',
+    clientId: 'client_01M2GJVYVBKESSVDNA0RM9C4AM',
     apiBase: 'https://api.fieldreadyacademy.com',
     // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
     // so a token minted without this opens the connector, not this API, and every
@@ -6037,6 +6039,10 @@ FRA.questions.push(
 
   const TOKEN_KEY = 'fra.auth.v1';
   const PKCE_KEY = 'fra.auth.pkce';
+  // Set by signOut(), consumed by the next beginSignIn(). The WorkOS session cookie
+  // outlives our local tokens and this tenant publishes no logout endpoint, so without
+  // this a sign-in right after a sign-out silently reissues a code with no login page.
+  const REAUTH_KEY = 'fra.auth.reauth';
   const SKEW_MS = 60000;               // refresh a minute early rather than racing expiry
 
   const redirectUri = () => new URL(CONFIG.redirectPath, root.location.origin).href;
@@ -6073,7 +6079,7 @@ FRA.questions.push(
     return root.crypto.subtle.digest('SHA-256', data).then(b64url);
   }
 
-  function authorizeUrl(verifier, state) {
+  function authorizeUrl(verifier, state, opts) {
     return challengeFor(verifier).then(function (challenge) {
       const q = new URLSearchParams({
         response_type: 'code',
@@ -6085,6 +6091,9 @@ FRA.questions.push(
         code_challenge_method: 'S256',
         resource: CONFIG.resource
       });
+      // prompt=login forces the AuthKit login page even when a session cookie already
+      // exists -- the only way to make "sign out then sign in" actually prompt here.
+      if (opts && opts.prompt) q.set('prompt', opts.prompt);
       return CONFIG.issuer.replace(/\/$/, '') + '/oauth2/authorize?' + q.toString();
     });
   }
@@ -6092,11 +6101,14 @@ FRA.questions.push(
   function beginSignIn(returnTo) {
     const verifier = randomString(64);
     const state = randomString(32);
+    // A sign-in that directly follows an explicit sign-out must show the login page.
+    const forcePrompt = readJson(root.localStorage, REAUTH_KEY) ? 'login' : null;
+    drop(root.localStorage, REAUTH_KEY);
     writeJson(root.sessionStorage, PKCE_KEY, {
       verifier: verifier, state: state,
       returnTo: returnTo || root.location.pathname + root.location.hash
     });
-    return authorizeUrl(verifier, state).then(function (url) { root.location.href = url; });
+    return authorizeUrl(verifier, state, { prompt: forcePrompt }).then(function (url) { root.location.href = url; });
   }
 
   function tokenRequest(params) {
@@ -6204,6 +6216,9 @@ FRA.questions.push(
     // destroy the learner's local progress.
     drop(root.localStorage, TOKEN_KEY);
     drop(root.sessionStorage, PKCE_KEY);
+    // Make the next sign-in prompt: the WorkOS session cookie is still live and there is
+    // no logout endpoint to clear it, so beginSignIn() must pass prompt=login next time.
+    writeJson(root.localStorage, REAUTH_KEY, true);
   }
 
   function user() {
@@ -6403,9 +6418,14 @@ FRA.questions.push(
 
   function readVersion(resp, body) {
     const tag = resp.headers && resp.headers.get ? resp.headers.get('ETag') : null;
-    if (tag) return String(tag).replace(/^W\//, '').replace(/"/g, '');
-    if (body && body.version != null) return String(body.version);
-    return null;
+    const raw = tag ? String(tag).replace(/^W\//, '').replace(/"/g, '')
+      : (body && body.version != null ? String(body.version) : null);
+    // A version only ever becomes an If-Match precondition, which the server parses as a
+    // bare integer -- a stray quote from a cache-revalidated response, an empty ETag, or a
+    // value left by an older build all parse as a 400 that strands every write after the
+    // first. Keep only a clean integer; null means "unknown", which routes the next write
+    // to create (and a 412 there re-GETs a good ETag and retries as an update).
+    return /^\d+$/.test(raw || '') ? raw : null;
   }
 
   function get(tok) {
@@ -6506,9 +6526,14 @@ FRA.questions.push(
   }
 
   function attemptPut(tok, body, attempt, gen) {
-    const pre = book.version == null
+    // Guard the stored version too, not just readVersion's output: a malformed value
+    // persisted by an older build is read straight from localStorage by loadBook(). A
+    // non-integer version is treated as "unknown" -> create; if the row exists the server
+    // answers 412 and the retry path below re-GETs a clean ETag and writes as an update.
+    const v = /^\d+$/.test(String(book.version)) ? String(book.version) : null;
+    const pre = v == null
       ? { 'If-None-Match': '*' }
-      : { 'If-Match': '"' + book.version + '"' };
+      : { 'If-Match': '"' + v + '"' };
     return root.fetch(url(), {
       method: 'PUT',
       // strict_content_type is on server-side; without this header every write 422s.

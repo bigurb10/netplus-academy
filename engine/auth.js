@@ -6,7 +6,9 @@
 // a bearer token and knows nothing else about auth.
 (function (root) {
   const DEFAULTS = {
-    issuer: 'https://prepared-song-48-staging.authkit.app',
+    // PRODUCTION AuthKit (soft-rose-14). The course site and ServiceForge share this
+    // WorkOS environment; sign-in cut over from the staging tenant on 2026-09-14.
+    issuer: 'https://soft-rose-14.authkit.app',
     // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
     // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
     // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
@@ -14,7 +16,7 @@
     // -- which is what broke the first live sign-in attempt. The environment client
     // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
     // tokens carry no `aud` at all and so cannot be audience-bound to this API.
-    clientId: 'client_01M2G92EW9F8X16GPQCV5598ZS',
+    clientId: 'client_01M2GJVYVBKESSVDNA0RM9C4AM',
     apiBase: 'https://api.fieldreadyacademy.com',
     // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
     // so a token minted without this opens the connector, not this API, and every
