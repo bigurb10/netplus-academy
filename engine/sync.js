@@ -126,10 +126,17 @@
 
   function pull() {
     if (!opts) return Promise.resolve(false);
+    // Same fencing as pushNow(): captured before the first await, checked before any
+    // book/dirty mutation or opts.adopt() call, so a reset() (e.g. sign-out) fired
+    // while this pull is in flight cannot have its cleared state silently overwritten
+    // by a response that resolves afterward.
+    const gen = generation;
     return token().then(function (tok) {
+      if (gen !== generation) return false;
       if (!tok) return false;
       status('syncing');
       return get(tok).then(function (r) {
+        if (gen !== generation) return false;
         if (r.status === 404) {                 // normal: this learner has stored nothing yet
           // book.hash must be cleared too, not just book.version: otherwise a later
           // pushNow() of the SAME local state sees hashOf(payload) === book.hash (the
@@ -144,6 +151,7 @@
         if (r.status === 401) { root.FRAAuth.signOut(); status('error'); return false; }
         if (!r.ok) { status('error'); return false; }   // 5xx: try again later
         return r.json().then(function (body) {
+          if (gen !== generation) return false;
           const merged = root.FRAMerge.mergeState(opts.getState(), body.state, mergeOpts());
           const before = JSON.stringify(payload());
           // Prime the change-detector on what the server actually has, BEFORE

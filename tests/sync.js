@@ -339,6 +339,38 @@ function state(extra) {
       h.w.FRASync.isDirty() === false, h.w.FRASync.isDirty());
   }
 
+  // ----- (review round 2) reset() also fences a pull() already in flight -----
+  {
+    const h = harness([]);   // fetch is overridden below with a deferred (manually-resolved) stub
+    // A lesson the merge would adopt if it ran, and a passStreak that differs from
+    // local's whether or not the raw field carries over (mergeState always recomputes
+    // passStreak from the exam log) -- either way, a real adopt() changes `local`.
+    const remote = state({ passStreak: 5, lessons: { u1l1: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    let resolveFetch;
+    h.w.fetch = function (url, opts) {
+      opts = opts || {};
+      h.calls.push({
+        url: String(url), method: opts.method || 'GET', headers: opts.headers || {},
+        body: opts.body ? JSON.parse(opts.body) : null
+      });
+      return new Promise(function (resolve) { resolveFetch = resolve; });
+    };
+    const p = h.w.FRASync.pull();    // starts a read; the GET is now pending
+    await new Promise(function (r) { setTimeout(r, 0); });   // let the pending GET actually fire
+    check('the read reached fetch before reset() fired', h.calls.length === 1, h.calls.length);
+    h.w.FRASync.reset();             // e.g. sign-out while the read is still in flight
+    resolveFetch(res(200, { state: remote, version: 7 }, '"7"'));   // the deferred response arrives after reset
+    const ok = await p;
+    check('a read fenced by reset() resolves false', ok === false, ok);
+    check('local was never adopted after reset() fenced the read',
+      local.passStreak === 1 && !local.lessons.u1l1, JSON.stringify(local));
+    check('reset() cleared the bookkeeping key despite the late pull response',
+      h.w.localStorage.getItem('fra.netplus.sync.v1') === null,
+      h.w.localStorage.getItem('fra.netplus.sync.v1'));
+  }
+
   // ----- (finding 3) a merge that only reorders feedback must not force a push -----
   {
     const itemA = { id: 'A', text: 'a', sent: true };
