@@ -288,6 +288,36 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
       calls.length === 2 && calls[1].method === 'PUT', JSON.stringify(calls.map(c => c.method)));
   }
 
+  // 6) Signed in: the checkpoint's immediate pushNow() fires only on the advance that
+  // completes the checkpoint with a pass -- not on every "next" click within it.
+  {
+    const { w: w12, calls } = bootSignedIn([res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET
+    const lessonId = w12.FRA.units[0].lessons[0].id;
+    act(w12, 'lesson', lessonId);
+    act(w12, 'start-checkpoint', lessonId);
+    const QQ = {}; w12.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    const fatten = x => typeof x === 'string' ? QQ[x] : x;
+    let a = state(w12).active;
+    if (!a || a.kind !== 'checkpoint') throw new Error('checkpoint did not start for ' + lessonId);
+    const n = a.items.length;
+    // Answer every question but the last correctly and confidently (same pick-the-key
+    // pattern finishCheckpoint/finishStarter use), so the eventual score is guaranteed to
+    // clear CHECKPOINT_PASS on the final advance.
+    for (let k = 0; k < n - 1; k++) {
+      const q = fatten(a.items[a.i]);
+      act(w12, 'opt', q.c); act(w12, 'conf', 5); act(w12, 'submit'); act(w12, 'next');
+      a = state(w12).active;
+    }
+    await tick();
+    check('no PUT before the checkpoint completes', calls.length === 1, calls.length);
+    const qLast = fatten(a.items[a.i]);
+    act(w12, 'opt', qLast.c); act(w12, 'conf', 5); act(w12, 'submit'); act(w12, 'next'); // the completing, passing advance
+    await tick(); // no timer is advanced -- this is the immediate pushNow(), not the 5s debounce
+    check('exactly one PUT fires immediately when the checkpoint completes with a pass',
+      calls.length === 2 && calls[1].method === 'PUT', JSON.stringify(calls.map(c => c.method)));
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

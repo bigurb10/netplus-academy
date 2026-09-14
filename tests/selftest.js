@@ -13,3 +13,7 @@ for (const dir of dirs) {
 }
 if (failed) { console.error(`${failed} course(s) failed`); process.exit(1); }
 console.log('selftest: all courses OK');
+// Explicit exit: each booted window's save() now schedules a debounced FRASync push (Task 5),
+// arming a real 5s setTimeout regardless of whether FRASync.init() ran on this file:// boot
+// path. Node's natural exit would otherwise wait out the last of those.
+process.exit(0);

@@ -559,3 +559,7 @@ if (box2) {
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
+// Explicit exit: the round-trip block boots the real engine, whose save() now schedules a
+// debounced FRASync push on every call (Task 5), arming a real 5s setTimeout on that window.
+// Node's natural exit would otherwise wait out that timer instead of exiting once checks are done.
+process.exit(0);

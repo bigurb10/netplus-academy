@@ -1062,8 +1062,9 @@
   function advance(sess) {
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
-      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
-      save(); if (window.FRASync) FRASync.pushNow(); render(); return;
+      let passedNow = false;
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
+      save(); if (passedNow && window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;

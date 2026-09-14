@@ -175,4 +175,8 @@ function freshWindow() {
 
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All auth tests passed.');
+  // Explicit on the success path too: booting the real engine arms a real 5s FRASync
+  // schedulePush() timer (Task 5's save() change) that Node's natural exit would otherwise
+  // wait out.
+  process.exit(0);
 })().catch(e => { console.error(e); process.exit(1); });
