@@ -687,6 +687,29 @@ function state(extra) {
       h.calls[1] && h.calls[1].headers['If-None-Match']);
   }
 
+  // ----- a malformed stored version never leaves the client as a bad If-Match -----
+  // An older build (or a cache-mangled ETag) can leave a non-integer version in the sync
+  // book. The server parses If-Match as an integer, so sending `If-Match: ""` is a 400
+  // that strands every write after the first. The client must instead treat an unclean
+  // version as unknown, create (If-None-Match: *), take the 412 that a create-on-existing
+  // returns, re-GET a clean ETag, and retry as a proper update.
+  {
+    const h = harness([res(412), res(200, { state: state(), version: 5 }, '"5"'), res(200, { version: 6 }, '"6"')]);
+    h.w.localStorage.setItem('fra.netplus.sync.v1',
+      JSON.stringify({ version: '', hash: 'stale', sub: 'u1', lastPullAt: 0 }));  // '' = the poison value
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const ok = await h.w.FRASync.pushNow();
+    check('a stale empty version never becomes an If-Match; the first write is a create',
+      h.calls[0].method === 'PUT' && h.calls[0].headers['If-None-Match'] === '*'
+      && h.calls[0].headers['If-Match'] === undefined,
+      JSON.stringify(h.calls[0].headers));
+    check('the 412 is followed by a re-GET', h.calls[1] && h.calls[1].method === 'GET', h.calls[1] && h.calls[1].method);
+    check('the retry carries the clean ETag from the re-GET as If-Match',
+      h.calls[2] && h.calls[2].headers['If-Match'] === '"5"', h.calls[2] && h.calls[2].headers['If-Match']);
+    check('the write ultimately succeeds', ok === true, ok);
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

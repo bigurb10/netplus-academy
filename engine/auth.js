@@ -27,6 +27,10 @@
 
   const TOKEN_KEY = 'fra.auth.v1';
   const PKCE_KEY = 'fra.auth.pkce';
+  // Set by signOut(), consumed by the next beginSignIn(). The WorkOS session cookie
+  // outlives our local tokens and this tenant publishes no logout endpoint, so without
+  // this a sign-in right after a sign-out silently reissues a code with no login page.
+  const REAUTH_KEY = 'fra.auth.reauth';
   const SKEW_MS = 60000;               // refresh a minute early rather than racing expiry
 
   const redirectUri = () => new URL(CONFIG.redirectPath, root.location.origin).href;
@@ -63,7 +67,7 @@
     return root.crypto.subtle.digest('SHA-256', data).then(b64url);
   }
 
-  function authorizeUrl(verifier, state) {
+  function authorizeUrl(verifier, state, opts) {
     return challengeFor(verifier).then(function (challenge) {
       const q = new URLSearchParams({
         response_type: 'code',
@@ -75,6 +79,9 @@
         code_challenge_method: 'S256',
         resource: CONFIG.resource
       });
+      // prompt=login forces the AuthKit login page even when a session cookie already
+      // exists -- the only way to make "sign out then sign in" actually prompt here.
+      if (opts && opts.prompt) q.set('prompt', opts.prompt);
       return CONFIG.issuer.replace(/\/$/, '') + '/oauth2/authorize?' + q.toString();
     });
   }
@@ -82,11 +89,14 @@
   function beginSignIn(returnTo) {
     const verifier = randomString(64);
     const state = randomString(32);
+    // A sign-in that directly follows an explicit sign-out must show the login page.
+    const forcePrompt = readJson(root.localStorage, REAUTH_KEY) ? 'login' : null;
+    drop(root.localStorage, REAUTH_KEY);
     writeJson(root.sessionStorage, PKCE_KEY, {
       verifier: verifier, state: state,
       returnTo: returnTo || root.location.pathname + root.location.hash
     });
-    return authorizeUrl(verifier, state).then(function (url) { root.location.href = url; });
+    return authorizeUrl(verifier, state, { prompt: forcePrompt }).then(function (url) { root.location.href = url; });
   }
 
   function tokenRequest(params) {
@@ -194,6 +204,9 @@
     // destroy the learner's local progress.
     drop(root.localStorage, TOKEN_KEY);
     drop(root.sessionStorage, PKCE_KEY);
+    // Make the next sign-in prompt: the WorkOS session cookie is still live and there is
+    // no logout endpoint to clear it, so beginSignIn() must pass prompt=login next time.
+    writeJson(root.localStorage, REAUTH_KEY, true);
   }
 
   function user() {

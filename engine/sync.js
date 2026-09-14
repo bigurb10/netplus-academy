@@ -174,9 +174,14 @@
 
   function readVersion(resp, body) {
     const tag = resp.headers && resp.headers.get ? resp.headers.get('ETag') : null;
-    if (tag) return String(tag).replace(/^W\//, '').replace(/"/g, '');
-    if (body && body.version != null) return String(body.version);
-    return null;
+    const raw = tag ? String(tag).replace(/^W\//, '').replace(/"/g, '')
+      : (body && body.version != null ? String(body.version) : null);
+    // A version only ever becomes an If-Match precondition, which the server parses as a
+    // bare integer -- a stray quote from a cache-revalidated response, an empty ETag, or a
+    // value left by an older build all parse as a 400 that strands every write after the
+    // first. Keep only a clean integer; null means "unknown", which routes the next write
+    // to create (and a 412 there re-GETs a good ETag and retries as an update).
+    return /^\d+$/.test(raw || '') ? raw : null;
   }
 
   function get(tok) {
@@ -277,9 +282,14 @@
   }
 
   function attemptPut(tok, body, attempt, gen) {
-    const pre = book.version == null
+    // Guard the stored version too, not just readVersion's output: a malformed value
+    // persisted by an older build is read straight from localStorage by loadBook(). A
+    // non-integer version is treated as "unknown" -> create; if the row exists the server
+    // answers 412 and the retry path below re-GETs a clean ETag and writes as an update.
+    const v = /^\d+$/.test(String(book.version)) ? String(book.version) : null;
+    const pre = v == null
       ? { 'If-None-Match': '*' }
-      : { 'If-Match': '"' + book.version + '"' };
+      : { 'If-Match': '"' + v + '"' };
     return root.fetch(url(), {
       method: 'PUT',
       // strict_content_type is on server-side; without this header every write 422s.

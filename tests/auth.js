@@ -224,6 +224,21 @@ function freshWindow() {
       w.localStorage.getItem('fra.auth.v1'));
     check('signing out must never destroy local progress',
       w.localStorage.getItem('fra.netplus.state.v3') === '{"v":3}', w.localStorage.getItem('fra.netplus.state.v3'));
+    // The WorkOS session outlives the local token and there is no logout endpoint, so
+    // sign-out arms a one-shot flag that makes the NEXT sign-in force the login page.
+    check('signOut arms the re-auth flag for the next sign-in',
+      w.localStorage.getItem('fra.auth.reauth') !== null, w.localStorage.getItem('fra.auth.reauth'));
+  }
+
+  // ----- prompt=login is added only when asked (the sign-out -> sign-in path) -----
+  {
+    const w = freshWindow();
+    const forced = new URL(await w.FRAAuth.authorizeUrl('v', 's', { prompt: 'login' }));
+    check('authorizeUrl adds prompt=login when forced', forced.searchParams.get('prompt') === 'login',
+      forced.searchParams.get('prompt'));
+    const plain = new URL(await w.FRAAuth.authorizeUrl('v', 's'));
+    check('a normal sign-in sends no prompt (silent SSO preserved)', plain.searchParams.get('prompt') === null,
+      plain.searchParams.get('prompt'));
   }
 
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
