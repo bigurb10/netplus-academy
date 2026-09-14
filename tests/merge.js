@@ -216,9 +216,10 @@ check('the merged plan is not the same object reference as either input',
 const tailoredExam = exam({ id: 'path-tailored', date: 1 });
 const fullExam = exam({ id: 'path-full', date: 2 });
 r = M.mergeState(
-  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], touchedAt: 10 }),
-  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], touchedAt: 99 }), OPTS);
-check('path comes from the more recently touched side', r.path.scope === 'full', JSON.stringify(r.path));
+  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], pathAt: 10, touchedAt: 99 }),
+  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], pathAt: 99, touchedAt: 10 }), OPTS);
+check('path comes from the side where it was more recently CHANGED (pathAt), not opened (touchedAt)',
+  r.path.scope === 'full', JSON.stringify(r.path));
 
 // A device that has been merely opened has touchedAt = Date.now() and path: null from fresh(),
 // with no path choice of its own. Taking path from `newer` with no fallback lets that null win
@@ -298,9 +299,9 @@ check('a sent feedback flag survives no matter which side reports it first', r.f
 // The brief's path test only exercises the more-recently-touched side being `b`. Swap it to `a`
 // so an "always take b's path" bug (which would also pass the brief's own case) gets caught.
 r = M.mergeState(
-  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], touchedAt: 99 }),
-  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], touchedAt: 10 }), OPTS);
-check('path still comes from the more recently touched side when that side is passed first',
+  full({ path: { examIdx: 0, scope: 'full' }, exams: [fullExam], pathAt: 99, touchedAt: 10 }),
+  full({ path: { examIdx: 0, scope: 'tailored' }, exams: [tailoredExam], pathAt: 10, touchedAt: 99 }), OPTS);
+check('path still comes from the more recently CHANGED side when that side is passed first',
   r.path.scope === 'full', JSON.stringify(r.path));
 
 // `created` uses Infinity as a sentinel for "missing" so a real 0 never wins the Math.min by
@@ -374,6 +375,48 @@ check('plan remaps against its own source side, not the newer one',
   const m2 = M.mergeState(a, b, OPTS);
   check('the genuinely later settings change won', m2.settings.timer === true, m2.settings.timer);
   check('settingsAt took the later stamp', m2.settingsAt === 5000, m2.settingsAt);
+}
+
+// ---------- path rides on pathAt, not touchedAt ----------
+// The same flaw settings had: touchedAt means "last opened", so a device merely opened
+// later must not out-vote the device where the path was actually chosen.
+{
+  const shared = [exam({ id: 'e1', date: 1, kind: 'starter' })];   // examIdx 0 resolves on both sides
+  const a = full({ exams: shared });                                // device A: chose the tailored path
+  a.path = { examIdx: 0, scope: 'tailored' };
+  a.pathAt = 1000;
+  a.touchedAt = 1000;
+
+  const b = full({ exams: shared });                                // device B: opened later, never chose
+  b.path = null;
+  b.pathAt = 0;
+  b.touchedAt = 9999;
+
+  const m1 = M.mergeState(a, b, OPTS);
+  check('a chosen path survives a later mere-open on another device',
+    !!(m1.path && m1.path.scope === 'tailored'), JSON.stringify(m1.path));
+  check('pathAt carries the real change time', m1.pathAt === 1000, m1.pathAt);
+  const m1b = M.mergeState(b, a, OPTS);
+  check('commutative: the chosen path survives either order', !!(m1b.path && m1b.path.scope === 'tailored'),
+    JSON.stringify(m1b.path));
+}
+
+// A genuine later path change on the other device DOES win, even though this one was opened last.
+{
+  const shared = [exam({ id: 'e1', date: 1, kind: 'starter' })];
+  const a = full({ exams: shared });
+  a.path = { examIdx: 0, scope: 'tailored' };
+  a.pathAt = 1000;
+  a.touchedAt = 9999;                    // A was opened most recently...
+
+  const b = full({ exams: shared });
+  b.path = { examIdx: 0, scope: 'full' };
+  b.pathAt = 5000;                       // ...but B is where the path was actually changed
+  b.touchedAt = 1000;
+
+  const m2 = M.mergeState(a, b, OPTS);
+  check('the genuinely later path change won', !!(m2.path && m2.path.scope === 'full'), JSON.stringify(m2.path));
+  check('pathAt took the later stamp', m2.pathAt === 5000, m2.pathAt);
 }
 
 // pickSettings' tie branch: an exact settingsAt tie with settings differing on each side.
