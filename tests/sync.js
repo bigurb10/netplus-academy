@@ -418,16 +418,19 @@ function state(extra) {
   // The extra opts sync.js needs on the ownership paths, wired the way engine/app.js
   // wires them: stash copies the blob aside, fresh supplies an empty state.
   function ownerOpts(h, get, set) {
-    return {
+    const o = {
       courseId: 'netplus',
       getState: get,
-      adopt: s => set(s),
+      // Records the second argument as well: `false` means "this is a different account's
+      // state, do not carry the previous learner's view and open exam over".
+      adopt: (s, keepDeviceLocal) => { o.adoptedWith = keepDeviceLocal; set(s); },
       stash: () => {
         const raw = h.w.localStorage.getItem(STATE_KEY);
         if (raw != null) h.w.localStorage.setItem(STATE_KEY + '.stash', raw);
       },
       fresh: () => state()
     };
+    return o;
   }
 
   // ----- (C2a) no recorded owner: anonymous progress is claimed by the first account -----
@@ -435,10 +438,12 @@ function state(extra) {
     const remote = state({ lessons: { u1l1: lesson(90, 5) } });
     const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
     let local = state({ lessons: { u2l1: lesson(80, 6) } });
-    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.FRASync.init(o);
     await h.w.FRASync.pull();
     check('an unowned local blob is merged into the account claiming it -- the first-sign-in flow',
       !!(local.lessons.u1l1 && local.lessons.u2l1), JSON.stringify(Object.keys(local.lessons)));
+    check('the merge path leaves the device-local view and exam alone', o.adoptedWith === undefined, o.adoptedWith);
     check('the pull records which account now owns the local progress',
       JSON.parse(h.w.localStorage.getItem(SYNC_KEY)).sub === 'u1', h.w.localStorage.getItem(SYNC_KEY));
   }
@@ -463,9 +468,12 @@ function state(extra) {
     let local = state({ lessons: { u2l1: lesson(80, 6) } });
     const before = JSON.stringify(local);
     h.w.localStorage.setItem(STATE_KEY, before);
-    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.FRASync.init(o);
     const changed = await h.w.FRASync.pull();
     check('a different account adopts the server state rather than merging', changed === true, changed);
+    check('an identity switch tells the app not to carry the previous exam and view over',
+      o.adoptedWith === false, o.adoptedWith);
     check('the previous learner progress is NOT handed to the new account',
       !local.lessons.u2l1, JSON.stringify(Object.keys(local.lessons)));
     check('the new account still gets its own stored progress',
@@ -485,8 +493,11 @@ function state(extra) {
     let local = state({ passStreak: 4, lessons: { u2l1: lesson(80, 6) } });
     const before = JSON.stringify(local);
     h.w.localStorage.setItem(STATE_KEY, before);
-    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.FRASync.init(o);
     await h.w.FRASync.pull();
+    check('an identity switch on the 404 path also asks for no device-local carry-over',
+      o.adoptedWith === false, o.adoptedWith);
     check('a different account with nothing stored starts from a fresh state',
       local.passStreak === 0 && !local.lessons.u2l1, JSON.stringify([local.passStreak, Object.keys(local.lessons)]));
     check('the previous learner blob was stashed on the 404 path too',
@@ -570,6 +581,41 @@ function state(extra) {
       !!(local.lessons.u1l1 && local.lessons.u2l1), JSON.stringify(Object.keys(local.lessons)));
     check('nothing was stashed on the same-owner path',
       h.w.localStorage.getItem(STATE_KEY + '.stash') === null, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+  }
+
+  // ----- (C2i) the owner rule is a WRITE rule too, not only a read rule -----
+  // Reproduced by the re-review: u1 pushes, u2 signs in, u2's boot pull 5xxs so the book
+  // still names u1, and the next push uploads u1's blob -- then 412s, re-GETs u2's row and
+  // merges u1's progress into it. The guard sits in doPush, before anything is sent.
+  {
+    const h = harness([
+      res(200, { version: 1 }, '"1"'),                                   // u1's own push
+      res(503),                                                          // u2's boot pull fails
+      // Nothing below may ever be reached. Scripted so that removing the guard reproduces
+      // the reviewer's exact PUT, GET, PUT sequence rather than dying on an empty script.
+      res(412),
+      res(200, { state: state({ passStreak: 9 }), version: 4 }, '"4"'),
+      res(200, { version: 5 }, '"5"')
+    ]);
+    let local = state({ ratings: { u1l1: { r: 9, ts: 5 } } });
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.FRASync.init(o);
+    await h.w.FRASync.pushNow();
+    check('setup: u1 own push recorded u1 as the owner', bookOf(h).sub === 'u1', JSON.stringify(bookOf(h)));
+    // A different account signs in on the same browser.
+    h.w.localStorage.setItem('fra.auth.v1', JSON.stringify({
+      access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u2'
+    }));
+    await h.w.FRASync.pull();                               // 503: identity still unresolved
+    local = Object.assign({}, local, { passStreak: 3 });     // u2 studies
+    const ok = await h.w.FRASync.pushNow();
+    check('a push by an account that does not own the local blob is refused', ok === false, ok);
+    check('no PUT followed the refused push', h.calls.length === 2,
+      JSON.stringify(h.calls.map(c => c.method)));
+    check('the refused push did not relabel the book onto the new account',
+      bookOf(h).sub === 'u1', JSON.stringify(bookOf(h)));
+    check('nothing of the new account was adopted by a retry loop that never ran',
+      o.adoptedWith === undefined && local.passStreak === 3, JSON.stringify([o.adoptedWith, local.passStreak]));
   }
 
   // ===== Final review I5 / I6 / I8 =====

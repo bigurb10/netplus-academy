@@ -1315,15 +1315,26 @@
         // the view the learner is on and any exam in progress, and save() would then
         // persist the loss. Both pull() and the 412 retry loop adopt through here, so
         // carrying the two device-local fields across is done once, at the choke point.
-        adopt: function (next) { next.view = S.view; next.active = S.active; S = next; save(); render(); },
+        // keepDeviceLocal === false is the identity-switch path: a different account's
+        // state is landing here, and the previous learner's open exam (their picks and
+        // their confidence) and current view must not follow it, exactly as `import`
+        // lands on home with no session.
+        adopt: function (next, keepDeviceLocal) {
+          if (keepDeviceLocal !== false) { next.view = S.view; next.active = S.active; }
+          else { next.view = { name: 'home' }; next.active = null; }
+          S = next; save(); render();
+        },
         onStatus: function (s) { syncStatus = s; paintSyncBadge(); },
         // Called when a pull finds a DIFFERENT account owns the progress in this browser.
         // The blob is copied aside rather than merged into the new account or thrown away,
         // so nothing a learner did is ever lost to a shared browser.
+        // One slot per stash, keyed by the moment it was taken: a single fixed key meant
+        // a browser passed A -> B -> C silently overwrote A's progress with B's. There is
+        // deliberately no UI for these yet; the point is that nothing is destroyed.
         stash: function () {
           try {
             const raw = localStorage.getItem(STORE_KEY);
-            if (raw != null) localStorage.setItem(STORE_KEY + '.stash', raw);
+            if (raw != null) localStorage.setItem(STORE_KEY + '.stash.' + Date.now(), raw);
           } catch (e) { /* ignore */ }
         },
         fresh: function () { return fresh(); },

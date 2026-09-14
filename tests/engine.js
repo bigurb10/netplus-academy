@@ -516,6 +516,55 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
       gotRemote.status === 'passed' && gotRemote.best === 90, JSON.stringify(gotRemote));
   }
 
+  // ----- Amendment 2: an identity switch must NOT carry the previous exam or view over -----
+  // The mirror image of the C1 case above. Same live checkpoint, same 200 pull -- but the
+  // sync book names a different account, so this is the stash-and-adopt path, and the
+  // previous learner's open exam (their picks, their confidence) and their current view
+  // must not follow their progress into someone else's account.
+  {
+    let resolveGet = null;
+    const w22 = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'switch@example.com' }));
+        // The progress sitting in this browser belongs to somebody else.
+        x.localStorage.setItem('fra.netplus.sync.v1', JSON.stringify({ version: 6, hash: 'stale', sub: 'previous-learner', lastPullAt: 0 }));
+        x.fetch = () => new Promise(r => { resolveGet = r; });
+      }
+    });
+    const lessonId22 = w22.FRA.units[0].lessons[0].id;
+    act(w22, 'lesson', lessonId22);
+    act(w22, 'start-checkpoint', lessonId22);
+    const QQ22 = {}; w22.FRA.questions.forEach(q => { QQ22[q.id] = q; });
+    const live = state(w22).active;
+    const q22 = typeof live.items[0] === 'string' ? QQ22[live.items[0]] : live.items[0];
+    act(w22, 'opt', q22.c); act(w22, 'conf', 5);   // a real answer in progress
+    check('setup: the previous learner is mid-checkpoint with an answer picked',
+      !!(state(w22).active && state(w22).active.sel != null), JSON.stringify(state(w22).active && state(w22).active.sel));
+    await tick();
+    if (typeof resolveGet !== 'function') throw new Error('the boot pull never reached fetch');
+    // The new account's own stored row: a complete v3 blob with a marker of its own.
+    const mine = Object.assign(JSON.parse(w22.localStorage.getItem(KEY)), {
+      active: null, ratings: { theirs: { r: 7, ts: 1 } }, touchedAt: 1
+    });
+    delete mine.view;
+    resolveGet(res(200, { state: mine, version: 7 }, '"7"'));
+    await tick();
+    const s22 = state(w22);
+    check('an identity switch does not hand the new account the previous exam',
+      s22.active === null, JSON.stringify(s22.active));
+    check('an identity switch lands the new account on home',
+      !!(s22.view && s22.view.name === 'home'), JSON.stringify(s22.view));
+    check('the new account got its own stored state', !!(s22.ratings && s22.ratings.theirs), JSON.stringify(s22.ratings));
+    let stashed = null;
+    for (let i = 0; i < w22.localStorage.length; i++) {
+      const k = w22.localStorage.key(i);
+      if (k && k.indexOf('fra.netplus.state.v3.stash') === 0) stashed = k;
+    }
+    check('the previous learner progress was stashed under its own slot, not a shared one',
+      stashed !== null && stashed !== 'fra.netplus.state.v3.stash', stashed);
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

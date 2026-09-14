@@ -208,7 +208,9 @@
             const blank = opts.fresh ? opts.fresh() : null;
             book = { version: null, hash: null, sub: sub, lastPullAt: Date.now() };
             saveBook();
-            if (blank) opts.adopt(blank);
+            // `false`: the previous learner's open exam and current view must not follow
+            // their progress into someone else's account.
+            if (blank) opts.adopt(blank, false);
             cancelPush();
             status('idle');
             return true;
@@ -240,7 +242,7 @@
             stashLocal();
             book = { version: readVersion(r, body), hash: hashOf(body.state), sub: sub, lastPullAt: Date.now() };
             saveBook();
-            opts.adopt(body.state);
+            opts.adopt(body.state, false);   // as above: no device-local carry-over
             cancelPush();
             status('idle');
             return true;
@@ -292,7 +294,10 @@
           if (gen !== generation) return false;
           book.version = readVersion(r, j);
           book.hash = hashOf(body);
-          book.sub = currentSub();
+          // Only ever claim ownership for an account allowed to write this blob. Relabel
+          // it unconditionally and a write that slipped past the guard above would also
+          // erase the evidence, so no later pull would ever stash.
+          if (localBelongsTo(currentSub())) book.sub = currentSub();
           saveBook();
           dirty = false;
           status('idle');
@@ -336,6 +341,13 @@
       // generation that no longer exists.
       if (gen !== generation) return false;
       if (!tok) return false;
+      // The owner rule is a WRITE rule before it is a read rule. A pull that never got to
+      // run -- offline, or a 5xx -- leaves a book still naming the previous learner while
+      // a different account is signed in; pushing then uploads their blob, and worse, the
+      // 412 retry loop re-GETs the new account's row and merges the old learner's progress
+      // into it. Refusing to write until a pull has resolved the identity is what stops
+      // that: the pull stashes and adopts, and this account's own work is pushed after.
+      if (!localBelongsTo(currentSub())) return false;
       const body = payload();
       const h = hashOf(body);
       // Every PUT burns a version. A state that has not actually changed (aside from
