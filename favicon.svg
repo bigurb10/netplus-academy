@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- The FieldReady Academy mark: the same navy rounded square and monospace "FR"
+       that .brand .mark draws on every page (28px box, 7px radius = 25%). -->
+  <rect width="64" height="64" rx="16" fill="#14212E"/>
+  <text x="32" y="32" text-anchor="middle" dominant-baseline="central"
+        font-family="'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace"
+        font-size="29" font-weight="500" fill="#F3F5F8">FR</text>
+</svg>

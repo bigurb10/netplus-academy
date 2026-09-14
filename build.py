@@ -13,6 +13,12 @@ ENGINE = os.path.join(ROOT, "engine")
 COURSES = os.path.join(ROOT, "courses")
 DIST = os.path.join(ROOT, "dist")
 FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">'
+# The site favicon set lives at the web root next to the catalog; bundles are served
+# from /<id>/ so the paths are absolute. favicon.svg is the crisp one for Chrome and
+# Firefox, favicon.ico (16/32/48) covers everything else, the PNG is for iOS.
+ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
+         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+         '<link rel="apple-touch-icon" href="/apple-touch-icon.png">')
 
 
 def read(p):
@@ -48,6 +54,7 @@ def build(course_id):
     # Guard against accidental script-closing sequences inside inline code
     scripts = scripts.replace("</script", "<\\/script")
     body = f"""<title>{m['name']}</title>
+{ICONS}
 {FONTS}
 <style>
 {css}
@@ -64,6 +71,7 @@ def build(course_id):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{m['description']}">
 <title>{m['name']}</title>
+{ICONS}
 {FONTS}
 <style>
 {css}
