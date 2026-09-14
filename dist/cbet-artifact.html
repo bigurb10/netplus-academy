@@ -9031,6 +9031,15 @@ FRA.questions.push(
   const MAX_ATTEMPTS = 3;
   const PUSH_DEBOUNCE_MS = 5000;
   const PULL_MIN_INTERVAL_MS = 60000;
+  // After a push that conflicts (412 exhausted) or hits a transient failure, the next
+  // attempt backs off exponentially with full jitter instead of re-firing on the fixed
+  // 5s debounce. Two devices signed in to one account push in lockstep otherwise, each
+  // PUT invalidating the other's version, and never converge -- a 412 storm. Jitter
+  // desynchronises them so one lands a write while the other waits, and once their state
+  // is equal both skip on the hash check.
+  const PUSH_BACKOFF_BASE_MS = 2000;
+  const PUSH_BACKOFF_MAX_MS = 60000;
+  const MAX_BACKOFF_N = 6;             // 2s,4s,8s,16s,32s,60s(capped)
 
   let opts = null;
   // `sub` records WHICH account the local progress blob belongs to. Nothing else does:
@@ -9040,6 +9049,16 @@ FRA.questions.push(
   let book = { version: null, hash: null, sub: null, lastPullAt: 0 };
   let dirty = false;
   let timer = null;
+  // A push is executing (from doPush entry to its finalizer). While it is, schedulePush()
+  // must NOT arm a competing timer -- the running push's finalizer decides the single next
+  // step. This is what stops the 412 retry's own adopt()->save()->schedulePush() from
+  // re-arming a 5s push behind the retry and looping forever.
+  let pushing = false;
+  // Consecutive failed push rounds, driving the backoff delay. Reset on any settled push.
+  let backoffN = 0;
+  // How the last push ended, read by pushNow's finalizer to choose the next step:
+  // 'wrote' | 'nothing' | 'conflict' | 'transient' | 'permanent' | 'blocked' | 'ended'.
+  let pushOutcome = null;
   // pull and pushNow run one at a time, through a single promise chain. Interleaved,
   // a pull wrote book.hash/book.version in the middle of the 412 retry loop's own
   // bookkeeping (self-healing via a later 412, but a wasted round trip and a bug that
@@ -9093,7 +9112,14 @@ FRA.questions.push(
   // this client has deliberately decided it owes the server nothing.
   function cancelPush() {
     dirty = false;
+    backoffN = 0;
     if (timer) { root.clearTimeout(timer); timer = null; }
+  }
+
+  // Arm the single push timer, replacing any pending one.
+  function arm(delay) {
+    if (timer) root.clearTimeout(timer);
+    timer = root.setTimeout(function () { timer = null; pushNow(); }, delay);
   }
 
   // A 401 from ANY request means the token is genuinely dead (a 5xx is the try-later
@@ -9323,6 +9349,7 @@ FRA.questions.push(
       if (r.ok) {
         return r.json().then(function (j) {
           if (gen !== generation) return false;
+          pushOutcome = 'wrote';
           book.version = readVersion(r, j);
           book.hash = hashOf(body);
           // Only ever claim ownership for an account allowed to write this blob. Relabel
@@ -9335,21 +9362,22 @@ FRA.questions.push(
           return true;
         });
       }
-      if (r.status === 401) { sessionEnded(); return false; }
+      if (r.status === 401) { pushOutcome = 'ended'; sessionEnded(); return false; }
       if (r.status === 413) {
         // Permanent. The blob is over the server's ceiling and retrying cannot help.
+        pushOutcome = 'permanent';
         status('error');
         return false;
       }
       if (r.status === 412) {
-        if (attempt >= MAX_ATTEMPTS) { status('error'); return false; }
+        if (attempt >= MAX_ATTEMPTS) { pushOutcome = 'conflict'; status('error'); return false; }
         return get(tok).then(function (r2) {
           if (gen !== generation) return false;
           if (r2.status === 404) {           // deleted between our write and our re-read
             book.version = null; saveBook();
             return attemptPut(tok, payload(), attempt + 1, gen);
           }
-          if (!r2.ok) { status('error'); return false; }
+          if (!r2.ok) { pushOutcome = 'transient'; status('error'); return false; }
           return r2.json().then(function (b2) {
             if (gen !== generation) return false;
             opts.adopt(root.FRAMerge.mergeState(opts.getState(), b2.state, mergeOpts()));
@@ -9359,7 +9387,8 @@ FRA.questions.push(
           });
         });
       }
-      status('error');                        // 5xx and anything else: try later
+      pushOutcome = 'transient';               // 5xx and anything else: try later
+      status('error');
       return false;
     });
   }
@@ -9370,29 +9399,29 @@ FRA.questions.push(
     return token().then(function (tok) {
       // reset() may have fired while token() was pending; don't touch book/dirty for a
       // generation that no longer exists.
-      if (gen !== generation) return false;
-      if (!tok) return false;
+      if (gen !== generation) { pushOutcome = 'ended'; return false; }
+      if (!tok) { pushOutcome = 'blocked'; return false; }
       // The owner rule is a WRITE rule before it is a read rule. A pull that never got to
       // run -- offline, or a 5xx -- leaves a book still naming the previous learner while
       // a different account is signed in; pushing then uploads their blob, and worse, the
       // 412 retry loop re-GETs the new account's row and merges the old learner's progress
       // into it. Refusing to write until a pull has resolved the identity is what stops
       // that: the pull stashes and adopts, and this account's own work is pushed after.
-      if (!localBelongsTo(currentSub())) return false;
+      if (!localBelongsTo(currentSub())) { pushOutcome = 'blocked'; return false; }
       const body = payload();
       const h = hashOf(body);
       // Every PUT burns a version. A state that has not actually changed (aside from
       // touchedAt, which save() stamps on every navigation) must not be re-pushed
       // just because something upstream set dirty -- dirty means "a write may be
       // owed"; hash equality proves it is not.
-      if (h === book.hash) { dirty = false; return false; }
+      if (h === book.hash) { dirty = false; pushOutcome = 'nothing'; return false; }
       // From here local differs from the server. Stay dirty until a write is
       // actually accepted, so a failure at any point below is retried by a later
       // trigger rather than being silently forgotten.
       dirty = true;
       status('syncing');
       return attemptPut(tok, body, 1, gen);
-    }).catch(function () { status('offline'); return false; });
+    }).catch(function () { pushOutcome = 'transient'; status('offline'); return false; });
   }
 
   // The two public entry points. Everything above runs inside the serial chain.
@@ -9406,13 +9435,45 @@ FRA.questions.push(
 
   function pushNow() {
     if (!opts) return Promise.resolve(false);
-    return serial(doPush);
+    return serial(function () {
+      pushOutcome = null;
+      pushing = true;                          // suppress schedulePush's timer during the push
+      return Promise.resolve().then(doPush).then(finishPush, function () {
+        pushing = false; return false;
+      });
+    });
+  }
+
+  // Runs once per push, after doPush settles, to choose the SINGLE next step -- this is
+  // the only place a follow-up push is scheduled, so the 412 retry's own adopt()->save()
+  // can no longer re-arm a competing 5s loop.
+  function finishPush(ok) {
+    pushing = false;
+    if (pushOutcome === 'wrote') {
+      backoffN = 0;
+      // A genuine change that landed mid-push (save() set dirty while pushing) still owes
+      // a write; hash equality proves whether it does. Not a conflict, so normal debounce.
+      if (opts && hashOf(payload()) !== book.hash) arm(PUSH_DEBOUNCE_MS);
+    } else if (pushOutcome === 'conflict' || pushOutcome === 'transient') {
+      // Back off with full jitter so lockstep writers spread out and converge.
+      backoffN = Math.min(backoffN + 1, MAX_BACKOFF_N);
+      const ceil = Math.min(PUSH_BACKOFF_BASE_MS * Math.pow(2, backoffN - 1), PUSH_BACKOFF_MAX_MS);
+      arm(Math.floor(Math.random() * ceil) + 1);
+    } else {
+      // 'nothing' (settled), 'blocked' (signed out / not the owner -- a pull resolves it),
+      // 'permanent' (413), 'ended' (session gone). None benefit from an auto-retry; wait
+      // for a real trigger (a save, a focus pull) rather than spinning.
+      backoffN = 0;
+    }
+    return ok;
   }
 
   function schedulePush() {
     dirty = true;
-    if (timer) root.clearTimeout(timer);
-    timer = root.setTimeout(function () { timer = null; pushNow(); }, PUSH_DEBOUNCE_MS);
+    // A push is running: it will schedule what comes next from its own outcome. Arming a
+    // timer here is exactly the accidental re-arm that produced the 412 storm.
+    if (pushing) return;
+    arm(PUSH_DEBOUNCE_MS);
   }
 
   // Ends the server session. The book holds two different kinds of state: version, hash
@@ -9426,6 +9487,8 @@ FRA.questions.push(
     const owner = book.sub || null;
     book = { version: null, hash: null, sub: owner, lastPullAt: 0 };
     dirty = false;
+    backoffN = 0;
+    pushing = false;
     if (timer) { root.clearTimeout(timer); timer = null; }
     // A fetch that never settles would otherwise wedge the chain for the life of the
     // page, exactly as the old inFlight flag could. Whatever is still in flight is

@@ -710,6 +710,64 @@ function state(extra) {
     check('the write ultimately succeeds', ok === true, ok);
   }
 
+  // ----- a 412 storm does not re-arm itself: the retry's adopt cannot schedule a push,
+  //       and an exhausted push backs off with jitter instead of the fixed 5s debounce -----
+  // This is the live "412 constantly" livelock: two devices in lockstep, each PUT
+  // invalidating the other's version. The retry's opts.adopt() -> save() -> schedulePush()
+  // used to re-arm a 5s push behind the retry, so it fired forever every 5s.
+  {
+    const remote = state({ passStreak: 9 });
+    const h = harness([res(412), res(200, { state: remote, version: 9 }, '"9"'),
+                       res(412), res(200, { state: remote, version: 9 }, '"9"'),
+                       res(412)]);                       // MAX_ATTEMPTS=3 PUTs, never a 200
+    const delays = [];
+    h.w.setTimeout = function (fn, d) { delays.push(d); return delays.length; };
+    h.w.clearTimeout = function () {};
+    let local = state({ passStreak: 1 });
+    // adopt mirrors app.js: it calls save() which calls schedulePush() -- the re-arm source.
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local,
+      adopt: s => { local = s; h.w.FRASync.schedulePush(); } });
+    const ok = await h.w.FRASync.pushNow();
+    check('a 412 storm gives up rather than looping to a 200', ok === false, ok);
+    check('the retry\'s adopts armed no timer; exactly one follow-up is scheduled', delays.length === 1,
+      JSON.stringify(delays));
+    check('the follow-up is a jittered backoff, not the fixed 5s debounce',
+      delays[0] !== 5000 && delays[0] >= 1 && delays[0] <= 2000, delays[0]);
+    check('still dirty so the backoff retry is owed', h.w.FRASync.isDirty() === true, h.w.FRASync.isDirty());
+    h.w.FRASync.reset();
+  }
+
+  // ----- backoff grows on repeated conflict and resets after a clean write -----
+  {
+    const remote = state({ passStreak: 9 });
+    const conflict = () => [res(412), res(200, { state: remote, version: 9 }, '"9"'),
+                            res(412), res(200, { state: remote, version: 9 }, '"9"'), res(412)];
+    const h = harness(conflict().concat(conflict()));
+    h.w.Math.random = () => 0.999;   // pin the jitter to ~ceiling, in the window's own Math
+    const delays = [];
+    h.w.setTimeout = function (fn, d) { delays.push(d); return delays.length; };
+    h.w.clearTimeout = function () {};
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local,
+      adopt: s => { local = s; h.w.FRASync.schedulePush(); } });
+    await h.w.FRASync.pushNow();          // backoffN -> 1, ceil 2000
+    await h.w.FRASync.pushNow();          // backoffN -> 2, ceil 4000
+    check('backoff doubles on a second consecutive conflict',
+      delays.length === 2 && delays[0] > 1900 && delays[0] <= 2000 && delays[1] > 3900 && delays[1] <= 4000,
+      JSON.stringify(delays));
+    // A clean create now succeeds and must reset the backoff to zero.
+    const h2 = harness([res(200, { version: 1 }, '"1"')]);
+    const d2 = [];
+    h2.w.setTimeout = function (fn, d) { d2.push(d); return d2.length; };
+    h2.w.clearTimeout = function () {};
+    let l2 = state({ passStreak: 5 });
+    h2.w.FRASync.init({ courseId: 'netplus', getState: () => l2, adopt: s => { l2 = s; } });
+    const wrote = await h2.w.FRASync.pushNow();
+    check('a clean write succeeds', wrote === true, wrote);
+    check('a settled write arms no follow-up timer', d2.length === 0, JSON.stringify(d2));
+    h.w.FRASync.reset(); h2.w.FRASync.reset();
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync
