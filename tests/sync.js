@@ -768,6 +768,28 @@ function state(extra) {
     h.w.FRASync.reset(); h2.w.FRASync.reset();
   }
 
+  // ----- after a conflict recovery, an unchanged push converges (no re-PUT) -----
+  // The 412 recovery must prime book.hash on the server's state, or the next push always
+  // re-PUTs even when the merges already made local identical to the server -- churn, not
+  // convergence. local starts empty, so merge(local, remote) == remote and nothing is owed.
+  {
+    const remote = state({ lessons: { u1l1: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    const h = harness([res(412), res(200, { state: remote, version: 9 }, '"9"'),
+                       res(412), res(200, { state: remote, version: 9 }, '"9"'),
+                       res(412)]);                       // exhaust; local becomes == remote via the merges
+    h.w.setTimeout = function () { return 1; };          // swallow the backoff arm
+    h.w.clearTimeout = function () {};
+    let local = state({ lessons: {} });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pushNow();                          // conflict-exhausts; primes book.hash = hashOf(remote)
+    const before = h.calls.length;
+    const ok2 = await h.w.FRASync.pushNow();              // nothing changed and local == server now
+    check('a conflict recovery primes the hash so an unchanged retry converges (no PUT)',
+      h.calls.length === before && ok2 === false, `calls +${h.calls.length - before}, ok=${ok2}`);
+    check('and it is no longer dirty', h.w.FRASync.isDirty() === false, h.w.FRASync.isDirty());
+    h.w.FRASync.reset();
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

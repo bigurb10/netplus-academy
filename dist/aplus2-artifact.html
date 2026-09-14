@@ -6303,14 +6303,20 @@ FRA.questions.push(
       if (r.status === 412) {
         if (attempt >= MAX_ATTEMPTS) { pushOutcome = 'conflict'; status('error'); return false; }
         return get(tok).then(function (r2) {
-          if (gen !== generation) return false;
+          if (gen !== generation) { pushOutcome = 'ended'; return false; }
           if (r2.status === 404) {           // deleted between our write and our re-read
-            book.version = null; saveBook();
+            book.version = null; book.hash = null; saveBook();
             return attemptPut(tok, payload(), attempt + 1, gen);
           }
           if (!r2.ok) { pushOutcome = 'transient'; status('error'); return false; }
           return r2.json().then(function (b2) {
-            if (gen !== generation) return false;
+            if (gen !== generation) { pushOutcome = 'ended'; return false; }
+            // Prime the change-detector on the server's state BEFORE adopting the merge,
+            // exactly as doPull does. Without this book.hash stays stale after a conflict
+            // recovery, so the next push (after backoff) never sees hashOf(payload) ===
+            // book.hash and re-PUTs even when the merge already made local == server --
+            // the difference between converging and churning one version per recovery.
+            book.hash = hashOf(b2.state);
             opts.adopt(root.FRAMerge.mergeState(opts.getState(), b2.state, mergeOpts()));
             book.version = readVersion(r2, b2);
             saveBook();
@@ -6384,7 +6390,11 @@ FRA.questions.push(
       backoffN = 0;
       // A genuine change that landed mid-push (save() set dirty while pushing) still owes
       // a write; hash equality proves whether it does. Not a conflict, so normal debounce.
-      if (opts && hashOf(payload()) !== book.hash) arm(PUSH_DEBOUNCE_MS);
+      // Guarded: this must honor the module's never-throw-into-a-caller contract even if
+      // opts.getState() misbehaves.
+      let owed = false;
+      try { owed = !!opts && hashOf(payload()) !== book.hash; } catch (e) { owed = false; }
+      if (owed) arm(PUSH_DEBOUNCE_MS);
     } else if (pushOutcome === 'conflict' || pushOutcome === 'transient') {
       // Back off with full jitter so lockstep writers spread out and converge.
       backoffN = Math.min(backoffN + 1, MAX_BACKOFF_N);
