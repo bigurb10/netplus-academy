@@ -341,10 +341,18 @@
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
   let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
+  // Shared between the topbar template (so the dot is correct on the render right after
+  // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
+  const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
-  function paintSyncBadge() { /* filled in by Task 6 */ }
+  function paintSyncBadge() {
+    const el = $('#syncdot');
+    if (!el) return;
+    el.className = 'syncdot ' + syncStatus;
+    el.title = SYNC_LABEL[syncStatus] || '';
+  }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
   // ---------- browser history ----------
@@ -391,6 +399,9 @@
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
+          ${window.FRAAuth ? (FRAAuth.isSignedIn()
+            ? `<div class="acct"><span class="who" title="${esc((FRAAuth.user() || {}).email || '')}">${esc((FRAAuth.user() || {}).email || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`
+            : `<button class="btn small" data-act="sign-in">Save my progress</button>`) : ''}
           <nav class="nav">
             ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
@@ -762,7 +773,8 @@
           <div class="paths">
             <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
             <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
-          </div></div>`;
+          </div></div>
+          ${window.FRAAuth && !FRAAuth.isSignedIn() ? `<p class="muted">Studying on more than one device? <button class="btn ghost small" data-act="sign-in">Save my progress</button></p>` : ''}`;
       } else if (planIsFromThis && S.plan.scope === 'full') {
         planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
         <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
@@ -1091,6 +1103,12 @@
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
       case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
       case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
+      case 'sign-out': {
+        // Sign-out clears the token, never the local blob. The learner keeps studying
+        // exactly as an anonymous visitor would, with everything they have done so far.
+        FRAAuth.signOut(); if (window.FRASync) FRASync.reset(); render(); return;
+      }
       case 'rate': {
         const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
         S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();

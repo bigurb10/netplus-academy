@@ -318,6 +318,132 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
       calls.length === 2 && calls[1].method === 'PUT', JSON.stringify(calls.map(c => c.method)));
   }
 
+  // ----- Task 6: the sign-in affordance -----
+  // A fresh boot with no starter test taken sits in stage() === 'starter', which gates the
+  // topbar behind the welcome screen for any view not in WELCOME_EXEMPT (app.js's paint()).
+  // 'cheatsheet' is exempt, so navigating there is the lightest way to get the topbar on
+  // screen without having to run a whole exam first.
+  const gotoExempt = (w, name) => act(w, 'go', name);
+  // Same shape as bootSignedIn above, but with an email on the stored token -- Task 5's
+  // helper omits it, and the topbar's .who needs one to assert against.
+  function bootSignedInAs(email, script) {
+    const calls = [];
+    const w = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email }));
+        x.fetch = (url, opts) => {
+          opts = opts || {};
+          calls.push({ url: String(url), method: opts.method || 'GET', headers: opts.headers || {}, body: opts.body ? JSON.parse(opts.body) : null });
+          const next = script.shift();
+          if (!next) return Promise.reject(new Error('unexpected extra fetch: ' + url));
+          return Promise.resolve(next);
+        };
+      }
+    });
+    return { w, calls };
+  }
+
+  // 1) Signed out: the topbar offers to sign in, and shows no account.
+  {
+    const w13 = boot({ courseDir: dir });
+    gotoExempt(w13, 'cheatsheet');
+    const btn = w13.$('.topbar [data-act="sign-in"]');
+    check('signed-out topbar shows the sign-in button', !!btn && btn.textContent.trim() === 'Save my progress', btn && btn.textContent);
+    check('signed-out topbar has no .acct', !w13.$('.topbar .acct'));
+  }
+
+  // 2) Signed in: the topbar shows the account, the sync dot, and sign-out -- never sign-in.
+  {
+    const { w: w14 } = bootSignedInAs('learner@example.com', [res(404)]);
+    await tick(); // let the boot-time pull() settle
+    gotoExempt(w14, 'cheatsheet');
+    const who = w14.$('.topbar .acct .who');
+    check('signed-in topbar shows the account email', !!who && who.textContent === 'learner@example.com', who && who.textContent);
+    check('signed-in topbar has a sync dot', !!w14.$('.topbar #syncdot'));
+    check('signed-in topbar shows sign-out', !!w14.$('.topbar [data-act="sign-out"]'));
+    check('signed-in topbar has no sign-in button', !w14.$('.topbar [data-act="sign-in"]'));
+  }
+
+  // 3) Clicking sign-out clears the token and the sync book, leaves course progress
+  // untouched, and re-renders the sign-in button. Mutation target: dropping the
+  // `if (window.FRASync) FRASync.reset()` guard's call from the sign-out case.
+  {
+    const { w: w15 } = bootSignedInAs('learner2@example.com', [res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET
+    await w15.FRASync.pushNow(); // establishes fra.netplus.sync.v1 so there is something to clear
+    check('setup: the sync book exists before sign-out', w15.localStorage.getItem('fra.netplus.sync.v1') !== null);
+    gotoExempt(w15, 'cheatsheet');
+    const stateBefore = w15.localStorage.getItem('fra.netplus.state.v3');
+    w15.click(w15.$('.topbar [data-act="sign-out"]'));
+    const stateAfter = w15.localStorage.getItem('fra.netplus.state.v3');
+    check('sign-out clears the auth token', w15.localStorage.getItem('fra.auth.v1') === null, w15.localStorage.getItem('fra.auth.v1'));
+    check('sign-out leaves course progress untouched', stateAfter === stateBefore, stateAfter === stateBefore ? 'unchanged' : 'CHANGED');
+    check('sign-out clears the sync book (FRASync.reset() ran)', w15.localStorage.getItem('fra.netplus.sync.v1') === null, w15.localStorage.getItem('fra.netplus.sync.v1'));
+    check('sign-out re-renders the sign-in button', !!w15.$('.topbar [data-act="sign-in"]'));
+  }
+
+  // 4) Clicking sign-in calls FRAAuth.beginSignIn with the current path and hash.
+  {
+    const w16 = boot({ courseDir: dir });
+    act(w16, 'course', 'u3'); // an exempt, distinctive view/hash so a hardcoded mutation cannot accidentally match
+    let calledWith = 'unset';
+    w16.FRAAuth.beginSignIn = arg => { calledWith = arg; return Promise.resolve(); }; // the real one navigates away
+    w16.click(w16.$('.topbar [data-act="sign-in"]'));
+    const expected = w16.location.pathname + w16.location.hash;
+    check('sign-in calls FRAAuth.beginSignIn with location.pathname + location.hash',
+      calledWith === expected && expected.includes('#course/u3'), `${calledWith} vs ${expected}`);
+  }
+
+  // 5) The status dot is correct right after every render(), not only after the next
+  // onStatus -- resolution 2. Capture FRASync.init's onStatus the same way Task 5's tests
+  // wrapped FRASync.pull, drive it directly, then force a re-render (paint() recreates
+  // #syncdot from scratch) and check the dot survives it before any further onStatus call.
+  {
+    let capturedOnStatus = null;
+    const w17 = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'dot@example.com' }));
+        x.fetch = () => Promise.resolve(res(404)); // boot pull
+        const realInit = x.FRASync.init;
+        x.FRASync.init = function (o) { capturedOnStatus = o.onStatus; return realInit.call(this, o); };
+      }
+    });
+    await tick(); // let the boot-time pull() settle
+    gotoExempt(w17, 'cheatsheet');
+    if (typeof capturedOnStatus !== 'function') throw new Error('FRASync.init was never called with onStatus');
+    capturedOnStatus('syncing');
+    let dot = w17.$('#syncdot');
+    check('onStatus(syncing) paints the dot class', !!dot && dot.className === 'syncdot syncing', dot && dot.className);
+    check('onStatus(syncing) paints the dot title', !!dot && dot.title === 'Saving...', dot && dot.title);
+    gotoExempt(w17, 'progress'); // a fresh render(): paint() rebuilds the topbar and #syncdot from scratch
+    dot = w17.$('#syncdot');
+    check('the dot is still correct immediately after a render, with no further onStatus call',
+      !!dot && dot.className === 'syncdot syncing' && dot.title === 'Saving...', dot && [dot.className, dot.title].join(' / '));
+    capturedOnStatus('idle');
+    dot = w17.$('#syncdot');
+    check('onStatus(idle) paints the dot class', !!dot && dot.className === 'syncdot idle', dot && dot.className);
+    check('onStatus(idle) paints the dot title', !!dot && dot.title === 'Progress saved', dot && dot.title);
+  }
+
+  // 6) The starter-results offer: shown once, signed out, beneath the path choice; never
+  // shown signed in.
+  {
+    const w18 = boot({ courseDir: dir });
+    finishStarter(w18); // lands on the starter results view with the path choice showing
+    const offer18 = w18.$$('p.muted').find(p => /Studying on more than one device\?/.test(p.textContent));
+    check('signed-out starter results offer to save progress', !!offer18, w18.text().includes('Studying on more than one device?'));
+    check('the offer carries a sign-in button', !!offer18 && !!offer18.querySelector('[data-act="sign-in"]'));
+
+    const { w: w19 } = bootSignedInAs('starter@example.com', [res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET
+    finishStarter(w19);
+    await tick(); // let finishExam's immediate pushNow() settle
+    const offer19 = w19.$$('p.muted').find(p => /Studying on more than one device\?/.test(p.textContent));
+    check('signed-in starter results do not repeat the save-progress offer', !offer19, !!offer19);
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced
