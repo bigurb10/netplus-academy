@@ -16,9 +16,13 @@
   let dirty = false;
   let timer = null;
   let inFlight = false;
+  // Bumped by reset(). A pushNow() call captures it at entry; every handler downstream
+  // that would mutate book/dirty checks it still matches before touching anything, so a
+  // write that was already in flight when reset() fired cannot write stale state back.
+  let generation = 0;
 
   const bookKey = () => 'fra.' + opts.courseId + '.sync.v1';
-  const url = () => FRAAuth.CONFIG.apiBase + '/v1/progress/' + encodeURIComponent(opts.courseId);
+  const url = () => root.FRAAuth.CONFIG.apiBase + '/v1/progress/' + encodeURIComponent(opts.courseId);
 
   function loadBook() {
     try {
@@ -64,13 +68,32 @@
     return '{' + keys.map(function (k) { return JSON.stringify(k) + ':' + stableStringify(v[k]); }).join(',') + '}';
   }
 
+  // mergeState (engine/merge.js) unions `feedback` in first-occurrence order over
+  // a.concat(b) and never re-sorts it afterwards -- unlike `exams`, which it does
+  // re-sort -- so a no-op merge (nothing local added beyond what the server already
+  // has) can still reorder `feedback` relative to the server's own copy and defeat
+  // change detection with a spurious hash difference. Sorting it by its own canonical
+  // serialization before hashing means order alone never counts as a change. `exams`
+  // is already deterministically ordered by mergeState's own .sort(); feedback is the
+  // only other array in the state shape merge leaves order-sensitive.
+  function canonicalFeedback(list) {
+    if (!Array.isArray(list)) return list;
+    return list.slice().sort(function (x, y) {
+      const sx = stableStringify(x), sy = stableStringify(y);
+      return sx < sy ? -1 : sx > sy ? 1 : 0;
+    });
+  }
+
   // Change detection ignores touchedAt. save() (engine/app.js) stamps touchedAt on
   // every navigation, not only on a real change, so on its own it must never justify
   // a write. touchedAt still travels in the PUT body unchanged and merge still uses
   // it; anything it protects (e.g. `path`) is itself part of the payload, so a real
   // change still changes the hash and touchedAt rides along.
   function hashOf(body) {
-    return hash(stableStringify(Object.assign({}, body, { touchedAt: 0 })));
+    return hash(stableStringify(Object.assign({}, body, {
+      touchedAt: 0,
+      feedback: canonicalFeedback(body.feedback)
+    })));
   }
 
   // `active` is an in-progress exam; it is deliberately not synced, matching exportable().
@@ -108,7 +131,12 @@
       status('syncing');
       return get(tok).then(function (r) {
         if (r.status === 404) {                 // normal: this learner has stored nothing yet
-          book.version = null; book.lastPullAt = Date.now(); saveBook();
+          // book.hash must be cleared too, not just book.version: otherwise a later
+          // pushNow() of the SAME local state sees hashOf(payload) === book.hash (the
+          // last-pushed hash, still sitting there from before the row was deleted),
+          // skips the write entirely, and clears dirty -- so a deleted server row can
+          // never be recreated by a client whose local state has not itself changed.
+          book.version = null; book.hash = null; book.lastPullAt = Date.now(); saveBook();
           dirty = true;                         // we have something worth uploading
           status('idle');
           return false;
@@ -144,7 +172,7 @@
     return pull();
   }
 
-  function attemptPut(tok, body, attempt) {
+  function attemptPut(tok, body, attempt, gen) {
     const pre = book.version == null
       ? { 'If-None-Match': '*' }
       : { 'If-Match': '"' + book.version + '"' };
@@ -154,8 +182,12 @@
       headers: headers(tok, Object.assign({ 'Content-Type': 'application/json' }, pre)),
       body: JSON.stringify({ state: body })
     }).then(function (r) {
+      // reset() may have fired while this write was in flight. A stale response must
+      // never write book/dirty back over state a later init/reset already replaced.
+      if (gen !== generation) return false;
       if (r.ok) {
         return r.json().then(function (j) {
+          if (gen !== generation) return false;
           book.version = readVersion(r, j);
           book.hash = hashOf(body);
           saveBook();
@@ -173,16 +205,18 @@
       if (r.status === 412) {
         if (attempt >= MAX_ATTEMPTS) { status('error'); return false; }
         return get(tok).then(function (r2) {
+          if (gen !== generation) return false;
           if (r2.status === 404) {           // deleted between our write and our re-read
             book.version = null; saveBook();
-            return attemptPut(tok, payload(), attempt + 1);
+            return attemptPut(tok, payload(), attempt + 1, gen);
           }
           if (!r2.ok) { status('error'); return false; }
           return r2.json().then(function (b2) {
+            if (gen !== generation) return false;
             opts.adopt(root.FRAMerge.mergeState(opts.getState(), b2.state, mergeOpts()));
             book.version = readVersion(r2, b2);
             saveBook();
-            return attemptPut(tok, payload(), attempt + 1);
+            return attemptPut(tok, payload(), attempt + 1, gen);
           });
         });
       }
@@ -193,7 +227,17 @@
 
   function pushNow() {
     if (!opts || inFlight) return Promise.resolve(false);
+    // Set synchronously, before the first await: token() resolves via a microtask, and
+    // two pushNow() calls made back to back (no await between them) both run this
+    // synchronous prelude before either's .then callback fires. Setting inFlight here
+    // -- not inside the .then -- is what makes the second call's entry check above see
+    // it and bail out, rather than both racing through to a PUT.
+    inFlight = true;
+    const gen = generation;
     return token().then(function (tok) {
+      // reset() may have fired while token() was pending; don't touch book/dirty for a
+      // generation that no longer exists.
+      if (gen !== generation) return false;
       if (!tok) return false;
       const body = payload();
       const h = hashOf(body);
@@ -206,9 +250,8 @@
       // actually accepted, so a failure at any point below is retried by a later
       // trigger rather than being silently forgotten.
       dirty = true;
-      inFlight = true;
       status('syncing');
-      return attemptPut(tok, body, 1);
+      return attemptPut(tok, body, 1, gen);
     }).catch(function () { status('offline'); return false; })
       .then(function (ok) { inFlight = false; return ok; });
   }
@@ -220,6 +263,7 @@
   }
 
   function reset() {
+    generation++;   // fence off any pushNow() already in flight; see its comments above
     book = { version: null, hash: null, lastPullAt: 0 };
     dirty = false;
     if (timer) { root.clearTimeout(timer); timer = null; }

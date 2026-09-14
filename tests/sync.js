@@ -212,14 +212,21 @@ function state(extra) {
   }
 
   // ----- signed-out sync is a no-op and touches no network -----
+  // Rewritten on the harness() pattern with an EMPTY script (review finding 4): the
+  // original test's throwing fetch stub proved nothing, because sync.js's required
+  // .catch() swallows that throw -- pull()/pushNow() would still resolve false even
+  // if a bug called the API while signed out. An empty script plus asserting
+  // h.calls.length === 0 actually catches that.
   {
-    const w = boot({ courseDir: dir });
-    w.localStorage.clear();
-    w.fetch = () => { throw new Error('anonymous study must never call the API'); };
+    const h = harness([]);
+    h.w.localStorage.clear();   // drop the fra.auth.v1 token harness() wrote; this test is signed-out
     let local = state();
-    w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
-    check('signed-out pull is a no-op', await w.FRASync.pull() === false);
-    check('signed-out push is a no-op', await w.FRASync.pushNow() === false);
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const pulled = await h.w.FRASync.pull();
+    const pushed = await h.w.FRASync.pushNow();
+    check('signed-out pull is a no-op', pulled === false, pulled);
+    check('signed-out push is a no-op', pushed === false, pushed);
+    check('anonymous study must never call the API', h.calls.length === 0, h.calls.length);
   }
 
   // ===== Controller's three defect resolutions on top of the brief =====
@@ -265,6 +272,105 @@ function state(extra) {
     check('a pull that only adopted what the server already sent must not push it straight back',
       ok === false, ok);
     check('no PUT followed the pull', h.calls.length === 1, h.calls.length);
+  }
+
+  // ===== Review round 1: six findings =====
+
+  // ----- (finding 1) a 404 pull must not leave book.hash stale, or a deleted server
+  // row can never be recreated by an unchanged client -----
+  {
+    const h = harness([
+      res(200, { version: 1 }, '"1"'),  // an earlier push establishes book.version/hash
+      res(404),                          // then a pull finds the row gone
+      res(200, { version: 1 }, '"1"')    // the SAME local state must be able to recreate it
+    ]);
+    let local = state({ passStreak: 4 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pushNow();                // establishes book.version = "1", book.hash = hashOf(local)
+    const pulled = await h.w.FRASync.pull();     // 404: the server row was deleted meanwhile
+    check('a 404 pull is not itself a change', pulled === false, pulled);
+    const ok = await h.w.FRASync.pushNow();      // SAME local state as the first push
+    check('an unchanged client can recreate a deleted server row', ok === true, ok);
+    check('exactly one PUT followed the 404 pull', h.calls.length === 3, h.calls.length);
+    check('the recreate write is create-only, not skipped as unchanged',
+      h.calls[2].headers['If-None-Match'] === '*', h.calls[2].headers['If-None-Match']);
+  }
+
+  // ----- (finding 2a) two synchronous pushNow() calls must not both PUT -----
+  {
+    const h = harness([res(200, { version: 1 }, '"1"')]);
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const p1 = h.w.FRASync.pushNow();
+    const p2 = h.w.FRASync.pushNow();   // called synchronously, before p1's token() lookup resolves
+    const [r1, r2] = await Promise.all([p1, p2]);
+    check('the first synchronous call wins and succeeds', r1 === true, r1);
+    check('the second synchronous call resolves false rather than racing to a second PUT',
+      r2 === false, r2);
+    check('two synchronous pushNow() calls against one scripted response produce exactly one PUT',
+      h.calls.length === 1, h.calls.length);
+  }
+
+  // ----- (finding 2b) reset() fences a write already in flight -----
+  {
+    const h = harness([]);   // fetch is overridden below with a deferred (manually-resolved) stub
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    let resolveFetch;
+    h.w.fetch = function (url, opts) {
+      opts = opts || {};
+      h.calls.push({
+        url: String(url), method: opts.method || 'GET', headers: opts.headers || {},
+        body: opts.body ? JSON.parse(opts.body) : null
+      });
+      return new Promise(function (resolve) { resolveFetch = resolve; });
+    };
+    const p = h.w.FRASync.pushNow();     // starts a write; the PUT is now pending
+    await new Promise(function (r) { setTimeout(r, 0); });   // let the pending PUT actually fire
+    check('the write reached fetch before reset() fired', h.calls.length === 1, h.calls.length);
+    h.w.FRASync.reset();                 // e.g. sign-out while the write is still in flight
+    resolveFetch(res(200, { version: 1 }, '"1"'));   // the deferred response arrives after reset
+    const ok = await p;
+    check('a write fenced by reset() resolves false', ok === false, ok);
+    check('reset() cleared the bookkeeping key despite the late response',
+      h.w.localStorage.getItem('fra.netplus.sync.v1') === null,
+      h.w.localStorage.getItem('fra.netplus.sync.v1'));
+    check('isDirty is false after the deferred response resolves',
+      h.w.FRASync.isDirty() === false, h.w.FRASync.isDirty());
+  }
+
+  // ----- (finding 3) a merge that only reorders feedback must not force a push -----
+  {
+    const itemA = { id: 'A', text: 'a', sent: true };
+    const itemB = { id: 'B', text: 'b', sent: true };
+    const itemC = { id: 'C', text: 'c', sent: true };
+    const remote = state({ feedback: [itemA, itemB, itemC] });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    let local = state({ feedback: [itemB, itemA] });   // same items as remote, different order
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();
+    const ok = await h.w.FRASync.pushNow();
+    check('a feedback-reorder-only merge does not report a push', ok === false, ok);
+    check('no PUT followed a feedback-reorder-only merge', h.calls.length === 1, h.calls.length);
+  }
+
+  // ----- (finding 5) maybePull only pulls when the last pull was over 60s ago -----
+  {
+    const h = harness([res(404), res(404)]);
+    let local = state();
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();   // seeds book.lastPullAt = Date.now()
+    const ok1 = await h.w.FRASync.maybePull();
+    check('maybePull with a recent lastPullAt resolves false', ok1 === false, ok1);
+    check('maybePull with a recent lastPullAt makes no request', h.calls.length === 1, h.calls.length);
+
+    // Stub Date.now on the window rather than sleeping, as tests/engine.js does.
+    const t0 = h.w.Date.now();
+    h.w.Date.now = () => t0 + 61000;
+    await h.w.FRASync.maybePull();
+    check('maybePull performs the GET once lastPullAt is over 60s stale',
+      h.calls.length === 2, h.calls.length);
+    check('the stale-lastPullAt call was a GET', h.calls[1].method === 'GET', h.calls[1].method);
   }
 
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
