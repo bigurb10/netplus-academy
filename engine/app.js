@@ -1316,7 +1316,20 @@
         // persist the loss. Both pull() and the 412 retry loop adopt through here, so
         // carrying the two device-local fields across is done once, at the choke point.
         adopt: function (next) { next.view = S.view; next.active = S.active; S = next; save(); render(); },
-        onStatus: function (s) { syncStatus = s; paintSyncBadge(); }
+        onStatus: function (s) { syncStatus = s; paintSyncBadge(); },
+        // Called when a pull finds a DIFFERENT account owns the progress in this browser.
+        // The blob is copied aside rather than merged into the new account or thrown away,
+        // so nothing a learner did is ever lost to a shared browser.
+        stash: function () {
+          try {
+            const raw = localStorage.getItem(STORE_KEY);
+            if (raw != null) localStorage.setItem(STORE_KEY + '.stash', raw);
+          } catch (e) { /* ignore */ }
+        },
+        fresh: function () { return fresh(); },
+        // A 401 means the session ended mid-pull; the topbar still shows the account until
+        // something repaints it.
+        onSignedOut: function () { render(); }
       });
       if (FRAAuth.isSignedIn()) FRASync.pull();
       window.addEventListener('focus', function () { FRASync.maybePull(); });

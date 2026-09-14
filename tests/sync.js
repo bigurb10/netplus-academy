@@ -405,6 +405,108 @@ function state(extra) {
     check('the stale-lastPullAt call was a GET', h.calls[1].method === 'GET', h.calls[1].method);
   }
 
+  // ===== Final review C2: the local blob belongs to exactly one account =====
+  // Nothing recorded whose progress fra.<courseId>.state.v3 was, so signing in as a
+  // second learner on the same browser merged the first one into the new account. The
+  // sync book now records the owner, and pull() checks it before merging.
+  const SYNC_KEY = 'fra.netplus.sync.v1';
+  const STATE_KEY = 'fra.netplus.state.v3';
+  const lesson = (best, at) => ({ status: 'done', best: best, attempts: 1, passedAt: at });
+  // The extra opts sync.js needs on the ownership paths, wired the way engine/app.js
+  // wires them: stash copies the blob aside, fresh supplies an empty state.
+  function ownerOpts(h, get, set) {
+    return {
+      courseId: 'netplus',
+      getState: get,
+      adopt: s => set(s),
+      stash: () => {
+        const raw = h.w.localStorage.getItem(STATE_KEY);
+        if (raw != null) h.w.localStorage.setItem(STATE_KEY + '.stash', raw);
+      },
+      fresh: () => state()
+    };
+  }
+
+  // ----- (C2a) no recorded owner: anonymous progress is claimed by the first account -----
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    let local = state({ lessons: { u2l1: lesson(80, 6) } });
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    await h.w.FRASync.pull();
+    check('an unowned local blob is merged into the account claiming it -- the first-sign-in flow',
+      !!(local.lessons.u1l1 && local.lessons.u2l1), JSON.stringify(Object.keys(local.lessons)));
+    check('the pull records which account now owns the local progress',
+      JSON.parse(h.w.localStorage.getItem(SYNC_KEY)).sub === 'u1', h.w.localStorage.getItem(SYNC_KEY));
+  }
+
+  // ----- (C2b) same owner: an ordinary sync still merges both sides -----
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: null, sub: 'u1', lastPullAt: 0 }));
+    let local = state({ lessons: { u2l1: lesson(80, 6) } });
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    await h.w.FRASync.pull();
+    check('the account that owns the local blob still merges both sides',
+      !!(local.lessons.u1l1 && local.lessons.u2l1), JSON.stringify(Object.keys(local.lessons)));
+  }
+
+  // ----- (C2c) different owner, server has a row: adopt it, never merge -----
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'someone-else', lastPullAt: 0 }));
+    let local = state({ lessons: { u2l1: lesson(80, 6) } });
+    const before = JSON.stringify(local);
+    h.w.localStorage.setItem(STATE_KEY, before);
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    const changed = await h.w.FRASync.pull();
+    check('a different account adopts the server state rather than merging', changed === true, changed);
+    check('the previous learner progress is NOT handed to the new account',
+      !local.lessons.u2l1, JSON.stringify(Object.keys(local.lessons)));
+    check('the new account still gets its own stored progress',
+      !!local.lessons.u1l1, JSON.stringify(Object.keys(local.lessons)));
+    check('the previous learner blob was stashed, not destroyed',
+      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+    check('the sync book now names the new owner',
+      JSON.parse(h.w.localStorage.getItem(SYNC_KEY)).sub === 'u1', h.w.localStorage.getItem(SYNC_KEY));
+    check('nothing is pushed on the new account behalf until they act', h.calls.length === 1, h.calls.length);
+    check('the adopt-wholesale path leaves no write owed', h.w.FRASync.isDirty() === false, h.w.FRASync.isDirty());
+  }
+
+  // ----- (C2d) different owner, server has nothing: start fresh, still stash -----
+  {
+    const h = harness([res(404)]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'someone-else', lastPullAt: 0 }));
+    let local = state({ passStreak: 4, lessons: { u2l1: lesson(80, 6) } });
+    const before = JSON.stringify(local);
+    h.w.localStorage.setItem(STATE_KEY, before);
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    await h.w.FRASync.pull();
+    check('a different account with nothing stored starts from a fresh state',
+      local.passStreak === 0 && !local.lessons.u2l1, JSON.stringify([local.passStreak, Object.keys(local.lessons)]));
+    check('the previous learner blob was stashed on the 404 path too',
+      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+    check('nothing is uploaded on the 404 different-owner path', h.calls.length === 1, h.calls.length);
+  }
+
+  // ----- (C2e) a 401 pull clears the book, not just the token -----
+  {
+    const h = harness([res(401)]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 0 }));
+    let local = state();
+    let repainted = 0;
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    o.onSignedOut = () => { repainted++; };
+    h.w.FRASync.init(o);
+    await h.w.FRASync.pull();
+    check('a 401 pull ends the session', h.w.FRAAuth.isSignedIn() === false, h.w.FRAAuth.isSignedIn());
+    check('a 401 pull clears the sync book, so no later account inherits its version',
+      h.w.localStorage.getItem(SYNC_KEY) === null, h.w.localStorage.getItem(SYNC_KEY));
+    check('a 401 pull asks the app to repaint the signed-out topbar', repainted === 1, repainted);
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

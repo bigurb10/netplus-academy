@@ -12,7 +12,11 @@
   const PULL_MIN_INTERVAL_MS = 60000;
 
   let opts = null;
-  let book = { version: null, hash: null, lastPullAt: 0 };
+  // `sub` records WHICH account the local progress blob belongs to. Nothing else does:
+  // signOut() deliberately keeps fra.<courseId>.state.v3, so without this a second
+  // learner signing in on the same browser would have the first one's progress merged
+  // into their account by the ordinary pull path.
+  let book = { version: null, hash: null, sub: null, lastPullAt: 0 };
   let dirty = false;
   let timer = null;
   let inFlight = false;
@@ -35,6 +39,28 @@
   }
 
   function status(s) { if (opts && opts.onStatus) { try { opts.onStatus(s); } catch (e) {} } }
+  function stashLocal() { if (opts && opts.stash) { try { opts.stash(); } catch (e) {} } }
+  function signedOut() { if (opts && opts.onSignedOut) { try { opts.onSignedOut(); } catch (e) {} } }
+
+  // The account signed in right now, per the stored token. Display-level only, like
+  // everything else FRAAuth.user() feeds -- the server is what actually decides whose
+  // row a request touches.
+  function currentSub() {
+    const u = root.FRAAuth && root.FRAAuth.user ? root.FRAAuth.user() : null;
+    return (u && u.sub) || null;
+  }
+  // No recorded sub is anonymous progress being claimed by a first account -- the
+  // design's first-sign-in flow, which merges. An unrecognisable current sub (a token
+  // with no `sub` claim) also merges, rather than discarding a learner's work on the
+  // strength of a missing claim.
+  function localBelongsTo(sub) { return !book.sub || !sub || book.sub === sub; }
+
+  // Undo a debounce that opts.adopt()'s own save() just armed. Used on the paths where
+  // this client has deliberately decided it owes the server nothing.
+  function cancelPush() {
+    dirty = false;
+    if (timer) { root.clearTimeout(timer); timer = null; }
+  }
 
   // recomputeStreak (via mergeState) requires passPct/streakNeeded as numbers or it
   // throws -- see engine/merge.js. Both live on the course manifest, already loaded
@@ -137,21 +163,54 @@
       status('syncing');
       return get(tok).then(function (r) {
         if (gen !== generation) return false;
+        const sub = currentSub();
         if (r.status === 404) {                 // normal: this learner has stored nothing yet
+          if (!localBelongsTo(sub)) {
+            // A DIFFERENT account on a browser that still holds the previous learner's
+            // progress, with nothing stored for the new one. Merging here would hand one
+            // learner's history to another, so the old blob is copied aside untouched and
+            // this account starts from a fresh state. Nothing is uploaded until the new
+            // learner actually studies and save() arms a push of their own work.
+            stashLocal();
+            const blank = opts.fresh ? opts.fresh() : null;
+            book = { version: null, hash: null, sub: sub, lastPullAt: Date.now() };
+            saveBook();
+            if (blank) opts.adopt(blank);
+            cancelPush();
+            status('idle');
+            return true;
+          }
           // book.hash must be cleared too, not just book.version: otherwise a later
           // pushNow() of the SAME local state sees hashOf(payload) === book.hash (the
           // last-pushed hash, still sitting there from before the row was deleted),
           // skips the write entirely, and clears dirty -- so a deleted server row can
           // never be recreated by a client whose local state has not itself changed.
-          book.version = null; book.hash = null; book.lastPullAt = Date.now(); saveBook();
-          dirty = true;                         // we have something worth uploading
+          book.version = null; book.hash = null; book.sub = sub; book.lastPullAt = Date.now(); saveBook();
           status('idle');
           return false;
         }
-        if (r.status === 401) { root.FRAAuth.signOut(); status('error'); return false; }
+        if (r.status === 401) {
+          // reset() as well as signOut(): a book left behind here still carries the dead
+          // session's version, which the next account to sign in would inherit and write
+          // blind If-Match requests against. onSignedOut() repaints the topbar, which
+          // otherwise keeps offering an account that is no longer signed in.
+          root.FRAAuth.signOut(); reset(); status('error'); signedOut(); return false;
+        }
         if (!r.ok) { status('error'); return false; }   // 5xx: try again later
         return r.json().then(function (body) {
           if (gen !== generation) return false;
+          if (!localBelongsTo(sub)) {
+            // As above, but this account does have stored progress: adopt it wholesale
+            // instead of merging the previous learner's blob into it. Their work is
+            // stashed, not destroyed, and this pull owes the server nothing.
+            stashLocal();
+            book = { version: readVersion(r, body), hash: hashOf(body.state), sub: sub, lastPullAt: Date.now() };
+            saveBook();
+            opts.adopt(body.state);
+            cancelPush();
+            status('idle');
+            return true;
+          }
           const merged = root.FRAMerge.mergeState(opts.getState(), body.state, mergeOpts());
           const before = JSON.stringify(payload());
           // Prime the change-detector on what the server actually has, BEFORE
@@ -164,6 +223,7 @@
           const afterObj = payload();
           const after = JSON.stringify(afterObj);
           book.version = readVersion(r, body);
+          book.sub = sub;
           book.lastPullAt = Date.now();
           saveBook();
           // If the merge produced something the server does not have, we owe it a push.
@@ -198,6 +258,7 @@
           if (gen !== generation) return false;
           book.version = readVersion(r, j);
           book.hash = hashOf(body);
+          book.sub = currentSub();
           saveBook();
           dirty = false;
           status('idle');
@@ -272,7 +333,7 @@
 
   function reset() {
     generation++;   // fence off any pushNow() already in flight; see its comments above
-    book = { version: null, hash: null, lastPullAt: 0 };
+    book = { version: null, hash: null, sub: null, lastPullAt: 0 };
     dirty = false;
     if (timer) { root.clearTimeout(timer); timer = null; }
     try { root.localStorage.removeItem(bookKey()); } catch (e) { /* ignore */ }
