@@ -213,6 +213,7 @@
     // this, adding pathAt made every pull's merge differ from the stored blob by one key and
     // burned a spurious PUT per pull until each row had been rewritten.
     if (!c.pathAt) delete c.pathAt;
+    if (!c.settingsAt) delete c.settingsAt;   // same class: rows written before settingsAt existed
     return hash(stableStringify(c));
   }
 

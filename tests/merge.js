@@ -419,6 +419,31 @@ check('plan remaps against its own source side, not the newer one',
   check('pathAt took the later stamp', m2.pathAt === 5000, m2.pathAt);
 }
 
+// A deliberate RESET (a new starter test sets path to null and stamps pathAt) is itself the
+// later change and must beat a stale choice -- the single-device reload/focus-pull race.
+// Distinct from a never-chose null, which carries no stamp and must never win.
+{
+  const shared = [exam({ id: 'e1', date: 1, kind: 'starter' })];
+  const stale = full({ exams: shared });         // the server row: the old choice
+  stale.path = { examIdx: 0, scope: 'tailored' };
+  stale.pathAt = 1000;
+  const reset = full({ exams: shared });         // local: just retook the starter test
+  reset.path = null;
+  reset.pathAt = 5000;
+
+  const r1 = M.mergeState(reset, stale, OPTS);
+  check('a newer reset (null path, newer pathAt) beats a stale choice', r1.path === null, JSON.stringify(r1.path));
+  check('and carries the reset\'s stamp', r1.pathAt === 5000, r1.pathAt);
+  const r2 = M.mergeState(stale, reset, OPTS);
+  check('commutative: the reset wins with the sides swapped too', r2.path === null, JSON.stringify(r2.path));
+
+  const neverChose = full({ exams: shared });    // path null, NO stamp: a device merely opened
+  neverChose.path = null; neverChose.pathAt = 0; neverChose.touchedAt = 9999;
+  const r3 = M.mergeState(neverChose, stale, OPTS);
+  check('a never-chose null (no stamp) still loses to a real choice', !!(r3.path && r3.path.scope === 'tailored'),
+    JSON.stringify(r3.path));
+}
+
 // pickSettings' tie branch: an exact settingsAt tie with settings differing on each side.
 // pickSettings' own comment says the tie "prefer[s] whichever side actually has settings, then
 // a" - i.e. whichever side is passed first wins. `if (bt > at)` is what keeps a genuine tie out

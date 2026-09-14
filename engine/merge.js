@@ -162,13 +162,18 @@
   // exception `path` and `plan` already carry, not an oversight. Two devices changing a
   // setting in the same millisecond is vanishingly rare and either choice is defensible;
   // what matters is that a mere open never beats a real change, which settingsAt ensures.
-  // Later real path change wins; a side with no path never wins. An exact pathAt tie with
-  // both sides holding a different path falls back to the side passed first -- the same
-  // documented order-dependence as settings and plan.
+  // Later real path change wins. A null path is two different things: "never chose" (no
+  // stamp -- fresh() on a device that was merely opened) must never beat a real choice,
+  // but "chose, then a new starter test RESET it" carries a fresh pathAt and is itself the
+  // later change, so it must win over a stale choice -- otherwise a reload or focus-pull
+  // racing the debounced push silently reverts the learner's own reset. An exact pathAt
+  // tie with the two sides differing falls back to the side passed first, the same
+  // documented order-dependence settings and plan carry.
   function pickPathSide(a, b) {
-    if (!a.path) return b;
-    if (!b.path) return a;
-    return (b.pathAt || 0) > (a.pathAt || 0) ? b : a;
+    const at = a.pathAt || 0, bt = b.pathAt || 0;
+    if (!a.path && !at) return b;
+    if (!b.path && !bt) return a;
+    return bt > at ? b : a;
   }
 
   function pickSettings(a, b) {
