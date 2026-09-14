@@ -119,6 +119,59 @@ function freshWindow() {
     check('cleared the dead token', w.localStorage.getItem('fra.auth.v1') === null, w.localStorage.getItem('fra.auth.v1'));
   }
 
+  // ----- a 5xx refresh must NOT sign the learner out (plan API fact 7) -----
+  // A JWKS or database outage answers 503. Treating any non-2xx as a dead grant, which is
+  // what the original catch-all rejection handler did, logs every signed-in learner out of
+  // a working account for the duration of an issuer blip.
+  {
+    const w = freshWindow();
+    const stored = JSON.stringify({ access_token: 'tok-old', refresh_token: 'r1', expires_at: Date.now() - 1000, sub: 's' });
+    w.localStorage.setItem('fra.auth.v1', stored);
+    w.fetch = () => Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}) });
+    const t = await w.FRAAuth.accessToken();
+    check('a 503 refresh resolves null rather than a stale token', t === null, t);
+    check('a 503 refresh leaves the stored tokens alone for the next trigger',
+      w.localStorage.getItem('fra.auth.v1') === stored, w.localStorage.getItem('fra.auth.v1'));
+    check('a 503 refresh leaves the learner signed in', w.FRAAuth.isSignedIn() === true, w.FRAAuth.isSignedIn());
+  }
+
+  // ----- an offline refresh keeps the tokens too -----
+  {
+    const w = freshWindow();
+    const stored = JSON.stringify({ access_token: 'tok-old', refresh_token: 'r1', expires_at: Date.now() - 1000, sub: 's' });
+    w.localStorage.setItem('fra.auth.v1', stored);
+    w.fetch = () => Promise.reject(new Error('offline'));
+    const t = await w.FRAAuth.accessToken();
+    check('a rejected refresh resolves null, never throws', t === null, t);
+    check('going offline must not sign the learner out',
+      w.localStorage.getItem('fra.auth.v1') === stored, w.localStorage.getItem('fra.auth.v1'));
+  }
+
+  // ----- two concurrent accessToken() calls share ONE refresh -----
+  // Refresh tokens rotate, so a second concurrent refresh presents one the first already
+  // consumed: it comes back 400 and (correctly, per the test above) ends the session.
+  {
+    const w = freshWindow();
+    let calls = 0;
+    w.fetch = () => {
+      calls++;
+      return Promise.resolve({
+        ok: true, status: 200,
+        json: () => Promise.resolve({ access_token: 'tok-fresh', refresh_token: 'r2', expires_in: 3600 })
+      });
+    };
+    w.localStorage.setItem('fra.auth.v1', JSON.stringify({
+      access_token: 'tok-old', refresh_token: 'r1', expires_at: Date.now() - 1000, sub: 's'
+    }));
+    const a = w.FRAAuth.accessToken();
+    const b = w.FRAAuth.accessToken();   // synchronous, before the first refresh settles
+    const [ta, tb] = await Promise.all([a, b]);
+    check('two concurrent accessToken() calls make exactly one token request', calls === 1, calls);
+    check('both concurrent callers resolve the freshly refreshed token',
+      ta === 'tok-fresh' && tb === 'tok-fresh', [ta, tb].join(' / '));
+    check('a deduped refresh still leaves the learner signed in', w.FRAAuth.isSignedIn() === true, w.FRAAuth.isSignedIn());
+  }
+
   // ----- callback rejects a mismatched state -----
   {
     const w = freshWindow();

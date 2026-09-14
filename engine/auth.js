@@ -153,21 +153,33 @@
     });
   }
 
+  // The single refresh in flight, if any. Two triggers routinely want a token in the same
+  // tick -- sync's boot pull racing the first save()'s debounced push, or two focus events
+  // -- and with rotating refresh tokens the second request presents a token the first has
+  // already consumed, which comes back 400 and would end a perfectly good session. One
+  // in-flight refresh therefore serves every caller.
+  let refreshing = null;
+
   function refresh() {
     const t = tokens();
     if (!t || !t.refresh_token) { signOut(); return Promise.resolve(null); }
-    return tokenRequest(new URLSearchParams({
+    if (refreshing) return refreshing;
+    refreshing = tokenRequest(new URLSearchParams({
       grant_type: 'refresh_token', refresh_token: t.refresh_token
     })).then(function (r) {
-      if (!r.ok) throw new Error('refresh rejected: ' + r.status);
-      return r.json();
-    }).then(function (data) {
-      return store(data).access_token;
-    }, function () {
-      // The refresh token is dead. Clearing it is what stops an infinite retry loop.
-      signOut();
-      return null;
-    });
+      // ONLY a dead grant ends the session. 400/401 from the token endpoint means the
+      // refresh token itself is gone, and clearing it is what stops an infinite retry
+      // loop. Everything else -- a 5xx (an issuer outage answers 503, never 401), a
+      // rejected fetch (offline), a body that will not parse -- leaves the stored tokens
+      // exactly where they are so the next trigger can retry.
+      if (r.status === 400 || r.status === 401) { signOut(); return null; }
+      if (!r.ok) return null;
+      return r.json().then(function (data) { return store(data).access_token; },
+        function () { return null; });
+    }, function () { return null; })
+      .then(function (tok) { refreshing = null; return tok; },
+        function () { refreshing = null; return null; });
+    return refreshing;
   }
 
   function accessToken() {
@@ -191,6 +203,10 @@
 
   root.FRAAuth = {
     CONFIG: CONFIG,
+    // A stored access token exists -- nothing more. It does NOT mean the token is still
+    // valid or that its refresh will succeed: refresh() deliberately keeps the tokens
+    // through an outage, so treating a network blip as "signed out" would hide the
+    // learner's own account from them until the next reload.
     isSignedIn: function () { return !!(tokens() || {}).access_token; },
     user: user,
     beginSignIn: beginSignIn,
