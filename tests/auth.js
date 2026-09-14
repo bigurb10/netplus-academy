@@ -241,6 +241,22 @@ function freshWindow() {
       plain.searchParams.get('prompt'));
   }
 
+  // ----- beginSignIn wires the one-shot reauth flag through to prompt=login end to end -----
+  {
+    const w = freshWindow();
+    // jsdom refuses to redefine location; capture via the FRA_NAVIGATE seam instead.
+    let navURL = null;
+    w.FRA_NAVIGATE = function (u) { navURL = u; };
+    w.localStorage.setItem('fra.auth.reauth', JSON.stringify(true));  // as if a sign-out just happened
+    await w.FRAAuth.beginSignIn('/netplus/');
+    check('beginSignIn after a sign-out forces prompt=login', /[?&]prompt=login(&|$)/.test(navURL || ''), navURL);
+    check('beginSignIn consumed the one-shot reauth flag', w.localStorage.getItem('fra.auth.reauth') === null,
+      w.localStorage.getItem('fra.auth.reauth'));
+    navURL = null;
+    await w.FRAAuth.beginSignIn('/netplus/');   // a normal sign-in, no prior sign-out
+    check('the next sign-in no longer forces a prompt (silent SSO restored)', !/[?&]prompt=/.test(navURL || ''), navURL);
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All auth tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

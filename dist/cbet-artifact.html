@@ -8876,7 +8876,12 @@ FRA.questions.push(
       verifier: verifier, state: state,
       returnTo: returnTo || root.location.pathname + root.location.hash
     });
-    return authorizeUrl(verifier, state, { prompt: forcePrompt }).then(function (url) { root.location.href = url; });
+    return authorizeUrl(verifier, state, { prompt: forcePrompt }).then(function (url) {
+      // Navigation seam, mirroring the callback page's FRA_REDIRECT: production falls back
+      // to a plain location assignment; a test sets root.FRA_NAVIGATE to capture the URL,
+      // since jsdom refuses to redefine location.
+      (root.FRA_NAVIGATE || function (u) { root.location.href = u; })(url);
+    });
   }
 
   function tokenRequest(params) {
@@ -8986,6 +8991,10 @@ FRA.questions.push(
     drop(root.sessionStorage, PKCE_KEY);
     // Make the next sign-in prompt: the WorkOS session cookie is still live and there is
     // no logout endpoint to clear it, so beginSignIn() must pass prompt=login next time.
+    // Armed on every sign-out, whether the learner clicked it or a dead/expired session
+    // forced it (sync's sessionEnded, refresh's dead-grant path) -- the only effect is that
+    // their next manual sign-in shows a login screen instead of silent SSO, which is right
+    // after any session actually ended.
     writeJson(root.localStorage, REAUTH_KEY, true);
   }
 
