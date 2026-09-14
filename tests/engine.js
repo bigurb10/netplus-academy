@@ -171,6 +171,128 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('navigating alone does not advance settingsAt', s1.settingsAt === settingsBefore, `${settingsBefore} -> ${s1.settingsAt}`);
   }
 
+  // ----- Sync triggers (Task 5): pull/push wiring between engine/app.js and window.FRASync -----
+  const res = (status, body, etag) => ({
+    ok: status >= 200 && status < 300,
+    status: status,
+    headers: { get: k => (k.toLowerCase() === 'etag' ? (etag || null) : null) },
+    json: () => Promise.resolve(body === undefined ? {} : body)
+  });
+  // Boots signed in with window.fetch scripted from `script` (a queue of res() responses),
+  // wired up via beforeAppJs so the token and the fetch stub are both in place before app.js's
+  // boot IIFE makes its own FRASync.init()/pull() calls. Returns the window and the calls fetch
+  // actually recorded.
+  function bootSignedIn(script) {
+    const calls = [];
+    const w = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1' }));
+        x.fetch = (url, opts) => {
+          opts = opts || {};
+          calls.push({ url: String(url), method: opts.method || 'GET', headers: opts.headers || {}, body: opts.body ? JSON.parse(opts.body) : null });
+          const next = script.shift();
+          if (!next) return Promise.reject(new Error('unexpected extra fetch: ' + url));
+          return Promise.resolve(next);
+        };
+      }
+    });
+    return { w, calls };
+  }
+  // Drives one lesson's checkpoint quiz to a pass, entirely through DOM clicks like finishStarter.
+  function finishCheckpoint(w, lessonId) {
+    act(w, 'lesson', lessonId);
+    act(w, 'start-checkpoint', lessonId);
+    if (!state(w).active || state(w).active.kind !== 'checkpoint') throw new Error('checkpoint did not start for ' + lessonId);
+    const QQ = {}; w.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    const fatten = x => typeof x === 'string' ? QQ[x] : x;
+    let a = state(w).active;
+    while (a && a.kind === 'checkpoint' && a.i < a.items.length) {
+      const q = fatten(a.items[a.i]);
+      act(w, 'opt', q.c); act(w, 'conf', 5); act(w, 'submit'); act(w, 'next');
+      a = state(w).active;
+    }
+    // advance()'s checkpoint branch leaves the finished session in S.active rather than
+    // clearing it (unlike finishExam()); dismiss it the way the UI's "Stay here" button
+    // does, or a later finishStarter() sees an unfinished session and shows Resume instead
+    // of Start the starter test.
+    act(w, 'finish-checkpoint', '__stay');
+  }
+
+  // 1) Signed out: boot, navigate, save, and complete a lesson checkpoint must never touch the
+  // network. This is the plan's "Done when" line and the most important test in this file. Two
+  // signals: FRASync.pull() itself must never be called (catches a boot that calls it
+  // unconditionally, which would otherwise be invisible -- sync.js's own token() guard already
+  // no-ops a signed-out pull before it can reach fetch), and fetch must never be called at all.
+  {
+    const calls = [];
+    let pullCalls = 0;
+    const w7 = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        x.fetch = (...args) => { calls.push(args); return Promise.reject(new Error('signed-out study must never call fetch')); };
+        const realPull = x.FRASync.pull;
+        x.FRASync.pull = function () { pullCalls++; return realPull.apply(this, arguments); };
+      }
+    });
+    act(w7, 'go', 'course');
+    act(w7, 'go', 'home');
+    finishCheckpoint(w7, w7.FRA.units[0].lessons[0].id);
+    finishStarter(w7);
+    check('signed-out boot never calls FRASync.pull()', pullCalls === 0, pullCalls);
+    check('signed-out study makes zero fetch calls end to end', calls.length === 0, calls.length);
+  }
+
+  // 2) Signed in: boot performs exactly one GET to the course's progress route.
+  {
+    const { w: w8, calls } = bootSignedIn([res(404)]);
+    await tick(); // let the boot-time pull() promise chain resolve
+    check('signed-in boot performs exactly one GET', calls.length === 1 && calls[0].method === 'GET', JSON.stringify(calls.map(c => c.method)));
+    check("the GET targets this course's progress route", !!calls[0] && /\/v1\/progress\/netplus$/.test(calls[0].url), calls[0] && calls[0].url);
+  }
+
+  // 3) Signed in: finishExam pushes immediately, without waiting for the 5s debounce.
+  {
+    const { w: w9, calls } = bootSignedIn([res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET before the exam starts
+    check('setup: signed-in boot pulled once', calls.length === 1, calls.length);
+    finishStarter(w9); // drives the starter exam through finishExam(); starter has minutes=0, so
+    // startTimer's own tick() stops immediately and this leaves no setInterval running.
+    await tick(); // let pushNow's token()+fetch promise chain settle -- no timer is advanced
+    check('finishExam pushes immediately without waiting for the 5s debounce',
+      calls.length === 2 && calls[1].method === 'PUT', JSON.stringify(calls.map(c => c.method)));
+  }
+
+  // 4) Signed in: a plain save() (e.g. a navigation) schedules a push but does not PUT immediately.
+  {
+    const { w: w10, calls } = bootSignedIn([res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET
+    await w10.FRASync.pushNow(); // establishes a clean baseline (dirty === false) via a real PUT,
+    // so the dirty check below reflects the navigation's save(), not the boot pull's own dirty flag.
+    check('setup: sync is clean before the navigation under test', w10.FRASync.isDirty() === false, w10.FRASync.isDirty());
+    check('setup consumed exactly two calls (GET, PUT)', calls.length === 2, calls.length);
+    act(w10, 'go', 'course'); // a plain save() via go(), no exam or checkpoint involved
+    await tick();
+    check('a plain save() does not PUT immediately', calls.length === 2, calls.length);
+    check('a plain save() leaves the sync client dirty for the 5s debounce', w10.FRASync.isDirty() === true, w10.FRASync.isDirty());
+  }
+
+  // 5) Signed in: visibilitychange to hidden triggers an immediate pushNow().
+  {
+    const { w: w11, calls } = bootSignedIn([res(404), res(200, { version: 1 }, '"1"')]);
+    await tick(); // consumes the boot GET
+    Object.defineProperty(w11.document, 'visibilityState', { value: 'hidden', configurable: true });
+    w11.document.dispatchEvent(new w11.Event('visibilitychange'));
+    await tick();
+    check('visibilitychange to hidden triggers an immediate push',
+      calls.length === 2 && calls[1].method === 'PUT', JSON.stringify(calls.map(c => c.method)));
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
+  // Explicit on the success path too: engine/app.js's save() now schedules a debounced
+  // FRASync push on every call (Task 5), which arms a real 5s setTimeout on every window
+  // this file booted. Node's natural exit would otherwise wait out the last of those
+  // instead of exiting as soon as the checks are done.
+  process.exit(0);
 })().catch(e => { console.error(e); process.exit(1); });

@@ -117,7 +117,7 @@
     } catch (e) { /* storage unavailable */ }
     return fresh();
   }
-  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } if (window.FRASync) FRASync.schedulePush(); }
 
   // Stamp "settings were genuinely changed", as distinct from touchedAt, which save()
   // sets on every call and therefore means "last opened". merge.js merges settings on
@@ -340,9 +340,11 @@
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
+  let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
+  function paintSyncBadge() { /* filled in by Task 6 */ }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
   // ---------- browser history ----------
@@ -737,6 +739,7 @@
     }
     S.active = null;
     S.view = { name: 'results', arg: String(examIdx) }; save();
+    if (window.FRASync) FRASync.pushNow();
     return viewResults(String(examIdx));
   }
   function viewResults(arg) {
@@ -1060,7 +1063,7 @@
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
       if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
-      save(); render(); return;
+      save(); if (window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
@@ -1278,6 +1281,21 @@
   } else {
     const hv = viewFromHash(location.hash); if (hv) S.view = hv;
     else if (location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
+    // Sync is optional and additive: everything below is a no-op while signed out, so
+    // anonymous study takes exactly the path it always has.
+    if (window.FRASync && window.FRAAuth) {
+      FRASync.init({
+        courseId: course.id,
+        getState: function () { return S; },
+        adopt: function (next) { S = next; save(); render(); },
+        onStatus: function (s) { syncStatus = s; paintSyncBadge(); }
+      });
+      if (FRAAuth.isSignedIn()) FRASync.pull();
+      window.addEventListener('focus', function () { FRASync.maybePull(); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') FRASync.pushNow();
+      });
+    }
     render();
     if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }
