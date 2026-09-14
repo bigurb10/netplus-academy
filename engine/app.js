@@ -399,9 +399,7 @@
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
-          ${window.FRAAuth ? (FRAAuth.isSignedIn()
-            ? `<div class="acct"><span class="who" title="${esc((FRAAuth.user() || {}).email || '')}">${esc((FRAAuth.user() || {}).email || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`
-            : `<button class="btn small" data-act="sign-in">Save my progress</button>`) : ''}
+          ${acctHtml()}
           <nav class="nav">
             ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
@@ -418,6 +416,12 @@
         </nav>
       </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
+  }
+  function acctHtml() {
+    if (!window.FRAAuth) return '';
+    if (!FRAAuth.isSignedIn()) return `<button class="btn small" data-act="sign-in">Save my progress</button>`;
+    const u = FRAAuth.user() || {};
+    return `<div class="acct"><span class="who" title="${esc(u.email || '')}">${esc(u.email || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');

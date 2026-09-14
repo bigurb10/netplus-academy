@@ -251,6 +251,10 @@ footer { padding: 40px 20px 60px; font-size: 0.9rem; }
   var msg = document.getElementById('msg');
   var detail = document.getElementById('detail');
   var actions = document.getElementById('actions');
+  // Overridable the same way the auth module's own config is (FRA_AUTH_CONFIG,
+  // FRA_ENTITLED): a test can set window.FRA_REDIRECT before this script runs to
+  // capture the target instead of actually navigating.
+  var redirect = window.FRA_REDIRECT || function (to) { window.location.replace(to); };
   function fail(text) {
     msg.textContent = 'That sign-in did not complete';
     detail.textContent = text;
@@ -265,7 +269,7 @@ footer { padding: 40px 20px 60px; font-size: 0.9rem; }
     // directly. Neither case is a failure, so completeSignIn is never called here.
     if (window.FRAAuth && window.FRAAuth.isSignedIn()) {
       msg.textContent = "You're signed in";
-      window.location.replace('/');
+      redirect('/');
     } else {
       msg.textContent = 'Nothing to finish here';
       detail.textContent = 'There is no sign-in in progress.';
@@ -279,7 +283,7 @@ footer { padding: 40px 20px 60px; font-size: 0.9rem; }
         // that arrived from outside, or this page becomes an open redirect.
         var to = out.returnTo || '/';
         if (!/^\/[^/]/.test(to)) to = '/';
-        window.location.replace(to);
+        redirect(to);
       }, function (err) {
         fail(String(err && err.message ? err.message : err));
       });
