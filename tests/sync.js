@@ -507,6 +507,75 @@ function state(extra) {
     check('a 401 pull asks the app to repaint the signed-out topbar', repainted === 1, repainted);
   }
 
+  // ===== Final review I5 / I6 / I8 =====
+
+  // ----- (I5) `view` is device-local: a navigation must not burn a server version -----
+  {
+    const h = harness([res(200, { version: 1 }, '"1"')]);
+    let local = state({ passStreak: 1, view: { name: 'home' }, touchedAt: 100 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pushNow();
+    check('the PUT body carries no view', h.calls[0].body.state.view === undefined,
+      JSON.stringify(h.calls[0].body.state.view));
+    // Exactly what save() does on a navigation: a new view and a new touchedAt, nothing else.
+    local = Object.assign({}, local, { view: { name: 'lesson', arg: 'u3l2' }, touchedAt: 999999 });
+    const ok = await h.w.FRASync.pushNow();
+    check('a navigation alone does not report a push', ok === false, ok);
+    check('a navigation alone sends no second PUT', h.calls.length === 1, h.calls.length);
+  }
+
+  // ----- (I6a) two synchronous pull() calls coalesce into one GET -----
+  {
+    const h = harness([res(404)]);
+    let local = state();
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const p1 = h.w.FRASync.pull();
+    const p2 = h.w.FRASync.pull();   // synchronous: maybePull's throttle cannot see the first yet
+    const [r1, r2] = await Promise.all([p1, p2]);
+    check('two synchronous pull() calls make exactly one GET', h.calls.length === 1, h.calls.length);
+    check('both pull() callers get the same answer', r1 === r2, [r1, r2].join(' / '));
+    h.w.FRASync.reset();   // cancel the debounce the 404 branch arms (see I8 below)
+  }
+
+  // ----- (I6b) a pull issued mid-retry-loop waits for the push to finish -----
+  {
+    const h = harness([
+      res(412),                                        // our write was stale
+      res(200, { state: state(), version: 9 }, '"9"'),  // the loop re-reads
+      res(200, { version: 10 }, '"10"'),                // and retries
+      res(404)                                          // only then does the pull run
+    ]);
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const pushing = h.w.FRASync.pushNow();
+    const pulling = h.w.FRASync.pull();   // synchronous, while the push is still queued
+    await Promise.all([pushing, pulling]);
+    check('a pull issued during a 412 retry loop runs after the push completes',
+      h.calls.map(c => c.method).join(',') === 'PUT,GET,PUT,GET', h.calls.map(c => c.method).join(','));
+    h.w.FRASync.reset();
+  }
+
+  // ----- (I8) a first sign-in creates the row without waiting for another trigger -----
+  {
+    const h = harness([res(404), res(200, { version: 1 }, '"1"')]);
+    // Capture the debounce rather than sleeping through it: schedulePush() reads
+    // root.setTimeout at call time, so replacing it on the window is enough.
+    let fire = null;
+    h.w.setTimeout = function (fn) { fire = fn; return 1; };
+    h.w.clearTimeout = function () {};
+    let local = state({ passStreak: 2 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();
+    check('a 404 pull arms the create push itself', typeof fire === 'function', typeof fire);
+    if (typeof fire === 'function') fire();
+    await new Promise(r => setTimeout(r, 5));
+    check('the first sign-in uploads without waiting for an unrelated trigger',
+      h.calls.length === 2 && h.calls[1].method === 'PUT', JSON.stringify(h.calls.map(c => c.method)));
+    check('and that upload is a create, not a blind overwrite',
+      !!h.calls[1] && h.calls[1].headers['If-None-Match'] === '*',
+      h.calls[1] && h.calls[1].headers['If-None-Match']);
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

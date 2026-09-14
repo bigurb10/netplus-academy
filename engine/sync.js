@@ -19,7 +19,20 @@
   let book = { version: null, hash: null, sub: null, lastPullAt: 0 };
   let dirty = false;
   let timer = null;
-  let inFlight = false;
+  // pull and pushNow run one at a time, through a single promise chain. Interleaved,
+  // a pull wrote book.hash/book.version in the middle of the 412 retry loop's own
+  // bookkeeping (self-healing via a later 412, but a wasted round trip and a bug that
+  // reads as unreproducible), and the debounce timer's push was swallowed outright
+  // whenever a write happened to be in flight -- the old inFlight flag bailed out and
+  // nothing re-armed the debounce. Queueing instead of bailing loses no trigger, and
+  // makes the "already running" early return unnecessary: a push that follows one that
+  // just succeeded finds hashOf(payload()) === book.hash and writes nothing.
+  let chain = Promise.resolve();
+  function serial(fn) { chain = chain.then(fn, fn); return chain; }
+  // A pull already queued satisfies whoever asks for another one. maybePull()'s throttle
+  // reads book.lastPullAt, which is written only at the very end, so without this two
+  // focus events in the same tick each ran a full GET, merge, adopt and render.
+  let pendingPull = null;
   // Bumped by reset(). A pushNow() call captures it at entry; every handler downstream
   // that would mutate book/dirty checks it still matches before touching anything, so a
   // write that was already in flight when reset() fired cannot write stale state back.
@@ -110,24 +123,33 @@
     });
   }
 
-  // Change detection ignores touchedAt. save() (engine/app.js) stamps touchedAt on
-  // every navigation, not only on a real change, so on its own it must never justify
-  // a write. touchedAt still travels in the PUT body unchanged and merge still uses
-  // it; anything it protects (e.g. `path`) is itself part of the payload, so a real
-  // change still changes the hash and touchedAt rides along.
-  function hashOf(body) {
-    return hash(stableStringify(Object.assign({}, body, {
-      touchedAt: 0,
-      feedback: canonicalFeedback(body.feedback)
-    })));
+  // ONE canonical view of a state, behind both the PUT body and the change-detection
+  // hash, so the two can never disagree about what a change is. `view` and `active` are
+  // device-local -- the design says neither is ever synced and mergeState returns
+  // neither -- yet `view` used to ride in the payload, so every navigation changed the
+  // body and burned a server version. Stripping it here also makes pull()'s
+  // `book.hash = hashOf(body.state)` compare like with like against a row an older
+  // client wrote with `view` still in it.
+  function canonical(s) {
+    const c = JSON.parse(JSON.stringify(s || {}));
+    delete c.view;
+    c.active = null;
+    return c;
   }
 
-  // `active` is an in-progress exam; it is deliberately not synced, matching exportable().
-  function payload() {
-    const s = JSON.parse(JSON.stringify(opts.getState()));
-    s.active = null;
-    return s;
+  // Change detection additionally ignores touchedAt. save() (engine/app.js) stamps
+  // touchedAt on every navigation, not only on a real change, so on its own it must
+  // never justify a write. touchedAt still travels in the PUT body unchanged and merge
+  // still uses it; anything it protects (e.g. `path`) is itself part of the payload, so
+  // a real change still changes the hash and touchedAt rides along.
+  function hashOf(body) {
+    const c = canonical(body);
+    c.touchedAt = 0;
+    c.feedback = canonicalFeedback(c.feedback);
+    return hash(stableStringify(c));
   }
+
+  function payload() { return canonical(opts.getState()); }
 
   function token() {
     if (!root.FRAAuth || !root.FRAAuth.isSignedIn()) return Promise.resolve(null);
@@ -150,7 +172,7 @@
     return root.fetch(url(), { method: 'GET', headers: headers(tok) });
   }
 
-  function pull() {
+  function doPull() {
     if (!opts) return Promise.resolve(false);
     // Same fencing as pushNow(): captured before the first await, checked before any
     // book/dirty mutation or opts.adopt() call, so a reset() (e.g. sign-out) fired
@@ -186,6 +208,13 @@
           // skips the write entirely, and clears dirty -- so a deleted server row can
           // never be recreated by a client whose local state has not itself changed.
           book.version = null; book.hash = null; book.sub = sub; book.lastPullAt = Date.now(); saveBook();
+          // The design's first-sign-in flow ends in "PUT the result", and this 404 IS
+          // that flow's first half. Setting dirty alone left the create waiting for an
+          // unrelated trigger. schedulePush() rather than pushNow(): it re-uses the same
+          // 5s debounce every save() arms, so a sign-in landing in the middle of a burst
+          // of saves still costs one write, and it cannot deadlock -- a pushNow() awaited
+          // from inside this pull would be queued behind the pull on the serial chain.
+          schedulePush();
           status('idle');
           return false;
         }
@@ -294,14 +323,8 @@
     });
   }
 
-  function pushNow() {
-    if (!opts || inFlight) return Promise.resolve(false);
-    // Set synchronously, before the first await: token() resolves via a microtask, and
-    // two pushNow() calls made back to back (no await between them) both run this
-    // synchronous prelude before either's .then callback fires. Setting inFlight here
-    // -- not inside the .then -- is what makes the second call's entry check above see
-    // it and bail out, rather than both racing through to a PUT.
-    inFlight = true;
+  function doPush() {
+    if (!opts) return Promise.resolve(false);
     const gen = generation;
     return token().then(function (tok) {
       // reset() may have fired while token() was pending; don't touch book/dirty for a
@@ -321,8 +344,21 @@
       dirty = true;
       status('syncing');
       return attemptPut(tok, body, 1, gen);
-    }).catch(function () { status('offline'); return false; })
-      .then(function (ok) { inFlight = false; return ok; });
+    }).catch(function () { status('offline'); return false; });
+  }
+
+  // The two public entry points. Everything above runs inside the serial chain.
+  function pull() {
+    if (!opts) return Promise.resolve(false);
+    if (pendingPull) return pendingPull;
+    pendingPull = serial(doPull).then(function (v) { pendingPull = null; return v; },
+      function () { pendingPull = null; return false; });
+    return pendingPull;
+  }
+
+  function pushNow() {
+    if (!opts) return Promise.resolve(false);
+    return serial(doPush);
   }
 
   function schedulePush() {
@@ -332,10 +368,16 @@
   }
 
   function reset() {
-    generation++;   // fence off any pushNow() already in flight; see its comments above
+    generation++;   // fence off any pull/push already in flight; see their comments above
     book = { version: null, hash: null, sub: null, lastPullAt: 0 };
     dirty = false;
     if (timer) { root.clearTimeout(timer); timer = null; }
+    // A fetch that never settles would otherwise wedge the chain for the life of the
+    // page, exactly as the old inFlight flag could. Whatever is still in flight is
+    // already fenced by the generation bump above, so a fresh chain cannot let it write
+    // stale state back.
+    chain = Promise.resolve();
+    pendingPull = null;
     try { root.localStorage.removeItem(bookKey()); } catch (e) { /* ignore */ }
   }
 
