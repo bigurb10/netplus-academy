@@ -75,6 +75,17 @@
     if (timer) { root.clearTimeout(timer); timer = null; }
   }
 
+  // A 401 from ANY request means the token is genuinely dead (a 5xx is the try-later
+  // case). Every discovery of it ends the session the same way: drop the token, clear the
+  // server-session bookkeeping -- reset() keeps the owner of the local blob -- and ask the
+  // app to repaint, which otherwise keeps offering an account that is no longer signed in.
+  function sessionEnded() {
+    root.FRAAuth.signOut();
+    reset();
+    status('error');
+    signedOut();
+  }
+
   // recomputeStreak (via mergeState) requires passPct/streakNeeded as numbers or it
   // throws -- see engine/merge.js. Both live on the course manifest, already loaded
   // by the time any of these functions actually run.
@@ -218,13 +229,7 @@
           status('idle');
           return false;
         }
-        if (r.status === 401) {
-          // reset() as well as signOut(): a book left behind here still carries the dead
-          // session's version, which the next account to sign in would inherit and write
-          // blind If-Match requests against. onSignedOut() repaints the topbar, which
-          // otherwise keeps offering an account that is no longer signed in.
-          root.FRAAuth.signOut(); reset(); status('error'); signedOut(); return false;
-        }
+        if (r.status === 401) { sessionEnded(); return false; }
         if (!r.ok) { status('error'); return false; }   // 5xx: try again later
         return r.json().then(function (body) {
           if (gen !== generation) return false;
@@ -294,7 +299,7 @@
           return true;
         });
       }
-      if (r.status === 401) { root.FRAAuth.signOut(); status('error'); return false; }
+      if (r.status === 401) { sessionEnded(); return false; }
       if (r.status === 413) {
         // Permanent. The blob is over the server's ceiling and retrying cannot help.
         status('error');
@@ -367,9 +372,16 @@
     timer = root.setTimeout(function () { timer = null; pushNow(); }, PUSH_DEBOUNCE_MS);
   }
 
+  // Ends the server session. The book holds two different kinds of state: version, hash
+  // and lastPullAt describe a session that has now ended and go; `sub` records WHOSE
+  // progress the local blob is, and a blob does not change hands because its owner signed
+  // out -- so the owner survives, and the key is kept to carry it. That is what lets a
+  // second learner signing in afterwards be recognised as a different account instead of
+  // silently inheriting the first one's work.
   function reset() {
     generation++;   // fence off any pull/push already in flight; see their comments above
-    book = { version: null, hash: null, sub: null, lastPullAt: 0 };
+    const owner = book.sub || null;
+    book = { version: null, hash: null, sub: owner, lastPullAt: 0 };
     dirty = false;
     if (timer) { root.clearTimeout(timer); timer = null; }
     // A fetch that never settles would otherwise wedge the chain for the life of the
@@ -378,7 +390,18 @@
     // stale state back.
     chain = Promise.resolve();
     pendingPull = null;
-    try { root.localStorage.removeItem(bookKey()); } catch (e) { /* ignore */ }
+    if (owner) saveBook();
+    else try { root.localStorage.removeItem(bookKey()); } catch (e) { /* ignore */ }
+  }
+
+  // The local blob was replaced wholesale from outside -- an export code the learner
+  // pasted into the import box. Whose progress that is cannot be known, so the owner
+  // record goes and the next pull treats it as unowned progress being claimed by whoever
+  // is signed in, which is exactly what importing a code asks for.
+  function forgetOwner() {
+    if (!opts) return;
+    book.sub = null;
+    saveBook();
   }
 
   root.FRASync = {
@@ -387,6 +410,7 @@
     maybePull: maybePull,
     pushNow: pushNow,
     schedulePush: schedulePush,
+    forgetOwner: forgetOwner,
     isDirty: function () { return dirty; },
     reset: reset
   };

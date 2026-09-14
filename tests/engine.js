@@ -379,7 +379,11 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     const stateAfter = w15.localStorage.getItem('fra.netplus.state.v3');
     check('sign-out clears the auth token', w15.localStorage.getItem('fra.auth.v1') === null, w15.localStorage.getItem('fra.auth.v1'));
     check('sign-out leaves course progress untouched', stateAfter === stateBefore, stateAfter === stateBefore ? 'unchanged' : 'CHANGED');
-    check('sign-out clears the sync book (FRASync.reset() ran)', w15.localStorage.getItem('fra.netplus.sync.v1') === null, w15.localStorage.getItem('fra.netplus.sync.v1'));
+    const bk15 = JSON.parse(w15.localStorage.getItem('fra.netplus.sync.v1') || '{}');
+    check('sign-out clears the server-session bookkeeping (FRASync.reset() ran)',
+      !bk15.version && !bk15.hash && !bk15.lastPullAt, JSON.stringify(bk15));
+    check('sign-out keeps the owner, so the next account is not handed this progress',
+      bk15.sub === 'u1', JSON.stringify(bk15));
     check('sign-out re-renders the sign-in button', !!w15.$('.topbar [data-act="sign-in"]'));
   }
 
@@ -442,6 +446,27 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     await tick(); // let finishExam's immediate pushNow() settle
     const offer19 = w19.$$('p.muted').find(p => /Studying on more than one device\?/.test(p.textContent));
     check('signed-in starter results do not repeat the save-progress offer', !offer19, !!offer19);
+  }
+
+  // ----- Amendment: importing a progress code clears the recorded owner -----
+  // The import action is the one place that replaces the whole blob from outside, with
+  // data whose provenance the engine cannot know. Leaving the previous owner on it would
+  // make the next pull treat a pasted code as a different account's progress and stash it
+  // instead of merging it into the account that pasted it.
+  {
+    const { w: w21 } = bootSignedIn([res(404)]);
+    await tick(); // the boot pull records the owner in the sync book
+    const bk21 = JSON.parse(w21.localStorage.getItem('fra.netplus.sync.v1'));
+    check('setup: the boot pull recorded the owner', bk21 && bk21.sub === 'u1', JSON.stringify(bk21));
+    const io = w21.document.createElement('textarea');
+    io.id = 'io';
+    io.value = JSON.stringify({ v: 3, course: 'netplus', passStreak: 2 });
+    w21.$('#app').appendChild(io);
+    act(w21, 'import');
+    check('importing a progress code loaded it', state(w21).passStreak === 2, state(w21).passStreak);
+    const bk21b = JSON.parse(w21.localStorage.getItem('fra.netplus.sync.v1'));
+    check('importing a progress code forgets whose progress the blob was',
+      bk21b && bk21b.sub === null, JSON.stringify(bk21b));
   }
 
   // ----- Final review C1: a pull must never delete the device-local view and active -----

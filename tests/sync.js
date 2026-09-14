@@ -412,6 +412,9 @@ function state(extra) {
   const SYNC_KEY = 'fra.netplus.sync.v1';
   const STATE_KEY = 'fra.netplus.state.v3';
   const lesson = (best, at) => ({ status: 'done', best: best, attempts: 1, passedAt: at });
+  // Tolerant of a missing key, so an implementation that drops the book entirely fails the
+  // owner check by name rather than crashing the suite on JSON.parse(null).
+  const bookOf = h => JSON.parse(h.w.localStorage.getItem(SYNC_KEY) || '{}');
   // The extra opts sync.js needs on the ownership paths, wired the way engine/app.js
   // wires them: stash copies the blob aside, fresh supplies an empty state.
   function ownerOpts(h, get, set) {
@@ -502,9 +505,71 @@ function state(extra) {
     h.w.FRASync.init(o);
     await h.w.FRASync.pull();
     check('a 401 pull ends the session', h.w.FRAAuth.isSignedIn() === false, h.w.FRAAuth.isSignedIn());
-    check('a 401 pull clears the sync book, so no later account inherits its version',
-      h.w.localStorage.getItem(SYNC_KEY) === null, h.w.localStorage.getItem(SYNC_KEY));
+    const bk = bookOf(h);
+    check('a 401 pull clears the server-session bookkeeping, so no later account inherits its version',
+      !bk.version && !bk.hash && !bk.lastPullAt, JSON.stringify(bk));
+    check('a 401 pull keeps the owner of the local blob', bk.sub === 'u1', JSON.stringify(bk));
     check('a 401 pull asks the app to repaint the signed-out topbar', repainted === 1, repainted);
+  }
+
+  // ----- (C2f) a 401 on a PUT ends the session exactly as a 401 on a GET does -----
+  {
+    const h = harness([res(401)]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 99 }));
+    let local = state({ passStreak: 1 });
+    let repainted = 0;
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    o.onSignedOut = () => { repainted++; };
+    h.w.FRASync.init(o);
+    await h.w.FRASync.pushNow();
+    check('a 401 PUT ends the session', h.w.FRAAuth.isSignedIn() === false, h.w.FRAAuth.isSignedIn());
+    const bk2 = bookOf(h);
+    check('a 401 PUT clears the server-session bookkeeping too',
+      !bk2.version && !bk2.hash && !bk2.lastPullAt, JSON.stringify(bk2));
+    check('a 401 PUT keeps the owner of the local blob', bk2.sub === 'u1', JSON.stringify(bk2));
+    check('a 401 PUT asks the app to repaint the signed-out topbar', repainted === 1, repainted);
+  }
+
+  // ----- (C2g) the owner survives sign-out: A signs out, B signs in on the same browser -----
+  // The sign-out button runs FRASync.reset(). If that dropped the owner along with the
+  // version, the very scenario C2 exists to stop -- a second learner inheriting the first
+  // one's progress -- would still happen on the course they signed out from.
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'learner-A', lastPullAt: 55 }));
+    let local = state({ lessons: { u2l1: lesson(80, 6) } });
+    const before = JSON.stringify(local);
+    h.w.localStorage.setItem(STATE_KEY, before);
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    h.w.FRASync.reset();                       // exactly what the sign-out button does
+    const bk3 = bookOf(h);
+    check('sign-out clears the server-session bookkeeping',
+      !bk3.version && !bk3.hash && !bk3.lastPullAt, JSON.stringify(bk3));
+    check('sign-out does not hand the local blob to the next account', bk3.sub === 'learner-A', JSON.stringify(bk3));
+    await h.w.FRASync.pull();                  // a DIFFERENT account (the harness token is u1)
+    check('the account signing in after a sign-out does not inherit the previous progress',
+      !local.lessons.u2l1, JSON.stringify(Object.keys(local.lessons)));
+    check('it gets its own server state instead', !!local.lessons.u1l1, JSON.stringify(Object.keys(local.lessons)));
+    check('and the previous learner blob was stashed across the sign-out',
+      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+  }
+
+  // ----- (C2h) ...but the SAME learner signing back in still merges -----
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 55 }));
+    let local = state();
+    h.w.FRASync.init(ownerOpts(h, () => local, s => { local = s; }));
+    h.w.FRASync.reset();
+    // Studying on while signed out is the ordinary anonymous path; the blob is still theirs.
+    local = state({ lessons: { u2l1: lesson(80, 6) } });
+    await h.w.FRASync.pull();
+    check('the same learner signing back in still merges what they did while signed out',
+      !!(local.lessons.u1l1 && local.lessons.u2l1), JSON.stringify(Object.keys(local.lessons)));
+    check('nothing was stashed on the same-owner path',
+      h.w.localStorage.getItem(STATE_KEY + '.stash') === null, h.w.localStorage.getItem(STATE_KEY + '.stash'));
   }
 
   // ===== Final review I5 / I6 / I8 =====
