@@ -103,7 +103,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   let S = load();
   function load() {
@@ -123,6 +123,26 @@
   // sets on every call and therefore means "last opened". merge.js merges settings on
   // this. Call it ONLY from real user-driven settings changes.
   function markSettingsChanged() { S.settingsAt = Date.now(); }
+  // Same idea for the path choice: stamped only where path genuinely changes, so the merge
+  // resolves it on "last changed", never on touchedAt's "last opened".
+  function markPathChanged() { S.pathAt = Date.now(); }
+
+  // Progress set aside when a different account signed in on this browser lives under
+  // STORE_KEY + '.stash.<ms>'. Bounded per course so a shared machine cannot grow
+  // localStorage one full blob per account switch toward the origin quota.
+  const STASH_KEEP = 5;
+  const STASH_PREFIX = STORE_KEY + '.stash.';
+  let stashSeq = 0;   // disambiguates two stashes taken in the same millisecond
+  function stashKeys() {
+    const keys = [];
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf(STASH_PREFIX) === 0) keys.push(k); } } catch (e) { /* ignore */ }
+    // Oldest first: the suffix is the ms the stash was taken.
+    return keys.sort((x, y) => (parseInt(x.slice(STASH_PREFIX.length), 10) || 0) - (parseInt(y.slice(STASH_PREFIX.length), 10) || 0));
+  }
+  function pruneStashes() {
+    const keys = stashKeys();
+    for (let i = 0; i < keys.length - STASH_KEEP; i++) { try { localStorage.removeItem(keys[i]); } catch (e) { /* ignore */ } }
+  }
 
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
@@ -282,7 +302,7 @@
     const rec = S.exams[idx]; if (!rec || rec.kind !== 'starter') return;
     const createdAt = S.plan && S.plan.examIdx === idx ? S.plan.createdAt : Date.now();
     const plan = applyScope(planFromStarter(rec, idx), scope); plan.createdAt = createdAt;
-    S.plan = plan.lessons.length ? plan : null; S.path = { examIdx: idx, scope }; save();
+    S.plan = plan.lessons.length ? plan : null; S.path = { examIdx: idx, scope }; markPathChanged(); save();
   }
   const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
   const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
@@ -741,7 +761,7 @@
     const total = items.length; const p = pct(score, total);
     const rec = { id: 'x-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
     S.exams.push(rec); const examIdx = S.exams.length - 1;
-    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; }
+    if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; markPathChanged(); }
     else if (ex.kind === 'custom') {
       // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
@@ -1331,11 +1351,36 @@
         // One slot per stash, keyed by the moment it was taken: a single fixed key meant
         // a browser passed A -> B -> C silently overwrote A's progress with B's. There is
         // deliberately no UI for these yet; the point is that nothing is destroyed.
-        stash: function () {
+        // Each stash is tagged with the account it belongs to, so sync can hand it back
+        // (merged) when that account signs in here again. Bounded: only the newest
+        // STASH_KEEP per course survive, oldest pruned, so a much-shared browser cannot
+        // grow localStorage a full blob per switch toward the origin quota.
+        stash: function (ownerSub) {
           try {
             const raw = localStorage.getItem(STORE_KEY);
-            if (raw != null) localStorage.setItem(STORE_KEY + '.stash.' + Date.now(), raw);
+            if (raw == null) return;
+            const rec = { sub: ownerSub || null, at: Date.now(), state: JSON.parse(raw) };
+            // "<ms>-<n>": stashKeys() orders by the leading ms (parseInt stops at the dash);
+            // the counter only keeps two same-ms stashes from overwriting each other.
+            localStorage.setItem(STORE_KEY + '.stash.' + rec.at + '-' + (++stashSeq), JSON.stringify(rec));
+            pruneStashes();
           } catch (e) { /* ignore */ }
+        },
+        // Remove and return the states of every stash tagged for `sub` (oldest first, so a
+        // later stash's newer values win in the merge). Untagged legacy stashes stay put.
+        takeStashes: function (sub) {
+          const out = [];
+          try {
+            stashKeys().forEach(function (k) {
+              let rec = null;
+              try { rec = JSON.parse(localStorage.getItem(k)); } catch (e) { rec = null; }
+              if (rec && rec.sub && rec.sub === sub && rec.state) {
+                out.push(rec.state);
+                localStorage.removeItem(k);
+              }
+            });
+          } catch (e) { /* ignore */ }
+          return out;
         },
         fresh: function () { return fresh(); },
         // A 401 means the session ended mid-pull; the topbar still shows the account until

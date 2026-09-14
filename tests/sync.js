@@ -424,9 +424,20 @@ function state(extra) {
       // Records the second argument as well: `false` means "this is a different account's
       // state, do not carry the previous learner's view and open exam over".
       adopt: (s, keepDeviceLocal) => { o.adoptedWith = keepDeviceLocal; set(s); },
-      stash: () => {
+      // Mirrors engine/app.js: the stash is tagged with the account it belongs to, and
+      // takeStashes hands back (and removes) only the stashes tagged for that account.
+      stash: (ownerSub) => {
         const raw = h.w.localStorage.getItem(STATE_KEY);
-        if (raw != null) h.w.localStorage.setItem(STATE_KEY + '.stash', raw);
+        if (raw != null) h.w.localStorage.setItem(STATE_KEY + '.stash',
+          JSON.stringify({ sub: ownerSub || null, at: 1, state: JSON.parse(raw) }));
+      },
+      takeStashes: (sub) => {
+        const raw = h.w.localStorage.getItem(STATE_KEY + '.stash');
+        if (raw == null) return [];
+        const rec = JSON.parse(raw);
+        if (!rec.sub || rec.sub !== sub) return [];
+        h.w.localStorage.removeItem(STATE_KEY + '.stash');
+        return [rec.state];
       },
       fresh: () => state()
     };
@@ -478,8 +489,11 @@ function state(extra) {
       !local.lessons.u2l1, JSON.stringify(Object.keys(local.lessons)));
     check('the new account still gets its own stored progress',
       !!local.lessons.u1l1, JSON.stringify(Object.keys(local.lessons)));
+    const stashed = JSON.parse(h.w.localStorage.getItem(STATE_KEY + '.stash') || 'null');
     check('the previous learner blob was stashed, not destroyed',
-      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+      !!stashed && JSON.stringify(stashed.state) === before, JSON.stringify(stashed && stashed.state));
+    check('and the stash is tagged with the PREVIOUS owner, so they can get it back',
+      !!stashed && stashed.sub === 'someone-else', stashed && stashed.sub);
     check('the sync book now names the new owner',
       JSON.parse(h.w.localStorage.getItem(SYNC_KEY)).sub === 'u1', h.w.localStorage.getItem(SYNC_KEY));
     check('nothing is pushed on the new account behalf until they act', h.calls.length === 1, h.calls.length);
@@ -500,8 +514,10 @@ function state(extra) {
       o.adoptedWith === false, o.adoptedWith);
     check('a different account with nothing stored starts from a fresh state',
       local.passStreak === 0 && !local.lessons.u2l1, JSON.stringify([local.passStreak, Object.keys(local.lessons)]));
+    const stashed404 = JSON.parse(h.w.localStorage.getItem(STATE_KEY + '.stash') || 'null');
     check('the previous learner blob was stashed on the 404 path too',
-      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+      !!stashed404 && JSON.stringify(stashed404.state) === before && stashed404.sub === 'someone-else',
+      JSON.stringify(stashed404 && { sub: stashed404.sub, lessons: Object.keys(stashed404.state.lessons) }));
     check('nothing is uploaded on the 404 different-owner path', h.calls.length === 1, h.calls.length);
   }
 
@@ -562,8 +578,57 @@ function state(extra) {
     check('the account signing in after a sign-out does not inherit the previous progress',
       !local.lessons.u2l1, JSON.stringify(Object.keys(local.lessons)));
     check('it gets its own server state instead', !!local.lessons.u1l1, JSON.stringify(Object.keys(local.lessons)));
+    const stashedX = JSON.parse(h.w.localStorage.getItem(STATE_KEY + '.stash') || 'null');
     check('and the previous learner blob was stashed across the sign-out',
-      h.w.localStorage.getItem(STATE_KEY + '.stash') === before, h.w.localStorage.getItem(STATE_KEY + '.stash'));
+      !!stashedX && JSON.stringify(stashedX.state) === before && stashedX.sub === 'learner-A',
+      JSON.stringify(stashedX && { sub: stashedX.sub, lessons: Object.keys(stashedX.state.lessons) }));
+  }
+
+  // ----- stashed progress comes back, merged, when its owner signs in again -----
+  // The design says collisions between two copies of ONE learner's work merge automatically.
+  // A stash is exactly that: this account's own progress, set aside when someone else used
+  // the browser. On the owner's next pull it is merged in, removed, and pushed.
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    const delays = [];
+    h.w.setTimeout = function (fn, d) { delays.push(d); return delays.length; };
+    h.w.clearTimeout = function () {};
+    let local = state({ lessons: { u2l1: lesson(80, 6) } });
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 0 }));
+    // What u1 left behind here earlier, when a different account took over this browser.
+    h.w.localStorage.setItem(STATE_KEY + '.stash',
+      JSON.stringify({ sub: 'u1', at: 1, state: state({ lessons: { u9l9: lesson(70, 3) } }) }));
+    h.w.FRASync.init(o);
+    const changed = await h.w.FRASync.pull();
+    check('the owner returning gets their stashed lesson merged back in',
+      !!(local.lessons.u1l1 && local.lessons.u2l1 && local.lessons.u9l9), JSON.stringify(Object.keys(local.lessons)));
+    check('pull reports the change', changed === true, changed);
+    check('the restored stash is removed', h.w.localStorage.getItem(STATE_KEY + '.stash') === null,
+      h.w.localStorage.getItem(STATE_KEY + '.stash'));
+    check('a push is armed to carry the restored progress to the server', delays.length >= 1 && h.w.FRASync.isDirty() === true,
+      JSON.stringify({ delays, dirty: h.w.FRASync.isDirty() }));
+    h.w.FRASync.reset();
+  }
+
+  // ----- a stash tagged for a DIFFERENT account is never handed to this one -----
+  {
+    const remote = state({ lessons: { u1l1: lesson(90, 5) } });
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"')]);
+    h.w.setTimeout = function () { return 1; };
+    h.w.clearTimeout = function () {};
+    let local = state();
+    const o = ownerOpts(h, () => local, s => { local = s; });
+    h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 0 }));
+    const theirs = JSON.stringify({ sub: 'someone-else', at: 1, state: state({ lessons: { u9l9: lesson(70, 3) } }) });
+    h.w.localStorage.setItem(STATE_KEY + '.stash', theirs);
+    h.w.FRASync.init(o);
+    await h.w.FRASync.pull();
+    check('another account\'s stash is not merged into this one', !local.lessons.u9l9, JSON.stringify(Object.keys(local.lessons)));
+    check('and it is left in place for its owner', h.w.localStorage.getItem(STATE_KEY + '.stash') === theirs,
+      h.w.localStorage.getItem(STATE_KEY + '.stash'));
+    h.w.FRASync.reset();
   }
 
   // ----- (C2h) ...but the SAME learner signing back in still merges -----

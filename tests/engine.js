@@ -171,6 +171,26 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('navigating alone does not advance settingsAt', s1.settingsAt === settingsBefore, `${settingsBefore} -> ${s1.settingsAt}`);
   }
 
+  // ----- pathAt stamps only where the path genuinely changes -----
+  // Same distinction as settingsAt: choosing a path and finishing a starter test (which resets
+  // the path) stamp it; merely navigating never does.
+  {
+    const w7 = boot({ courseDir: dir });
+    stubClock(w7, 1000);
+    const p0 = state(w7).pathAt || 0;
+    finishStarter(w7);                                   // finishExam resets path -> stamps
+    const p1 = state(w7).pathAt;
+    check('finishing a starter test advances pathAt', p1 > p0, `${p0} -> ${p1}`);
+    act(w7, 'path', 'tailored:0');                       // choosePath -> stamps
+    const p2 = state(w7).pathAt;
+    check('choosing a path advances pathAt', p2 > p1, `${p1} -> ${p2}`);
+    const touchedBefore = state(w7).touchedAt;
+    act(w7, 'go', 'course');
+    const s3 = state(w7);
+    check('navigating alone still advances touchedAt', s3.touchedAt > touchedBefore, `${touchedBefore} -> ${s3.touchedAt}`);
+    check('navigating alone does not advance pathAt', s3.pathAt === p2, `${p2} -> ${s3.pathAt}`);
+  }
+
   // ----- Sync triggers (Task 5): pull/push wiring between engine/app.js and window.FRASync -----
   const res = (status, body, etag) => ({
     ok: status >= 200 && status < 300,
@@ -563,6 +583,39 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     }
     check('the previous learner progress was stashed under its own slot, not a shared one',
       stashed !== null && stashed !== 'fra.netplus.state.v3.stash', stashed);
+  }
+
+  // ----- the real stash hooks: tagged with the owner, handed back only to them, pruned -----
+  {
+    let hooks = null;
+    const w23 = boot({
+      courseDir: dir,
+      beforeAppJs: x => {
+        const realInit = x.FRASync.init;
+        x.FRASync.init = function (o) { hooks = o; return realInit.call(this, o); };
+      }
+    });
+    if (!hooks || typeof hooks.stash !== 'function' || typeof hooks.takeStashes !== 'function') {
+      throw new Error('FRASync.init was not given stash/takeStashes');
+    }
+    stubClock(w23, 5000);                       // distinct ms per stash key
+    act(w23, 'go', 'home');                     // ensure the blob is saved under STORE_KEY
+    const blobBefore = w23.localStorage.getItem('fra.netplus.state.v3');
+    const stashKeys = () => { const k = []; for (let i = 0; i < w23.localStorage.length; i++) { const n = w23.localStorage.key(i); if (n && n.indexOf('fra.netplus.state.v3.stash.') === 0) k.push(n); } return k.sort(); };
+    hooks.stash('u1');
+    const k1 = stashKeys();
+    const rec = k1.length ? JSON.parse(w23.localStorage.getItem(k1[0])) : null;
+    check('stash() writes a record tagged with the owner and carrying the blob',
+      !!rec && rec.sub === 'u1' && JSON.stringify(rec.state) === blobBefore, JSON.stringify(rec && { sub: rec.sub, v: rec.state && rec.state.v }));
+    check('takeStashes() for another account returns nothing and leaves it', hooks.takeStashes('u2').length === 0 && stashKeys().length === 1,
+      JSON.stringify(stashKeys()));
+    const got = hooks.takeStashes('u1');
+    check('takeStashes() for the owner returns the state and removes it', got.length === 1 && got[0].v === 3 && stashKeys().length === 0,
+      JSON.stringify({ n: got.length, left: stashKeys() }));
+    for (let i = 0; i < 8; i++) hooks.stash('u' + i);
+    check('stashes are pruned to the newest 5 per course', stashKeys().length === 5, JSON.stringify(stashKeys()));
+    const newest = stashKeys().map(k => parseInt(k.slice('fra.netplus.state.v3.stash.'.length), 10));
+    check('and it is the OLDEST that were dropped', Math.min.apply(null, newest) > 5003, JSON.stringify(newest));
   }
 
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }

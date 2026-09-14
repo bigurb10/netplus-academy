@@ -113,7 +113,7 @@
   }
 
   // Merge two complete state blobs. Commutative and idempotent: the result depends on the
-  // contents, never on which side is passed first - except an exact tie on touchedAt (for path),
+  // contents, never on which side is passed first - except an exact tie on pathAt (for path),
   // settingsAt (for settings), or createdAt (for plan) with the two sides' path/settings/plan
   // actually differing, where the pick falls back to argument order. Accepted: real clocks
   // essentially never tie, and the fallback still always resolves to one side's real value, never
@@ -123,13 +123,14 @@
     const exams = unionBy(a.exams, b.exams, examId, (x, y) => (y.pct || 0) > (x.pct || 0) ? y : x)
       .slice().sort((x, y) => (x.date || 0) - (y.date || 0) || examId(x).localeCompare(examId(y)));
     const feedback = unionBy(a.feedback, b.feedback, f => f.id, (x, y) => x.sent ? x : y);
-    const newer = (b.touchedAt || 0) > (a.touchedAt || 0) ? b : a;
     const planSide = (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b : a;
-    // A device that has only been opened has path: null from fresh() with no choice of its own.
-    // Prefer the more-recently-touched side only when it actually made a choice, so opening the
-    // app on a second device can never null out a real path chosen elsewhere - mirrors the
-    // null-guard planSide already applies above.
-    const pathSide = newer.path ? newer : (a.path ? a : b);
+    // path rides on pathAt, NOT touchedAt -- the same fix settings got. touchedAt is stamped
+    // by save() on every navigation, so it means "last opened"; resolving path on it let a
+    // device that was merely opened later win over the device where the path was actually
+    // chosen. pathAt is stamped only where path genuinely changes (choosePath, and a new
+    // starter test resetting it). The null guard stays: a side with no path never beats a
+    // side that made a choice, whatever its stamp.
+    const pathSide = pickPathSide(a, b);
     const streak = recomputeStreak(exams, opts);
     // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
     const born = Math.min(a.created || Infinity, b.created || Infinity);
@@ -145,6 +146,7 @@
       official: streak.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
       path: remapExamIdx(pathSide.path, pathSide.exams, exams),
+      pathAt: max(a.pathAt, b.pathAt),
       // settings rides on settingsAt, NOT touchedAt. touchedAt is stamped by save() on
       // every navigation, so it means "last opened"; using it here let a second device
       // that was merely opened wipe a timer or test-setup choice made on the first.
@@ -160,6 +162,20 @@
   // exception `path` and `plan` already carry, not an oversight. Two devices changing a
   // setting in the same millisecond is vanishingly rare and either choice is defensible;
   // what matters is that a mere open never beats a real change, which settingsAt ensures.
+  // Later real path change wins. A null path is two different things: "never chose" (no
+  // stamp -- fresh() on a device that was merely opened) must never beat a real choice,
+  // but "chose, then a new starter test RESET it" carries a fresh pathAt and is itself the
+  // later change, so it must win over a stale choice -- otherwise a reload or focus-pull
+  // racing the debounced push silently reverts the learner's own reset. An exact pathAt
+  // tie with the two sides differing falls back to the side passed first, the same
+  // documented order-dependence settings and plan carry.
+  function pickPathSide(a, b) {
+    const at = a.pathAt || 0, bt = b.pathAt || 0;
+    if (!a.path && !at) return b;
+    if (!b.path && !bt) return a;
+    return bt > at ? b : a;
+  }
+
   function pickSettings(a, b) {
     const at = a.settingsAt || 0, bt = b.settingsAt || 0;
     if (bt > at) return b.settings || a.settings || {};

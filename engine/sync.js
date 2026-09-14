@@ -71,7 +71,32 @@
   }
 
   function status(s) { if (opts && opts.onStatus) { try { opts.onStatus(s); } catch (e) {} } }
-  function stashLocal() { if (opts && opts.stash) { try { opts.stash(); } catch (e) {} } }
+  // Copies the local blob aside on an identity switch, tagged with the account it belongs
+  // to (book.sub is still the previous owner at every call site), so that owner gets it
+  // back -- merged, per the design's "collisions merge automatically" -- when they next
+  // sign in on this browser. Called before book.sub is overwritten.
+  function stashLocal() { if (opts && opts.stash) { try { opts.stash(book.sub || null); } catch (e) {} } }
+  // Returns and removes every stash tagged for `sub`; merged into this account's state by
+  // restoreStashes(). Legacy untagged stashes are never attributed to anyone.
+  function takeStashes(sub) {
+    if (!opts || !opts.takeStashes || !sub) return [];
+    try { return opts.takeStashes(sub) || []; } catch (e) { return []; }
+  }
+  // After a pull has settled which account owns the local blob, fold in any progress this
+  // same account left behind on this browser when a different account took over. Merging
+  // is exactly what the design prescribes for two copies of one learner's work; the push it
+  // arms is what carries the restored progress to their server row.
+  function restoreStashes(sub) {
+    const found = takeStashes(sub);
+    if (!found.length) return false;
+    let s = opts.getState();
+    for (let i = 0; i < found.length; i++) {
+      if (found[i] && typeof found[i] === 'object') s = root.FRAMerge.mergeState(s, found[i], mergeOpts());
+    }
+    opts.adopt(s);
+    schedulePush();
+    return true;
+  }
   function signedOut() { if (opts && opts.onSignedOut) { try { opts.onSignedOut(); } catch (e) {} } }
 
   // The account signed in right now, per the stored token. Display-level only, like
@@ -183,6 +208,12 @@
     const c = canonical(body);
     c.touchedAt = 0;
     c.feedback = canonicalFeedback(c.feedback);
+    // Additive stamp fields must hash the same whether absent (a server blob written before
+    // the field existed) or at their zero default (fresh() and every merge emit it). Without
+    // this, adding pathAt made every pull's merge differ from the stored blob by one key and
+    // burned a spurious PUT per pull until each row had been rewritten.
+    if (!c.pathAt) delete c.pathAt;
+    if (!c.settingsAt) delete c.settingsAt;   // same class: rows written before settingsAt existed
     return hash(stableStringify(c));
   }
 
@@ -243,6 +274,8 @@
             // their progress into someone else's account.
             if (blank) opts.adopt(blank, false);
             cancelPush();
+            // This account may itself have been stashed here earlier; fold it back in.
+            restoreStashes(sub);
             status('idle');
             return true;
           }
@@ -259,6 +292,7 @@
           // of saves still costs one write, and it cannot deadlock -- a pushNow() awaited
           // from inside this pull would be queued behind the pull on the serial chain.
           schedulePush();
+          restoreStashes(sub);
           status('idle');
           return false;
         }
@@ -275,6 +309,7 @@
             saveBook();
             opts.adopt(body.state, false);   // as above: no device-local carry-over
             cancelPush();
+            restoreStashes(sub);
             status('idle');
             return true;
           }
@@ -295,8 +330,9 @@
           saveBook();
           // If the merge produced something the server does not have, we owe it a push.
           if (hashOf(afterObj) !== book.hash) dirty = true;
+          const restored = restoreStashes(sub);
           status('idle');
-          return before !== after;
+          return before !== after || restored;
         });
       });
     }).catch(function () { status('offline'); return false; });
