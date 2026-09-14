@@ -70,6 +70,11 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); background: none; border: 0; padding: 0; }
 .brand .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; }
+.acct { display:flex; align-items:center; gap:8px; }
+.acct .who { font-size:.85rem; opacity:.8; max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.syncdot { width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block; }
+.syncdot.syncing { background:var(--accent); }
+.syncdot.error, .syncdot.offline { background:var(--warn); }
 .nav { display: flex; gap: 4px; margin-left: 8px; }
 .nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--ink-2); }
 .nav button:hover { background: var(--surface-2); color: var(--ink); }
@@ -6132,7 +6137,14 @@ FRA.questions.push(
 (function (root) {
   const DEFAULTS = {
     issuer: 'https://prepared-song-48-staging.authkit.app',
-    clientId: 'client_01M23KW7MPKGQ3FGVAW836VKBQ',
+    // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
+    // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
+    // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
+    // Document. Handing it the environment client id returns `application_not_found`
+    // -- which is what broke the first live sign-in attempt. The environment client
+    // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
+    // tokens carry no `aud` at all and so cannot be audience-bound to this API.
+    clientId: 'client_01M2G92EW9F8X16GPQCV5598ZS',
     apiBase: 'https://api.fieldreadyacademy.com',
     // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
     // so a token minted without this opens the connector, not this API, and every
@@ -6271,21 +6283,33 @@ FRA.questions.push(
     });
   }
 
+  // The single refresh in flight, if any. Two triggers routinely want a token in the same
+  // tick -- sync's boot pull racing the first save()'s debounced push, or two focus events
+  // -- and with rotating refresh tokens the second request presents a token the first has
+  // already consumed, which comes back 400 and would end a perfectly good session. One
+  // in-flight refresh therefore serves every caller.
+  let refreshing = null;
+
   function refresh() {
     const t = tokens();
     if (!t || !t.refresh_token) { signOut(); return Promise.resolve(null); }
-    return tokenRequest(new URLSearchParams({
+    if (refreshing) return refreshing;
+    refreshing = tokenRequest(new URLSearchParams({
       grant_type: 'refresh_token', refresh_token: t.refresh_token
     })).then(function (r) {
-      if (!r.ok) throw new Error('refresh rejected: ' + r.status);
-      return r.json();
-    }).then(function (data) {
-      return store(data).access_token;
-    }, function () {
-      // The refresh token is dead. Clearing it is what stops an infinite retry loop.
-      signOut();
-      return null;
-    });
+      // ONLY a dead grant ends the session. 400/401 from the token endpoint means the
+      // refresh token itself is gone, and clearing it is what stops an infinite retry
+      // loop. Everything else -- a 5xx (an issuer outage answers 503, never 401), a
+      // rejected fetch (offline), a body that will not parse -- leaves the stored tokens
+      // exactly where they are so the next trigger can retry.
+      if (r.status === 400 || r.status === 401) { signOut(); return null; }
+      if (!r.ok) return null;
+      return r.json().then(function (data) { return store(data).access_token; },
+        function () { return null; });
+    }, function () { return null; })
+      .then(function (tok) { refreshing = null; return tok; },
+        function () { refreshing = null; return null; });
+    return refreshing;
   }
 
   function accessToken() {
@@ -6309,6 +6333,10 @@ FRA.questions.push(
 
   root.FRAAuth = {
     CONFIG: CONFIG,
+    // A stored access token exists -- nothing more. It does NOT mean the token is still
+    // valid or that its refresh will succeed: refresh() deliberately keeps the tokens
+    // through an outage, so treating a network blip as "signed out" would hide the
+    // learner's own account from them until the next reload.
     isSignedIn: function () { return !!(tokens() || {}).access_token; },
     user: user,
     beginSignIn: beginSignIn,
@@ -6316,6 +6344,424 @@ FRA.questions.push(
     completeSignIn: completeSignIn,
     accessToken: accessToken,
     signOut: signOut
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+'use strict';
+// Pull / merge / push of one course's progress blob against the progress API.
+// Loaded as a plain script beside auth.js and merge.js; sets window.FRASync.
+//
+// This file knows the API's routes and nothing about tokens (it asks FRAAuth) and
+// nothing about merge rules (it calls FRAMerge). It never throws into a caller and
+// never blocks the UI: every failure is swallowed, the dirty flag persists, and the
+// next trigger retries.
+(function (root) {
+  const MAX_ATTEMPTS = 3;
+  const PUSH_DEBOUNCE_MS = 5000;
+  const PULL_MIN_INTERVAL_MS = 60000;
+
+  let opts = null;
+  // `sub` records WHICH account the local progress blob belongs to. Nothing else does:
+  // signOut() deliberately keeps fra.<courseId>.state.v3, so without this a second
+  // learner signing in on the same browser would have the first one's progress merged
+  // into their account by the ordinary pull path.
+  let book = { version: null, hash: null, sub: null, lastPullAt: 0 };
+  let dirty = false;
+  let timer = null;
+  // pull and pushNow run one at a time, through a single promise chain. Interleaved,
+  // a pull wrote book.hash/book.version in the middle of the 412 retry loop's own
+  // bookkeeping (self-healing via a later 412, but a wasted round trip and a bug that
+  // reads as unreproducible), and the debounce timer's push was swallowed outright
+  // whenever a write happened to be in flight -- the old inFlight flag bailed out and
+  // nothing re-armed the debounce. Queueing instead of bailing loses no trigger, and
+  // makes the "already running" early return unnecessary: a push that follows one that
+  // just succeeded finds hashOf(payload()) === book.hash and writes nothing.
+  let chain = Promise.resolve();
+  function serial(fn) { chain = chain.then(fn, fn); return chain; }
+  // A pull already queued satisfies whoever asks for another one. maybePull()'s throttle
+  // reads book.lastPullAt, which is written only at the very end, so without this two
+  // focus events in the same tick each ran a full GET, merge, adopt and render.
+  let pendingPull = null;
+  // Bumped by reset(). A pushNow() call captures it at entry; every handler downstream
+  // that would mutate book/dirty checks it still matches before touching anything, so a
+  // write that was already in flight when reset() fired cannot write stale state back.
+  let generation = 0;
+
+  const bookKey = () => 'fra.' + opts.courseId + '.sync.v1';
+  const url = () => root.FRAAuth.CONFIG.apiBase + '/v1/progress/' + encodeURIComponent(opts.courseId);
+
+  function loadBook() {
+    try {
+      const raw = root.localStorage.getItem(bookKey());
+      if (raw) book = Object.assign(book, JSON.parse(raw));
+    } catch (e) { /* ignore */ }
+  }
+  function saveBook() {
+    try { root.localStorage.setItem(bookKey(), JSON.stringify(book)); } catch (e) { /* ignore */ }
+  }
+
+  function status(s) { if (opts && opts.onStatus) { try { opts.onStatus(s); } catch (e) {} } }
+  function stashLocal() { if (opts && opts.stash) { try { opts.stash(); } catch (e) {} } }
+  function signedOut() { if (opts && opts.onSignedOut) { try { opts.onSignedOut(); } catch (e) {} } }
+
+  // The account signed in right now, per the stored token. Display-level only, like
+  // everything else FRAAuth.user() feeds -- the server is what actually decides whose
+  // row a request touches.
+  function currentSub() {
+    const u = root.FRAAuth && root.FRAAuth.user ? root.FRAAuth.user() : null;
+    return (u && u.sub) || null;
+  }
+  // No recorded sub is anonymous progress being claimed by a first account -- the
+  // design's first-sign-in flow, which merges. An unrecognisable current sub (a token
+  // with no `sub` claim) also merges, rather than discarding a learner's work on the
+  // strength of a missing claim.
+  function localBelongsTo(sub) { return !book.sub || !sub || book.sub === sub; }
+
+  // Undo a debounce that opts.adopt()'s own save() just armed. Used on the paths where
+  // this client has deliberately decided it owes the server nothing.
+  function cancelPush() {
+    dirty = false;
+    if (timer) { root.clearTimeout(timer); timer = null; }
+  }
+
+  // A 401 from ANY request means the token is genuinely dead (a 5xx is the try-later
+  // case). Every discovery of it ends the session the same way: drop the token, clear the
+  // server-session bookkeeping -- reset() keeps the owner of the local blob -- and ask the
+  // app to repaint, which otherwise keeps offering an account that is no longer signed in.
+  function sessionEnded() {
+    root.FRAAuth.signOut();
+    reset();
+    status('error');
+    signedOut();
+  }
+
+  // recomputeStreak (via mergeState) requires passPct/streakNeeded as numbers or it
+  // throws -- see engine/merge.js. Both live on the course manifest, already loaded
+  // by the time any of these functions actually run.
+  function mergeOpts() {
+    const t = (root.FRA && root.FRA.course && root.FRA.course.test) || {};
+    return { passPct: t.passPct, streakNeeded: t.streakNeeded };
+  }
+
+  // FNV-1a over a string. Cheap change detection; storing a second copy of a 200 KB
+  // blob to compare against would double the course's storage footprint.
+  function hash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return h.toString(36) + ':' + str.length;
+  }
+
+  // A key-sorted serialization, not plain JSON.stringify. mergeState (engine/merge.js)
+  // rebuilds its return value with its own field order and recomputes passStreak/
+  // official from the exam log rather than trusting either input's copy verbatim, so
+  // an order-sensitive stringify can call a semantically no-op merge "changed" purely
+  // because of property order. Only used for the internal change-detection hash below
+  // -- the actual PUT body is still plain JSON.stringify(payload), untouched.
+  function stableStringify(v) {
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) return '[' + v.map(stableStringify).join(',') + ']';
+    const keys = Object.keys(v).sort();
+    return '{' + keys.map(function (k) { return JSON.stringify(k) + ':' + stableStringify(v[k]); }).join(',') + '}';
+  }
+
+  // mergeState (engine/merge.js) unions `feedback` in first-occurrence order over
+  // a.concat(b) and never re-sorts it afterwards -- unlike `exams`, which it does
+  // re-sort -- so a no-op merge (nothing local added beyond what the server already
+  // has) can still reorder `feedback` relative to the server's own copy and defeat
+  // change detection with a spurious hash difference. Sorting it by its own canonical
+  // serialization before hashing means order alone never counts as a change. `exams`
+  // is already deterministically ordered by mergeState's own .sort(); feedback is the
+  // only other array in the state shape merge leaves order-sensitive.
+  function canonicalFeedback(list) {
+    if (!Array.isArray(list)) return list;
+    return list.slice().sort(function (x, y) {
+      const sx = stableStringify(x), sy = stableStringify(y);
+      return sx < sy ? -1 : sx > sy ? 1 : 0;
+    });
+  }
+
+  // ONE canonical view of a state, behind both the PUT body and the change-detection
+  // hash, so the two can never disagree about what a change is. `view` and `active` are
+  // device-local -- the design says neither is ever synced and mergeState returns
+  // neither -- yet `view` used to ride in the payload, so every navigation changed the
+  // body and burned a server version. Stripping it here also makes pull()'s
+  // `book.hash = hashOf(body.state)` compare like with like against a row an older
+  // client wrote with `view` still in it.
+  function canonical(s) {
+    const c = JSON.parse(JSON.stringify(s || {}));
+    delete c.view;
+    c.active = null;
+    return c;
+  }
+
+  // Change detection additionally ignores touchedAt. save() (engine/app.js) stamps
+  // touchedAt on every navigation, not only on a real change, so on its own it must
+  // never justify a write. touchedAt still travels in the PUT body unchanged and merge
+  // still uses it; anything it protects (e.g. `path`) is itself part of the payload, so
+  // a real change still changes the hash and touchedAt rides along.
+  function hashOf(body) {
+    const c = canonical(body);
+    c.touchedAt = 0;
+    c.feedback = canonicalFeedback(c.feedback);
+    return hash(stableStringify(c));
+  }
+
+  function payload() { return canonical(opts.getState()); }
+
+  function token() {
+    if (!root.FRAAuth || !root.FRAAuth.isSignedIn()) return Promise.resolve(null);
+    return root.FRAAuth.accessToken();
+  }
+
+  function headers(tok, extra) {
+    const h = Object.assign({ Authorization: 'Bearer ' + tok }, extra || {});
+    return h;
+  }
+
+  function readVersion(resp, body) {
+    const tag = resp.headers && resp.headers.get ? resp.headers.get('ETag') : null;
+    if (tag) return String(tag).replace(/^W\//, '').replace(/"/g, '');
+    if (body && body.version != null) return String(body.version);
+    return null;
+  }
+
+  function get(tok) {
+    return root.fetch(url(), { method: 'GET', headers: headers(tok) });
+  }
+
+  function doPull() {
+    if (!opts) return Promise.resolve(false);
+    // Same fencing as pushNow(): captured before the first await, checked before any
+    // book/dirty mutation or opts.adopt() call, so a reset() (e.g. sign-out) fired
+    // while this pull is in flight cannot have its cleared state silently overwritten
+    // by a response that resolves afterward.
+    const gen = generation;
+    return token().then(function (tok) {
+      if (gen !== generation) return false;
+      if (!tok) return false;
+      status('syncing');
+      return get(tok).then(function (r) {
+        if (gen !== generation) return false;
+        const sub = currentSub();
+        if (r.status === 404) {                 // normal: this learner has stored nothing yet
+          if (!localBelongsTo(sub)) {
+            // A DIFFERENT account on a browser that still holds the previous learner's
+            // progress, with nothing stored for the new one. Merging here would hand one
+            // learner's history to another, so the old blob is copied aside untouched and
+            // this account starts from a fresh state. Nothing is uploaded until the new
+            // learner actually studies and save() arms a push of their own work.
+            stashLocal();
+            const blank = opts.fresh ? opts.fresh() : null;
+            book = { version: null, hash: null, sub: sub, lastPullAt: Date.now() };
+            saveBook();
+            if (blank) opts.adopt(blank);
+            cancelPush();
+            status('idle');
+            return true;
+          }
+          // book.hash must be cleared too, not just book.version: otherwise a later
+          // pushNow() of the SAME local state sees hashOf(payload) === book.hash (the
+          // last-pushed hash, still sitting there from before the row was deleted),
+          // skips the write entirely, and clears dirty -- so a deleted server row can
+          // never be recreated by a client whose local state has not itself changed.
+          book.version = null; book.hash = null; book.sub = sub; book.lastPullAt = Date.now(); saveBook();
+          // The design's first-sign-in flow ends in "PUT the result", and this 404 IS
+          // that flow's first half. Setting dirty alone left the create waiting for an
+          // unrelated trigger. schedulePush() rather than pushNow(): it re-uses the same
+          // 5s debounce every save() arms, so a sign-in landing in the middle of a burst
+          // of saves still costs one write, and it cannot deadlock -- a pushNow() awaited
+          // from inside this pull would be queued behind the pull on the serial chain.
+          schedulePush();
+          status('idle');
+          return false;
+        }
+        if (r.status === 401) { sessionEnded(); return false; }
+        if (!r.ok) { status('error'); return false; }   // 5xx: try again later
+        return r.json().then(function (body) {
+          if (gen !== generation) return false;
+          if (!localBelongsTo(sub)) {
+            // As above, but this account does have stored progress: adopt it wholesale
+            // instead of merging the previous learner's blob into it. Their work is
+            // stashed, not destroyed, and this pull owes the server nothing.
+            stashLocal();
+            book = { version: readVersion(r, body), hash: hashOf(body.state), sub: sub, lastPullAt: Date.now() };
+            saveBook();
+            opts.adopt(body.state);
+            cancelPush();
+            status('idle');
+            return true;
+          }
+          const merged = root.FRAMerge.mergeState(opts.getState(), body.state, mergeOpts());
+          const before = JSON.stringify(payload());
+          // Prime the change-detector on what the server actually has, BEFORE
+          // adopting the merge: a merge that adds nothing local then compares equal
+          // afterwards, so the schedulePush() that a later adopt -> save() triggers
+          // becomes a no-op instead of burning a version on a state the server
+          // already has.
+          book.hash = hashOf(body.state);
+          opts.adopt(merged);
+          const afterObj = payload();
+          const after = JSON.stringify(afterObj);
+          book.version = readVersion(r, body);
+          book.sub = sub;
+          book.lastPullAt = Date.now();
+          saveBook();
+          // If the merge produced something the server does not have, we owe it a push.
+          if (hashOf(afterObj) !== book.hash) dirty = true;
+          status('idle');
+          return before !== after;
+        });
+      });
+    }).catch(function () { status('offline'); return false; });
+  }
+
+  function maybePull() {
+    if (Date.now() - (book.lastPullAt || 0) < PULL_MIN_INTERVAL_MS) return Promise.resolve(false);
+    return pull();
+  }
+
+  function attemptPut(tok, body, attempt, gen) {
+    const pre = book.version == null
+      ? { 'If-None-Match': '*' }
+      : { 'If-Match': '"' + book.version + '"' };
+    return root.fetch(url(), {
+      method: 'PUT',
+      // strict_content_type is on server-side; without this header every write 422s.
+      headers: headers(tok, Object.assign({ 'Content-Type': 'application/json' }, pre)),
+      body: JSON.stringify({ state: body })
+    }).then(function (r) {
+      // reset() may have fired while this write was in flight. A stale response must
+      // never write book/dirty back over state a later init/reset already replaced.
+      if (gen !== generation) return false;
+      if (r.ok) {
+        return r.json().then(function (j) {
+          if (gen !== generation) return false;
+          book.version = readVersion(r, j);
+          book.hash = hashOf(body);
+          book.sub = currentSub();
+          saveBook();
+          dirty = false;
+          status('idle');
+          return true;
+        });
+      }
+      if (r.status === 401) { sessionEnded(); return false; }
+      if (r.status === 413) {
+        // Permanent. The blob is over the server's ceiling and retrying cannot help.
+        status('error');
+        return false;
+      }
+      if (r.status === 412) {
+        if (attempt >= MAX_ATTEMPTS) { status('error'); return false; }
+        return get(tok).then(function (r2) {
+          if (gen !== generation) return false;
+          if (r2.status === 404) {           // deleted between our write and our re-read
+            book.version = null; saveBook();
+            return attemptPut(tok, payload(), attempt + 1, gen);
+          }
+          if (!r2.ok) { status('error'); return false; }
+          return r2.json().then(function (b2) {
+            if (gen !== generation) return false;
+            opts.adopt(root.FRAMerge.mergeState(opts.getState(), b2.state, mergeOpts()));
+            book.version = readVersion(r2, b2);
+            saveBook();
+            return attemptPut(tok, payload(), attempt + 1, gen);
+          });
+        });
+      }
+      status('error');                        // 5xx and anything else: try later
+      return false;
+    });
+  }
+
+  function doPush() {
+    if (!opts) return Promise.resolve(false);
+    const gen = generation;
+    return token().then(function (tok) {
+      // reset() may have fired while token() was pending; don't touch book/dirty for a
+      // generation that no longer exists.
+      if (gen !== generation) return false;
+      if (!tok) return false;
+      const body = payload();
+      const h = hashOf(body);
+      // Every PUT burns a version. A state that has not actually changed (aside from
+      // touchedAt, which save() stamps on every navigation) must not be re-pushed
+      // just because something upstream set dirty -- dirty means "a write may be
+      // owed"; hash equality proves it is not.
+      if (h === book.hash) { dirty = false; return false; }
+      // From here local differs from the server. Stay dirty until a write is
+      // actually accepted, so a failure at any point below is retried by a later
+      // trigger rather than being silently forgotten.
+      dirty = true;
+      status('syncing');
+      return attemptPut(tok, body, 1, gen);
+    }).catch(function () { status('offline'); return false; });
+  }
+
+  // The two public entry points. Everything above runs inside the serial chain.
+  function pull() {
+    if (!opts) return Promise.resolve(false);
+    if (pendingPull) return pendingPull;
+    pendingPull = serial(doPull).then(function (v) { pendingPull = null; return v; },
+      function () { pendingPull = null; return false; });
+    return pendingPull;
+  }
+
+  function pushNow() {
+    if (!opts) return Promise.resolve(false);
+    return serial(doPush);
+  }
+
+  function schedulePush() {
+    dirty = true;
+    if (timer) root.clearTimeout(timer);
+    timer = root.setTimeout(function () { timer = null; pushNow(); }, PUSH_DEBOUNCE_MS);
+  }
+
+  // Ends the server session. The book holds two different kinds of state: version, hash
+  // and lastPullAt describe a session that has now ended and go; `sub` records WHOSE
+  // progress the local blob is, and a blob does not change hands because its owner signed
+  // out -- so the owner survives, and the key is kept to carry it. That is what lets a
+  // second learner signing in afterwards be recognised as a different account instead of
+  // silently inheriting the first one's work.
+  function reset() {
+    generation++;   // fence off any pull/push already in flight; see their comments above
+    const owner = book.sub || null;
+    book = { version: null, hash: null, sub: owner, lastPullAt: 0 };
+    dirty = false;
+    if (timer) { root.clearTimeout(timer); timer = null; }
+    // A fetch that never settles would otherwise wedge the chain for the life of the
+    // page, exactly as the old inFlight flag could. Whatever is still in flight is
+    // already fenced by the generation bump above, so a fresh chain cannot let it write
+    // stale state back.
+    chain = Promise.resolve();
+    pendingPull = null;
+    if (owner) saveBook();
+    else try { root.localStorage.removeItem(bookKey()); } catch (e) { /* ignore */ }
+  }
+
+  // The local blob was replaced wholesale from outside -- an export code the learner
+  // pasted into the import box. Whose progress that is cannot be known, so the owner
+  // record goes and the next pull treats it as unowned progress being claimed by whoever
+  // is signed in, which is exactly what importing a code asks for.
+  function forgetOwner() {
+    if (!opts) return;
+    book.sub = null;
+    saveBook();
+  }
+
+  root.FRASync = {
+    init: function (o) { opts = o; loadBook(); },
+    pull: pull,
+    maybePull: maybePull,
+    pushNow: pushNow,
+    schedulePush: schedulePush,
+    forgetOwner: forgetOwner,
+    isDirty: function () { return dirty; },
+    reset: reset
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -6438,7 +6884,7 @@ FRA.questions.push(
     } catch (e) { /* storage unavailable */ }
     return fresh();
   }
-  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+  function save() { S.touchedAt = Date.now(); try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } if (window.FRASync) FRASync.schedulePush(); }
 
   // Stamp "settings were genuinely changed", as distinct from touchedAt, which save()
   // sets on every call and therefore means "last opened". merge.js merges settings on
@@ -6661,9 +7107,19 @@ FRA.questions.push(
   let deepOpen = null; // lesson id whose deeper explanation is expanded
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
+  let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
+  // Shared between the topbar template (so the dot is correct on the render right after
+  // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
+  const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
   const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
+  function paintSyncBadge() {
+    const el = $('#syncdot');
+    if (!el) return;
+    el.className = 'syncdot ' + syncStatus;
+    el.title = SYNC_LABEL[syncStatus] || '';
+  }
   function go(name, arg) { S.view = { name, arg }; save(); render(); window.scrollTo(0, 0); }
 
   // ---------- browser history ----------
@@ -6710,6 +7166,7 @@ FRA.questions.push(
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
+          ${acctHtml()}
           <nav class="nav">
             ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
@@ -6726,6 +7183,12 @@ FRA.questions.push(
         </nav>
       </div>${fbModal()}${acrModal()}`;
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
+  }
+  function acctHtml() {
+    if (!window.FRAAuth) return '';
+    if (!FRAAuth.isSignedIn()) return `<button class="btn small" data-act="sign-in">Save my progress</button>`;
+    const u = FRAAuth.user() || {};
+    return `<div class="acct"><span class="who" title="${esc(u.email || '')}">${esc(u.email || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');
@@ -7058,6 +7521,7 @@ FRA.questions.push(
     }
     S.active = null;
     S.view = { name: 'results', arg: String(examIdx) }; save();
+    if (window.FRASync) FRASync.pushNow();
     return viewResults(String(examIdx));
   }
   function viewResults(arg) {
@@ -7080,7 +7544,8 @@ FRA.questions.push(
           <div class="paths">
             <button class="option path" data-act="path" data-arg="tailored:${idx}"><span class="key">1</span><span><strong>Tailored tutorial</strong><br><span class="ink2">${tailored.length ? `${plural(tailored.length, 'lesson')}, about ${planMinutes(tailored)} minutes, chosen from these results. Missed ${ALL_WORD} questions in a domain: every lesson in it. Missed one, or guessed: its core lessons plus the exact topic.` : 'Nothing to teach from these results, so you go straight to the test.'}</span></span></button>
             <button class="option path" data-act="path" data-arg="full:${idx}"><span class="key">2</span><span><strong>The whole course</strong><br><span class="ink2">All ${plural(lessons.length, 'lesson')} in order, about ${fullCourseMinutes()} minutes. Lessons tied to a question you missed or guessed still open with your answer and the correct one.</span></span></button>
-          </div></div>`;
+          </div></div>
+          ${window.FRAAuth && !FRAAuth.isSignedIn() ? `<p class="muted">Studying on more than one device? <button class="btn ghost small" data-act="sign-in">Save my progress</button></p>` : ''}`;
       } else if (planIsFromThis && S.plan.scope === 'full') {
         planCard = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your path: the whole course</div><h3>${plural(S.plan.lessons.length, 'lesson')} in order, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the course</button></div>
         <p class="ink2" style="font-size:.95rem">Lessons tied to a question you missed or guessed open with your answer and the correct one.</p>
@@ -7380,8 +7845,9 @@ FRA.questions.push(
   function advance(sess) {
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
-      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); } }
-      save(); render(); return;
+      let passedNow = false;
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
+      save(); if (passedNow && window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
@@ -7408,6 +7874,12 @@ FRA.questions.push(
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
       case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
       case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
+      case 'sign-out': {
+        // Sign-out clears the token, never the local blob. The learner keeps studying
+        // exactly as an anonymous visitor would, with everything they have done so far.
+        FRAAuth.signOut(); if (window.FRASync) FRASync.reset(); render(); return;
+      }
       case 'rate': {
         const id = btn.dataset.lesson; const r = parseInt(arg, 10); if (!L[id] || !(r >= 1 && r <= 10)) return;
         S.ratings = S.ratings || {}; S.ratings[id] = { r, ts: Date.now() }; save();
@@ -7465,7 +7937,7 @@ FRA.questions.push(
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
       case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
-      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
+      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; if (window.FRASync) FRASync.forgetOwner(); save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
@@ -7599,6 +8071,39 @@ FRA.questions.push(
   } else {
     const hv = viewFromHash(location.hash); if (hv) S.view = hv;
     else if (location.hash === '#cheatsheet-print') S.view = { name: 'cheatsheet' };
+    // Sync is optional and additive: everything below is a no-op while signed out, so
+    // anonymous study takes exactly the path it always has.
+    if (window.FRASync && window.FRAAuth) {
+      FRASync.init({
+        courseId: course.id,
+        getState: function () { return S; },
+        // mergeState() (engine/merge.js) returns no view/active -- both are device-local
+        // and deliberately never synced -- so assigning its result wholesale would delete
+        // the view the learner is on and any exam in progress, and save() would then
+        // persist the loss. Both pull() and the 412 retry loop adopt through here, so
+        // carrying the two device-local fields across is done once, at the choke point.
+        adopt: function (next) { next.view = S.view; next.active = S.active; S = next; save(); render(); },
+        onStatus: function (s) { syncStatus = s; paintSyncBadge(); },
+        // Called when a pull finds a DIFFERENT account owns the progress in this browser.
+        // The blob is copied aside rather than merged into the new account or thrown away,
+        // so nothing a learner did is ever lost to a shared browser.
+        stash: function () {
+          try {
+            const raw = localStorage.getItem(STORE_KEY);
+            if (raw != null) localStorage.setItem(STORE_KEY + '.stash', raw);
+          } catch (e) { /* ignore */ }
+        },
+        fresh: function () { return fresh(); },
+        // A 401 means the session ended mid-pull; the topbar still shows the account until
+        // something repaints it.
+        onSignedOut: function () { render(); }
+      });
+      if (FRAAuth.isSignedIn()) FRASync.pull();
+      window.addEventListener('focus', function () { FRASync.maybePull(); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') FRASync.pushNow();
+      });
+    }
     render();
     if (location.hash === '#cheatsheet-print') setTimeout(() => window.print(), 400);
   }
