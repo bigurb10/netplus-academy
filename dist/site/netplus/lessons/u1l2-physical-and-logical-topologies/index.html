@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical and Logical Topologies | CompTIA Network+ N10-009 | FieldReady Academy</title>
+<meta name="description" content="A topology is the shape of a network. The physical topology is how cables actually run. The logical topology is how data flows. They can differ: a...">
+<link rel="canonical" href="https://fieldreadyacademy.com/netplus/lessons/u1l2-physical-and-logical-topologies/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Physical and Logical Topologies">
+<meta property="og:description" content="A topology is the shape of a network. The physical topology is how cables actually run. The logical topology is how data flows. They can differ: a...">
+<meta property="og:url" content="https://fieldreadyacademy.com/netplus/lessons/u1l2-physical-and-logical-topologies/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Physical and Logical Topologies","description":"A topology is the shape of a network. The physical topology is how cables actually run. The logical topology is how data flows. They can differ: a...","url":"https://fieldreadyacademy.com/netplus/lessons/u1l2-physical-and-logical-topologies/","mainEntityOfPage":"https://fieldreadyacademy.com/netplus/lessons/u1l2-physical-and-logical-topologies/","articleSection":"Unit 1: Networking Foundations","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"NetPlus Academy","url":"https://fieldreadyacademy.com/netplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Network+ N10-009","item":"https://fieldreadyacademy.com/netplus/lessons/"},{"@type":"ListItem","position":3,"name":"Physical and Logical Topologies","item":"https://fieldreadyacademy.com/netplus/lessons/u1l2-physical-and-logical-topologies/"}]}</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/netplus/lessons/" aria-current="page">Lessons</a><a href="/netplus/cheatsheet/">Cheat sheet</a><a href="/netplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/netplus/lessons/">CompTIA Network+ N10-009</a><span class="sep">/</span><span>Physical and Logical Topologies</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 1</span><span class="pill">Concepts</span><span class="pill">Objective 1.6</span><span class="muted">8 min read</span></div>
+  <h1>Physical and Logical Topologies</h1>
+  <p class="ink2 lede">Unit 1: Networking Foundations. Lesson 2 of 49 in NetPlus Academy.</p>
+  <div class="lesson-body"><p>A topology is the shape of a network. The <strong>physical</strong> topology is how cables actually run. The <strong>logical</strong> topology is how data flows. They can differ: a modern office is a physical star wired to a switch, and it behaves logically like a star too, but old Token Ring was a physical star with a logical ring.</p><h3>The shapes you must recognize</h3><ul><li><strong>Star</strong> (also called <strong>hub and spoke</strong>): every device connects to one central device. Easy to add or remove hosts and one cable fault affects one host, but the center is a single point of failure. This is the standard <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> design.</li><li><strong>Mesh</strong>: devices interconnect with each other. <strong>Full mesh</strong> links every pair, which gives maximum redundancy but the link count explodes: n(n-1)/2 links for n devices, so 6 devices need 15 links. <strong>Partial mesh</strong> links only the important pairs. <abbr title="Wide area network. Connects LANs across cities or countries, usually over links leased from a provider.">WAN</abbr> cores and wireless mesh systems use partial mesh.</li><li><strong>Point-to-point</strong>: one direct link between two endpoints, such as a leased line between two offices or a wireless bridge between buildings.</li><li><strong>Point-to-multipoint</strong>: one central endpoint talks to many, such as a wireless access point serving clients.</li><li><strong>Ring</strong>: each device connects to two neighbors. A single break can stop the ring unless a second counter-rotating ring exists.</li><li><strong>Bus</strong>: one shared cable with terminators at each end. A single break kills everyone. Legacy only.</li><li><strong>Hybrid</strong>: any combination, which describes almost every real network.</li></ul><div class="tip">Exam tip: &quot;the most fault tolerant&quot; means full mesh. &quot;The easiest to troubleshoot and expand&quot; means star. &quot;A single cable break brings down the whole segment&quot; means bus or a single ring.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Star = one center; mesh = redundancy with n(n-1)/2 links; bus and ring die from one break.</div></div>
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Physical and Logical Topologies, explained slowly</h2><div class="lesson-body deep-body"><h3>Two questions about any network</h3><p>A topology answers &quot;what shape is it?&quot; But there are two shapes to ask about. The <strong>physical</strong> topology is where the cables actually run. The <strong>logical</strong> topology is the path the data takes. Usually they match. Sometimes they do not: old Token Ring networks were wired as a star (every cable went to a central box) but the data went around in a circle from one <abbr title="Personal computer. A desktop or laptop for one user.">PC</abbr> to the next, so the logical topology was a ring.</p><h3>The shapes, one at a time</h3><p><strong>Star</strong> (also called hub and spoke). Every device gets its own cable to one central device, which today is a switch.</p><pre>        [PC]
+          |
+[PC] --[Switch]-- [PC]
+          |
+        [PC]</pre><p>Add a <abbr title="Personal computer. A desktop or laptop for one user.">PC</abbr>: plug in one cable. One cable breaks: one <abbr title="Personal computer. A desktop or laptop for one user.">PC</abbr> is down, everyone else keeps working. That is why every office <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> is a star. The weakness is the middle. If the switch dies, everyone is down. That is the single point of failure.</p><p><strong>Mesh.</strong> Devices connect to each other, not through a middle. <strong>Full mesh</strong> links every pair. Maximum redundancy: any link can fail and there is still a path. The cost is the number of links. Each of n devices needs a link to the other n minus 1 devices. That counts every link twice (A to B and B to A), so divide by two.</p><pre>Devices   Links needed (n x (n-1) / 2)
+   3         3
+   4         6
+   5        10
+   6        15
+   8        28
+  10        45</pre><p>Nobody builds a full mesh of 50 offices; 1,225 links. So real <abbr title="Wide area network. Connects LANs across cities or countries, usually over links leased from a provider.">WANs</abbr> use <strong>partial mesh</strong>: the important sites get redundant links, the small ones get one.</p><p><strong>Point-to-point.</strong> One link, two ends. A wireless bridge from one roof to another. A leased line between two offices.</p><p><strong>Point-to-multipoint.</strong> One center talks to many, but those many do not talk to each other directly. A <abbr title="Wireless fidelity. The trade name for IEEE 802.11 wireless networking.">Wi-Fi</abbr> access point and its clients.</p><p><strong>Ring.</strong> Each device connects to its two neighbors and data circles around. One break stops the ring unless there is a second ring going the other way.</p><p><strong>Bus.</strong> One long cable everyone taps into, with a terminator at each end that soaks up the signal. Remove a terminator or cut the cable anywhere and the whole segment dies. Legacy.</p><p><strong>Hybrid.</strong> Any combination. A star in each building with a partial mesh between buildings is a hybrid, and that describes almost every real network.</p><h3>The part that trips people up</h3><p>Questions usually describe a property and want the shape.</p><ul><li>&quot;Most fault tolerant&quot; or &quot;no single link failure can isolate a site&quot;: full mesh.</li><li>&quot;Easiest to add devices and troubleshoot&quot;: star.</li><li>&quot;One cable break brings down the whole segment&quot;: bus (or a single ring).</li><li>&quot;A single point of failure at the center&quot;: star. The star is easy to manage and also has a single point of failure. Both are true.</li><li>&quot;Two buildings connected by a directional wireless link&quot;: point-to-point.</li></ul><h3>What to memorize</h3><ul><li>Star: one center, one cable per device, the center is the weak point.</li><li>Full mesh links: n(n-1)/2.</li><li>Bus and single ring: one break, everyone down.</li><li>Physical is the wiring, logical is the data path.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/netplus/#lesson/u1l2">Open this lesson in the course</a> <a class="btn" href="/netplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/netplus/lessons/u1l1-networks-and-their-types/" rel="prev">&larr; Networks and Their Types</a>
+  <a href="/netplus/lessons/">All lessons</a>
+  <a href="/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/" rel="next">Enterprise Architectures and Traffic Flow &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

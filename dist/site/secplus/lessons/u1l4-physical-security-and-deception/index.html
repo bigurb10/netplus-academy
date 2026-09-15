@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical Security and Deception | CompTIA Security+ SY0-701 | FieldReady Academy</title>
+<meta name="description" content="Software cannot protect a server someone can carry away. Physical controls guard the building, and deception controls turn the attacker&#39;s curiosity...">
+<link rel="canonical" href="https://fieldreadyacademy.com/secplus/lessons/u1l4-physical-security-and-deception/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Physical Security and Deception">
+<meta property="og:description" content="Software cannot protect a server someone can carry away. Physical controls guard the building, and deception controls turn the attacker&#39;s curiosity...">
+<meta property="og:url" content="https://fieldreadyacademy.com/secplus/lessons/u1l4-physical-security-and-deception/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Physical Security and Deception","description":"Software cannot protect a server someone can carry away. Physical controls guard the building, and deception controls turn the attacker's curiosity...","url":"https://fieldreadyacademy.com/secplus/lessons/u1l4-physical-security-and-deception/","mainEntityOfPage":"https://fieldreadyacademy.com/secplus/lessons/u1l4-physical-security-and-deception/","articleSection":"Unit 1: Security Foundations","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"SecPlus Academy","url":"https://fieldreadyacademy.com/secplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Security+ SY0-701","item":"https://fieldreadyacademy.com/secplus/lessons/"},{"@type":"ListItem","position":3,"name":"Physical Security and Deception","item":"https://fieldreadyacademy.com/secplus/lessons/u1l4-physical-security-and-deception/"}]}</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/secplus/lessons/" aria-current="page">Lessons</a><a href="/secplus/cheatsheet/">Cheat sheet</a><a href="/secplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/secplus/lessons/">CompTIA Security+ SY0-701</a><span class="sep">/</span><span>Physical Security and Deception</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 1</span><span class="pill">Concepts</span><span class="pill">Objective 1.2</span><span class="muted">7 min read</span></div>
+  <h1>Physical Security and Deception</h1>
+  <p class="ink2 lede">Unit 1: Security Foundations. Lesson 4 of 54 in SecPlus Academy.</p>
+  <div class="lesson-body"><p>Software cannot protect a server someone can carry away. Physical controls guard the building, and deception controls turn the attacker&#39;s curiosity against them.</p><h3>Perimeter and entry</h3><ul><li><strong>Bollards</strong>: short posts that stop vehicles from ramming an entrance.</li><li><strong>Fencing</strong>: defines the boundary and slows intruders; height and design set how serious it is.</li><li><strong>Lighting</strong>: removes hiding places and makes cameras useful at night.</li><li><strong>Access control vestibule</strong>: two doors where only one opens at a time, so one badge admits one person and nobody can tailgate. Older name: mantrap.</li><li><strong>Access badge</strong>: proves identity at doors and logs entry. Combine with a <abbr title="Personal identification number. A short numeric secret, a something-you-know factor.">PIN</abbr> or biometric for high-security rooms.</li><li><strong>Security guard</strong>: the only control that can make judgment calls and respond in the moment.</li><li><strong>Video surveillance</strong>: deters when visible, detects when reviewed, supports investigations.</li></ul><h3>Sensors</h3><ul><li><strong>Infrared</strong>: detects body heat moving through a space.</li><li><strong>Pressure</strong>: detects weight on a floor plate or mat.</li><li><strong>Microwave</strong>: sends out waves and detects changes in the reflection when something moves.</li><li><strong>Ultrasonic</strong>: the same idea with sound waves.</li></ul><h3>Deception technology</h3><p>Decoys that look valuable, do nothing real, and alert the moment they are touched.</p><ul><li><strong>Honeypot</strong>: a decoy system that attracts attackers so their tools and methods can be studied.</li><li><strong>Honeynet</strong>: a whole decoy network of honeypots.</li><li><strong>Honeyfile</strong>: a bait document, such as &quot;passwords.xlsx,&quot; that alerts when opened or copied.</li><li><strong>Honeytoken</strong>: a fake credential, <abbr title="Application programming interface. The defined way one program talks to another, such as the web endpoints a cloud service exposes.">API</abbr> key, or database record that should never be used; any use proves a breach.</li></ul><div class="tip">Exam tip: &quot;prevent tailgating&quot; is an access control vestibule. &quot;Stop a vehicle&quot; is bollards. &quot;Detect that someone is browsing the file share they should not be in&quot; is a honeyfile. Nothing legitimate ever touches a honeytoken, so any hit is a true positive.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Bollards stop cars, vestibules stop tailgating, guards make decisions. Sensors: infrared heat, pressure weight, microwave and ultrasonic motion. Honeypot, honeynet, honeyfile, honeytoken: touched means breached.</div></div>
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Physical Security and Deception, explained slowly</h2><div class="lesson-body deep-body"><h3>The layer software cannot fix</h3><p>If someone can walk into the server room, encryption on the wire does not matter. Physical security is the first layer, and the exam covers it as a short list of devices and a set of sensors. Deception technology is bundled here because, like a tripwire, it is a control that waits.</p><h3>Perimeter to door to room</h3><pre>Perimeter    fencing, bollards, lighting, cameras
+Entrance     guard, badge reader, access control vestibule
+Inside       locked rooms, cabinets, sensors, cameras</pre><ul><li><strong>Bollards</strong> are the short concrete or steel posts in front of buildings. Their only job is to stop a vehicle, whether a ram raid or an accident.</li><li><strong>Fencing</strong> marks the boundary and buys time. A low decorative fence deters casual entry; a tall fence with a top guard deters serious entry.</li><li><strong>Lighting</strong> takes away hiding places and gives cameras something to see.</li><li><strong>Video surveillance</strong> works three ways: visible cameras deter, live monitoring detects, and recordings support investigations.</li><li><strong>Access badge</strong>: proves identity to a reader and creates a log. Combine it with a <abbr title="Personal identification number. A short numeric secret, a something-you-know factor.">PIN</abbr> or fingerprint for sensitive rooms so a stolen badge alone is useless.</li><li><strong>Security guard</strong>: the only control that can think. Guards verify identities, notice odd behavior, and respond.</li><li><strong>Access control vestibule</strong>: two interlocking doors. The outer door must close before the inner door opens, and one badge admits one person, so nobody can slip in behind an employee. This is the specific answer to tailgating.</li></ul><h3>Sensors: how each one notices you</h3><pre>Infrared     detects body heat crossing the field of view
+Pressure     detects weight on a floor plate, mat, or step
+Microwave    emits waves and detects the change in reflection when something moves
+Ultrasonic   the same principle with sound above human hearing</pre><p>Microwave and ultrasonic both watch for movement through reflected energy; infrared watches for heat; pressure watches for weight. A question that says &quot;triggered when someone steps on it&quot; is pressure; &quot;detects heat signatures&quot; is infrared.</p><h3>Deception: controls that are never touched legitimately</h3><p>The idea is a tripwire nobody has a reason to cross. Because no legitimate process ever touches a decoy, any touch is a true positive.</p><ul><li><strong>Honeypot</strong>: a system that looks like a real server, records everything an attacker does, and holds nothing of value. You learn their tools and targets.</li><li><strong>Honeynet</strong>: several honeypots arranged as a fake network, so the attacker&#39;s lateral movement can be watched.</li><li><strong>Honeyfile</strong>: a document with an irresistible name such as &quot;executive_salaries.xlsx&quot; that alerts when opened, copied, or emailed.</li><li><strong>Honeytoken</strong>: a fake credential, <abbr title="Application programming interface. The defined way one program talks to another, such as the web endpoints a cloud service exposes.">API</abbr> key, or database row planted where an attacker would find it. If it is ever used, someone stole it.</li></ul><h3>How the exam asks it</h3><ul><li>&quot;Prevent an unauthorized person from following an employee through the door.&quot; Access control vestibule.</li><li>&quot;Stop a vehicle from driving into the lobby.&quot; Bollards.</li><li>&quot;Detect an attacker browsing a file server without alerting on normal use.&quot; Honeyfile.</li><li>&quot;Identify that a database was breached when a fake account is used.&quot; Honeytoken.</li></ul><h3>What to memorize</h3><ul><li>Bollards stop cars, vestibules stop tailgating, guards make judgment calls.</li><li>Infrared heat, pressure weight, microwave and ultrasonic motion.</li><li>Honeypot, honeynet, honeyfile, honeytoken: any use means breach.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/secplus/#lesson/u1l4">Open this lesson in the course</a> <a class="btn" href="/secplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/secplus/lessons/u1l3-zero-trust/" rel="prev">&larr; Zero Trust</a>
+  <a href="/secplus/lessons/">All lessons</a>
+  <a href="/secplus/lessons/u2l1-change-management/" rel="next">Change Management &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

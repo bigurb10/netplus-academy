@@ -1,0 +1,24 @@
+[Unit]
+Description=FieldReady Academy weekly feedback report email
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=fieldready
+Group=fieldready
+WorkingDirectory=/opt/fieldready-api
+EnvironmentFile=/opt/fieldready-api/.env
+# Sends nothing when the week had no feedback (exit 0). Exit 2 = SMTP not configured;
+# exit 1 = a real failure, with a one-line redacted reason in the journal.
+ExecStart=/opt/fieldready-api/.venv/bin/python mail_feedback_report.py --days 7
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service

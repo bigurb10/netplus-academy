@@ -71,6 +71,12 @@ def build(course_id):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{m['description']}">
 <title>{m['name']}</title>
+<link rel="canonical" href="https://fieldreadyacademy.com/{course_id}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="{m['name']}">
+<meta property="og:description" content="{m['description']}">
+<meta property="og:url" content="https://fieldreadyacademy.com/{course_id}/">
 {ICONS}
 {FONTS}
 <style>

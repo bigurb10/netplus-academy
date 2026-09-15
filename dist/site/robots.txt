@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /callback
+Disallow: /fp-test/
+
+Sitemap: https://fieldreadyacademy.com/sitemap.xml

@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly FieldReady feedback report, Monday 13:00 UTC (09:00 US Eastern in summer)
+
+[Timer]
+OnCalendar=Mon *-*-* 13:00:00 UTC
+# If the box was off at the scheduled time, run at the next boot instead of skipping.
+Persistent=true
+Unit=fieldready-feedback-report.service
+
+[Install]
+WantedBy=timers.target
