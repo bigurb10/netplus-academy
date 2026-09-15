@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise Architectures and Traffic Flow | CompTIA Network+ N10-009 | FieldReady Academy</title>
+<meta name="description" content="Large networks are organized in layers so that each layer has one job.">
+<link rel="canonical" href="https://fieldreadyacademy.com/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Enterprise Architectures and Traffic Flow">
+<meta property="og:description" content="Large networks are organized in layers so that each layer has one job.">
+<meta property="og:url" content="https://fieldreadyacademy.com/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Enterprise Architectures and Traffic Flow","description":"Large networks are organized in layers so that each layer has one job.","url":"https://fieldreadyacademy.com/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/","mainEntityOfPage":"https://fieldreadyacademy.com/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/","articleSection":"Unit 1: Networking Foundations","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"NetPlus Academy","url":"https://fieldreadyacademy.com/netplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Network+ N10-009","item":"https://fieldreadyacademy.com/netplus/lessons/"},{"@type":"ListItem","position":3,"name":"Enterprise Architectures and Traffic Flow","item":"https://fieldreadyacademy.com/netplus/lessons/u1l3-enterprise-architectures-and-traffic-flow/"}]}</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/netplus/lessons/" aria-current="page">Lessons</a><a href="/netplus/cheatsheet/">Cheat sheet</a><a href="/netplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/netplus/lessons/">CompTIA Network+ N10-009</a><span class="sep">/</span><span>Enterprise Architectures and Traffic Flow</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 1</span><span class="pill">Concepts</span><span class="pill">Objective 1.6</span><span class="muted">8 min read</span></div>
+  <h1>Enterprise Architectures and Traffic Flow</h1>
+  <p class="ink2 lede">Unit 1: Networking Foundations. Lesson 3 of 49 in NetPlus Academy.</p>
+  <div class="lesson-body"><p>Large networks are organized in layers so that each layer has one job.</p><h3>The three-tier hierarchy</h3><ul><li><strong>Access layer</strong>: where end devices plug in. Access switches provide ports, <abbr title="Power over Ethernet. Delivers DC power to devices over the data cable: 802.3af 15.4 W, 802.3at 30 W, 802.3bt 60 to 90 W.">PoE</abbr>, and <abbr title="Virtual local area network. A logical LAN on a switch: ports in different VLANs are separate broadcast domains.">VLAN</abbr> assignment.</li><li><strong>Distribution layer</strong>: aggregates access switches, applies policy such as <abbr title="Access control list. An ordered list of permit and deny rules on a router, firewall, or file system.">ACLs</abbr> and QoS, and routes between <abbr title="Virtual local area network. A logical LAN on a switch: ports in different VLANs are separate broadcast domains.">VLANs</abbr>.</li><li><strong>Core layer</strong>: a fast, simple backbone that moves traffic between distribution blocks. No policy, just speed.</li></ul><h3>Collapsed core</h3><p>Small and medium networks merge the core and distribution layers into one pair of devices. Cheaper and simpler, at the cost of scalability.</p><h3>Spine and leaf</h3><p>Data centers use a two-tier fabric. Every <strong>leaf</strong> switch (where servers connect) links to every <strong>spine</strong> switch, and leaves never connect to leaves. Any server can reach any other in exactly two hops, so bandwidth is predictable and the fabric grows by adding spines or leaves. It is built for traffic that moves sideways between servers.</p><h3>Traffic flows</h3><ul><li><strong>North-south</strong>: traffic entering or leaving the data center, for example a user reaching a web server. It crosses the perimeter and the firewall.</li><li><strong>East-west</strong>: traffic between servers inside the data center, for example a web server querying a database. In modern applications most traffic is east-west, which is why spine and leaf exists.</li></ul><div class="tip">Exam tip: &quot;every access switch connects to every upper switch and same-tier switches never connect&quot; is the textbook description of spine and leaf.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Access plugs in, distribution decides, core moves. Spine-leaf: two hops, built for east-west.</div></div>
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Enterprise Architectures and Traffic Flow, explained slowly</h2><div class="lesson-body deep-body"><h3>Why layers of switches?</h3><p>A network with 40 people can be one switch. A network with 4,000 people cannot, so designers split it into tiers where each tier has one job. Think of roads: neighborhood streets, main roads, and the highway.</p><h3>The three-tier design</h3><pre>              [ Core ]            highway: fast, no stoplights
+             /        \
+   [ Distribution ] [ Distribution ]   main roads: rules, routing between VLANs
+    /    |    \        /    |    \
+ [Acc] [Acc] [Acc]  [Acc] [Acc] [Acc]  neighborhood streets: where devices plug in</pre><ul><li><strong>Access layer</strong>: the switches your <abbr title="Personal computer. A desktop or laptop for one user.">PC</abbr>, phone, and access point plug into. They give you a port, power over Ethernet, and a <abbr title="Virtual local area network. A logical LAN on a switch: ports in different VLANs are separate broadcast domains.">VLAN</abbr> assignment.</li><li><strong>Distribution layer</strong>: gathers up the access switches and applies policy. Access control lists, quality of service, and routing between <abbr title="Virtual local area network. A logical LAN on a switch: ports in different VLANs are separate broadcast domains.">VLANs</abbr> live here.</li><li><strong>Core layer</strong>: moves traffic between distribution blocks as fast as possible. No policy, no filtering, just speed. Anything that slows the core slows everyone.</li></ul><h3>Collapsed core</h3><p>A medium-sized company does not need three tiers. It merges the core and distribution into one pair of big switches. Cheaper and simpler. The trade-off is that it will not grow as far.</p><h3>Spine and leaf</h3><p>Data centers have a different problem: servers talk to other servers constantly. The three-tier design sends that traffic up and down, which adds hops and unpredictability. Spine and leaf fixes it with a rule: <strong>every leaf connects to every spine, and leaves never connect to leaves.</strong></p><pre>     [Spine 1]      [Spine 2]
+       / | \          / | \
+      /  |  \        /  |  \
+ [Leaf A][Leaf B][Leaf C]   (each leaf has a link to EVERY spine)
+   |        |       |
+ servers  servers  servers</pre><p>Any server to any other server is exactly two hops: up to a spine, down to a leaf. Need more capacity? Add a spine. Need more ports? Add a leaf. Bandwidth stays predictable because every path is the same length.</p><h3>North-south and east-west</h3><p>Picture the data center as a box.</p><ul><li><strong>North-south</strong> traffic enters or leaves the box: a user on the internet loading a web page. It crosses the perimeter firewall.</li><li><strong>East-west</strong> traffic moves sideways inside the box: the web server asking the database server for data. In modern applications most traffic is east-west, which is exactly why spine and leaf exists.</li></ul><h3>How the exam asks it</h3><ul><li>&quot;Where do <abbr title="Access control list. An ordered list of permit and deny rules on a router, firewall, or file system.">ACLs</abbr> and inter-<abbr title="Virtual local area network. A logical LAN on a switch: ports in different VLANs are separate broadcast domains.">VLAN</abbr> routing belong&quot; means distribution.</li><li>&quot;Every access switch connects to every upper switch, and switches in the same tier never connect&quot;: spine and leaf.</li><li>&quot;Small business wants fewer devices&quot;: collapsed core.</li><li>&quot;Traffic between servers in the same data center&quot;: east-west.</li></ul><h3>What to memorize</h3><ul><li>Access plugs in, distribution decides, core moves.</li><li>Spine and leaf: two hops, every leaf to every spine, built for east-west.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/netplus/#lesson/u1l3">Open this lesson in the course</a> <a class="btn" href="/netplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/netplus/lessons/u1l2-physical-and-logical-topologies/" rel="prev">&larr; Physical and Logical Topologies</a>
+  <a href="/netplus/lessons/">All lessons</a>
+  <a href="/netplus/lessons/u2l1-layers-1-to-3-physical-data-link-network/" rel="next">Layers 1 to 3: Physical, Data Link, Network &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

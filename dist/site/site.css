@@ -1,0 +1,117 @@
+/* Public SEO pages. Loaded after /catalog.css, which supplies the base tokens (bg, surface,
+   ink, muted, line, accent, good) and the body/heading/wrap/brand rules. This file adds the
+   tokens the engine's lesson rules need and copies those rules from engine/styles.css so a
+   public lesson reads exactly like the same lesson inside the course. */
+:root {
+  --surface-2: #E9EDF2; --accent-ink: #FFFFFF; --warn: #B58A1B; --warn-soft: #F7EED3; --bad: #C8322B; --bad-soft: #F9E2E0;
+  --focus: #2F6FBF; --shadow: 0 1px 2px rgba(20,33,46,.06), 0 8px 24px rgba(20,33,46,.06); --radius: 10px;
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --surface-2: #1F2B37; --accent-ink: #14212E; --warn: #D9AC3A; --warn-soft: #3A3016; --bad: #E5605A; --bad-soft: #3D1C1B; --focus: #7FB0F5; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3); }
+}
+a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: 0.92em; background: var(--surface-2); padding: 0.08em 0.4em; border-radius: 5px; color: var(--ink); }
+.muted { color: var(--muted); }
+.ink2 { color: var(--ink-2); }
+.eyebrow { font-family: var(--font-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+
+/* Header, breadcrumbs, footer */
+.site-head { background: var(--surface); border-bottom: 1px solid var(--line); padding: 12px 0; }
+.site-head .brand { color: inherit; text-decoration: none; }
+.site-nav { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.site-nav a { font-family: var(--font-display); font-weight: 600; font-size: 0.92rem; color: var(--ink-2); text-decoration: none; }
+.site-nav a:hover { color: var(--accent); }
+.site-nav a[aria-current="page"] { color: var(--ink); }
+main.wrap { max-width: 820px; padding-bottom: 40px; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 6px; font-size: 0.9rem; color: var(--muted); }
+.crumbs a { color: var(--ink-2); text-decoration: none; }
+.crumbs a:hover { color: var(--accent); }
+.crumbs .sep { color: var(--line); }
+footer.wrap { border-top: 1px solid var(--line); margin-top: 30px; }
+
+/* Cards, buttons, pills, tables (from engine/styles.css) */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 10px 16px; border-radius: 9px; font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(0.95); }
+.btn.small { padding: 6px 11px; font-size: 0.85rem; }
+.btn.lg { padding: 13px 22px; font-size: 1.05rem; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; background: var(--surface-2); color: var(--ink-2); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+.table-wrap { overflow-x: auto; }
+table.plain { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+table.plain th { text-align: left; font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+table.plain td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.facts th { width: 26%; text-transform: none; letter-spacing: 0; font-size: 0.95rem; color: var(--ink-2); vertical-align: top; }
+
+/* Lesson pages */
+.pills { margin-top: 22px; gap: 8px; }
+.lesson h1 { font-size: 2rem; margin: 10px 0 8px; letter-spacing: -0.01em; }
+.lede { font-size: 1.08rem; margin: 0 0 22px; }
+.lesson-body { font-size: 1.05rem; }
+.lesson-body h3 { margin: 26px 0 8px; font-size: 1.05rem; color: var(--ink); }
+.lesson-body p { margin: 0 0 12px; }
+.lesson-body ul { margin: 0 0 12px; padding-left: 22px; }
+.lesson-body ol { margin: 0 0 12px; padding-left: 24px; }
+.lesson-body li { margin: 4px 0; }
+.lesson-body ol li { margin: 5px 0; }
+.lesson-body .tip { margin: 18px 0 12px; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; color: var(--ink); }
+.lesson-body pre { margin: 10px 0 14px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--ink); white-space: pre; }
+.hook { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: var(--surface-2); border-radius: var(--radius); margin-top: 8px; }
+.hook .eyebrow { color: var(--accent); padding-top: 3px; white-space: nowrap; }
+.deep { margin-top: 30px; padding: 20px 22px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); }
+.deep h2 { font-size: 1.3rem; margin: 4px 0 14px; }
+.deep-body h3:first-child { margin-top: 4px; }
+abbr[title] { text-decoration: underline dotted; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; }
+.cta { margin: 30px 0 10px; }
+.cta h2 { font-size: 1.25rem; margin: 0; }
+.cta p { margin: 0; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 30px; font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; }
+.pager a { text-decoration: none; }
+.pager a:hover { text-decoration: underline; }
+
+/* Course landing page */
+.course-hero { padding: 8px 0 6px; }
+.course-hero h1 { font-size: 2.1rem; margin: 8px 0 12px; letter-spacing: -0.01em; }
+.course-hero .row { margin-top: 4px; }
+main section { margin-top: 34px; }
+main section h2 { font-size: 1.4rem; margin: 0 0 12px; }
+main section h3 { font-size: 1.05rem; margin: 22px 0 4px; }
+.unit-blurb { margin: 0 0 6px; font-size: 0.95rem; }
+.lesson-list { padding-left: 24px; line-height: 1.7; margin: 0; }
+.lesson-list a { text-decoration: none; }
+.lesson-list a:hover { text-decoration: underline; }
+.steps { padding-left: 22px; line-height: 1.7; color: var(--ink-2); }
+.steps strong { color: var(--ink); }
+
+/* Cheat sheet page (from engine/styles.css) */
+.cs h1 { font-size: 1.7rem; margin: 8px 0 8px; }
+.cs-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.cs-toc a { font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; text-decoration: none; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+.cs-toc a:hover { border-color: var(--accent); color: var(--ink); }
+.cs-section { margin-top: 26px; scroll-margin-top: 20px; }
+.cs-section h2 { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); margin-bottom: 12px; font-size: 1.25rem; }
+.cs-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; color: var(--accent); }
+.cs-section h3 { font-size: 0.95rem; margin: 14px 0 6px; color: var(--ink-2); }
+.cs-section .tip { margin: 12px 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; color: var(--ink); }
+.cs-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin: 6px 0 14px; }
+.cs-table th { text-align: left; font-family: var(--font-display); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--ink); }
+.cs-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cs-table td:first-child { font-weight: 600; }
+.cs-list ul { margin: 0 0 12px; padding-left: 20px; }
+.cs-list li { margin: 3px 0; font-size: 0.95rem; break-inside: avoid; }
+.cs-list.two ul { columns: 2; column-gap: 28px; }
+
+@media (max-width: 700px) {
+  .cs-list.two ul { columns: 1; }
+  .lesson h1 { font-size: 1.6rem; }
+  .course-hero h1 { font-size: 1.7rem; }
+  .site-nav { gap: 10px; }
+}

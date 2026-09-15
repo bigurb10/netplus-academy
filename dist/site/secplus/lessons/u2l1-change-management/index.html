@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Change Management | CompTIA Security+ SY0-701 | FieldReady Academy</title>
+<meta name="description" content="Most outages and many breaches follow an unplanned change. Change management is the process that makes changes deliberate, reviewed, and reversible....">
+<link rel="canonical" href="https://fieldreadyacademy.com/secplus/lessons/u2l1-change-management/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Change Management">
+<meta property="og:description" content="Most outages and many breaches follow an unplanned change. Change management is the process that makes changes deliberate, reviewed, and reversible....">
+<meta property="og:url" content="https://fieldreadyacademy.com/secplus/lessons/u2l1-change-management/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Change Management","description":"Most outages and many breaches follow an unplanned change. Change management is the process that makes changes deliberate, reviewed, and reversible....","url":"https://fieldreadyacademy.com/secplus/lessons/u2l1-change-management/","mainEntityOfPage":"https://fieldreadyacademy.com/secplus/lessons/u2l1-change-management/","articleSection":"Unit 2: Change Management and Cryptography","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"SecPlus Academy","url":"https://fieldreadyacademy.com/secplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Security+ SY0-701","item":"https://fieldreadyacademy.com/secplus/lessons/"},{"@type":"ListItem","position":3,"name":"Change Management","item":"https://fieldreadyacademy.com/secplus/lessons/u2l1-change-management/"}]}</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/secplus/lessons/" aria-current="page">Lessons</a><a href="/secplus/cheatsheet/">Cheat sheet</a><a href="/secplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/secplus/lessons/">CompTIA Security+ SY0-701</a><span class="sep">/</span><span>Change Management</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 2</span><span class="pill">Concepts</span><span class="pill">Objective 1.3</span><span class="muted">8 min read</span></div>
+  <h1>Change Management</h1>
+  <p class="ink2 lede">Unit 2: Change Management and Cryptography. Lesson 5 of 54 in SecPlus Academy.</p>
+  <div class="lesson-body"><p>Most outages and many breaches follow an unplanned change. Change management is the process that makes changes deliberate, reviewed, and reversible. The exam tests the pieces of the process and the technical side effects a change can have.</p><h3>The business process</h3><ul><li><strong>Approval process</strong>: a change request is submitted, reviewed, and approved by a change advisory board or an owner before anything happens.</li><li><strong>Ownership</strong>: one named person is responsible for the change end to end.</li><li><strong>Stakeholders</strong>: everyone affected is identified and informed.</li><li><strong>Impact analysis</strong>: what could break, who is affected, how long, and what the risk is.</li><li><strong>Test results</strong>: the change is tried in a test environment first and the results are attached.</li><li><strong>Backout plan</strong>: the exact steps to undo the change if it fails.</li><li><strong>Maintenance window</strong>: the scheduled time when the change may run, chosen for least impact.</li><li><strong>Standard operating procedure</strong>: routine, low-risk changes follow a pre-approved procedure instead of a full review.</li></ul><h3>Technical implications</h3><ul><li><strong>Allow lists and deny lists</strong>: adding software or traffic to an allow list, or blocking it, changes what works.</li><li><strong>Restricted activities</strong>: some actions are forbidden during a change, or forbidden entirely without a separate review.</li><li><strong>Downtime</strong>: planned unavailability, communicated in advance.</li><li><strong>Service and application restarts</strong>: many changes take effect only after a restart, which itself is downtime.</li><li><strong>Legacy applications</strong>: old software may break when its platform changes.</li><li><strong>Dependencies</strong>: a change to one system can break others that rely on it.</li></ul><p>The objective&#39;s own words for the restart items are service restart and application restart, and legacy applications and dependencies decide the order.</p><h3>Documentation and version control</h3><p>After the change, update diagrams, procedures, and configuration records. <strong>Version control</strong> keeps every version of configurations and code, records who changed what, and makes rollback a checkout instead of a memory test.</p><p>Updating diagrams and updating policies and procedures are the two documentation tasks the exam names.</p><div class="tip">Exam tip: &quot;what must exist before the change can be approved&quot; is the backout plan plus impact analysis and test results. &quot;Roll back to the previous configuration quickly&quot; is version control. Emergency changes still get documented afterward.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Request, impact analysis, test, approve, window, backout plan ready, implement, document. Watch dependencies, legacy apps, restarts, and downtime. Version control makes rollback cheap.</div></div>
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Change Management, explained slowly</h2><div class="lesson-body deep-body"><h3>Why a process for changing things</h3><p>Ask any experienced administrator what caused the last big outage and the answer is usually &quot;a change.&quot; A firewall rule, a patch, a new server, a tweak nobody wrote down. Change management is the discipline that turns &quot;just do it&quot; into &quot;request it, review it, test it, schedule it, do it with a way back, write it down.&quot; The exam tests both the process pieces and the technical consequences a change can carry.</p><h3>The process, as a story</h3><p>The web team wants to move the customer portal to a new database version.</p><ol><li><strong>Change request</strong>: they write what, why, and when.</li><li><strong>Ownership</strong>: one engineer is named as owner and stays accountable through the end.</li><li><strong>Stakeholders</strong>: sales, support, and the database team are identified and told.</li><li><strong>Impact analysis</strong>: what breaks if it fails? Customers cannot log in. How long? An hour of downtime. What else depends on it? The reporting system.</li><li><strong>Test results</strong>: they run the upgrade in a staging environment and attach the results.</li><li><strong>Backout plan</strong>: exact steps to return to the old version if the new one fails, with the time it takes.</li><li><strong>Approval</strong>: the change advisory board reviews all of the above and approves.</li><li><strong>Maintenance window</strong>: Saturday 2 a.m. to 4 a.m., communicated in advance.</li><li>Implement, test, and <strong>document</strong>: diagrams, procedures, and the configuration record are updated.</li></ol><p>For routine, low-risk changes, a <strong>standard operating procedure</strong> replaces the full review: the change is pre-approved as long as the procedure is followed.</p><h3>Technical implications: what a change can break</h3><pre>Allow lists / deny lists      adding or blocking software, sites, or traffic changes what works
+Restricted activities         some actions are prohibited during the window or without separate approval
+Downtime                      planned unavailability; announce it
+Service / application restart most changes only take effect after a restart, which is itself downtime
+Legacy applications           old software may not run on the new platform
+Dependencies                  changing one system breaks the systems that rely on it</pre><p>The dependency trap is the exam&#39;s favorite: the database upgrade succeeds, but the reporting system that connects to it was never tested against the new version and fails Monday morning. Impact analysis exists to find that before the change.</p><h3>Documentation and version control</h3><p>Every change ends with documentation: what changed, why, who approved it, and updated diagrams and procedures. <strong>Version control</strong> keeps every previous version of configuration files and code, with who changed what and when. Rolling back becomes &quot;restore the previous version&quot; instead of trying to remember the old settings. It is also evidence for audits.</p><h3>How the exam asks it</h3><ul><li>&quot;What must be in place before a change is implemented?&quot; Backout plan, impact analysis, test results, approval.</li><li>&quot;Which element identifies systems that could be affected?&quot; Impact analysis, and the dependency list.</li><li>&quot;How can the team quickly revert to the previous configuration?&quot; Version control.</li><li>&quot;An emergency patch was applied at 3 a.m. What is required afterward?&quot; Documentation through the change process.</li></ul><h3>What to memorize</h3><ul><li>Request, impact analysis, test, backout plan, approve, maintenance window, implement, document.</li><li>Watch dependencies, legacy applications, restarts, downtime, allow and deny lists.</li><li>Version control makes rollback cheap and proves what changed.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/secplus/#lesson/u2l1">Open this lesson in the course</a> <a class="btn" href="/secplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/secplus/lessons/u1l4-physical-security-and-deception/" rel="prev">&larr; Physical Security and Deception</a>
+  <a href="/secplus/lessons/">All lessons</a>
+  <a href="/secplus/lessons/u2l2-symmetric-asymmetric-and-key-exchange/" rel="next">Symmetric, Asymmetric, and Key Exchange &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

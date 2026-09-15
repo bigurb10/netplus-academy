@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero Trust | CompTIA Security+ SY0-701 | FieldReady Academy</title>
+<meta name="description" content="Traditional security was a castle: a hard perimeter, and anything inside was trusted. Zero trust throws that out. Location grants nothing. Every...">
+<link rel="canonical" href="https://fieldreadyacademy.com/secplus/lessons/u1l3-zero-trust/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Zero Trust">
+<meta property="og:description" content="Traditional security was a castle: a hard perimeter, and anything inside was trusted. Zero trust throws that out. Location grants nothing. Every...">
+<meta property="og:url" content="https://fieldreadyacademy.com/secplus/lessons/u1l3-zero-trust/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Zero Trust","description":"Traditional security was a castle: a hard perimeter, and anything inside was trusted. Zero trust throws that out. Location grants nothing. Every...","url":"https://fieldreadyacademy.com/secplus/lessons/u1l3-zero-trust/","mainEntityOfPage":"https://fieldreadyacademy.com/secplus/lessons/u1l3-zero-trust/","articleSection":"Unit 1: Security Foundations","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"SecPlus Academy","url":"https://fieldreadyacademy.com/secplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Security+ SY0-701","item":"https://fieldreadyacademy.com/secplus/lessons/"},{"@type":"ListItem","position":3,"name":"Zero Trust","item":"https://fieldreadyacademy.com/secplus/lessons/u1l3-zero-trust/"}]}</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/secplus/lessons/" aria-current="page">Lessons</a><a href="/secplus/cheatsheet/">Cheat sheet</a><a href="/secplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/secplus/lessons/">CompTIA Security+ SY0-701</a><span class="sep">/</span><span>Zero Trust</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 1</span><span class="pill">Concepts</span><span class="pill">Objective 1.2</span><span class="muted">9 min read</span></div>
+  <h1>Zero Trust</h1>
+  <p class="ink2 lede">Unit 1: Security Foundations. Lesson 3 of 54 in SecPlus Academy.</p>
+  <div class="lesson-body"><p>Traditional security was a castle: a hard perimeter, and anything inside was trusted. Zero trust throws that out. Location grants nothing. Every request, from anyone, from anywhere, is verified against policy before it is allowed. The exam expects the vocabulary of how that verification is organized.</p><h3>Two planes</h3><p>Zero trust splits the work into a <strong>control plane</strong> that decides and a <strong>data plane</strong> that carries traffic and enforces the decision.</p><h3>Control plane components</h3><ul><li><strong>Adaptive identity</strong>: authentication strength changes with context. A login from a managed laptop in the office needs less than the same account from a new phone in another country.</li><li><strong>Threat scope reduction</strong>: limit what any single identity can reach, so a compromised account can do little.</li><li><strong>Policy-driven access control</strong>: rules based on identity, device, and context decide access, never the network location.</li><li><strong>Policy engine</strong>: the component that evaluates each request against policy and returns allow or deny.</li><li><strong>Policy administrator</strong>: takes the engine&#39;s decision and instructs the enforcement point to open or close the path.</li></ul><h3>Data plane components</h3><ul><li><strong>Subject and system</strong>: the user or process asking, and the resource being asked for.</li><li><strong>Policy enforcement point</strong>: where the decision is applied. It sits in the path of the traffic and only passes what the control plane approved.</li><li><strong>Implicit trust zones</strong>: small zones where, after verification, traffic is allowed to flow. They replace the one big trusted inside.</li></ul><p>The subject/system making the request is evaluated at the policy enforcement point before it reaches the resource.</p><h3>How a request flows</h3><ol><li>The subject asks the enforcement point for a resource.</li><li>The enforcement point hands the request to the policy administrator.</li><li>The policy engine evaluates identity, device health, location, and the requested action against policy.</li><li>The administrator tells the enforcement point to allow or deny.</li><li>Access is granted only to that resource, for that session, and can be re-evaluated.</li></ol><div class="tip">Exam tip: &quot;decides&quot; is the policy engine, &quot;communicates the decision&quot; is the policy administrator, &quot;applies it to traffic&quot; is the policy enforcement point. &quot;Authentication requirements change with context&quot; is adaptive identity.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Never trust, always verify. Control plane decides (engine, administrator, adaptive identity, scope reduction, policy-driven). Data plane enforces (enforcement point, implicit trust zones, subject and system).</div></div>
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Zero Trust, explained slowly</h2><div class="lesson-body deep-body"><h3>The castle and the airport</h3><p>The old model was a castle: a moat and a wall, and once you were inside you could walk anywhere. Attackers learned to get one foothold inside, then roam. Zero trust is an airport instead: your ticket is checked at the door, again at security, again at the gate, and you can only enter the one gate on your boarding pass. Being inside the terminal earns you nothing.</p><h3>Two planes</h3><p>Zero trust separates deciding from doing.</p><ul><li>The <strong>control plane</strong> makes the decisions. It never touches the traffic.</li><li>The <strong>data plane</strong> carries the traffic and enforces the decisions.</li></ul><pre>CONTROL PLANE (decides)
+   Policy engine ............ evaluates the request against policy: allow or deny
+   Policy administrator ..... sends the decision down to the enforcement point
+   Adaptive identity ........ how much proof is required depends on context
+   Threat scope reduction ... each identity can reach as little as possible
+   Policy-driven access ..... rules about identity and device, not network location
+            |
+            v decision
+DATA PLANE (enforces)
+   Policy enforcement point . the gate: opens or stays closed
+   Implicit trust zone ...... the small area you may move in once admitted
+   Subject / system ......... the requester, and the resource it asked for</pre><h3>A request, step by step</h3><ol><li>A <strong>subject</strong> (Maria on her laptop) asks for a <strong>system</strong> (the payroll app).</li><li>The <strong>policy enforcement point</strong> in front of payroll holds the request and asks the control plane.</li><li>The <strong>policy administrator</strong> passes it to the <strong>policy engine</strong>.</li><li>The engine checks: is Maria authenticated? Is the laptop managed and patched? Is she in an allowed location? Does her role include payroll? <strong>Adaptive identity</strong> may demand a second factor because she is on a new network.</li><li>The engine says allow, for payroll only, for this session. The administrator tells the enforcement point to open.</li><li>Maria reaches payroll and nothing else. That is her <strong>implicit trust zone</strong>. If her device health changes mid-session, the decision can be re-evaluated and access revoked.</li></ol><h3>The part that trips people up: engine versus administrator versus enforcement point</h3><p>Three components, three verbs. The <strong>engine decides</strong>. The <strong>administrator communicates</strong> the decision. The <strong>enforcement point applies</strong> it to traffic. Questions test exactly this separation.</p><h3>Why the pieces matter</h3><ul><li><strong>Threat scope reduction</strong> is why a stolen account in a zero trust network is a small problem instead of a catastrophe.</li><li><strong>Policy-driven access control</strong> is why &quot;I am on the office network&quot; is no longer a credential.</li><li><strong>Adaptive identity</strong> is why a login from a strange place asks for more.</li></ul><h3>How the exam asks it</h3><ul><li>&quot;Which component makes the access decision?&quot; Policy engine.</li><li>&quot;Which component is in the data plane and enforces access?&quot; Policy enforcement point.</li><li>&quot;Authentication requirements change based on user behavior and location.&quot; Adaptive identity.</li><li>&quot;Limiting the resources any single compromised identity can reach.&quot; Threat scope reduction.</li></ul><h3>What to memorize</h3><ul><li>Never trust, always verify; location is not a credential.</li><li>Control plane: engine decides, administrator communicates, adaptive identity, threat scope reduction, policy-driven access control.</li><li>Data plane: enforcement point, implicit trust zones, subject and system.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/secplus/#lesson/u1l3">Open this lesson in the course</a> <a class="btn" href="/secplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/secplus/lessons/u1l2-cia-non-repudiation-aaa-and-gap-analysis/" rel="prev">&larr; CIA, Non-repudiation, AAA, and Gap Analysis</a>
+  <a href="/secplus/lessons/">All lessons</a>
+  <a href="/secplus/lessons/u1l4-physical-security-and-deception/" rel="next">Physical Security and Deception &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>
