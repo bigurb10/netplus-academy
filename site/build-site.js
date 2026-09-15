@@ -352,7 +352,7 @@ function sitemap(origin, urls) {
 }
 
 function robots(origin) {
-  return `User-agent: *\nAllow: /\nDisallow: /callback\nDisallow: /fp-test/\n\nSitemap: ${origin}/sitemap.xml\n`;
+  return `User-agent: *\nAllow: /\nDisallow: /callback\n\nSitemap: ${origin}/sitemap.xml\n`;
 }
 
 function buildAll(opts) {

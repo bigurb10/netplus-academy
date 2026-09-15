@@ -8803,14 +8803,20 @@ FRA.questions.push(
     // PRODUCTION AuthKit (soft-rose-14). The course site and ServiceForge share this
     // WorkOS environment; sign-in cut over from the staging tenant on 2026-09-14.
     issuer: 'https://soft-rose-14.authkit.app',
-    // A DYNAMICALLY REGISTERED client, not the environment's AuthKit client id.
+    // A WorkOS CONNECT application, not the environment's AuthKit client id.
     // `/oauth2/authorize` is WorkOS Connect's authorization server and only knows
-    // clients created through DCR (POST /oauth2/register) or a Client ID Metadata
-    // Document. Handing it the environment client id returns `application_not_found`
-    // -- which is what broke the first live sign-in attempt. The environment client
-    // id belongs to the OTHER flow, api.workos.com/user_management/authorize, whose
-    // tokens carry no `aud` at all and so cannot be audience-bound to this API.
-    clientId: 'client_01M2GJVYVBKESSVDNA0RM9C4AM',
+    // Connect applications: first-party apps made in the dashboard or API, or clients
+    // registered through DCR (POST /oauth2/register) or a Client ID Metadata Document.
+    // Handing it the environment client id returns `application_not_found` -- which is
+    // what broke the first live sign-in attempt. The environment client id belongs to
+    // the OTHER flow, api.workos.com/user_management/authorize, whose tokens carry no
+    // `aud` at all and so cannot be audience-bound to this API.
+    // This is the production FIRST-PARTY app (no consent screen), adopted 2026-09-15
+    // after a live sign-in through it minted aud = this API and the API answered 200.
+    // The DCR client it replaced, client_01M2GJVYVBKESSVDNA0RM9C4AM, still exists in
+    // the tenant; refresh tokens issued to it die at the switch, so those learners
+    // simply sign in again (their progress is keyed by sub, which is the same).
+    clientId: 'client_01M2H28RQJQ5EE9E0Q00GP23B6',
     apiBase: 'https://api.fieldreadyacademy.com',
     // RFC 8707 resource indicator. The tenant's DEFAULT indicator is the MCP server,
     // so a token minted without this opens the connector, not this API, and every
