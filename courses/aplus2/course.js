@@ -14,7 +14,7 @@ FRA.course = {
     { id: 3, name: "Software Troubleshooting", short: "Troubleshooting", pct: 23, quota: 12 },
     { id: 4, name: "Operational Procedures", short: "Procedures", pct: 21, quota: 10 }
   ],
-  // The real exam passes at 700 of 900, so the course bar is 85% to keep a margin.
+  // Practice tests pass at 80%; the official-format test uses 78%, the real exam's 700 of 900.
   test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l2", "u1l3", "u1l4", "u2l1", "u2l2", "u2l3", "u2l4", "u2l5", "u2l6", "u3l1", "u3l2"],

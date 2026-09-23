@@ -16,7 +16,7 @@ FRA.course = {
     { id: 5, name: "Healthcare Technology Problem Solving", short: "Problem Solving", pct: 30, quota: 15 },
     { id: 6, name: "Healthcare Information Technology", short: "Healthcare IT", pct: 17, quota: 8 }
   ],
-  // The real exam needs roughly 70%, so the course bar is 85% to keep a margin.
+  // Practice tests pass at 80%; the official-format test uses 70%, roughly the real exam's bar.
   test: { questions: 50, minutes: 55, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l2", "u1l3", "u1l4", "u1l5", "u1l1", "u1l6", "u1l7"],

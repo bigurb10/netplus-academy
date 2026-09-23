@@ -15,7 +15,7 @@ FRA.course = {
     { id: 4, name: "Virtualization and Cloud Computing", short: "Cloud", pct: 11, quota: 6 },
     { id: 5, name: "Hardware and Network Troubleshooting", short: "Troubleshooting", pct: 28, quota: 14 }
   ],
-  // The real exam passes at 675 of 900, so the course bar is 85% to keep a margin.
+  // Practice tests pass at 80%; the official-format test uses 75%, the real exam's 675 of 900.
   test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u1l2", "u1l4"],

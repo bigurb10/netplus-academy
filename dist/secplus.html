@@ -391,7 +391,7 @@ FRA.course = {
     { id: 4, name: "Security Operations", short: "Operations", pct: 28, quota: 14 },
     { id: 5, name: "Security Program Management and Oversight", short: "Governance", pct: 20, quota: 10 }
   ],
-  // The real exam passes at about 83%, so the course bar is 90% to keep a margin.
+  // Practice tests pass at 80%; the official-format test uses 83%, the real exam's 750 of 900.
   test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u2l2", "u2l4", "u1l2", "u2l3"],
@@ -7180,7 +7180,7 @@ FRA.questions.push(
   function mergeOpts() {
     const t = (root.FRA && root.FRA.course && root.FRA.course.test) || {};
     const ex = (root.FRA && root.FRA.course && root.FRA.course.exam) || {};
-    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct };
+    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct || t.passPct };
   }
 
   // FNV-1a over a string. Cheap change detection; storing a second copy of a 200 KB
@@ -8034,7 +8034,7 @@ FRA.questions.push(
           <nav class="nav">
             ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
           </nav>
-          <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and pass streak">
+          <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and recent passes">
             <span class="eyebrow">Readiness</span>
             <div class="meter ${r >= PASS_PCT ? 'good' : ''}"><i style="width:${r}%"></i></div>
             <span class="tnum" style="font-family:var(--font-display);font-weight:700">${r}%</span>
@@ -8145,7 +8145,7 @@ FRA.questions.push(
   function greeting() {
     if (!S.exams.length) return 'Let’s find out where you stand.';
     const r = readiness();
-    if (r >= 70) return 'Almost there. Keep the streak going.';
+    if (r >= 70) return 'Almost there. Keep your last five strong.';
     if (r >= 40) return 'Good progress. Time to close the gaps.';
     return 'Keep going. Every lesson counts.';
   }
@@ -8345,11 +8345,11 @@ FRA.questions.push(
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward your pass streak.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward qualifying.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
       <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
-      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="start-custom">Start custom test</button><button class="btn ghost small" data-act="setup-reset">Reset to exam defaults</button><span class="muted" style="font-size:.9rem">Custom tests feed your weak topics and retraining but do not count toward the pass streak.</span></div></div>`;
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="start-custom">Start custom test</button><button class="btn ghost small" data-act="setup-reset">Reset to exam defaults</button><span class="muted" style="font-size:.9rem">Custom tests feed your weak topics and retraining but do not count toward qualifying.</span></div></div>`;
   }
   const nextFlowKind = () => S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full';
   function startExam(kind, setup) {
@@ -8378,7 +8378,7 @@ FRA.questions.push(
     S.exams.push(rec); const examIdx = S.exams.length - 1;
     if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; markPathChanged(); }
     else if (ex.kind === 'custom') {
-      // Custom tests train and feed the weak-topic list but never move the pass streak, and never replace a retraining plan still in progress.
+      // Custom tests train and feed the weak-topic list but never count toward qualifying, and never replace a retraining plan still in progress.
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
     } else {
       // Recomputed from the whole log rather than incremented, so this path and the merge
@@ -8867,7 +8867,7 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
-    // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the streak alone.
+    // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the passes alone.
     const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
     const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
     S.active = null; startExam('custom', { mode: 'custom', n: 12, minutes: 0, weights: cw }); ex = S.active;

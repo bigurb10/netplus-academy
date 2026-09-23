@@ -143,7 +143,7 @@
   function mergeOpts() {
     const t = (root.FRA && root.FRA.course && root.FRA.course.test) || {};
     const ex = (root.FRA && root.FRA.course && root.FRA.course.exam) || {};
-    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct };
+    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct || t.passPct };
   }
 
   // FNV-1a over a string. Cheap change detection; storing a second copy of a 200 KB

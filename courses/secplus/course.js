@@ -15,7 +15,7 @@ FRA.course = {
     { id: 4, name: "Security Operations", short: "Operations", pct: 28, quota: 14 },
     { id: 5, name: "Security Program Management and Oversight", short: "Governance", pct: 20, quota: 10 }
   ],
-  // The real exam passes at about 83%, so the course bar is 90% to keep a margin.
+  // Practice tests pass at 80%; the official-format test uses 83%, the real exam's 750 of 900.
   test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u2l2", "u2l4", "u1l2", "u2l3"],
