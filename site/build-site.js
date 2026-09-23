@@ -226,7 +226,7 @@ const HOW = (c) => {
     '<strong>Starter test.</strong> A few questions per exam domain, with a confidence rating on each.',
     '<strong>Your tutorial.</strong> Lessons chosen from what you missed or guessed, each with a checkpoint and a deeper explanation.',
     `<strong>Practice tests and retraining.</strong> ${t.questions ? `${t.questions} questions, ` : ''}weighted like the real exam. Every miss is explained and feeds back into your lessons.`,
-    `<strong>${t.streakNeeded ? `${t.streakNeeded} passes in a row` : 'Passes in a row'}${t.passPct ? ` at ${t.passPct}%` : ''}.</strong> That unlocks one full-length test on the real exam's clock${ex.questions && ex.minutes ? `: ${ex.questions} questions in ${ex.minutes} minutes` : ''}. Pass it and you are ready to book.`
+    `<strong>${t.passesNeeded && t.passWindow ? `${t.passesNeeded} of your last ${t.passWindow}` : 'Enough of your recent tests'}${t.passPct ? ` at ${t.passPct}%` : ''}.</strong> That unlocks one full-length test on the real exam's clock${ex.questions && ex.minutes ? `: ${ex.questions} questions in ${ex.minutes} minutes` : ''}${ex.passPct ? `, at its real passing score of ${ex.passPct}%` : ''}. Pass it once and you are ready to book.`
   ];
 };
 

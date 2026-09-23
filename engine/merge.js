@@ -11,29 +11,40 @@
   // exam record, so this predicate works on stored history as well as a live exam.
   const isOfficialRecord = rec => !!(rec && rec.setup && rec.setup.mode === 'standard' && rec.minutes > 0);
 
-  // Replay of the fold in app.js finishExam. passStreak and official are never merged across
-  // devices - taking the larger of two streaks would invent one nobody earned - so they are
-  // always recomputed from the merged, date-ordered exam log.
-  function recomputeStreak(exams, opts) {
+  // The pass rule, as one fold over the date-ordered exam log. It is the only place the rule
+  // lives: app.js finishExam, load(), and mergeState all call it, so `passes` and `official`
+  // are never merged across devices (taking the larger of two counts would invent passes nobody
+  // earned) and never trusted from a stored blob.
+  //
+  // The rule (Blake, 2026-09-23): the last `passWindow` tests -- 50-question and official-format
+  // alike; starter and custom never count -- form a rolling window, and `passes` is how many of
+  // them scored passPct or better. Once `passes >= passesNeeded` the learner is qualified; an
+  // official-format test (isOfficialRecord) scored at officialPct or better while already
+  // qualified sets `official`, permanently. A fail never resets anything; the window slides.
+  function recomputeQualification(exams, opts) {
     // e.pct >= undefined is false for every record, so a malformed opts would silently replay to
-    // passStreak: 0 - the exact number this function exists to never invent - with no error.
+    // passes: 0 - the exact number this function exists to never invent - with no error.
     // Number.isFinite, not typeof: typeof NaN is 'number', and a NaN passPct makes every
     // comparison false, reproducing the exact silent zeroing this guard exists to stop.
-    if (!opts || !Number.isFinite(opts.passPct) || !Number.isFinite(opts.streakNeeded)) {
-      throw new Error('recomputeStreak requires opts.passPct and opts.streakNeeded as numbers');
+    const need = ['passPct', 'passesNeeded', 'passWindow', 'officialPct'];
+    if (!opts || need.some(k => !Number.isFinite(opts[k]))) {
+      throw new Error('recomputeQualification requires opts.' + need.join(', opts.') + ' as numbers');
     }
-    const passPct = opts.passPct, streakNeeded = opts.streakNeeded;
-    let passStreak = 0, official = null;
+    const recent = [];   // pass/fail of the last passWindow counted tests, oldest first
+    let official = null;
     for (let i = 0; i < exams.length; i++) {
       const e = exams[i];
       if (!e || e.kind === 'starter' || e.kind === 'custom') continue;
-      const prevStreak = passStreak;
-      const passed = e.pct >= passPct;
-      passStreak = passed ? prevStreak + 1 : 0;
-      if (!passed) official = null;
-      else if (isOfficialRecord(e) && prevStreak >= streakNeeded) official = { examIdx: i, date: e.date, pct: e.pct };
+      // Qualification is judged on the tests BEFORE this one: the official test is the gate,
+      // not a way to open it.
+      const qualified = recent.filter(Boolean).length >= opts.passesNeeded;
+      if (!official && qualified && isOfficialRecord(e) && e.pct >= opts.officialPct) {
+        official = { examIdx: i, date: e.date, pct: e.pct };
+      }
+      recent.push(e.pct >= opts.passPct);
+      if (recent.length > opts.passWindow) recent.shift();
     }
-    return { passStreak, official };
+    return { passes: recent.filter(Boolean).length, official };
   }
 
   // Identity for union-merging exam logs. New records carry an explicit id; anything saved
@@ -131,7 +142,7 @@
     // starter test resetting it). The null guard stays: a side with no path never beats a
     // side that made a choice, whatever its stamp.
     const pathSide = pickPathSide(a, b);
-    const streak = recomputeStreak(exams, opts);
+    const q = recomputeQualification(exams, opts);
     // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
     const born = Math.min(a.created || Infinity, b.created || Infinity);
 
@@ -142,8 +153,8 @@
       seen: maps.seen, ratings: maps.ratings,
       exams: exams,
       feedback: feedback,
-      passStreak: streak.passStreak,
-      official: streak.official,
+      passes: q.passes,
+      official: q.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
       path: remapExamIdx(pathSide.path, pathSide.exams, exams),
       pathAt: max(a.pathAt, b.pathAt),
@@ -183,5 +194,5 @@
     return a.settings || b.settings || {};
   }
 
-  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, remapExamIdx, mergeState };
+  return { VERSION, isOfficialRecord, recomputeQualification, examId, mergeMaps, remapExamIdx, mergeState };
 }));

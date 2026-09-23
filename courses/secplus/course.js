@@ -6,7 +6,7 @@ FRA.course = {
   short: "S+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90 },
+  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90, passPct: 83 },
   description: "Self-paced CompTIA Security+ SY0-701 course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "General Security Concepts", short: "Concepts", pct: 12, quota: 6 },
@@ -16,7 +16,7 @@ FRA.course = {
     { id: 5, name: "Security Program Management and Oversight", short: "Governance", pct: 20, quota: 10 }
   ],
   // The real exam passes at about 83%, so the course bar is 90% to keep a margin.
-  test: { questions: 50, minutes: 50, passPct: 90, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u2l2", "u2l4", "u1l2", "u2l3"],
     2: ["u3l1", "u3l3", "u5l1", "u5l2", "u4l2", "u5l5"],
@@ -35,7 +35,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam passes at 750 of 900, about 83%.",
+  realExamNote: "The real exam passes at 750 on a 100 to 900 scale. This course's official-format test uses 83%, that score divided by 900.",
   examDay: [
     "Up to 90 questions in 90 minutes, including performance-based items. Do the multiple choice first if a simulation stalls you; flag and return.",
     "Read for the qualifier: BEST, MOST likely, FIRST, NEXT, LEAST. The answer is usually the least disruptive control that fixes the stated problem.",

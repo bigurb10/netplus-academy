@@ -21,17 +21,18 @@
 
   const obj = v => (v && typeof v === 'object') ? v : null;
 
-  // meta: { lessons, passPct, streakNeeded, examQuestions } from the course manifest and
+  // meta: { lessons, passPct, passesNeeded, passWindow, examQuestions } from the course manifest and
   // curriculum (build.py's course table). Returns { started, stage, stageLabel,
-  // lessonsPassed, lessonsTotal, bestPct, streak, streakNeeded, official, lastStudied }.
+  // lessonsPassed, lessonsTotal, bestPct, passes, passesNeeded, passWindow, official, lastStudied }.
   function summarize(state, meta) {
     const s = obj(state) || {};
     const m = obj(meta) || {};
     const lessons = obj(s.lessons) || {};
     const exams = Array.isArray(s.exams) ? s.exams.filter(obj) : [];
     const plan = obj(s.plan) && Array.isArray(s.plan.lessons) ? s.plan : null;
-    const streakNeeded = Number(m.streakNeeded) > 0 ? Number(m.streakNeeded) : 3;
-    const streak = Number(s.passStreak) > 0 ? Number(s.passStreak) : 0;
+    const passesNeeded = Number(m.passesNeeded) > 0 ? Number(m.passesNeeded) : 3;
+    const passWindow = Number(m.passWindow) > 0 ? Number(m.passWindow) : 5;
+    const passes = Number(s.passes) > 0 ? Number(s.passes) : 0;
     const official = obj(s.official);
     // Same rule as planDone() in app.js: a plan lesson counts only when it was passed after
     // the plan was made, so an old pass cannot satisfy a new retraining plan.
@@ -41,7 +42,8 @@
     let stage;
     if (!has('starter')) stage = 'starter';
     else if (plan && planLeft) stage = plan.source === 'starter' ? 'tutorial' : 'retrain';
-    else if (streak >= streakNeeded) stage = official ? 'ready' : 'official';
+    else if (official) stage = 'ready';                       // permanent once earned
+    else if (passes >= passesNeeded) stage = 'official';
     else if (!has('full') && !has('practice')) stage = 'fulltest';
     else stage = 'practice';
     const ids = Object.keys(lessons);
@@ -54,7 +56,7 @@
     return {
       started, stage, stageLabel: stageLabel(stage, m),
       lessonsPassed, lessonsTotal: Number(m.lessons) > 0 ? Number(m.lessons) : 0,
-      bestPct, streak, streakNeeded,
+      bestPct, passes, passesNeeded, passWindow,
       official: official ? { date: Number(official.date) || null, pct: typeof official.pct === 'number' ? official.pct : null } : null,
       lastStudied: Number(s.touchedAt) > 0 ? Number(s.touchedAt) : null
     };

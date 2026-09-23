@@ -6,7 +6,7 @@ FRA.course = {
   short: "A1",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 1", code: "220-1201", questions: 90, minutes: 90 },
+  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 1", code: "220-1201", questions: 90, minutes: 90, passPct: 75 },
   description: "Self-paced CompTIA A+ Core 1 (220-1201) course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "Mobile Devices", short: "Mobile", pct: 13, quota: 6 },
@@ -16,7 +16,7 @@ FRA.course = {
     { id: 5, name: "Hardware and Network Troubleshooting", short: "Troubleshooting", pct: 28, quota: 14 }
   ],
   // The real exam passes at 675 of 900, so the course bar is 85% to keep a margin.
-  test: { questions: 50, minutes: 50, passPct: 85, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u1l2", "u1l4"],
     2: ["u2l2", "u3l1", "u2l3", "u3l3", "u2l4", "u3l4", "u2l5", "u3l6", "u2l1", "u3l2", "u3l5"],
@@ -35,7 +35,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam passes at 675 on a 100 to 900 scale, roughly 64% depending on the scaling.",
+  realExamNote: "The real exam passes at 675 on a 100 to 900 scale. This course's official-format test uses 75%, that score divided by 900.",
   examDay: [
     "Up to 90 questions in 90 minutes with performance-based items; do the multiple choice first if a simulation stalls you, flag it and return.",
     "Port numbers, 802.11 standards, cable categories, connector names, DDR generations, and the seven laser steps are pure recall; know them cold.",

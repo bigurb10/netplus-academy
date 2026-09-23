@@ -8,63 +8,65 @@ const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== 
 check('module loads under node', typeof M === 'object' && M !== null);
 check('module reports its version', M.VERSION === 1, M.VERSION);
 
-// ---------- recomputeStreak ----------
+// ---------- recomputeQualification ----------
+// The rule: the last `passWindow` non-custom, non-starter tests form a rolling window; `passes`
+// counts those at or above passPct. An official-format test scored at officialPct or better
+// while ALREADY qualified (passes >= passesNeeded before it) sets `official`, permanently.
 const std = { mode: 'standard', n: 90, minutes: 90 };
 const exam = (o) => Object.assign({ date: 1, kind: 'practice', pct: 80, total: 50, minutes: 0, setup: null }, o);
-const OPTS = { passPct: 80, streakNeeded: 3 };
+const OPTS = { passPct: 80, passesNeeded: 3, passWindow: 5, officialPct: 75 };
+const Q = (log) => M.recomputeQualification(log, OPTS);
 
-check('empty log gives a zero streak',
-  JSON.stringify(M.recomputeStreak([], OPTS)) === JSON.stringify({ passStreak: 0, official: null }));
+check('empty log gives zero passes and no official',
+  JSON.stringify(Q([])) === JSON.stringify({ passes: 0, official: null }));
+check('three passes count three', Q([exam({date:1}), exam({date:2}), exam({date:3})]).passes === 3);
+check('a failure does not reset: two passes and a fail is still two',
+  Q([exam({date:1}), exam({date:2}), exam({date:3, pct:60})]).passes === 2, Q([exam({date:1}), exam({date:2}), exam({date:3, pct:60})]).passes);
+check('the window is the last five: six passes then two fails leaves three',
+  Q([1, 2, 3, 4, 5, 6].map(d => exam({date:d})).concat([exam({date:7, pct:10}), exam({date:8, pct:10})])).passes === 3);
+check('a pass at exactly passPct counts', Q([exam({date:1, pct:80})]).passes === 1);
+check('a score just under passPct does not', Q([exam({date:1, pct:79})]).passes === 0);
+check('starter tests never enter the window', Q([exam({date:1, kind:'starter', pct:30}), exam({date:2})]).passes === 1);
+check('custom tests never enter the window',
+  Q([exam({date:1}), exam({date:2, kind:'custom', pct:10}), exam({date:3})]).passes === 2);
+check('an official-format test enters the window like any other test',
+  Q([exam({date:1, minutes:90, setup:std, pct:85})]).passes === 1);
 
-check('three passes make a streak of three',
-  M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3})], OPTS).passStreak === 3);
-
-check('a failure resets the streak to zero',
-  M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3, pct:60})], OPTS).passStreak === 0);
-
-check('starter tests never move the streak',
-  M.recomputeStreak([exam({date:1, kind:'starter', pct:30}), exam({date:2})], OPTS).passStreak === 1);
-
-check('custom tests never move the streak',
-  M.recomputeStreak([exam({date:1}), exam({date:2, kind:'custom', pct:10}), exam({date:3})], OPTS).passStreak === 2);
-
-const officialLog = [exam({date:1}), exam({date:2}), exam({date:3}), exam({date:4, minutes:90, setup:std, pct:85})];
-check('an official pass after a complete streak is recorded',
-  M.recomputeStreak(officialLog, OPTS).official !== null);
-check('the official record points at the right index',
-  M.recomputeStreak(officialLog, OPTS).official.examIdx === 3,
-  JSON.stringify(M.recomputeStreak(officialLog, OPTS).official));
-
-check('an official pass before the streak is complete does not count',
-  M.recomputeStreak([exam({date:1}), exam({date:2, minutes:90, setup:std, pct:85})], OPTS).official === null);
-
-check('a later failure revokes the official pass',
-  M.recomputeStreak(officialLog.concat([exam({date:5, pct:50})]), OPTS).official === null);
-
+const officialLog = [exam({date:1}), exam({date:2}), exam({date:3}), exam({date:4, minutes:90, setup:std, pct:76})];
+check('an official pass once qualified is recorded', Q(officialLog).official !== null);
+check('the official record points at the right index', Q(officialLog).official.examIdx === 3, JSON.stringify(Q(officialLog).official));
+check('the official record carries date and pct', Q(officialLog).official.date === 4 && Q(officialLog).official.pct === 76);
+check('an official test is judged at officialPct (75), not passPct (80): 76 passes',
+  Q(officialLog).official !== null && Q(officialLog).passes === 3);
+check('an official test under officialPct does not count even when qualified',
+  Q([exam({date:1}), exam({date:2}), exam({date:3}), exam({date:4, minutes:90, setup:std, pct:74})]).official === null);
+check('an official pass before qualifying does not count',
+  Q([exam({date:1}), exam({date:2, minutes:90, setup:std, pct:95})]).official === null);
+check('qualification is judged before the official test itself, not including it',
+  Q([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:95})]).official === null);
+const afterFails = officialLog.concat([exam({date:5, pct:50}), exam({date:6, pct:50}), exam({date:7, pct:50})]);
+check('a later failure never revokes the official pass', Q(afterFails).official !== null);
+check('passes still slide after the official pass', Q(afterFails).passes === 1, Q(afterFails).passes);
+check('the first official pass is the one kept',
+  Q(officialLog.concat([exam({date:5, minutes:90, setup:std, pct:99})])).official.examIdx === 3);
+check('a failed official test sits in the window like a failed practice test, and a later official pass counts',
+  Q([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:50}), exam({date:4}), exam({date:5, minutes:90, setup:std, pct:90})]).official.examIdx === 4);
 check('examIdx counts skipped records',
-  M.recomputeStreak([exam({date:1, kind:'starter', pct:20}), exam({date:2}), exam({date:3}), exam({date:4}),
-                     exam({date:5, minutes:90, setup:std, pct:85})], OPTS).official.examIdx === 4);
+  Q([exam({date:1, kind:'starter', pct:20}), exam({date:2}), exam({date:3}), exam({date:4}), exam({date:5, minutes:90, setup:std, pct:85})]).official.examIdx === 4);
 
-check('official award requires prior complete streak, not the current exam itself',
-  M.recomputeStreak([exam({date:1}), exam({date:2}), exam({date:3, minutes:90, setup:std, pct:85})], OPTS).official === null);
-
-// A malformed opts must throw, not silently replay to passStreak: 0 - e.pct >= undefined is
-// false for every record, so a missing passPct would otherwise erase a real streak with no error.
+// A malformed opts must throw, not silently replay to passes: 0 - e.pct >= undefined is false for
+// every record, so a missing passPct would otherwise erase real passes with no error. typeof NaN
+// is 'number', so the guard must be Number.isFinite.
 const throws = fn => { try { fn(); return false; } catch (e) { return true; } };
-check('recomputeStreak throws when opts is missing entirely',
-  throws(() => M.recomputeStreak([exam({date:1})], undefined)));
-check('recomputeStreak throws when passPct is missing',
-  throws(() => M.recomputeStreak([exam({date:1})], { streakNeeded: 3 })));
-check('recomputeStreak throws when streakNeeded is missing',
-  throws(() => M.recomputeStreak([exam({date:1})], { passPct: 80 })));
-// typeof NaN is 'number', so a typeof guard would let NaN through - and a NaN passPct makes
-// every comparison false, reproducing the exact silent zeroing the guard exists to stop.
-check('recomputeStreak throws when passPct is NaN',
-  throws(() => M.recomputeStreak([exam({date:1})], { passPct: NaN, streakNeeded: 3 })));
-check('recomputeStreak throws when streakNeeded is NaN',
-  throws(() => M.recomputeStreak([exam({date:1})], { passPct: 80, streakNeeded: NaN })));
-check('recomputeStreak does not throw when both opts fields are present',
-  !throws(() => M.recomputeStreak([exam({date:1})], OPTS)));
+check('throws when opts is missing entirely', throws(() => M.recomputeQualification([exam({date:1})], undefined)));
+['passPct', 'passesNeeded', 'passWindow', 'officialPct'].forEach(k => {
+  const missing = Object.assign({}, OPTS); delete missing[k];
+  check(`throws when ${k} is missing`, throws(() => M.recomputeQualification([exam({date:1})], missing)));
+  const nan = Object.assign({}, OPTS); nan[k] = NaN;
+  check(`throws when ${k} is NaN`, throws(() => M.recomputeQualification([exam({date:1})], nan)));
+});
+check('does not throw when all four opts fields are present', !throws(() => M.recomputeQualification([exam({date:1})], OPTS)));
+check('the old recomputeStreak name is gone', typeof M.recomputeStreak === 'undefined');
 check('mergeState propagates the same guard through to its opts argument',
   throws(() => M.mergeState({ exams: [] }, { exams: [] }, {})));
 
@@ -132,7 +134,7 @@ check('seen unions', m.seen.a === true && m.seen.b === true);
 // ---------- mergeState ----------
 const full = (o) => Object.assign({
   v: 3, course: 'netplus', lessons: {}, topics: {}, qstats: {}, seen: {}, ratings: {},
-  exams: [], feedback: [], passStreak: 0, official: null, plan: null, path: null,
+  exams: [], feedback: [], passes: 0, official: null, plan: null, path: null,
   settings: { timer: true }, settingsAt: 0, touchedAt: 0, created: 1
 }, o);
 
@@ -154,19 +156,24 @@ check('exams sharing a date break the tie by examId, ascending',
   r.exams[0].id === 'a-exam' && r.exams[1].id === 'z-exam',
   JSON.stringify(r.exams.map(e => e.id)));
 
-// The case the whole design exists for: A has a three-pass streak, B has a later failure.
+// The case the whole design exists for: A has three passes, B has a later failure. The window
+// slides; nothing resets.
 r = M.mergeState(
-  full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2}), exam({id:'a3',date:3})], passStreak: 3 }),
-  full({ exams: [exam({id:'b1',date:4,pct:50})], passStreak: 0 }), OPTS);
-check('a later failure on the other device resets the merged streak', r.passStreak === 0, r.passStreak);
+  full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2}), exam({id:'a3',date:3})], passes: 3 }),
+  full({ exams: [exam({id:'b1',date:4,pct:50})], passes: 0 }), OPTS);
+check('a later failure on the other device slides the merged window; the three passes remain', r.passes === 3, r.passes);
+r = M.mergeState(
+  full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2}), exam({id:'a3',date:3})], passes: 3 }),
+  full({ exams: [4, 5, 6, 7].map(d => exam({id:'b'+d, date:d, pct:50})), passes: 0 }), OPTS);
+check('four later failures elsewhere leave one pass in the merged window of five', r.passes === 1, r.passes);
 
-// An official pass must not survive a later failure recorded elsewhere.
+// An official pass survives a later failure recorded elsewhere.
 r = M.mergeState(
   full({ exams: [exam({id:'a1',date:1}), exam({id:'a2',date:2}), exam({id:'a3',date:3}),
                  exam({id:'a4',date:4,minutes:90,setup:std,pct:85})],
-         passStreak: 4, official: { examIdx: 3, date: 4, pct: 85 } }),
+         passes: 4, official: { examIdx: 3, date: 4, pct: 85 } }),
   full({ exams: [exam({id:'b1',date:5,pct:40})] }), OPTS);
-check('a later failure revokes a merged official pass', r.official === null, JSON.stringify(r.official));
+check('a later failure elsewhere does not revoke a merged official pass', r.official !== null && r.exams[r.official.examIdx].id === 'a4', JSON.stringify(r.official));
 
 // examIdx must be resolved against the merged array, not inherited.
 r = M.mergeState(
@@ -177,7 +184,7 @@ r = M.mergeState(
 check('official.examIdx is recomputed against the merged array', r.official.examIdx === 4,
   JSON.stringify(r.official));
 check('the exam it points at is the official one', r.exams[r.official.examIdx].id === 'a4');
-check('passStreak is replayed, not inherited from either input', r.passStreak === 4, r.passStreak);
+check('passes is replayed, not inherited from either input', r.passes === 4, r.passes);
 
 // ---------- plan/path examIdx remap ----------
 // plan.examIdx and path.examIdx carry the same hazard official.examIdx does above: the merged
@@ -503,7 +510,8 @@ check('the starter exam was answered correctly, giving a known score to track th
   real.exams[0].pct === 100, real.exams[0].pct);
 
 const T = w.FRA.course.test;
-const selfMerged = M.mergeState(real, real, { passPct: T.passPct, streakNeeded: T.streakNeeded });
+const OFFICIAL = (w.FRA.course.exam && w.FRA.course.exam.passPct) || T.passPct;
+const selfMerged = M.mergeState(real, real, { passPct: T.passPct, passesNeeded: T.passesNeeded, passWindow: T.passWindow, officialPct: OFFICIAL });
 check('merging a real state with itself keeps one exam', selfMerged.exams.length === 1, selfMerged.exams.length);
 check('the merged exam is still the engine\'s own record, not a synthesized duplicate',
   JSON.stringify(selfMerged.exams[0]) === JSON.stringify(real.exams[0]),
@@ -572,7 +580,7 @@ check('the two real runs have different exam ids',
 check('the second run scored differently from the all-correct first run, so the two real states genuinely diverge',
   real2.exams[0].pct !== real.exams[0].pct, JSON.stringify([real.exams[0].pct, real2.exams[0].pct]));
 
-const twoMerged = M.mergeState(real, real2, { passPct: T.passPct, streakNeeded: T.streakNeeded });
+const twoMerged = M.mergeState(real, real2, { passPct: T.passPct, passesNeeded: T.passesNeeded, passWindow: T.passWindow, officialPct: OFFICIAL });
 // This is the assertion a `return a` stub cannot satisfy: it would hand back real's own
 // one-exam log and real2's record would simply be gone.
 check('merging two genuinely different real states keeps both exam records',

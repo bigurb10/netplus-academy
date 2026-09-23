@@ -6,7 +6,7 @@ FRA.course = {
   short: "A2",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 2", code: "220-1202", questions: 90, minutes: 90 },
+  exam: { vendor: "CompTIA", title: "CompTIA A+ Core 2", code: "220-1202", questions: 90, minutes: 90, passPct: 78 },
   description: "Self-paced CompTIA A+ Core 2 (220-1202) course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "Operating Systems", short: "OS", pct: 28, quota: 14 },
@@ -15,7 +15,7 @@ FRA.course = {
     { id: 4, name: "Operational Procedures", short: "Procedures", pct: 21, quota: 10 }
   ],
   // The real exam passes at 700 of 900, so the course bar is 85% to keep a margin.
-  test: { questions: 50, minutes: 50, passPct: 85, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l2", "u1l3", "u1l4", "u2l1", "u2l2", "u2l3", "u2l4", "u2l5", "u2l6", "u3l1", "u3l2"],
     2: ["u4l1", "u4l2", "u4l3", "u4l4", "u4l5", "u5l1", "u5l2", "u5l3", "u5l4", "u5l5", "u5l6", "u5l7", "u5l8"],
@@ -32,7 +32,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam passes at 700 on a 100 to 900 scale, roughly 67% depending on the scaling.",
+  realExamNote: "The real exam passes at 700 on a 100 to 900 scale. This course's official-format test uses 78%, that score divided by 900.",
   examDay: [
     "Up to 90 questions in 90 minutes with performance-based items; do the multiple choice first if a simulation stalls you, flag it and return.",
     "Tool names and their .msc or .exe files, command switches, the seven malware removal steps in order, and the permission rules (most restrictive over the network, Deny wins, move keeps and copy inherits) are pure recall; know them cold.",

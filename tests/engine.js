@@ -49,7 +49,7 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   q0.a.unshift(q0.a.pop()); q0.c = (q0.c + 1) % n;
   act(w, 'go', 'home'); act(w, 'go', 'results:0');
   let item = w.$$('.review-item').find(el => el.textContent.includes(q0.q));
-  check('results show the answer by its text after a reorder', !!item && item.textContent.includes(`You: ${LET[newIdx]}. ${wrongText}`) && item.textContent.includes(`Correct: ${LET[q0.c]}. ${q0.a[q0.c]}`), item && item.querySelector('.ans').textContent);
+  check('results show the answer by its text after a reorder', !!item && item.textContent.includes(`Your answer: ${LET[newIdx]}. ${wrongText}`) && item.textContent.includes(`Correct answer: ${LET[q0.c]}. ${q0.a[q0.c]}`), item && item.querySelector('.ans').textContent);
   act(w, 'path', 'tailored:0');
   act(w, 'lesson', q0.t);
   let callout = w.$$('.callout').find(el => el.textContent.includes(q0.q));
@@ -62,14 +62,14 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   const w2 = boot({ courseDir: dir, beforeApp: x => { x.localStorage.setItem(KEY, JSON.stringify(legacy)); } });
   act(w2, 'go', 'results:0');
   item = w2.$$('.review-item').find(el => el.textContent.includes(q0.q));
-  check("legacy record never shows the correct answer as the learner's wrong pick", !!item && !item.textContent.includes(`You: ${LET[oq.c]}. ${oq.a[oq.c]}`) && /different option/.test(item.textContent), item && item.querySelector('.ans').textContent);
+  check("legacy record never shows the correct answer as the learner's wrong pick", !!item && !item.textContent.includes(`Your answer: ${LET[oq.c]}. ${oq.a[oq.c]}`) && /different option/.test(item.textContent), item && item.querySelector('.ans').textContent);
   act(w2, 'lesson', q0.t);
   callout = w2.$$('.callout').find(el => el.textContent.includes(q0.q));
   check('legacy callout says a different option was chosen', !!callout && !callout.textContent.includes(`You answered ${LET[oq.c]}. ${oq.a[oq.c]}`) && /different option/.test(callout.textContent), callout && callout.textContent.slice(0, 160));
   // Untouched legacy records still show the letter and text.
   const other = legacy.exams[0].review.find(r => typeof r.q === 'string' && r.q !== q0.id); const oq2 = orig.FRA.questions.find(q => q.id === other.q);
   act(w2, 'go', 'results:0'); item = w2.$$('.review-item').find(el => el.textContent.includes(oq2.q));
-  check('legacy record with a consistent index shows letter and text', !!item && item.textContent.includes(`You: ${LET[other.choice]}. ${oq2.a[other.choice]}`), item && item.querySelector('.ans').textContent);
+  check('legacy record with a consistent index shows letter and text', !!item && item.textContent.includes(`Your answer: ${LET[other.choice]}. ${oq2.a[other.choice]}`), item && item.querySelector('.ans').textContent);
 
   // ----- Acronyms with two meanings -----
   w = boot({ courseDir: dir }); L = lessonsOf(w);
@@ -498,10 +498,10 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('setup: the boot pull recorded the owner', bk21 && bk21.sub === 'u1', JSON.stringify(bk21));
     const io = w21.document.createElement('textarea');
     io.id = 'io';
-    io.value = JSON.stringify({ v: 3, course: 'netplus', passStreak: 2 });
+    io.value = JSON.stringify({ v: 3, course: 'netplus', exams: [], passes: 2 });
     w21.$('#app').appendChild(io);
     act(w21, 'import');
-    check('importing a progress code loaded it', state(w21).passStreak === 2, state(w21).passStreak);
+    check('importing a progress code loaded it', state(w21).created != null && !state(w21).exams.length, JSON.stringify(state(w21).exams));
     const bk21b = JSON.parse(w21.localStorage.getItem('fra.netplus.sync.v1'));
     check('importing a progress code forgets whose progress the blob was',
       bk21b && bk21b.sub === null, JSON.stringify(bk21b));
@@ -634,6 +634,52 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('stashes are pruned to the newest 5 per course', stashKeys().length === 5, JSON.stringify(stashKeys()));
     const newest = stashKeys().map(k => parseInt(k.slice('fra.netplus.state.v3.stash.'.length), 10));
     check('and it is the OLDEST that were dropped', Math.min.apply(null, newest) > 5003, JSON.stringify(newest));
+  }
+
+  // ----- The pass rule and sureness (2026-09-23): only the starter asks; tests and checkpoints do not -----
+  {
+    const w30 = boot({ courseDir: dir });
+    act(w30, 'go', 'home'); act(w30, 'start-exam', 'starter');
+    check('the starter test asks for sureness', !state(w30).active.noConf && !!w30.$('.confidence'));
+    const fat30 = x => typeof x === 'string' ? w30.FRA.questions.find(q => q.id === x) : x;
+    state(w30).active.items.map(fat30).forEach(q => { act(w30, 'opt', q.c); act(w30, 'conf', 5); act(w30, 'submit'); });
+    act(w30, 'start-exam', 'full');
+    const ex30 = state(w30).active;
+    check('the 50-question test asks no sureness', !!ex30 && ex30.kind === 'full' && ex30.noConf === true && !w30.$('.confidence'), JSON.stringify(ex30 && { kind: ex30.kind, noConf: ex30.noConf }));
+    ex30.items.map(fat30).forEach((q, k) => { act(w30, 'opt', k === 0 ? (q.c + 1) % q.a.length : q.c); act(w30, 'submit'); });
+    const rec30 = state(w30).exams[state(w30).exams.length - 1];
+    check('the test recorded without sureness', !!rec30 && rec30.kind === 'full' && rec30.noConf === true && rec30.review[0].correct === false, JSON.stringify(rec30 && { kind: rec30.kind, noConf: rec30.noConf }));
+    check('the results page offers the next test at the top and the bottom', w30.$$('[data-act="start-exam"][data-arg="practice"]').length === 2, w30.$$('[data-act="start-exam"]').length);
+    const ri = w30.$('.review-item');
+    check('a wrong answer shows Your answer, Correct answer, and Why', !!ri && /Your answer:/.test(ri.textContent) && /Correct answer:/.test(ri.textContent) && /Why:/.test(ri.textContent), ri && ri.textContent.slice(0, 160));
+    check('the review offers the lesson as an option', !!ri && !!ri.querySelector('[data-act="lesson"]') && /Review the lesson/.test(ri.textContent));
+    check('no guess language on a test without sureness', !/guess/i.test(w30.text()));
+    check('the results pill counts passes in the window, not a streak', /of your last 5 passed/.test(w30.text()) && !/streak/i.test(w30.text()));
+    // Checkpoint: no chips, passes on 3 of 4 correct.
+    const byT = {}; w30.FRA.questions.forEach(q => { (byT[q.t] = byT[q.t] || []).push(q); });
+    const cpId = Object.keys(byT).find(t => byT[t].length >= 4);
+    act(w30, 'lesson', cpId); act(w30, 'start-checkpoint', cpId);
+    const cp = state(w30).active;
+    check('the checkpoint asks no sureness', !!cp && cp.kind === 'checkpoint' && cp.noConf === true && !w30.$('.confidence'));
+    check('the checkpoint copy no longer mentions being sure', !/at least fairly sure/.test(w30.text()));
+    cp.items.map(fat30).forEach((q, k) => { act(w30, 'opt', k === 0 ? (q.c + 1) % q.a.length : q.c); act(w30, 'submit'); act(w30, 'next'); });
+    const ls30 = state(w30).lessons[cpId];
+    check('three of four correct passes the checkpoint with no sureness asked', !!ls30 && ls30.status === 'passed' && ls30.best === 3, JSON.stringify(ls30));
+    check('the checkpoint result says correct, not correct and sure', /3 of 4 correct/.test(w30.text()) && !/correct and sure/.test(w30.text()));
+  }
+
+  // ----- An old blob with passStreak migrates on load: passes and official come from the log -----
+  {
+    const w31 = boot({ courseDir: dir, beforeAppJs: x => {
+      const passed = pct => ({ id: 'p' + pct + Math.random(), date: Date.now(), kind: 'practice', score: pct, total: 100, pct, byDomain: {}, review: [], seconds: 1, minutes: 0, setup: null, noConf: true });
+      x.localStorage.setItem('fra.netplus.state.v3', JSON.stringify({ v: 3, course: 'netplus', lessons: {}, qstats: {}, topics: {}, feedback: [], ratings: {}, seen: {},
+        exams: [{ id: 's', date: 1, kind: 'starter', score: 5, total: 10, pct: 50, byDomain: {}, review: [], seconds: 1, minutes: 0, setup: null }, passed(90), passed(40), passed(85), passed(88)],
+        passStreak: 2, official: null, plan: null, path: null, settings: { timer: true }, settingsAt: 0, touchedAt: 0, created: 1 }));
+    } });
+    const s31 = state(w31);
+    check('load drops passStreak and recomputes passes from the exam log', s31.passStreak === undefined && s31.passes === 3, JSON.stringify({ passStreak: s31.passStreak, passes: s31.passes }));
+    act(w31, 'go', 'exam');
+    check('the tests hub reports passes in the window and offers the official-format test', /Final step: the official-format test/.test(w31.text()) && !!w31.$('[data-act="start-standard"]'));
   }
 
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }

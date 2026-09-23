@@ -382,7 +382,7 @@ FRA.course = {
   short: "S+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90 },
+  exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90, passPct: 83 },
   description: "Self-paced CompTIA Security+ SY0-701 course with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "General Security Concepts", short: "Concepts", pct: 12, quota: 6 },
@@ -392,7 +392,7 @@ FRA.course = {
     { id: 5, name: "Security Program Management and Oversight", short: "Governance", pct: 20, quota: 10 }
   ],
   // The real exam passes at about 83%, so the course bar is 90% to keep a margin.
-  test: { questions: 50, minutes: 50, passPct: 90, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u2l2", "u2l4", "u1l2", "u2l3"],
     2: ["u3l1", "u3l3", "u5l1", "u5l2", "u4l2", "u5l5"],
@@ -411,7 +411,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam passes at 750 of 900, about 83%.",
+  realExamNote: "The real exam passes at 750 on a 100 to 900 scale. This course's official-format test uses 83%, that score divided by 900.",
   examDay: [
     "Up to 90 questions in 90 minutes, including performance-based items. Do the multiple choice first if a simulation stalls you; flag and return.",
     "Read for the qualifier: BEST, MOST likely, FIRST, NEXT, LEAST. The answer is usually the least disruptive control that fixes the stated problem.",
@@ -6597,29 +6597,40 @@ FRA.questions.push(
   // exam record, so this predicate works on stored history as well as a live exam.
   const isOfficialRecord = rec => !!(rec && rec.setup && rec.setup.mode === 'standard' && rec.minutes > 0);
 
-  // Replay of the fold in app.js finishExam. passStreak and official are never merged across
-  // devices - taking the larger of two streaks would invent one nobody earned - so they are
-  // always recomputed from the merged, date-ordered exam log.
-  function recomputeStreak(exams, opts) {
+  // The pass rule, as one fold over the date-ordered exam log. It is the only place the rule
+  // lives: app.js finishExam, load(), and mergeState all call it, so `passes` and `official`
+  // are never merged across devices (taking the larger of two counts would invent passes nobody
+  // earned) and never trusted from a stored blob.
+  //
+  // The rule (Blake, 2026-09-23): the last `passWindow` tests -- 50-question and official-format
+  // alike; starter and custom never count -- form a rolling window, and `passes` is how many of
+  // them scored passPct or better. Once `passes >= passesNeeded` the learner is qualified; an
+  // official-format test (isOfficialRecord) scored at officialPct or better while already
+  // qualified sets `official`, permanently. A fail never resets anything; the window slides.
+  function recomputeQualification(exams, opts) {
     // e.pct >= undefined is false for every record, so a malformed opts would silently replay to
-    // passStreak: 0 - the exact number this function exists to never invent - with no error.
+    // passes: 0 - the exact number this function exists to never invent - with no error.
     // Number.isFinite, not typeof: typeof NaN is 'number', and a NaN passPct makes every
     // comparison false, reproducing the exact silent zeroing this guard exists to stop.
-    if (!opts || !Number.isFinite(opts.passPct) || !Number.isFinite(opts.streakNeeded)) {
-      throw new Error('recomputeStreak requires opts.passPct and opts.streakNeeded as numbers');
+    const need = ['passPct', 'passesNeeded', 'passWindow', 'officialPct'];
+    if (!opts || need.some(k => !Number.isFinite(opts[k]))) {
+      throw new Error('recomputeQualification requires opts.' + need.join(', opts.') + ' as numbers');
     }
-    const passPct = opts.passPct, streakNeeded = opts.streakNeeded;
-    let passStreak = 0, official = null;
+    const recent = [];   // pass/fail of the last passWindow counted tests, oldest first
+    let official = null;
     for (let i = 0; i < exams.length; i++) {
       const e = exams[i];
       if (!e || e.kind === 'starter' || e.kind === 'custom') continue;
-      const prevStreak = passStreak;
-      const passed = e.pct >= passPct;
-      passStreak = passed ? prevStreak + 1 : 0;
-      if (!passed) official = null;
-      else if (isOfficialRecord(e) && prevStreak >= streakNeeded) official = { examIdx: i, date: e.date, pct: e.pct };
+      // Qualification is judged on the tests BEFORE this one: the official test is the gate,
+      // not a way to open it.
+      const qualified = recent.filter(Boolean).length >= opts.passesNeeded;
+      if (!official && qualified && isOfficialRecord(e) && e.pct >= opts.officialPct) {
+        official = { examIdx: i, date: e.date, pct: e.pct };
+      }
+      recent.push(e.pct >= opts.passPct);
+      if (recent.length > opts.passWindow) recent.shift();
     }
-    return { passStreak, official };
+    return { passes: recent.filter(Boolean).length, official };
   }
 
   // Identity for union-merging exam logs. New records carry an explicit id; anything saved
@@ -6717,7 +6728,7 @@ FRA.questions.push(
     // starter test resetting it). The null guard stays: a side with no path never beats a
     // side that made a choice, whatever its stamp.
     const pathSide = pickPathSide(a, b);
-    const streak = recomputeStreak(exams, opts);
+    const q = recomputeQualification(exams, opts);
     // Both sides missing `created` must not yield Infinity, which JSON.stringify turns into null.
     const born = Math.min(a.created || Infinity, b.created || Infinity);
 
@@ -6728,8 +6739,8 @@ FRA.questions.push(
       seen: maps.seen, ratings: maps.ratings,
       exams: exams,
       feedback: feedback,
-      passStreak: streak.passStreak,
-      official: streak.official,
+      passes: q.passes,
+      official: q.official,
       plan: remapExamIdx(planSide.plan, planSide.exams, exams),
       path: remapExamIdx(pathSide.path, pathSide.exams, exams),
       pathAt: max(a.pathAt, b.pathAt),
@@ -6769,7 +6780,7 @@ FRA.questions.push(
     return a.settings || b.settings || {};
   }
 
-  return { VERSION, isOfficialRecord, recomputeStreak, examId, mergeMaps, remapExamIdx, mergeState };
+  return { VERSION, isOfficialRecord, recomputeQualification, examId, mergeMaps, remapExamIdx, mergeState };
 }));
 
 'use strict';
@@ -7163,12 +7174,13 @@ FRA.questions.push(
     signedOut();
   }
 
-  // recomputeStreak (via mergeState) requires passPct/streakNeeded as numbers or it
+  // recomputeQualification (via mergeState) requires the four rule fields as numbers or it
   // throws -- see engine/merge.js. Both live on the course manifest, already loaded
   // by the time any of these functions actually run.
   function mergeOpts() {
     const t = (root.FRA && root.FRA.course && root.FRA.course.test) || {};
-    return { passPct: t.passPct, streakNeeded: t.streakNeeded };
+    const ex = (root.FRA && root.FRA.course && root.FRA.course.exam) || {};
+    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct };
   }
 
   // FNV-1a over a string. Cheap change detection; storing a second copy of a 200 KB
@@ -7580,12 +7592,13 @@ FRA.questions.push(
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
-   Flow: 10-question starter test (with confidence) -> personalized tutorial -> 50-question test ->
-   retraining tutorial built from the misses -> practice tests until three in a row at 85% or better.
-   Every test ends with an explanation of each wrong answer and each lucky guess.
+   Flow: 10-question starter test (the only one that asks how sure you are) -> personalized tutorial ->
+   50-question test -> retraining tutorial built from the misses -> practice tests until three of the
+   last five score 80% or better -> one official-format test at the real exam's own passing score.
+   Every test ends with an explanation of each wrong answer (and, on the starter, each lucky guess).
    After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
    Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
-   standard-format tests (the real exam's format) ask no confidence question. */
+   only the starter test asks a sureness question; checkpoints, drills, and every other test do not. */
 (function () {
   'use strict';
 
@@ -7595,7 +7608,11 @@ FRA.questions.push(
   const DOMAINS = {}; course.domains.forEach(d => { DOMAINS[d.id] = d; });
   const DOMAIN_IDS = course.domains.map(d => d.id);
   const T = course.test;
-  const PASS_PCT = T.passPct, STREAK_NEEDED = T.streakNeeded, EXAM_N = T.questions, EXAM_MINUTES = T.minutes;
+  const PASS_PCT = T.passPct, PASSES_NEEDED = T.passesNeeded, PASS_WINDOW = T.passWindow, EXAM_N = T.questions, EXAM_MINUTES = T.minutes;
+  // The official-format test is judged at the real exam's passing score, not the practice bar.
+  const OFFICIAL_PCT = (course.exam && course.exam.passPct) || PASS_PCT;
+  // The pass rule's parameters, for the one fold that computes passes/official (engine/merge.js).
+  const RULE_OPTS = () => ({ passPct: PASS_PCT, passesNeeded: PASSES_NEEDED, passWindow: PASS_WINDOW, officialPct: OFFICIAL_PCT });
   const STARTER_N = DOMAIN_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
   const REBUILD_PTS = 3 * T.starterPerDomain; // every starter question in the domain wrong
   const ALL_WORD = T.starterPerDomain === 2 ? 'both' : 'all';
@@ -7684,16 +7701,28 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passStreak: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+  }
+  // The pass rule lives in one fold (engine/merge.js). Recomputing on load migrates blobs saved
+  // under the old streak rule (passStreak goes; passes and official come from the exam log) and
+  // makes a stale stored count impossible. Never throws: a blob the fold cannot read keeps its
+  // stored fields.
+  function adoptRule(s) {
+    try {
+      const r = FRAMerge.recomputeQualification(Array.isArray(s.exams) ? s.exams : [], RULE_OPTS());
+      s.passes = r.passes; s.official = r.official;
+    } catch (e) { s.passes = s.passes || 0; }
+    delete s.passStreak;
+    return s;
   }
   let S = load();
   function load() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) { const s = JSON.parse(raw); if (s && s.v === 3) return Object.assign(fresh(), s); }
+      if (raw) { const s = JSON.parse(raw); if (s && s.v === 3) return adoptRule(Object.assign(fresh(), s)); }
       for (const key of (course.legacyStoreKeys || [])) {
         const old = localStorage.getItem(key);
-        if (old) { const s = JSON.parse(old); if (s && s.v === 2) return Object.assign(fresh(), s, { v: 3, course: course.id }); }
+        if (old) { const s = JSON.parse(old); if (s && s.v === 2) return adoptRule(Object.assign(fresh(), s, { v: 3, course: course.id })); }
       }
     } catch (e) { /* storage unavailable */ }
     return fresh();
@@ -7728,8 +7757,8 @@ FRA.questions.push(
   const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
-  // Checkpoint credit: right answers marked Guess or Unsure do not count toward passing the lesson.
-  const cpScore = s => s.answers.filter(a => a.correct && a.conf >= 3).length;
+  // Checkpoint credit: every correct answer counts. Checkpoints ask no sureness; only the starter test does.
+  const cpScore = s => s.answers.filter(a => a.correct).length;
 
   // Priority points. Wrong and confident is the most dangerous state; right but unsure is probably a guess.
   function points(correct, conf) {
@@ -7896,11 +7925,12 @@ FRA.questions.push(
   function stage() {
     if (!S.exams.some(e => e.kind === 'starter')) return 'starter';
     if (S.plan && planRemaining().length) return S.plan.source === 'starter' ? 'tutorial' : 'retrain';
-    if (S.passStreak >= STREAK_NEEDED) return S.official ? 'ready' : 'official';
+    if (S.official) return 'ready';                     // permanent once earned
+    if (S.passes >= PASSES_NEEDED) return 'official';
     if (!S.exams.some(e => e.kind === 'full' || e.kind === 'practice')) return 'fulltest';
     return 'practice';
   }
-  // The final gate: after the pass streak, one test in the real exam's format, within its time limit, at the course bar.
+  // The final gate: once enough of the last few tests pass, one test in the real exam's format, within its time limit, at the real exam's passing score.
   const STAGE_LABEL = { starter: 'Starter test', tutorial: 'Initial tutorial', fulltest: `${EXAM_N}-question test`, retrain: 'Retraining', practice: 'Practice tests', official: 'Official-format test', ready: 'Ready' };
 
   function lastExam(kind) { for (let i = S.exams.length - 1; i >= 0; i--) if (!kind || S.exams[i].kind === kind) return S.exams[i]; return null; }
@@ -7914,7 +7944,7 @@ FRA.questions.push(
     const touched = lessons.filter(l => (S.topics[l.id] || { attempts: 0 }).attempts > 0);
     const mastered = lessons.filter(l => topicMastered(l.id)).length;
     const masteryPart = touched.length ? 100 * mastered / lessons.length : 0;
-    const streakPart = 100 * Math.min(S.passStreak, STREAK_NEEDED) / STREAK_NEEDED;
+    const streakPart = 100 * Math.min(S.passes, PASSES_NEEDED) / PASSES_NEEDED;
     if (!ex.length && !touched.length) return 0;
     return Math.round(0.5 * examPart + 0.3 * masteryPart + 0.2 * streakPart);
   }
@@ -7929,10 +7959,10 @@ FRA.questions.push(
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
     if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
-    if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${PASS_PCT}% or better within the time limit and you are cleared to book.` };
+    if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${OFFICIAL_PCT}% or better, the real exam's passing score, within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
     if (testsLocked('practice')) return { label: 'Unlock the full course for practice tests', act: 'upgrade', arg: '' };
-    return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `Pass streak ${S.passStreak} of ${STREAK_NEEDED}. Score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row to be cleared.` };
+    return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `${S.passes} of your last ${PASS_WINDOW} tests passed. Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} to unlock the official-format test.` };
   }
 
   // ---------- rendering ----------
@@ -8065,8 +8095,8 @@ FRA.questions.push(
           <li><strong>Your path.</strong> Right after the starter test you choose: a tutorial built from your results, or the whole course in order. Either way, miss a topic and its lesson opens with your answer versus the right one. Miss a whole domain and the tailored tutorial gives you that domain from the ground up.</li>
           <li><strong>The ${EXAM_N}-question test.</strong> Weighted like the real exam, explained at the end.</li>
           <li><strong>Retraining.</strong> A second tutorial built only from what you missed or guessed, worst first.</li>
-          <li><strong>Practice tests</strong> until you score ${PASS_PCT}% or better ${STREAK_NEEDED} times in a row.</li>
-          <li><strong>The official-format test.</strong> ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam. Pass it and book the exam.</li>
+          <li><strong>Practice tests</strong> until ${PASSES_NEEDED} of your last ${PASS_WINDOW} score ${PASS_PCT}% or better.</li>
+          <li><strong>The official-format test.</strong> ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam, at its real passing score of ${OFFICIAL_PCT}%. Pass it once and book the exam.</li>
         </ol>
         <div class="row"><button class="btn primary lg" data-act="start-exam" data-arg="starter">Start the ${STARTER_N}-question test</button><button class="btn ghost" data-act="go" data-arg="course">Browse the lessons first</button></div>
       </div>
@@ -8098,7 +8128,7 @@ FRA.questions.push(
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
         <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
-        <div class="stat"><div class="eyebrow">Pass streak</div><div class="big">${S.passStreak}<small> / ${STREAK_NEEDED} at ${PASS_PCT}%+</small></div></div>
+        <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> / ${PASSES_NEEDED} of last ${PASS_WINDOW} at ${PASS_PCT}%+</small></div></div>
       </div>
       <div class="card stack">
         <div class="row spread"><h3>Accuracy by exam domain</h3><span class="muted" style="font-size:.9rem">${mastered} of ${lessons.length} topics mastered</span></div>
@@ -8205,9 +8235,9 @@ FRA.questions.push(
     const domainReason = entry ? entry.reasons.find(r => r.kind === 'domain') : null;
     let quiz;
     if (!cp) {
-      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint</div><h3>${CHECKPOINT_N} questions on this lesson</h3><p class="ink2">Pass ${CHECKPOINT_PASS} of ${CHECKPOINT_N} to complete it. An answer counts only if you were at least fairly sure.${ls.best ? ` Your best so far: ${ls.best}/${CHECKPOINT_N}.` : ''}</p></div><button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Start checkpoint</button></div></div>`;
+      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint</div><h3>${CHECKPOINT_N} questions on this lesson</h3><p class="ink2">Pass ${CHECKPOINT_PASS} of ${CHECKPOINT_N} to complete it.${ls.best ? ` Your best so far: ${ls.best}/${CHECKPOINT_N}.` : ''}</p></div><button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Start checkpoint</button></div></div>`;
     } else if (cp.i >= cp.items.length) {
-      const score = cpScore(cp); const unsure = cp.answers.filter(a => a.correct && a.conf <= 2).length; const passed = score >= CHECKPOINT_PASS;
+      const score = cpScore(cp); const passed = score >= CHECKPOINT_PASS;
       const st = stage();
       let nextBtn = '';
       if (passed) {
@@ -8215,7 +8245,7 @@ FRA.questions.push(
         else if (S.plan && !planRemaining().length) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="__test">Tutorial complete. Take the ${EXAM_N}-question ${st === 'fulltest' ? 'test' : 'practice test'}</button>`;
         else if (nextLesson) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextLesson.id}">Next lesson: ${esc(nextLesson.title)}</button>`;
       }
-      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint result</div><h3>${score} of ${CHECKPOINT_N} ${passed ? 'correct and sure. Lesson complete.' : 'correct and sure. Review and try again.'}</h3>${unsure ? `<p class="ink2">${plural(unsure, 'answer')} right but marked Guess or Unsure did not count.</p>` : ''}</div><span class="pill ${passed ? 'good' : 'warn'}">${passed ? 'PASSED' : 'RETRY'}</span></div>
+      quiz = `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Checkpoint result</div><h3>${score} of ${CHECKPOINT_N} correct. ${passed ? 'Lesson complete.' : 'Review and try again.'}</h3></div><span class="pill ${passed ? 'good' : 'warn'}">${passed ? 'PASSED' : 'RETRY'}</span></div>
         <div class="row">${nextBtn}${!passed ? `<button class="btn primary" data-act="start-checkpoint" data-arg="${id}">Try a fresh checkpoint</button>` : ''}<button class="btn ghost" data-act="finish-checkpoint" data-arg="__stay">Stay here</button></div></div>`;
     } else {
       quiz = `<div class="card lift">${questionCard(cp, { showNumber: true, immediate: true })}</div>`;
@@ -8261,7 +8291,7 @@ FRA.questions.push(
     let feedback = '';
     if (submitted && opts.immediate) {
       const correct = sel === q.c;
-      feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
+      feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (hasConf && conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
     const canSubmit = sel != null && (conf != null || !hasConf);
     const controls = submitted
@@ -8284,6 +8314,8 @@ FRA.questions.push(
   const examMinutes = ex => ex.minutes == null ? (ex.kind === 'starter' ? 0 : EXAM_MINUTES) : ex.minutes;
   // An official-format test: the real exam's format with a time limit. It is always timed and is the course's final gate.
   const isOfficial = FRAMerge.isOfficialRecord;
+  // A record is judged against the bar that applied to it: the real exam's score for an official-format test, the practice bar otherwise.
+  const barFor = e => isOfficial(e) ? OFFICIAL_PCT : PASS_PCT;
   function viewExam() {
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
@@ -8299,13 +8331,13 @@ FRA.questions.push(
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
-      <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : st === 'official' ? 'Final step: the official-format test' : `Pass streak: ${S.passStreak} of ${STREAK_NEEDED}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : st === 'official' ? `Your streak is complete. Pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${PASS_PCT}% or better and you are cleared to book the real thing.` : `Score ${PASS_PCT}% or better on ${STREAK_NEEDED} tests in a row, then pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) and you are cleared to book the real thing.`}</p></div>
+      <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : st === 'official' ? 'Final step: the official-format test' : `Passes: ${S.passes} of ${PASSES_NEEDED} in your last ${PASS_WINDOW}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : st === 'official' ? `You have qualified. Pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}%, the real exam's passing score, and you are cleared to book the real thing.` : `Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} tests, then pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}% and you are cleared to book the real thing.`}</p></div>
         <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}${st === 'official' && !testsLocked('full') ? `<button class="btn primary" data-act="start-standard">Official-format test</button>` : ''}</div></div>
         <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests (the official-format test is always timed)</label></div>
       ${setupCard()}
       ${exams.length ? `<div class="card"><h3 style="margin-bottom:10px">History</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Calibration</th><th></th></tr></thead><tbody>
         ${exams.map((e, k) => { const cm = e.review.filter(r => !r.correct && r.conf >= 4).length, g = e.review.filter(r => r.correct && r.conf <= 2).length;
-          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= PASS_PCT ? 'good' : 'bad'}">${e.pct >= PASS_PCT ? 'PASS' : 'BELOW ' + PASS_PCT + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${e.noConf ? 'no confidence ratings' : `${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}`}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
+          return `<tr><td>${fmtDate(e.date)}</td><td>${testLabel(e)}</td><td class="tnum">${e.score}/${e.total} (${e.pct}%) ${e.kind !== 'starter' ? `<span class="pill ${e.pct >= barFor(e) ? 'good' : 'bad'}">${e.pct >= barFor(e) ? 'PASS' : 'BELOW ' + barFor(e) + '%'}</span>` : ''}</td><td class="muted" style="font-size:.9rem">${e.noConf ? 'no confidence ratings' : `${cm} confident miss${cm === 1 ? '' : 'es'}, ${g} guess${g === 1 ? '' : 'es'}`}</td><td><button class="btn small ghost" data-act="go" data-arg="results:${S.exams.length - 1 - k}">Review</button></td></tr>`; }).join('')}
       </tbody></table></div></div>` : ''}
     </div>`;
   }
@@ -8325,8 +8357,8 @@ FRA.questions.push(
     if (kind === 'starter') items = buildStarter();
     else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
     const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
-    // Standard-format tests (the real exam's format) ask no confidence question.
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: !!(setup && setup.mode === 'standard') };
+    // Only the starter test asks a sureness question; every other test is scored on the answer alone, like the real exam.
+    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: kind !== 'starter' };
     go('exam');
   }
   function finishExam() {
@@ -8350,9 +8382,9 @@ FRA.questions.push(
       if (!S.plan || !planRemaining().length) { const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null; }
     } else {
       // Recomputed from the whole log rather than incremented, so this path and the merge
-      // replay in engine/merge.js can never disagree about the streak.
-      const r = FRAMerge.recomputeStreak(S.exams, { passPct: PASS_PCT, streakNeeded: STREAK_NEEDED });
-      S.passStreak = r.passStreak; S.official = r.official;
+      // replay in engine/merge.js can never disagree about the passes or the official pass.
+      const r = FRAMerge.recomputeQualification(S.exams, RULE_OPTS());
+      S.passes = r.passes; S.official = r.official;
       const plan = planFromTest(rec, examIdx); S.plan = plan.lessons.length ? plan : null;
     }
     S.active = null;
@@ -8364,7 +8396,7 @@ FRA.questions.push(
     const idx = parseInt(String(arg).replace('results:', ''), 10); const e = S.exams[idx];
     if (!e) return viewTestsHub();
     const isStarter = e.kind === 'starter';
-    const passed = e.pct >= PASS_PCT; const ringColor = isStarter ? 'var(--accent)' : passed ? 'var(--good)' : e.pct >= 70 ? 'var(--warn)' : 'var(--bad)';
+    const passed = e.pct >= barFor(e); const ringColor = isStarter ? 'var(--accent)' : passed ? 'var(--good)' : e.pct >= 70 ? 'var(--warn)' : 'var(--bad)';
     const misses = e.review.filter(r => !r.correct); const guesses = e.review.filter(r => r.correct && r.conf <= 2);
     const confident = misses.filter(r => r.conf >= 4).length;
     const mins = Math.max(1, Math.round(e.seconds / 60));
@@ -8397,21 +8429,31 @@ FRA.questions.push(
       headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
       planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
         <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
-        : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not change your pass streak. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
-        : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Your streak is complete; the official-format test is the final step.' : 'Nothing to retrain. Take another practice test to extend your streak.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
+        : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not count toward qualifying. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
+        : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'You have qualified; the official-format test is the final step.' : 'Nothing to retrain. Keep your last five strong with another practice test.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
-    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div><div class="ans">${wrong ? `<span style="color:var(--bad)">You: ${pickText(q, r, wrong) || 'skipped'}</span> · ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans ink2">${esc(q.e)}</div><div class="ans muted row" style="gap:6px">${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Open lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
+    // Each miss: what you picked, what was right, and why -- the bank's explanation says why the
+    // correct answer is correct and, for most questions, why the others are not. The lesson link
+    // is optional; the learner can read the review and go straight to the next test.
+    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (e.noConf || r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${e.noConf ? (wrong ? 'Wrong' : 'Right') : KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div>${wrong ? `<div class="ans"><span class="ink2">Your answer:</span> <span style="color:var(--bad)">${pickText(q, r, wrong) || 'skipped'}</span></div>` : ''}<div class="ans"><span class="ink2">Correct answer:</span> <span style="color:var(--good)">${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans"><span class="ink2">Why:</span> ${esc(q.e)}</div><div class="ans muted row" style="gap:6px;flex-wrap:wrap">Lesson: ${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Review the lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
+    // The next step, offered at the top and the bottom so the review never traps the learner.
+    const nk = nextFlowKind();
+    const nextBtn = isStarter ? '' : testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the full course</button>`
+      : e.kind === 'custom' ? `<button class="btn primary" data-act="go" data-arg="exam">Set up another test</button>`
+      : stage() === 'official' ? `<button class="btn primary" data-act="start-standard">Take the official-format test</button>`
+      : stage() === 'ready' ? `<button class="btn primary" data-act="start-exam" data-arg="practice">One more practice test</button>`
+      : `<button class="btn primary" data-act="start-exam" data-arg="${nk}">Next ${nk === 'full' ? `${EXAM_N}-question test` : 'practice test'}</button>`;
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>
+      <div class="row spread" style="align-items:flex-end;gap:12px;flex-wrap:wrap"><div><div class="eyebrow">${testLabel(e)} · ${fmtDate(e.date)} · ${mins} min${e.minutes ? ` of ${e.minutes}` : ''}</div><h1>${headline}</h1></div>${nextBtn}</div>
       <div class="card lift"><div class="score-hero"><div class="score-ring" style="--pct:${e.pct};--ring-color:${ringColor}"><div>${e.pct}%</div></div>
-        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} This course holds you to ${PASS_PCT}% so the real thing has margin.`}</div>
-        <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted in the streak</span>' : `<span class="pill ${S.passStreak ? 'good' : ''}">streak ${S.passStreak}/${STREAK_NEEDED}</span>`) : ''}</div>
+        <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} Practice tests here pass at ${PASS_PCT}%; the official-format test uses the real exam's passing score, ${OFFICIAL_PCT}%.`}</div>
+        <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted toward qualifying</span>' : `<span class="pill ${S.passes >= PASSES_NEEDED ? 'good' : ''}">${S.passes} of your last ${PASS_WINDOW} passed</span>`) : ''}</div>
         <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
       <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
       ${guesses.length ? `<div class="card"><h3 style="margin-bottom:6px">Right, but you were not sure (${guesses.length})</h3><p class="muted" style="font-size:.9rem;margin-bottom:6px">These count as gaps. Read why the answer is right so it stops being a guess.</p>${guesses.map(r => reviewItem(r, false)).join('')}</div>` : ''}
-      <div class="row"><button class="btn ghost" data-act="go" data-arg="home">Home</button><button class="btn ghost" data-act="go" data-arg="exam">All tests</button></div>
+      <div class="row">${nextBtn}<button class="btn ghost" data-act="go" data-arg="home">Home</button><button class="btn ghost" data-act="go" data-arg="exam">All tests</button></div>
     </div>`;
   }
 
@@ -8452,12 +8494,12 @@ FRA.questions.push(
     if (tr.i >= tr.items.length) { extendQueue(tr); if (tr.i >= tr.items.length) { tr.ti++; tr.phase = 'lesson'; tr.i = 0; tr.items = []; tr.answers = []; tr.streak = 0; tr.drills = 0; save(); return viewTrain(); } }
     return `<div class="content stack" style="gap:18px">${header}
       <div class="card lift">${questionCard(tr, { immediate: true, title: esc(l.title) })}</div>
-      <p class="muted" style="font-size:.9rem">Drill ${tr.drills + 1}. Three correct in a row at confidence 4 or 5 completes this topic.</p></div>`;
+      <p class="muted" style="font-size:.9rem">Drill ${tr.drills + 1}. Three correct in a row completes this topic.</p></div>`;
   }
   function startTrain(topics) {
     const list = topics && topics.length ? topics : weakTopics().slice(0, 3);
     if (!list.length) { S.active = { kind: 'train', phase: 'pick' }; go('train'); return; }
-    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, streak: 0, drills: 0, log: [], used: [] };
+    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true, streak: 0, drills: 0, log: [], used: [] };
     go('train');
   }
   function extendQueue(tr) {
@@ -8485,10 +8527,10 @@ FRA.questions.push(
   function exportable() { const c = JSON.parse(JSON.stringify(S)); c.active = null; return c; }
 
   function viewReady() {
-    const last3 = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-3); const st = stage(); const ready = st === 'ready';
+    const recent = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-PASS_WINDOW); const st = stage(); const ready = st === 'ready';
     return `<div class="content stack" style="gap:18px">
       <div><div class="eyebrow">Readiness report</div><h1>${ready ? 'Book the exam.' : 'Not yet.'}</h1></div>
-      ${ready ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passStreak} tests in a row${last3.length ? ` (${last3.map(e => e.pct + '%').join(', ')})` : ''}, and passed the official-format test at ${S.official.pct}% within its time limit.</strong><p>${esc(course.realExamNote)} You have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : st === 'official' ? `<div class="card stack"><p>Your streak of ${S.passStreak} is complete. The final step is the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam, at ${PASS_PCT}% or better.</p><div class="row"><button class="btn primary" data-act="start-standard">Start the official-format test</button></div></div>` : `<div class="card"><p>You need ${Math.max(0, STREAK_NEEDED - S.passStreak)} more test${STREAK_NEEDED - S.passStreak === 1 ? '' : 's'} at ${PASS_PCT}% or better in a row, then the official-format test.</p></div>`}
+      ${ready ? `<div class="ready-banner stack"><strong>You scored ${PASS_PCT}% or better on ${S.passes} of your last ${recent.length} tests${recent.length ? ` (${recent.map(e => e.pct + '%').join(', ')})` : ''}, and passed the official-format test at ${S.official.pct}% against its passing score of ${OFFICIAL_PCT}%, within its time limit.</strong><p>${esc(course.realExamNote)} You have margin. Schedule it for the next week or two while the material is fresh, and do one drill session a day until then.</p></div>` : st === 'official' ? `<div class="card stack"><p>You have qualified: ${S.passes} of your last ${PASS_WINDOW} tests at ${PASS_PCT}% or better. The final step is the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes, timed and weighted like the real exam, at ${OFFICIAL_PCT}% or better, the real exam's passing score.</p><div class="row"><button class="btn primary" data-act="start-standard">Start the official-format test</button></div></div>` : `<div class="card"><p>You need ${Math.max(0, PASSES_NEEDED - S.passes)} more pass${PASSES_NEEDED - S.passes === 1 ? '' : 'es'} at ${PASS_PCT}% or better among your last ${PASS_WINDOW} tests, then the official-format test.</p></div>`}
       <div class="card stack"><h3>Exam day</h3><ul style="margin:0;padding-left:20px;line-height:1.7">
         ${(course.examDay || []).map(t => `<li>${inline(t)}</li>`).join('')}
       </ul></div>
@@ -8665,12 +8707,14 @@ FRA.questions.push(
       sess.answers[sess.i] = { choice, conf, skipped: !!skipped };
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
     }
-    const res = recordAnswer(q, choice, conf);
+    // Without a sureness rating (checkpoints and drills), a right answer records as sure (4) and a
+    // wrong one as plain wrong (3), the same defaults finishExam uses for tests.
+    const res = recordAnswer(q, choice, conf == null ? (choice === q.c ? 4 : 3) : conf);
     sess.answers[sess.i] = { choice, pick: choice >= 0 ? q.a[choice] : null, conf, correct: res.correct, q: slim(q) };
     sess.submitted = true;
     if (sess.kind === 'train') {
       sess.drills++; sess.log.push({ t: q.t, correct: res.correct });
-      sess.streak = (res.correct && conf >= 4) ? sess.streak + 1 : 0;
+      sess.streak = res.correct ? sess.streak + 1 : 0;
       if (!res.correct) {
         const again = pickForLesson(q.t, 1, new Set(sess.used || []), gens[q.t] ? 0.6 : 0)[0];
         if (again) { sess.items.splice(Math.min(sess.items.length, sess.i + 3), 0, slim(again)); sess.used.push(again.id); }
@@ -8704,7 +8748,7 @@ FRA.questions.push(
       case 'nav': railOpen = false; return go(arg);
       case 'course': railOpen = false; return go('course', arg);
       case 'lesson': railOpen = false; if (deepOpen !== arg) deepOpen = null; if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== arg) S.active = null; return go('lesson', arg);
-      case 'start-checkpoint': { const items = pickForLesson(arg, CHECKPOINT_N, new Set(), 0.3); if (!items.length) { toast('No questions for this lesson yet.'); return; } S.active = { kind: 'checkpoint', lesson: arg, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false }; save(); render(); return; }
+      case 'start-checkpoint': { const items = pickForLesson(arg, CHECKPOINT_N, new Set(), 0.3); if (!items.length) { toast('No questions for this lesson yet.'); return; } S.active = { kind: 'checkpoint', lesson: arg, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true }; save(); render(); return; }
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
@@ -8773,7 +8817,7 @@ FRA.questions.push(
       case 'fb-copy': { copyText(feedbackReport(), 'Report copied'); return; }
       case 'fb-download': { try { const blob = new Blob([JSON.stringify({ course: course.id, feedback: S.feedback || [], ratings: S.ratings || {} }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${course.id}-feedback.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (err) { toast('Download blocked; use Copy report.'); } return; }
       case 'copy': { const ta = $('#io'); ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')); } catch (err) { document.execCommand('copy'); toast('Copied'); } return; }
-      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = Object.assign(fresh(), obj, { v: 3, course: course.id }); S.active = null; S.view = { name: 'home' }; if (window.FRASync) FRASync.forgetOwner(); save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
+      case 'import': { try { const obj = JSON.parse($('#io').value); if (!obj || (obj.v !== 2 && obj.v !== 3)) throw new Error('bad'); S = adoptRule(Object.assign(fresh(), obj, { v: 3, course: course.id })); S.active = null; S.view = { name: 'home' }; if (window.FRASync) FRASync.forgetOwner(); save(); toast('Progress loaded'); render(); } catch (err) { toast('That code could not be read.'); } return; }
       case 'reset': { if (!confirm('Erase all progress in this browser? Saved feedback is kept.')) return; const keep = S.feedback || []; S = fresh(); S.feedback = keep; save(); render(); return; }
     }
   });
@@ -8816,21 +8860,21 @@ FRA.questions.push(
     log.push(`path choice tailored=${tailoredN} full=${lessons.length} switch ok`);
     const first = S.plan.lessons[0].id; go('lesson', first);
     const items = pickForLesson(first, CHECKPOINT_N, new Set(), 0.3);
-    S.active = { kind: 'checkpoint', lesson: first, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
-    for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; s.conf = 5; submitAnswer(s, false); advance(s); }
+    S.active = { kind: 'checkpoint', lesson: first, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true };
+    for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; submitAnswer(s, false); advance(s); }
     log.push(`lesson ${first} status=${lstat(first).status} planDone=${planDone(first)} remaining=${planRemaining().length}`);
     S.active = null; startExam('full'); ex = S.active;
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
-    log.push(`full ${S.exams[1].pct}% streak=${S.passStreak} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
     // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the streak alone.
     const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
-    const streakBefore = S.passStreak, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
+    const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
     S.active = null; startExam('custom', { mode: 'custom', n: 12, minutes: 0, weights: cw }); ex = S.active;
     if (ex.items.length !== 12) throw new Error('custom test built ' + ex.items.length + ' items, expected 12');
     if (ex.minutes !== 0) throw new Error('custom test time limit not honored');
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = { choice: q.c, conf: 4 }; }); ex.i = ex.items.length; render();
-    if (S.exams[2].kind !== 'custom' || S.passStreak !== streakBefore || S.plan !== planBefore) throw new Error('custom test changed the streak or the plan');
+    if (S.exams[2].kind !== 'custom' || S.passes !== passesBefore || S.plan !== planBefore) throw new Error('custom test changed the passes or the plan');
     log.push(`custom ${S.exams[2].pct}% n=${S.exams[2].total} quotas=${JSON.stringify(S.exams[2].setup.quotas)} label=${testLabel(S.exams[2])}`);
     go('exam'); if (!$('#su-n')) throw new Error('test setup card did not render');
     saveFeedback({ kind: 'question', ref: { qid: lessons[0].id + '-1', lesson: lessons[0].id, stem: 'self-test stem', options: ['a', 'b', 'c', 'd'], correct: 0, where: 'checkpoint' }, cat: 'Typo', text: 'self-test feedback' });
@@ -8843,13 +8887,15 @@ FRA.questions.push(
     if (fb || S.feedback.length !== fbBefore + 1 || S.feedback[S.feedback.length - 1].rating !== 8) throw new Error('rating-only feedback did not save');
     if (!feedbackReport().includes('Lesson ratings')) throw new Error('feedback report lacks the ratings section');
     log.push(`rating ${lessons[0].id}=${S.ratings[lessons[0].id].r}/10 saved as feedback item ${S.feedback.length}`);
-    const unsureId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
-    if (unsureId) { const second = unsureId; go('lesson', second);
+    // Checkpoints ask no sureness: no chips on screen, and all-correct passes on the answers alone.
+    const plainId = lessons.map(l => l.id).find(id => lstat(id).status !== 'passed' && (byLesson[id] || []).length >= CHECKPOINT_N);
+    if (plainId) { const second = plainId; go('lesson', second);
       const items2 = pickForLesson(second, CHECKPOINT_N, new Set(), 0.3);
-      S.active = { kind: 'checkpoint', lesson: second, items: items2.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false };
-      for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; s.conf = 1; submitAnswer(s, false); advance(s); }
-      log.push(`unsure checkpoint ${second} status=${lstat(second).status} best=${lstat(second).best} (expected read, 0)`);
-      if (lstat(second).status === 'passed') throw new Error('unsure answers counted toward a checkpoint pass'); }
+      S.active = { kind: 'checkpoint', lesson: second, items: items2.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true };
+      render(); if ($('.confidence')) throw new Error('checkpoint still shows the sureness chips');
+      for (let k = 0; k < CHECKPOINT_N; k++) { const s = S.active; s.sel = fat(s.items[s.i]).c; submitAnswer(s, false); advance(s); }
+      log.push(`no-sureness checkpoint ${second} status=${lstat(second).status} best=${lstat(second).best} (expected passed, ${CHECKPOINT_N})`);
+      if (lstat(second).status !== 'passed') throw new Error('a checkpoint answered all-correct without sureness did not pass'); }
     const missingDeep = lessons.filter(l => !(FRA.deep && FRA.deep[l.id])).map(l => l.id);
     if (missingDeep.length) throw new Error('lessons without a deeper explanation: ' + missingDeep.join(', '));
     const deepId = lessons.find(l => FRA.deep && FRA.deep[l.id]).id; go('lesson', deepId); deepOpen = deepId; render();
@@ -8873,13 +8919,19 @@ FRA.questions.push(
       go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== senses) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${senses}`);
       log.push(`acronyms keys=${ACR_KEYS.length} senses=${senses} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
     } else log.push('acronyms: no glossary in this pack');
-    // The final gate: three short passes make the streak, then only a timed official-format pass clears the learner.
-    const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: 4 }; }); sess.i = sess.items.length; render(); };
-    // Resetting the streak without trimming the log would leave state the replay cannot
-    // reproduce: recomputeStreak would still see the earlier full/custom passes and recount them.
-    S.plan = null; S.passStreak = 0; S.official = null; S.exams = S.exams.filter(e => e.kind === 'starter');
-    for (let r = 0; r < STREAK_NEEDED; r++) { S.active = null; startExam('practice'); allRight(S.active); }
-    if (S.passStreak !== STREAK_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${STREAK_NEEDED} passes, got ${stage()} streak ${S.passStreak}`);
+    // The final gate: enough passes among the last few tests qualify the learner, then only a timed
+    // official-format pass at the real exam's score clears them, permanently.
+    const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: null }; }); sess.i = sess.items.length; render(); };
+    const allWrong = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); sess.i = sess.items.length; render(); };
+    // Resetting the count without trimming the log would leave state the replay cannot
+    // reproduce: recomputeQualification would still see the earlier full/custom passes and recount them.
+    S.plan = null; S.passes = 0; S.official = null; S.exams = S.exams.filter(e => e.kind === 'starter');
+    // A fail first: under the window rule it must not stop the later passes from qualifying.
+    S.active = null; startExam('practice'); if (!S.active.noConf || $('.confidence')) throw new Error('practice test still asks for sureness'); allWrong(S.active);
+    if (S.passes !== 0 || stage() === 'official') throw new Error('a failed practice test counted as a pass');
+    for (let r = 0; r < PASSES_NEEDED; r++) { S.active = null; startExam('practice'); allRight(S.active); }
+    if (S.passes !== PASSES_NEEDED || S.official || stage() !== 'official') throw new Error(`expected the official stage after ${PASSES_NEEDED} passes, got ${stage()} passes ${S.passes}`);
+    go('results', 'results:' + (S.exams.length - 1)); if (!$('[data-act="start-standard"]')) throw new Error('results page after qualifying does not offer the official-format test');
     S.settings.timer = false; S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); ex = S.active;
     if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
     // The standard test asks no confidence question: no chips, and Submit works on the option alone.
@@ -8892,13 +8944,17 @@ FRA.questions.push(
     go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
     log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
     S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); failing.i = failing.items.length; render();
-    if (S.official || S.passStreak !== 0) throw new Error('a failed test did not reset the official pass and streak');
+    if (!S.official) throw new Error('a failed test revoked the official pass; it is permanent');
+    { const keepPlan = S.plan; S.plan = null; if (stage() !== 'ready') throw new Error(`official pass did not keep the learner cleared: stage ${stage()}`); S.plan = keepPlan; }
+    if (S.passes !== Math.min(PASSES_NEEDED + 1, PASS_WINDOW - 1)) throw new Error(`window did not slide as expected: passes ${S.passes}`);
+    if (!/Your answer/.test(document.body.textContent) || !/Correct answer/.test(document.body.textContent) || !/Why:/.test(document.body.textContent)) throw new Error('the review lacks the your-answer / correct-answer / why lines');
+    if (!$('[data-act="lesson"]') || !$('[data-act="start-exam"]')) throw new Error('the review lacks the lesson link or the next-test button');
     // A failed standard test explains every wrong answer with no guess language, and its retraining callouts carry no confidence.
     const lastRec = S.exams[S.exams.length - 1];
     if (!lastRec.noConf || !document.body.textContent.includes('Wrong answers explained') || document.querySelectorAll('.review-item').length !== lastRec.total || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results did not explain every wrong answer without guess language');
     if (!S.plan || S.plan.source !== 'test') throw new Error('failed standard test built no retraining plan');
     go('lesson', S.plan.lessons[0].id); if ([...document.querySelectorAll('.callout .eyebrow')].some(el => /confidence/.test(el.textContent))) throw new Error('callout shows a confidence for a test that had none');
-    log.push(`failed standard test resets: streak=${S.passStreak} official=${S.official} stage=${stage()} wrong explained=${lastRec.total}`);
+    log.push(`failed standard test: passes=${S.passes} official kept=${!!S.official} stage=${stage()} wrong explained=${lastRec.total}`);
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
     document.body.insertAdjacentHTML('beforeend', `<pre id="selftest">OK\n${log.join('\n')}</pre>`);
   }

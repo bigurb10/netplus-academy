@@ -137,12 +137,13 @@
     signedOut();
   }
 
-  // recomputeStreak (via mergeState) requires passPct/streakNeeded as numbers or it
+  // recomputeQualification (via mergeState) requires the four rule fields as numbers or it
   // throws -- see engine/merge.js. Both live on the course manifest, already loaded
   // by the time any of these functions actually run.
   function mergeOpts() {
     const t = (root.FRA && root.FRA.course && root.FRA.course.test) || {};
-    return { passPct: t.passPct, streakNeeded: t.streakNeeded };
+    const ex = (root.FRA && root.FRA.course && root.FRA.course.exam) || {};
+    return { passPct: t.passPct, passesNeeded: t.passesNeeded, passWindow: t.passWindow, officialPct: ex.passPct };
   }
 
   // FNV-1a over a string. Cheap change detection; storing a second copy of a 200 KB

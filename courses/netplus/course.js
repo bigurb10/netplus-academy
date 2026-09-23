@@ -6,7 +6,7 @@ FRA.course = {
   short: "N+",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009", questions: 90, minutes: 90 },
+  exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009", questions: 90, minutes: 90, passPct: 80 },
   description: "Self-paced CompTIA Network+ N10-009 course with adaptive training and practice exams.",
   // Domains in exam order. id is what lessons reference in their `domain` field. quota is the count on the full test.
   domains: [
@@ -16,7 +16,7 @@ FRA.course = {
     { id: 4, name: "Network Security", short: "Security", pct: 14, quota: 7 },
     { id: 5, name: "Network Troubleshooting", short: "Troubleshooting", pct: 24, quota: 12 }
   ],
-  test: { questions: 50, minutes: 50, passPct: 85, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   // Lessons the starter test samples from, per domain (starterPerDomain different lessons each time).
   starterPool: {
     1: ["u2l1", "u2l2", "u4l3", "u5l2", "u3l3", "u7l4", "u4l5", "u1l3"],
@@ -38,7 +38,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam passes at 720 of 900, about 72%.",
+  realExamNote: "The real exam passes at 720 on a 100 to 900 scale. This course's official-format test uses 80%, that score divided by 900.",
   examDay: [
     "Up to 90 questions in 90 minutes, including performance-based items. Do the multiple choice first if a simulation stalls you; flag and return.",
     "Read for the qualifier: MOST likely, BEST, FIRST, NEXT. The methodology questions are about order.",

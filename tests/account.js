@@ -18,9 +18,9 @@ const inline = (html.match(/<script>([\s\S]*?)<\/script>/g) || []).map(s => s.re
 if (!inline) throw new Error('could not find the account page script in account/index.html');
 
 const COURSES = [
-  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 85, streakNeeded: 3, examQuestions: 50 },
-  { id: 'secplus', name: 'SecPlus Academy', exam: 'CompTIA Security+ SY0-701', lessons: 54, passPct: 90, streakNeeded: 3, examQuestions: 50 },
-  { id: 'cbet', name: 'CBET Academy', exam: 'AAMI CBET', lessons: 60, passPct: 85, streakNeeded: 3, examQuestions: 50 }
+  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 },
+  { id: 'secplus', name: 'SecPlus Academy', exam: 'CompTIA Security+ SY0-701', lessons: 54, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 },
+  { id: 'cbet', name: 'CBET Academy', exam: 'AAMI CBET', lessons: 60, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 }
 ];
 const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: () => Promise.resolve(body) });
 const exam = (kind, pct) => ({ id: 'x' + kind + pct, date: 1000, kind, score: pct, total: 100, pct });
@@ -74,7 +74,7 @@ const settle = () => new Promise(r => setTimeout(r, 30));
   // 2) Signed in with a name: two rows, one unreadable, one course not started.
   {
     const netplus = { v: 3, lessons: { a: { status: 'passed' }, b: { status: 'passed' }, c: { status: 'read' }, d: { status: 'passed' }, e: { status: 'passed' }, f: { status: 'passed' } },
-      exams: [exam('starter', 40), exam('practice', 80)], passStreak: 2, official: null, plan: null, touchedAt: Date.now() - 3 * HOUR };
+      exams: [exam('starter', 40), exam('practice', 80)], passes: 2, official: null, plan: null, touchedAt: Date.now() - 3 * HOUR };
     const { w, calls } = run({
       token: { name: 'Pat Learner' },
       fetch: [
@@ -94,7 +94,7 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     check('netplus: stage label', /Practice tests/.test(np), np);
     check('netplus: lessons passed of total', /5 of 49/.test(np));
     check('netplus: best practice score', /80%/.test(np));
-    check('netplus: streak of needed', /2 of 3/.test(np));
+    check('netplus: passes of needed in the window', /2 of 3 in last 5/.test(np));
     check('netplus: official not yet', /Not yet/.test(np));
     check('netplus: last studied is relative', /3 hours ago/.test(np));
     check('netplus: last synced is relative', /2 hours ago/.test(np));

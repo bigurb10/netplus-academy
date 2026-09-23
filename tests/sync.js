@@ -38,7 +38,7 @@ const res = (status, body, etag) => ({
 function state(extra) {
   return Object.assign({
     v: 3, course: 'netplus', lessons: {}, qstats: {}, topics: {},
-    exams: [], passStreak: 0, official: null, plan: null, path: null, active: null,
+    exams: [], passes: 0, official: null, plan: null, path: null, active: null,
     settings: { timer: true }, settingsAt: 0, feedback: [], ratings: {}, seen: {},
     touchedAt: 0, created: 1
   }, extra || {});
@@ -48,11 +48,11 @@ function state(extra) {
   // ----- a 404 on first pull leaves local progress alone and is not an error -----
   {
     const h = harness([res(404)]);
-    let local = state({ passStreak: 2 });
+    let local = state({ passes: 2 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const changed = await h.w.FRASync.pull();
     check('a 404 pull reports no change', changed === false, changed);
-    check('a 404 first pull must not wipe local progress', local.passStreak === 2, local.passStreak);
+    check('a 404 first pull must not wipe local progress', local.passes === 2, local.passes);
   }
 
   // ----- pull merges server state into local -----
@@ -70,7 +70,7 @@ function state(extra) {
   // ----- push sends Content-Type: application/json or the server rejects it -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();
     const put = h.calls[0];
@@ -93,13 +93,13 @@ function state(extra) {
 
   // ----- a 412 re-GETs, merges, and retries with the fresh version -----
   {
-    const remote = state({ passStreak: 3 });
+    const remote = state({ passes: 3 });
     const h = harness([
       res(412),                                        // our write was stale
       res(200, { state: remote, version: 9 }, '"9"'),  // re-read
       res(200, { version: 10 }, '"10"')                // retry accepted
     ]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const ok = await h.w.FRASync.pushNow();
     check('the retry eventually succeeds', ok === true, ok);
@@ -120,10 +120,10 @@ function state(extra) {
       res(404),                        // ...because the row was deleted meanwhile
       res(200, { version: 1 }, '"1"')  // so create it
     ]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();                          // establishes book.version = "5"
-    local = Object.assign({}, local, { passStreak: 2 });  // a real change, so the next push proceeds
+    local = Object.assign({}, local, { passes: 2 });  // a real change, so the next push proceeds
     const ok = await h.w.FRASync.pushNow();
     check('the create-after-delete retry succeeds', ok === true, ok);
     check('the retry that hit 412 carried the established version',
@@ -139,7 +139,7 @@ function state(extra) {
       res(412), res(200, { state: state(), version: 3 }, '"3"'),
       res(412), res(200, { state: state(), version: 4 }, '"4"')
     ]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const ok = await h.w.FRASync.pushNow();
     check('gave up rather than looping forever', ok === false, ok);
@@ -188,7 +188,7 @@ function state(extra) {
   // ----- an unchanged state is not pushed again -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();
     await h.w.FRASync.pushNow();   // nothing changed in between
@@ -204,7 +204,7 @@ function state(extra) {
       access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1'
     }));
     w.fetch = () => Promise.reject(new Error('offline'));
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const ok = await w.FRASync.pushNow();          // must not throw
     check('a network failure resolves false, never throws', ok === false, ok);
@@ -234,7 +234,7 @@ function state(extra) {
   // ----- (1) touchedAt alone must not force a second push -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1, touchedAt: 100 });
+    let local = state({ passes: 1, touchedAt: 100 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();
     // Simulate save() stamping touchedAt on a mere navigation -- nothing else changed.
@@ -248,7 +248,7 @@ function state(extra) {
   // ----- (2) a dirty flag alone (schedulePush) does not force a write of an unchanged state -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();               // establishes book.hash for this exact state
     h.w.FRASync.schedulePush();                // marks dirty, as every save() does
@@ -284,7 +284,7 @@ function state(extra) {
       res(404),                          // then a pull finds the row gone
       res(200, { version: 1 }, '"1"')    // the SAME local state must be able to recreate it
     ]);
-    let local = state({ passStreak: 4 });
+    let local = state({ passes: 4 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();                // establishes book.version = "1", book.hash = hashOf(local)
     const pulled = await h.w.FRASync.pull();     // 404: the server row was deleted meanwhile
@@ -299,7 +299,7 @@ function state(extra) {
   // ----- (finding 2a) two synchronous pushNow() calls must not both PUT -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const p1 = h.w.FRASync.pushNow();
     const p2 = h.w.FRASync.pushNow();   // called synchronously, before p1's token() lookup resolves
@@ -314,7 +314,7 @@ function state(extra) {
   // ----- (finding 2b) reset() fences a write already in flight -----
   {
     const h = harness([]);   // fetch is overridden below with a deferred (manually-resolved) stub
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     let resolveFetch;
     h.w.fetch = function (url, opts) {
@@ -342,11 +342,11 @@ function state(extra) {
   // ----- (review round 2) reset() also fences a pull() already in flight -----
   {
     const h = harness([]);   // fetch is overridden below with a deferred (manually-resolved) stub
-    // A lesson the merge would adopt if it ran, and a passStreak that differs from
+    // A lesson the merge would adopt if it ran, and a passes that differs from
     // local's whether or not the raw field carries over (mergeState always recomputes
-    // passStreak from the exam log) -- either way, a real adopt() changes `local`.
-    const remote = state({ passStreak: 5, lessons: { u1l1: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
-    let local = state({ passStreak: 1 });
+    // passes from the exam log) -- either way, a real adopt() changes `local`.
+    const remote = state({ passes: 5, lessons: { u1l1: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     let resolveFetch;
     h.w.fetch = function (url, opts) {
@@ -365,7 +365,7 @@ function state(extra) {
     const ok = await p;
     check('a read fenced by reset() resolves false', ok === false, ok);
     check('local was never adopted after reset() fenced the read',
-      local.passStreak === 1 && !local.lessons.u1l1, JSON.stringify(local));
+      local.passes === 1 && !local.lessons.u1l1, JSON.stringify(local));
     check('reset() cleared the bookkeeping key despite the late pull response',
       h.w.localStorage.getItem('fra.netplus.sync.v1') === null,
       h.w.localStorage.getItem('fra.netplus.sync.v1'));
@@ -504,7 +504,7 @@ function state(extra) {
   {
     const h = harness([res(404)]);
     h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'someone-else', lastPullAt: 0 }));
-    let local = state({ passStreak: 4, lessons: { u2l1: lesson(80, 6) } });
+    let local = state({ passes: 4, lessons: { u2l1: lesson(80, 6) } });
     const before = JSON.stringify(local);
     h.w.localStorage.setItem(STATE_KEY, before);
     const o = ownerOpts(h, () => local, s => { local = s; });
@@ -513,7 +513,7 @@ function state(extra) {
     check('an identity switch on the 404 path also asks for no device-local carry-over',
       o.adoptedWith === false, o.adoptedWith);
     check('a different account with nothing stored starts from a fresh state',
-      local.passStreak === 0 && !local.lessons.u2l1, JSON.stringify([local.passStreak, Object.keys(local.lessons)]));
+      local.passes === 0 && !local.lessons.u2l1, JSON.stringify([local.passes, Object.keys(local.lessons)]));
     const stashed404 = JSON.parse(h.w.localStorage.getItem(STATE_KEY + '.stash') || 'null');
     check('the previous learner blob was stashed on the 404 path too',
       !!stashed404 && JSON.stringify(stashed404.state) === before && stashed404.sub === 'someone-else',
@@ -543,7 +543,7 @@ function state(extra) {
   {
     const h = harness([res(401)]);
     h.w.localStorage.setItem(SYNC_KEY, JSON.stringify({ version: 6, hash: 'stale', sub: 'u1', lastPullAt: 99 }));
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     let repainted = 0;
     const o = ownerOpts(h, () => local, s => { local = s; });
     o.onSignedOut = () => { repainted++; };
@@ -659,7 +659,7 @@ function state(extra) {
       // Nothing below may ever be reached. Scripted so that removing the guard reproduces
       // the reviewer's exact PUT, GET, PUT sequence rather than dying on an empty script.
       res(412),
-      res(200, { state: state({ passStreak: 9 }), version: 4 }, '"4"'),
+      res(200, { state: state({ passes: 9 }), version: 4 }, '"4"'),
       res(200, { version: 5 }, '"5"')
     ]);
     let local = state({ ratings: { u1l1: { r: 9, ts: 5 } } });
@@ -672,7 +672,7 @@ function state(extra) {
       access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u2'
     }));
     await h.w.FRASync.pull();                               // 503: identity still unresolved
-    local = Object.assign({}, local, { passStreak: 3 });     // u2 studies
+    local = Object.assign({}, local, { passes: 3 });     // u2 studies
     const ok = await h.w.FRASync.pushNow();
     check('a push by an account that does not own the local blob is refused', ok === false, ok);
     check('no PUT followed the refused push', h.calls.length === 2,
@@ -680,7 +680,7 @@ function state(extra) {
     check('the refused push did not relabel the book onto the new account',
       bookOf(h).sub === 'u1', JSON.stringify(bookOf(h)));
     check('nothing of the new account was adopted by a retry loop that never ran',
-      o.adoptedWith === undefined && local.passStreak === 3, JSON.stringify([o.adoptedWith, local.passStreak]));
+      o.adoptedWith === undefined && local.passes === 3, JSON.stringify([o.adoptedWith, local.passes]));
   }
 
   // ===== Final review I5 / I6 / I8 =====
@@ -688,7 +688,7 @@ function state(extra) {
   // ----- (I5) `view` is device-local: a navigation must not burn a server version -----
   {
     const h = harness([res(200, { version: 1 }, '"1"')]);
-    let local = state({ passStreak: 1, view: { name: 'home' }, touchedAt: 100 });
+    let local = state({ passes: 1, view: { name: 'home' }, touchedAt: 100 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pushNow();
     check('the PUT body carries no view', h.calls[0].body.state.view === undefined,
@@ -721,7 +721,7 @@ function state(extra) {
       res(200, { version: 10 }, '"10"'),                // and retries
       res(404)                                          // only then does the pull run
     ]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const pushing = h.w.FRASync.pushNow();
     const pulling = h.w.FRASync.pull();   // synchronous, while the push is still queued
@@ -739,7 +739,7 @@ function state(extra) {
     let fire = null;
     h.w.setTimeout = function (fn) { fire = fn; return 1; };
     h.w.clearTimeout = function () {};
-    let local = state({ passStreak: 2 });
+    let local = state({ passes: 2 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pull();
     check('a 404 pull arms the create push itself', typeof fire === 'function', typeof fire);
@@ -762,7 +762,7 @@ function state(extra) {
     const h = harness([res(412), res(200, { state: state(), version: 5 }, '"5"'), res(200, { version: 6 }, '"6"')]);
     h.w.localStorage.setItem('fra.netplus.sync.v1',
       JSON.stringify({ version: '', hash: 'stale', sub: 'u1', lastPullAt: 0 }));  // '' = the poison value
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const ok = await h.w.FRASync.pushNow();
     check('a stale empty version never becomes an If-Match; the first write is a create',
@@ -781,14 +781,14 @@ function state(extra) {
   // invalidating the other's version. The retry's opts.adopt() -> save() -> schedulePush()
   // used to re-arm a 5s push behind the retry, so it fired forever every 5s.
   {
-    const remote = state({ passStreak: 9 });
+    const remote = state({ passes: 9 });
     const h = harness([res(412), res(200, { state: remote, version: 9 }, '"9"'),
                        res(412), res(200, { state: remote, version: 9 }, '"9"'),
                        res(412)]);                       // MAX_ATTEMPTS=3 PUTs, never a 200
     const delays = [];
     h.w.setTimeout = function (fn, d) { delays.push(d); return delays.length; };
     h.w.clearTimeout = function () {};
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     // adopt mirrors app.js: it calls save() which calls schedulePush() -- the re-arm source.
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local,
       adopt: s => { local = s; h.w.FRASync.schedulePush(); } });
@@ -804,7 +804,7 @@ function state(extra) {
 
   // ----- backoff grows on repeated conflict and resets after a clean write -----
   {
-    const remote = state({ passStreak: 9 });
+    const remote = state({ passes: 9 });
     const conflict = () => [res(412), res(200, { state: remote, version: 9 }, '"9"'),
                             res(412), res(200, { state: remote, version: 9 }, '"9"'), res(412)];
     const h = harness(conflict().concat(conflict()));
@@ -812,7 +812,7 @@ function state(extra) {
     const delays = [];
     h.w.setTimeout = function (fn, d) { delays.push(d); return delays.length; };
     h.w.clearTimeout = function () {};
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local,
       adopt: s => { local = s; h.w.FRASync.schedulePush(); } });
     await h.w.FRASync.pushNow();          // backoffN -> 1, ceil 2000
@@ -825,7 +825,7 @@ function state(extra) {
     const d2 = [];
     h2.w.setTimeout = function (fn, d) { d2.push(d); return d2.length; };
     h2.w.clearTimeout = function () {};
-    let l2 = state({ passStreak: 5 });
+    let l2 = state({ passes: 5 });
     h2.w.FRASync.init({ courseId: 'netplus', getState: () => l2, adopt: s => { l2 = s; } });
     const wrote = await h2.w.FRASync.pushNow();
     check('a clean write succeeds', wrote === true, wrote);
@@ -866,12 +866,12 @@ function state(extra) {
   // exhausted its retries. The API returns `version` in every body; that is the source of
   // truth, and the header is at most a fallback that tolerates an encoding suffix.
   {
-    const remote = state({ passStreak: 3 });
+    const remote = state({ passes: 3 });
     const h = harness([
       res(200, { state: remote, version: 3 }, '"3-zstd"'),   // pull through the compressing proxy
       res(200, { version: 4 }, '"4"')                        // the push the merge owes
     ]);
-    let local = state({ passStreak: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    let local = state({ passes: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pull();
     const ok = await h.w.FRASync.pushNow();
@@ -883,13 +883,13 @@ function state(extra) {
   {
     // The 412 recovery path reads the version the same way: a suffixed tag on the re-GET
     // must not send the retry back to create.
-    const remote = state({ passStreak: 3 });
+    const remote = state({ passes: 3 });
     const h = harness([
       res(412),
       res(200, { state: remote, version: 7 }, '"7-gzip"'),
       res(200, { version: 8 }, '"8"')
     ]);
-    let local = state({ passStreak: 1 });
+    let local = state({ passes: 1 });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     const ok = await h.w.FRASync.pushNow();
     check('a 412 recovery through a suffixed ETag retries as an update at the body version',
@@ -899,8 +899,8 @@ function state(extra) {
   {
     // A body without `version` (not this API, but the fallback must still be sane) reads
     // the leading integer of a suffixed tag rather than nothing.
-    const h = harness([res(200, { state: state({ passStreak: 3 }) }, '"5-zstd"'), res(200, { version: 6 }, '"6"')]);
-    let local = state({ passStreak: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    const h = harness([res(200, { state: state({ passes: 3 }) }, '"5-zstd"'), res(200, { version: 6 }, '"6"')]);
+    let local = state({ passes: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
     h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
     await h.w.FRASync.pull();
     await h.w.FRASync.pushNow();

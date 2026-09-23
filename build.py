@@ -51,7 +51,7 @@ def course_meta(course_id):
     src = read(os.path.join(course_dir, "course.js"))
     m = manifest(course_dir)
     exam = re.search(r'exam:\s*\{[^}]*?title:\s*"([^"]+)"[^}]*?code:\s*"([^"]+)"[^}]*?questions:\s*(\d+)', src)
-    test = re.search(r'test:\s*\{[^}]*?questions:\s*(\d+)[^}]*?passPct:\s*(\d+)[^}]*?streakNeeded:\s*(\d+)', src)
+    test = re.search(r'test:\s*\{[^}]*?questions:\s*(\d+)[^}]*?passPct:\s*(\d+)[^}]*?passesNeeded:\s*(\d+)[^}]*?passWindow:\s*(\d+)', src)
     if not exam or not test:
         raise SystemExit(f"{course_id}/course.js: could not read the exam/test fields for the account page")
     scripts = "\n".join(read(p) for p in course_files(course_dir))
@@ -60,7 +60,7 @@ def course_meta(course_id):
         "id": m["id"], "name": m["name"],
         "exam": f"{exam.group(1)} {exam.group(2)}",
         "lessons": len(lessons), "examQuestions": int(test.group(1)),
-        "passPct": int(test.group(2)), "streakNeeded": int(test.group(3)),
+        "passPct": int(test.group(2)), "passesNeeded": int(test.group(3)), "passWindow": int(test.group(4)),
     }
 
 

@@ -6,7 +6,7 @@ FRA.course = {
   short: "CB",
   brand: "FieldReady Academy",
   catalogUrl: "../",
-  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180, passPct: 70 },
   description: "Self-paced Certified Biomedical Equipment Technician (CBET) exam prep with adaptive training and practice exams.",
   domains: [
     { id: 1, name: "Anatomy and Physiology", short: "A&P", pct: 7, quota: 4 },
@@ -17,7 +17,7 @@ FRA.course = {
     { id: 6, name: "Healthcare Information Technology", short: "Healthcare IT", pct: 17, quota: 8 }
   ],
   // The real exam needs roughly 70%, so the course bar is 85% to keep a margin.
-  test: { questions: 50, minutes: 55, passPct: 85, streakNeeded: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 55, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: {
     1: ["u1l2", "u1l3", "u1l4", "u1l5", "u1l1", "u1l6", "u1l7"],
     2: ["u3l1", "u3l2", "u3l3", "u3l4", "u3l5", "u3l6", "u3l7"],
@@ -38,7 +38,7 @@ FRA.course = {
   free: { lessons: 10 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
-  realExamNote: "The real exam requires about 116 of 165 correct, roughly 70%.",
+  realExamNote: "The real exam requires about 116 of 165 correct, roughly 70%. This course's official-format test uses 70%.",
   examDay: [
     "165 questions in 3 hours, closed book, with a simple calculator allowed. That is over a minute per question; do not rush the math items.",
     "Some questions are unscored trial items. A question that seems to be from nowhere may be one of them; answer it and move on.",
