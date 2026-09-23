@@ -230,15 +230,21 @@
   }
 
   function readVersion(resp, body) {
+    // The API puts `version` in every body, GET and PUT alike; that is the source of truth.
+    // The ETag header is only a fallback, and a lenient one. The production reverse proxy
+    // compresses the larger GET responses and, as RFC 9110 requires of a strong tag that
+    // names one representation, rewrites the server's `"3"` to `"3-gzip"` / `"3-zstd"` on
+    // the compressed reply; PUT replies are too small to compress and arrive intact. Taking
+    // the header first and parsing it strictly is what stranded every write after the first
+    // pull: the suffixed tag read as "unknown", the next write became a create on a row that
+    // exists, the 412 re-GET returned the same suffixed tag, and the retries ran out. A
+    // version only ever becomes an If-Match precondition, which the server parses as a bare
+    // integer, so whatever source is used yields a clean integer or null ("unknown", which
+    // routes the next write to create and lets a 412 there re-GET and retry as an update).
+    if (body && body.version != null && /^\d+$/.test(String(body.version))) return String(body.version);
     const tag = resp.headers && resp.headers.get ? resp.headers.get('ETag') : null;
-    const raw = tag ? String(tag).replace(/^W\//, '').replace(/"/g, '')
-      : (body && body.version != null ? String(body.version) : null);
-    // A version only ever becomes an If-Match precondition, which the server parses as a
-    // bare integer -- a stray quote from a cache-revalidated response, an empty ETag, or a
-    // value left by an older build all parse as a 400 that strands every write after the
-    // first. Keep only a clean integer; null means "unknown", which routes the next write
-    // to create (and a 412 there re-GETs a good ETag and retries as an update).
-    return /^\d+$/.test(raw || '') ? raw : null;
+    const m = tag ? /^\s*(?:W\/)?"?(\d+)/.exec(String(tag)) : null;
+    return m ? m[1] : null;
   }
 
   function get(tok) {

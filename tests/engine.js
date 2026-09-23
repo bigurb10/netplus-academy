@@ -346,12 +346,12 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   const gotoExempt = (w, name) => act(w, 'go', name);
   // Same shape as bootSignedIn above, but with an email on the stored token -- Task 5's
   // helper omits it, and the topbar's .who needs one to assert against.
-  function bootSignedInAs(email, script) {
+  function bootSignedInAs(email, script, name) {
     const calls = [];
     const w = boot({
       courseDir: dir,
       beforeAppJs: x => {
-        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email }));
+        x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email, name: name || null }));
         x.fetch = (url, opts) => {
           opts = opts || {};
           calls.push({ url: String(url), method: opts.method || 'GET', headers: opts.headers || {}, body: opts.body ? JSON.parse(opts.body) : null });
@@ -379,10 +379,25 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     await tick(); // let the boot-time pull() settle
     gotoExempt(w14, 'cheatsheet');
     const who = w14.$('.topbar .acct .who');
-    check('signed-in topbar shows the account email', !!who && who.textContent === 'learner@example.com', who && who.textContent);
+    // The email is never shown in the topbar (Blake, 2026-09-23): it is on screen in every
+    // lesson and screenshot. An account with no name gets a neutral label instead.
+    check('signed-in topbar never shows the account email',
+      !!who && who.textContent === 'Signed in' && !w14.$('.topbar').outerHTML.includes('learner@example.com'),
+      who && who.textContent);
     check('signed-in topbar has a sync dot', !!w14.$('.topbar #syncdot'));
     check('signed-in topbar shows sign-out', !!w14.$('.topbar [data-act="sign-out"]'));
     check('signed-in topbar has no sign-in button', !w14.$('.topbar [data-act="sign-in"]'));
+  }
+
+  // 2b) Signed in with a name on the token: the topbar shows the name, still not the email.
+  {
+    const { w: w14b } = bootSignedInAs('learner@example.com', [res(404)], 'Pat Learner');
+    await tick();
+    gotoExempt(w14b, 'cheatsheet');
+    const who = w14b.$('.topbar .acct .who');
+    check('signed-in topbar shows the account name when the token has one',
+      !!who && who.textContent === 'Pat Learner' && !w14b.$('.topbar').outerHTML.includes('learner@example.com'),
+      who && who.textContent);
   }
 
   // 3) Clicking sign-out clears the token and the sync book, leaves course progress

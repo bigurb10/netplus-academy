@@ -855,6 +855,59 @@ function state(extra) {
     h.w.FRASync.reset();
   }
 
+  // ----- a proxy-rewritten ETag must not strand every write: the body's version rules -----
+  // Caddy (the production reverse proxy) compresses the API's GET responses and, per RFC
+  // 9110's rule that a strong ETag names one representation, rewrites the server's `"3"`
+  // to `"3-gzip"` / `"3-zstd"` on the compressed reply. PUT replies are too small to
+  // compress, so their tags arrive intact -- which is why the first writes after a
+  // sign-in succeeded and everything after the first pull failed with 412 for nine days:
+  // the client took the header over the body, could not parse the suffixed tag, fell to
+  // create (If-None-Match: *) on a row that exists, re-GET the same suffixed tag, and
+  // exhausted its retries. The API returns `version` in every body; that is the source of
+  // truth, and the header is at most a fallback that tolerates an encoding suffix.
+  {
+    const remote = state({ passStreak: 3 });
+    const h = harness([
+      res(200, { state: remote, version: 3 }, '"3-zstd"'),   // pull through the compressing proxy
+      res(200, { version: 4 }, '"4"')                        // the push the merge owes
+    ]);
+    let local = state({ passStreak: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();
+    const ok = await h.w.FRASync.pushNow();
+    check('a pull whose ETag carries a proxy encoding suffix still yields the row version',
+      h.calls[1] && h.calls[1].headers['If-Match'] === '"3"' && h.calls[1].headers['If-None-Match'] === undefined,
+      h.calls[1] && JSON.stringify(h.calls[1].headers));
+    check('and the push that follows it succeeds', ok === true, ok);
+  }
+  {
+    // The 412 recovery path reads the version the same way: a suffixed tag on the re-GET
+    // must not send the retry back to create.
+    const remote = state({ passStreak: 3 });
+    const h = harness([
+      res(412),
+      res(200, { state: remote, version: 7 }, '"7-gzip"'),
+      res(200, { version: 8 }, '"8"')
+    ]);
+    let local = state({ passStreak: 1 });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    const ok = await h.w.FRASync.pushNow();
+    check('a 412 recovery through a suffixed ETag retries as an update at the body version',
+      h.calls[2] && h.calls[2].headers['If-Match'] === '"7"', h.calls[2] && JSON.stringify(h.calls[2].headers));
+    check('and that retry succeeds', ok === true, ok);
+  }
+  {
+    // A body without `version` (not this API, but the fallback must still be sane) reads
+    // the leading integer of a suffixed tag rather than nothing.
+    const h = harness([res(200, { state: state({ passStreak: 3 }) }, '"5-zstd"'), res(200, { version: 6 }, '"6"')]);
+    let local = state({ passStreak: 1, lessons: { u9l9: { status: 'done', best: 90, attempts: 1, passedAt: 5 } } });
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();
+    await h.w.FRASync.pushNow();
+    check('with no body version, the header fallback keeps the leading integer of a suffixed tag',
+      h.calls[1] && h.calls[1].headers['If-Match'] === '"5"', h.calls[1] && JSON.stringify(h.calls[1].headers));
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

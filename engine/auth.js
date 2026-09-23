@@ -139,7 +139,10 @@
       refresh_token: data.refresh_token || (tokens() || {}).refresh_token || null,
       expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000,
       sub: c.sub || null,
-      email: c.email || null
+      email: c.email || null,
+      // The token's JWT template renders `name` as "first_name last_name", so a learner
+      // with neither (a magic-code sign-up) arrives as a lone space: blank means absent.
+      name: (typeof c.name === 'string' && c.name.trim()) ? c.name.trim() : null
     };
     writeJson(root.localStorage, TOKEN_KEY, rec);
     return rec;
@@ -228,7 +231,7 @@
 
   function user() {
     const t = tokens();
-    return t && t.sub ? { sub: t.sub, email: t.email || null } : null;
+    return t && t.sub ? { sub: t.sub, email: t.email || null, name: t.name || null } : null;
   }
 
   root.FRAAuth = {
