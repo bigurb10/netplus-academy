@@ -384,6 +384,8 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('signed-in topbar never shows the account email',
       !!who && who.textContent === 'Signed in' && !w14.$('.topbar').outerHTML.includes('learner@example.com'),
       who && who.textContent);
+    check('the account label links to the account page',
+      !!who && who.tagName === 'A' && who.getAttribute('href') === '/account/', who && who.outerHTML);
     check('signed-in topbar has a sync dot', !!w14.$('.topbar #syncdot'));
     check('signed-in topbar shows sign-out', !!w14.$('.topbar [data-act="sign-out"]'));
     check('signed-in topbar has no sign-in button', !w14.$('.topbar [data-act="sign-in"]'));
@@ -398,6 +400,7 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('signed-in topbar shows the account name when the token has one',
       !!who && who.textContent === 'Pat Learner' && !w14b.$('.topbar').outerHTML.includes('learner@example.com'),
       who && who.textContent);
+    check('the named label links to the account page too', !!who && who.getAttribute('href') === '/account/', who && who.outerHTML);
   }
 
   // 3) Clicking sign-out clears the token and the sync book, leaves course progress

@@ -25,3 +25,23 @@ main h2 { font-size: 1.3rem; margin: 32px 0 14px; }
 .steps { padding-left: 22px; line-height: 1.7; color: var(--ink-2); }
 footer { padding: 40px 20px 60px; font-size: 0.9rem; }
 .muted { color: var(--muted); }
+/* Account control (catalog header and account page) */
+.brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+a.brand { color: inherit; text-decoration: none; }
+.acct-slot { display: flex; align-items: center; gap: 10px; min-height: 32px; }
+.acct-slot .who { font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; color: var(--ink); text-decoration: none; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-slot .who:hover { color: var(--accent); }
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.92rem; line-height: 1.2; text-decoration: none; cursor: pointer; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
+.btn.ghost:hover { color: var(--ink); border-color: var(--ink-2); filter: none; }
+.btn.small { padding: 6px 10px; font-size: 0.85rem; }
+/* Account page */
+.hero.slim { padding: 22px 0 26px; }
+.hero.slim h1 { font-size: 1.7rem; margin: 16px 0 6px; }
+.card .exam { color: var(--muted); font-size: 0.9rem; margin: 0; flex: 0 0 auto; }
+.bar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--good); border-radius: 999px; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 4px 0 6px; }
+.fact dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.fact dd { margin: 0; font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; }

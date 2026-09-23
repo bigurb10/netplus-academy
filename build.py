@@ -42,6 +42,66 @@ def manifest(course_dir):
     return {"id": get("id"), "name": get("name"), "description": get("description")}
 
 
+CATALOG_ORDER = ["netplus", "secplus", "cbet", "aplus1", "aplus2"]
+
+
+def course_meta(course_id):
+    """The account page's row for one course: what engine/summary.js needs, plus names."""
+    course_dir = os.path.join(COURSES, course_id)
+    src = read(os.path.join(course_dir, "course.js"))
+    m = manifest(course_dir)
+    exam = re.search(r'exam:\s*\{[^}]*?title:\s*"([^"]+)"[^}]*?code:\s*"([^"]+)"[^}]*?questions:\s*(\d+)', src)
+    test = re.search(r'test:\s*\{[^}]*?questions:\s*(\d+)[^}]*?passPct:\s*(\d+)[^}]*?streakNeeded:\s*(\d+)', src)
+    if not exam or not test:
+        raise SystemExit(f"{course_id}/course.js: could not read the exam/test fields for the account page")
+    scripts = "\n".join(read(p) for p in course_files(course_dir))
+    lessons = re.findall(r'id: "(u\d+l\d+)", title: "', scripts)
+    return {
+        "id": m["id"], "name": m["name"],
+        "exam": f"{exam.group(1)} {exam.group(2)}",
+        "lessons": len(lessons), "examQuestions": int(test.group(1)),
+        "passPct": int(test.group(2)), "streakNeeded": int(test.group(3)),
+    }
+
+
+def inline_engine(html, rel_src, engine_file):
+    """Replace one <script src=...> with the engine file's text, so the page is self-contained."""
+    tag = f'<script src="{rel_src}"></script>'
+    assert tag in html, f"expected {tag!r} in the page"
+    js = read(os.path.join(ENGINE, engine_file)).replace("</script", "<\\/script")
+    return html.replace(tag, "<script>\n" + js + "\n</script>")
+
+
+def build_catalog():
+    """dist/index.html - the catalog with engine/auth.js inlined for its header control."""
+    html = inline_engine(read(os.path.join(ROOT, "index.html")), "engine/auth.js", "auth.js")
+    assert "engine/auth.js" not in html
+    os.makedirs(DIST, exist_ok=True)
+    with open(os.path.join(DIST, "index.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  wrote dist/index.html {len(html)} bytes")
+
+
+def build_account():
+    """dist/account.html - progress on every course, fully self-contained."""
+    import json
+    html = read(os.path.join(ROOT, "account", "index.html"))
+    html = html.replace('<link rel="stylesheet" href="../catalog.css">',
+                        "<style>\n" + read(os.path.join(ROOT, "catalog.css")) + "\n</style>")
+    html = inline_engine(html, "../engine/auth.js", "auth.js")
+    ids = [c for c in CATALOG_ORDER if os.path.exists(os.path.join(COURSES, c, "course.js"))]
+    table = json.dumps([course_meta(c) for c in ids], ensure_ascii=True).replace("</", "<\\/")
+    marker = "<script>\n(function () {\n  // FRA account page"
+    html = inline_engine(html, "../engine/summary.js", "summary.js")
+    assert marker in html, "account/index.html no longer matches the strings build_account() inlines"
+    html = html.replace(marker, "<script>window.FRA_COURSES = " + table + ";</script>\n" + marker)
+    assert "window.FRA_COURSES = [" in html and "<style>" in html and 'src="../engine/' not in html
+    os.makedirs(DIST, exist_ok=True)
+    with open(os.path.join(DIST, "account.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  wrote dist/account.html {len(html)} bytes ({len(ids)} courses)")
+
+
 def build(course_id):
     course_dir = os.path.join(COURSES, course_id)
     m = manifest(course_dir)
@@ -136,3 +196,5 @@ if __name__ == "__main__":
     for cid in wanted:
         build(cid)
     build_callback()
+    build_catalog()
+    build_account()

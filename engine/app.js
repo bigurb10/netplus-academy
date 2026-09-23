@@ -443,7 +443,7 @@
     const u = FRAAuth.user() || {};
     // The learner's name if their account has one, never the email: the topbar is on
     // screen in every lesson, screenshot, and over-the-shoulder glance.
-    return `<div class="acct"><span class="who">${esc(u.name || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
+    return `<div class="acct"><a class="who" href="/account/" title="Your progress on every course">${esc(u.name || 'Signed in')}</a><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');

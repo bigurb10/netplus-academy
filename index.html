@@ -35,7 +35,10 @@
 <body>
   <header class="hero">
     <div class="wrap">
-      <div class="brand"><span class="mark">FR</span> FieldReady Academy</div>
+      <div class="brand-row">
+        <div class="brand"><span class="mark">FR</span> FieldReady Academy</div>
+        <div class="acct-slot" id="acct"></div>
+      </div>
       <h1>Test first. Then learn exactly what you missed.</h1>
       <p>Each course starts with a printable memorization sheet and a short starter test, builds a tutorial from your gaps, and keeps testing you until you pass three practice exams in a row. Everything is free while we launch.</p>
     </div>
@@ -89,5 +92,28 @@
     </ol>
   </main>
   <footer class="wrap muted">FieldReady Academy. All course content is original. Progress is saved in your browser, and to your account when you sign in.</footer>
+  <script src="engine/auth.js"></script>
+  <script>
+  (function () {
+    // FRA catalog account control: sign in from the front page, and a way to your progress.
+    // The name, never the email, is what identifies the account here.
+    var A = window.FRAAuth, slot = document.getElementById('acct');
+    if (!A || !slot) return;
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+    function paint() {
+      var u = A.isSignedIn() ? A.user() : null;
+      slot.innerHTML = u
+        ? '<a class="who" href="/account/">' + esc(u.name || 'My progress') + '</a><button class="btn ghost small" data-act="sign-out">Sign out</button>'
+        : '<button class="btn small" data-act="sign-in">Sign in</button>';
+    }
+    slot.addEventListener('click', function (ev) {
+      var b = ev.target && ev.target.closest ? ev.target.closest('[data-act]') : null;
+      if (!b) return;
+      if (b.getAttribute('data-act') === 'sign-in') A.beginSignIn('/');
+      else if (b.getAttribute('data-act') === 'sign-out') { A.signOut(); paint(); }
+    });
+    paint();
+  })();
+  </script>
 </body>
 </html>

@@ -74,7 +74,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); background: none; border: 0; padding: 0; }
 .brand .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; }
 .acct { display:flex; align-items:center; gap:8px; }
-.acct .who { font-size:.85rem; opacity:.8; max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.acct .who { font-size:.85rem; color:var(--ink-2); text-decoration:none; max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.acct .who:hover { color:var(--ink); text-decoration:underline; }
 .syncdot { width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block; }
 .syncdot.syncing { background:var(--accent); }
 .syncdot.error, .syncdot.offline { background:var(--warn); }
@@ -6975,7 +6976,7 @@ FRA.questions.push(
     const u = FRAAuth.user() || {};
     // The learner's name if their account has one, never the email: the topbar is on
     // screen in every lesson, screenshot, and over-the-shoulder glance.
-    return `<div class="acct"><span class="who">${esc(u.name || 'Signed in')}</span><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
+    return `<div class="acct"><a class="who" href="/account/" title="Your progress on every course">${esc(u.name || 'Signed in')}</a><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');
