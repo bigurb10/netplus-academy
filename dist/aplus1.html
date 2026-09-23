@@ -7395,7 +7395,7 @@ FRA.questions.push(
         <div class="stat"><div class="eyebrow">Tutorial</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + ' lessons</small>' : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
         <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
-        <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> / ${PASSES_NEEDED} of last ${PASS_WINDOW} at ${PASS_PCT}%+</small></div></div>
+        <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> of your last ${PASS_WINDOW} at ${PASS_PCT}%+ · ${PASSES_NEEDED} needed</small></div></div>
       </div>
       <div class="card stack">
         <div class="row spread"><h3>Accuracy by exam domain</h3><span class="muted" style="font-size:.9rem">${mastered} of ${lessons.length} topics mastered</span></div>
