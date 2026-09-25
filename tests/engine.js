@@ -682,6 +682,55 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('the tests hub reports passes in the window and offers the official-format test', /Final step: the official-format test/.test(w31.text()) && !!w31.$('[data-act="start-standard"]'));
   }
 
+  // ----- Tests have a Previous button (2026-09-25): step back, change an answer, fill a skip, then finish -----
+  // Answers are only scored when the test ends, so a learner can move back through answered
+  // questions and change them, like the real exam. The frontier is answers.length: questions
+  // before it are open for review (Previous / Next), the one at it is new (Submit / Skip).
+  {
+    const w32 = boot({ courseDir: dir });
+    act(w32, 'go', 'home'); act(w32, 'start-exam', 'starter');
+    const fat32 = x => typeof x === 'string' ? w32.FRA.questions.find(q => q.id === x) : x;
+    state(w32).active.items.map(fat32).forEach(q => { act(w32, 'opt', q.c); act(w32, 'conf', 5); act(w32, 'submit'); });
+    act(w32, 'start-exam', 'full');
+    const items32 = state(w32).active.items.map(fat32); const n32 = items32.length;
+    check('the first question of a test has no Previous button', !w32.$('[data-act="test-prev"]'));
+    act(w32, 'opt', 0); act(w32, 'submit');   // question 1 answered A
+    act(w32, 'skip');                          // question 2 skipped
+    act(w32, 'opt', 2);                        // question 3: C picked, not submitted
+    check('from the second question on, Previous is offered', !!w32.$('[data-act="test-prev"]'));
+    act(w32, 'test-prev');
+    let ex32 = state(w32).active;
+    check('Previous returns to the skipped question with nothing selected', ex32.i === 1 && ex32.sel == null && !w32.$('.option[aria-pressed="true"]'), JSON.stringify({ i: ex32.i, sel: ex32.sel }));
+    check('a reviewed question offers Next instead of Submit and Skip', !!w32.$('[data-act="test-next"]') && !w32.$('[data-act="submit"]') && !w32.$('[data-act="skip"]'));
+    w32.document.dispatchEvent(new w32.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    ex32 = state(w32).active;
+    check('the left arrow key also steps back, showing the first answer selected', ex32.i === 0 && ex32.sel === 0 && w32.$('.option[data-arg="0"]').getAttribute('aria-pressed') === 'true', JSON.stringify({ i: ex32.i, sel: ex32.sel }));
+    act(w32, 'opt', 1); act(w32, 'test-next');  // change question 1 to B
+    act(w32, 'opt', 3);                          // fill the skipped question 2 with D
+    w32.document.dispatchEvent(new w32.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    ex32 = state(w32).active;
+    check('Next and Enter save the changed and the filled answers', ex32.i === 2 && ex32.answers[0].choice === 1 && ex32.answers[1].choice === 3 && ex32.answers[1].skipped === false, JSON.stringify(ex32.answers.slice(0, 2)));
+    check('returning to the new question restores its unsubmitted pick', ex32.sel === 2 && !!w32.$('[data-act="submit"]') && !!w32.$('[data-act="skip"]'), JSON.stringify({ i: ex32.i, sel: ex32.sel }));
+    check('the progress meter counts answered questions, not the one on screen', w32.$('.exam-head .meter > i').style.width === (100 * 2 / n32) + '%', w32.$('.exam-head .meter > i').style.width);
+    for (let k = 2; k < n32 - 1; k++) { act(w32, 'opt', items32[k].c); act(w32, 'submit'); }
+    const last32 = w32.$('[data-act="submit"]');
+    check('the last question offers Finish test instead of Submit', !!last32 && /Finish test/.test(last32.textContent) && !!w32.$('[data-act="test-prev"]'), last32 && last32.textContent);
+    act(w32, 'opt', items32[n32 - 1].c); act(w32, 'submit');
+    const rec32 = state(w32).exams[state(w32).exams.length - 1];
+    check('the record keeps the changed first answer and the filled second', !!rec32 && rec32.kind === 'full' && rec32.review[0].choice === 1 && rec32.review[1].choice === 3 && !state(w32).active, JSON.stringify(rec32 && [rec32.review[0].choice, rec32.review[1].choice]));
+    // The starter still asks sureness: a filled-in skip needs a rating before Next or Previous will move.
+    const w33 = boot({ courseDir: dir });
+    act(w33, 'go', 'home'); act(w33, 'start-exam', 'starter');
+    act(w33, 'opt', 0); act(w33, 'conf', 5); act(w33, 'submit'); act(w33, 'skip');
+    act(w33, 'test-prev'); act(w33, 'opt', 1);
+    check('on the starter, Next waits for a sureness rating on a filled-in skip', w33.$('[data-act="test-next"]').disabled && w33.$('[data-act="test-prev"]').disabled);
+    act(w33, 'test-next');
+    check('and the handler refuses until it is rated', state(w33).active.i === 1);
+    act(w33, 'conf', 3); act(w33, 'test-next');
+    const a33 = state(w33).active.answers[1];
+    check('rated, Next saves the answer with its sureness', state(w33).active.i === 2 && a33.choice === 1 && a33.conf === 3 && a33.skipped === false, JSON.stringify(a33));
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

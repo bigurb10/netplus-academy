@@ -235,6 +235,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .ready-banner { background: var(--good-soft); border: 1px solid var(--good); border-radius: var(--radius); padding: 18px 20px; }
 .kbd-hint { font-size: 0.82rem; color: var(--muted); }
 .kbd-hint kbd { font-family: var(--font-mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-size: 0.78rem; }
+/* Phones have no keyboard to hint at, and the hint would push Previous and Next (or Skip and Submit) onto two rows. */
+@media (max-width: 700px) { .kbd-hint { display: none; } }
 .topic-list { display: grid; gap: 8px; }
 .topic-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .topic-item .t-title { font-weight: 600; }
@@ -7876,9 +7878,16 @@ FRA.questions.push(
       feedback = `<div class="feedback ${correct ? 'good' : 'bad'}"><div class="verdict">${correct ? (hasConf && conf <= 2 ? 'Correct, but you were not sure, so it does not count. Read why.' : 'Correct') : `Incorrect. The answer is ${letters[q.c]}.`}</div><div>${esc(q.e)}</div>${l ? `<div class="muted" style="font-size:.9rem">Topic: ${esc(l.title)} (Unit ${l.unit.n})</div>` : ''}</div>`;
     }
     const canSubmit = sel != null && (conf != null || !hasConf);
+    // Tests only (opts.nav): Previous steps back through answered questions; a reviewed question offers Next in place
+    // of Submit and Skip. A pick without its sureness rating (starter only) holds both buttons until it is rated.
+    const nav = opts.nav || null; const unrated = hasConf && sel != null && conf == null;
+    const prevBtn = nav && nav.prev ? `<button class="btn ghost" data-act="test-prev" ${nav.review && unrated ? 'disabled' : ''}>&larr; Previous</button>` : '';
+    const keys = `<kbd>A</kbd>–<kbd>D</kbd> answer, ${hasConf ? '<kbd>1</kbd>–<kbd>5</kbd> confidence, ' : ''}`;
     const controls = submitted
       ? `<div class="row spread"><span class="kbd-hint"><kbd>Enter</kbd> continue</span><button class="btn primary" data-act="next">Continue</button></div>`
-      : `<div class="row spread"><span class="kbd-hint"><kbd>A</kbd>–<kbd>D</kbd> answer, ${hasConf ? '<kbd>1</kbd>–<kbd>5</kbd> confidence, ' : ''}<kbd>Enter</kbd> submit</span><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit</button></div></div>`;
+      : nav && nav.review
+        ? `<div class="row spread"><div class="row" style="gap:10px">${prevBtn}<span class="kbd-hint">${keys}<kbd>Enter</kbd> next</span></div><button class="btn primary" data-act="test-next" ${unrated ? 'disabled' : ''}>Next &rarr;</button></div>`
+        : `<div class="row spread"><div class="row" style="gap:10px">${prevBtn}<span class="kbd-hint">${keys}<kbd>Enter</kbd> submit</span></div><div class="row">${opts.allowSkip ? `<button class="btn ghost" data-act="skip">Skip</button>` : ''}<button class="btn primary" data-act="submit" ${canSubmit ? '' : 'disabled'}>${nav && nav.last ? 'Finish test' : 'Submit'}</button></div></div>`;
     return `<div class="quiz">
       <div class="q-head"><span class="eyebrow">${opts.title || 'Question'} ${opts.showNumber ? `${sess.i + 1} of ${n}` : ''}</span><span class="row" style="gap:6px">${opts.right || ''}${fbBtn(q, sess.kind)}</span></div>
       <div class="q-stem">${esc(q.q)}</div>
@@ -7903,9 +7912,10 @@ FRA.questions.push(
     if (!ex) return viewTestsHub();
     if (ex.i >= ex.items.length) return finishExam();
     const answered = ex.answers.filter(Boolean).length; const q = fat(ex.items[ex.i]);
+    const nav = { prev: ex.i > 0, review: ex.i < ex.answers.length, last: ex.i === ex.items.length - 1 };
     return `<div class="content">
-      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.i / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
-      <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short })}</div>
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.answers.length / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short, nav })}</div>
       <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
     </div>`;
   }
@@ -8342,13 +8352,34 @@ FRA.questions.push(
     if (a.kind === 'train' && S.view.name === 'train' && a.phase === 'drill') return a;
     return null;
   }
+  // ---------- moving through a test ----------
+  // A test scores nothing until it ends, so the learner can step back through answered questions, change an
+  // answer, or fill a skipped one, like the real exam. The frontier is answers.length: questions before it are
+  // answered (or skipped) and open for review; the one at it is new. The selection on screen is always the
+  // answer, so leaving a reviewed question saves it; leaving the new question keeps its unsubmitted pick as a
+  // draft that comes back when the learner returns to it.
+  const testAnswer = (sess, sel, conf) => { const skipped = sel == null; return { choice: skipped ? -1 : sel, conf: sess.noConf ? null : skipped ? 1 : conf, skipped }; };
+  function testLeave(sess) {
+    if (sess.i < sess.answers.length) sess.answers[sess.i] = testAnswer(sess, sess.sel, sess.conf);
+    else sess.draft = { sel: sess.sel, conf: sess.conf };
+  }
+  function testShow(sess, k) {
+    sess.i = k; sess.submitted = false;
+    if (k < sess.answers.length) { const a = sess.answers[k]; sess.sel = a.skipped || a.choice < 0 ? null : a.choice; sess.conf = a.skipped ? null : a.conf; }
+    else { const d = sess.draft || {}; sess.sel = d.sel == null ? null : d.sel; sess.conf = d.conf == null ? null : d.conf; sess.draft = null; }
+  }
+  // A pick on the starter without its sureness rating is not an answer yet, so it holds the learner on the question.
+  const testUnrated = sess => sess.i < sess.answers.length && !sess.noConf && sess.sel != null && sess.conf == null;
+  function testPrev(sess) { if (!isTest(sess.kind) || sess.i <= 0 || testUnrated(sess)) return; testLeave(sess); testShow(sess, sess.i - 1); save(); render(); }
+  function testNext(sess) { if (!isTest(sess.kind) || sess.i >= sess.answers.length || testUnrated(sess)) return; testLeave(sess); testShow(sess, sess.i + 1); save(); render(); }
   function submitAnswer(sess, skipped) {
     const q = fat(sess.items[sess.i]);
-    const choice = skipped ? -1 : sess.sel; const conf = sess.noConf ? null : skipped ? 1 : sess.conf;
     if (isTest(sess.kind)) {
-      sess.answers[sess.i] = { choice, conf, skipped: !!skipped };
-      sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; save(); render(); return;
+      if (sess.i < sess.answers.length) return testNext(sess); // a reviewed question moves on with whatever is selected
+      sess.answers[sess.i] = testAnswer(sess, skipped ? null : sess.sel, sess.conf);
+      sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; sess.draft = null; save(); render(); return;
     }
+    const choice = skipped ? -1 : sess.sel; const conf = sess.noConf ? null : skipped ? 1 : sess.conf;
     // Without a sureness rating (checkpoints and drills), a right answer records as sure (4) and a
     // wrong one as plain wrong (3), the same defaults finishExam uses for tests.
     const res = recordAnswer(q, choice, conf == null ? (choice === q.c ? 4 : 3) : conf);
@@ -8419,6 +8450,8 @@ FRA.questions.push(
       case 'acr-close': { if (btn.classList.contains('modal-back') && e.target !== btn) return; acrOpen = null; render(); return; }
       case 'acr-all': { acrOpen = null; go('cheatsheet'); const el = $('#cs-acronyms'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return; }
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
+      case 'test-prev': { const s = sessionForView(); if (s) testPrev(s); return; }
+      case 'test-next': { const s = sessionForView(); if (s) testNext(s); return; }
       case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
       case 'start-exam': {
         if (testsLocked(arg === 'starter' ? 'starter' : 'full')) { toast('The full course is needed for this test.'); return go('exam'); }
@@ -8484,7 +8517,9 @@ FRA.questions.push(
     const k = e.key.toUpperCase();
     if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
     if (!s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
+    if (isTest(s.kind) && e.key === 'ArrowLeft') { e.preventDefault(); testPrev(s); return; }
+    if (isTest(s.kind) && e.key === 'ArrowRight') { e.preventDefault(); testNext(s); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (isTest(s.kind) && s.i < s.answers.length) testNext(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
   });
   app.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
   app.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });

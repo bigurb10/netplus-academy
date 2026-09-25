@@ -217,6 +217,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .ready-banner { background: var(--good-soft); border: 1px solid var(--good); border-radius: var(--radius); padding: 18px 20px; }
 .kbd-hint { font-size: 0.82rem; color: var(--muted); }
 .kbd-hint kbd { font-family: var(--font-mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-size: 0.78rem; }
+/* Phones have no keyboard to hint at, and the hint would push Previous and Next (or Skip and Submit) onto two rows. */
+@media (max-width: 700px) { .kbd-hint { display: none; } }
 .topic-list { display: grid; gap: 8px; }
 .topic-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .topic-item .t-title { font-weight: 600; }
