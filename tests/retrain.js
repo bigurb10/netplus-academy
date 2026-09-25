@@ -140,6 +140,16 @@ const minutesOf = w => parseInt((w.$('.retrain-card h3').textContent.match(/abou
   check('adopting builds the plan from the custom test', state(w).plan.examIdx === customIdx && !!w.$('.retrain-card') && w.$$('.retrain-row').length > 0);
 }
 
+{
+  // An older test's results, once a later test replaced its plan, never claim "no misses".
+  const w = bootWith(seeded()); const s1 = takeTest(w, 'full', [T1]); const firstIdx = s1.exams.length - 1;
+  takeTest(w, 'practice', [T2]);
+  act(w, 'go', 'results:' + firstIdx);
+  check('an older test with misses offers to rebuild retraining and does not say no misses', !!w.$(`[data-act="retrain-adopt"][data-arg="${firstIdx}"]`) && !/No misses/.test(w.text()) && !w.$('.retrain-card'));
+  act(w, 'retrain-adopt', String(firstIdx));
+  check('rebuilding from the older test makes it the plan source', state(w).plan.examIdx === firstIdx && !!w.$('.retrain-card'));
+}
+
 // ----- Part 3: running a path -----
 // Answer the current drill or checkpoint question and continue.
 const answer = (w, ok) => { const a = state(w).active; const q = fat(a.items[a.i]); w.click(w.$(`[data-act="opt"][data-arg="${ok ? q.c : (q.c + 1) % q.a.length}"]`)); w.click(w.$('[data-act="submit"]')); w.click(w.$('[data-act="next"]')); };

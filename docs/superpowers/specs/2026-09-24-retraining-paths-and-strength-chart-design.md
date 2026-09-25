@@ -27,10 +27,11 @@ both at the end of the test and on the account page.
   correct in a row. Topics already merge whole-record by `last`, so it carries.
 - A plan built from a test (`plan.source === 'test'`) keeps its entries in `plan.lessons`.
   Each entry gains `mode` (`drill` | `lesson` | `deep`), `suggested` (the mode the rule
-  picked), `score`, and `why = { here, before, cpWrong }`. No `preset` field is stored; the
-  preset is derived on render from the modes (all equal to `suggested` is Suggested, all
-  `drill` is All drills, and so on, anything else is Custom). Plans from the starter test are
-  untouched. Entries saved before this change have no `mode` and are read as `lesson`.
+  picked), `score`, and `why = { here, before, cpWrong }`. The plan stores `preset`, the
+  preset the learner last chose (`suggested` for a new plan); the chip shown pressed is that
+  preset while every entry's mode still matches it, otherwise Custom. Plans from the starter
+  test are untouched. Entries saved before this change have no `mode` and are read as
+  `lesson`; a plan without `preset` reads as `suggested`.
 
 ### The retraining window and score
 
@@ -89,7 +90,10 @@ Order of the non-starter results page, top to bottom:
      a repeat miss suggests the lesson; missed on both tests or a failed checkpoint too
      suggests the extended lesson.
    When the plan is from another test (custom test case), the in-progress card from section 1.
-   When there is nothing to retrain, the existing "No misses" banner.
+   On an older full or practice test whose plan a later test replaced, a small card says so
+   and offers "Rebuild retraining from this test instead" (`retrain-adopt`), so a revisited
+   results page never claims "No misses". When there is nothing to retrain, the existing
+   "No misses" banner.
 5. Wrong answers explained (unchanged).
 6. The bottom row with the next-test button (unchanged).
 
