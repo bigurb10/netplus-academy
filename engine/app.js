@@ -315,6 +315,7 @@
   // read as lesson.
   const MODES = ['drill', 'lesson', 'deep'];
   const MODE_LABEL = { drill: 'Drill', lesson: 'Lesson', deep: 'Extended lesson' };
+  const MODE_SHORT = { drill: 'Drill', lesson: 'Lesson', deep: 'Extended' };
   const PRESET_LABEL = { suggested: 'Suggested', drill: 'All drills', lesson: 'All lessons', deep: 'All extended', custom: 'Custom' };
   const modeOf = e => (e && MODES.includes(e.mode)) ? e.mode : 'lesson';
   const suggestMode = score => score <= 1 ? 'drill' : score < 2.5 ? 'lesson' : 'deep';
@@ -335,6 +336,16 @@
     return matches ? p : 'custom';
   }
   function applyPreset(plan, p) { plan.lessons.forEach(e => { e.mode = p === 'suggested' ? (e.suggested || 'lesson') : p; }); plan.preset = p; }
+  // Open a retraining entry the way its mode says: a plan-flagged single-topic drill session, the
+  // lesson, or the lesson with its deeper explanation expanded.
+  function openEntry(en) {
+    if (!en || !L[en.id]) return;
+    const m = modeOf(en);
+    if (m === 'drill') { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain([en.id], { plan: true }); return; }
+    if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== en.id) S.active = null;
+    deepAuto = m === 'deep' ? en.id : null; deepOpen = m === 'deep' ? en.id : null; railOpen = false;
+    go('lesson', en.id);
+  }
   const deepMinutesCache = {};
   function deepMinutes(id) { if (deepMinutesCache[id] == null) { const d = FRA.deep && FRA.deep[id]; deepMinutesCache[id] = d ? Math.ceil(String(d).split(/\s+/).length / 200) : 0; } return deepMinutesCache[id]; }
   function entryMinutes(e) { const m = modeOf(e); const l = L[e.id]; const base = ((l && l.minutes) || 6) + 3; return m === 'drill' ? 5 : m === 'deep' ? base + deepMinutes(e.id) : base; }
@@ -408,7 +419,9 @@
     if (S.active) return { label: S.active.kind === 'train' ? 'Resume drills' : S.active.kind === 'checkpoint' ? 'Resume the lesson checkpoint' : 'Resume your test', act: 'resume', arg: '' };
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
-    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
+    if (st === 'retrain') { const rem = planRemaining(); const e0 = rem[0]; const l = L[e0.id]; const m = modeOf(e0); const p = presetOf(S.plan);
+      return { label: `${m === 'drill' ? 'Drill' : m === 'deep' ? 'Extended lesson' : 'Continue retraining'}: ${l.title}`, act: 'retrain-open', arg: l.id, sub: `${plural(rem.length, 'topic')} left, about ${planMinutes(rem)} minutes. ${p === 'suggested' ? 'Suggested path' : p === 'custom' ? 'Your own path' : PRESET_LABEL[p]}; change it from the Tutorial tab.` }; }
+    if (st === 'tutorial') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${OFFICIAL_PCT}% or better, the real exam's passing score, within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
@@ -420,6 +433,7 @@
   const app = $('#app');
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
+  let deepAuto = null; // lesson id whose deeper explanation was auto-expanded for an extended retraining entry (so Hide sticks)
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
   let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
@@ -636,6 +650,7 @@
     }
     const rem = planRemaining(); const done = S.plan.lessons.length - rem.length;
     const src = S.exams[S.plan.examIdx]; const full = S.plan.scope === 'full';
+    const isTestPlan = S.plan.source === 'test'; const openAct = isTestPlan ? 'retrain-open' : 'lesson';
     const tailoredN = S.plan.source === 'starter' && src ? planFromStarter(src, S.plan.examIdx).lessons.length : 0;
     const byUnit = {}; S.plan.lessons.forEach(e => { const u = L[e.id].unit; (byUnit[u.id] = byUnit[u.id] || { u, list: [] }).list.push(e); });
     const groups = Object.values(byUnit).sort((a, b) => S.plan.source === 'starter' ? a.u.n - b.u.n : Math.min(...a.list.map(e => S.plan.lessons.indexOf(e))) - Math.min(...b.list.map(e => S.plan.lessons.indexOf(e))));
@@ -644,10 +659,10 @@
         <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
       ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
-      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
-      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${presetOf(S.plan) === 'suggested' ? 'suggested' : presetOf(S.plan) === 'custom' ? 'your own mix' : PRESET_LABEL[presetOf(S.plan)].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
+      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="${openAct}" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}${isTestPlan && modeOf(rem[0]) !== 'lesson' ? ` (${MODE_SHORT[modeOf(rem[0])].toLowerCase()})` : ''}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
-        ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
+        ${g.list.map(e => `<button class="option" data-act="${openAct}" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span><span class="row" style="gap:6px">${planDone(e.id) ? '<span class="pill good">DONE</span>' : `${isTestPlan ? `<span class="pill accent">${MODE_SHORT[modeOf(e)]}</span>` : ''}${reasonPill(e)}`}</span></button>`).join('')}</div>`).join('')}
       <div class="row"><button class="btn ghost" data-act="go" data-arg="course">Browse all ${lessons.length} lessons</button></div>
     </div>`;
   }
@@ -676,6 +691,9 @@
     const ls = lstat(id); if (ls.status === 'new') { ls.status = 'read'; save(); }
     const entry = planEntry(id); const rem = planRemaining(); const posInPlan = entry ? rem.findIndex(e => e.id === id) : -1;
     const nextInPlan = entry ? rem.find(e => e.id !== id) : null;
+    // An extended retraining entry opens with the deeper explanation expanded, once; Hide then sticks.
+    const extended = !!(entry && S.plan.source === 'test' && modeOf(entry) === 'deep');
+    if (extended && !planDone(id) && deepAuto !== id) { deepAuto = id; deepOpen = id; }
     const idx = lessons.indexOf(l); const nextLesson = lessons[idx + 1]; const prevLesson = lessons[idx - 1];
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
@@ -692,7 +710,7 @@
       const st = stage();
       let nextBtn = '';
       if (passed) {
-        if (nextInPlan) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextInPlan.id}">Next in tutorial: ${esc(L[nextInPlan.id].title)}</button>`;
+        if (nextInPlan) { const nm = S.plan.source === 'test' ? modeOf(nextInPlan) : 'lesson'; nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextInPlan.id}">Next in ${S.plan.source === 'test' ? 'retraining' : 'tutorial'}: ${esc(L[nextInPlan.id].title)}${nm !== 'lesson' ? ` (${MODE_SHORT[nm].toLowerCase()})` : ''}</button>`; }
         else if (S.plan && !planRemaining().length) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="__test">Tutorial complete. Take the ${EXAM_N}-question ${st === 'fulltest' ? 'test' : 'practice test'}</button>`;
         else if (nextLesson) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextLesson.id}">Next lesson: ${esc(nextLesson.title)}</button>`;
       }
@@ -703,9 +721,10 @@
     }
     return `<div class="content stack" style="gap:20px">
       <div class="lesson-head">
-        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span><span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
+        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
         <h1>${esc(l.title)}</h1>
         ${domainReason && !callouts ? `<p class="ink2">${esc(lessonWhy(domainReason))}</p>` : ''}
+        ${extended && !planDone(id) ? `<p class="ink2">Extended lesson: read the lesson and the deeper explanation below, then take the checkpoint.</p>` : ''}
       </div>
       ${callouts}
       <article class="lesson-body">${renderBody(l.body)}</article>
@@ -865,7 +884,7 @@
     const plan = S.plan; const rem = planRemaining(); const p = presetOf(plan);
     const presets = ['suggested', 'drill', 'lesson', 'deep'].map(k => `<button class="chip preset" data-act="retrain-preset" data-arg="${k}" aria-pressed="${p === k}">${PRESET_LABEL[k]}</button>`).join('') + (p === 'custom' ? `<span class="chip preset" data-arg="custom" aria-pressed="true">Custom</span>` : '');
     const rows = plan.lessons.map(en => { const l = L[en.id]; if (!l) return ''; const m = modeOf(en); const done = planDone(en.id);
-      return `<div class="retrain-row ${done ? 'done' : ''}" data-id="${en.id}"><div class="row spread" style="gap:8px;align-items:flex-start"><div><div class="t-title">${esc(l.title)}</div><div class="t-sub">${esc(DOMAINS[l.domain].short)}${en.why ? ' · ' + esc(whyText(en.why)) : ''}${en.suggested ? ` · suggested: ${MODE_LABEL[en.suggested].toLowerCase()}` : ''}</div></div>${done ? '<span class="pill good">DONE</span>' : `<button class="btn small ghost" data-act="retrain-open" data-arg="${en.id}">Open</button>`}</div><div class="modes">${MODES.map(k => `<button class="chip mode" data-act="retrain-mode" data-arg="${en.id}:${k}" aria-pressed="${m === k}">${MODE_LABEL[k]}</button>`).join('')}</div></div>`; }).join('');
+      return `<div class="retrain-row ${done ? 'done' : ''}" data-id="${en.id}"><div class="row spread" style="gap:8px;align-items:flex-start"><div><div class="t-title">${esc(l.title)}</div><div class="t-sub">${esc(DOMAINS[l.domain].short)}${en.why ? ' · ' + esc(whyText(en.why)) : ''}${en.suggested ? ` · suggested: ${MODE_LABEL[en.suggested].toLowerCase()}` : ''}</div></div>${done ? '<span class="pill good">DONE</span>' : `<button class="btn small ghost" data-act="retrain-open" data-arg="${en.id}">Open</button>`}</div><div class="modes">${MODES.map(k => `<button class="chip mode" data-act="retrain-mode" data-arg="${en.id}:${k}" aria-pressed="${m === k}">${MODE_SHORT[k]}</button>`).join('')}</div></div>`; }).join('');
     const startBtn = rem.length ? `<button class="btn primary" data-act="retrain-start">${rem.length < plan.lessons.length ? 'Continue retraining' : 'Start retraining'}</button>` : '';
     return `<div class="card lift stack retrain-card"><div class="row spread"><div><div class="eyebrow">Retraining</div><h3>${rem.length ? `${plural(rem.length, 'topic')} to retrain, about ${planMinutes(rem)} minutes` : 'Retraining complete'}</h3><p class="ink2">Pick a depth for each topic, or one depth for all of them. Drill: a refresher, then questions until three in a row. Lesson: the lesson and its checkpoint. Extended: the lesson with its deeper explanation, then the checkpoint. You can take the next test at any time, finished or not.</p></div>${startBtn}</div>
       <div class="preset-row row" style="gap:6px;flex-wrap:wrap">${presets}</div>
@@ -963,7 +982,19 @@
     }
     if (tr.ti >= tr.topics.length) {
       const done = tr.log; const c = done.filter(x => x.correct).length; const still = weakTopics();
+      const fromPlan = !!tr.fromPlan; const topic0 = tr.topics[0];
       S.active = null; save();
+      if (fromPlan && L[topic0]) {
+        // A retraining drill: done means three in a row (the entry is complete); otherwise ten
+        // questions went by without one, and the learner can drill again or take the lesson instead.
+        const finished = planDone(topic0); const next = planRemaining()[0]; const st = stage();
+        const nextBtn = next ? `<button class="btn primary" data-act="retrain-open" data-arg="${next.id}">Next: ${esc(L[next.id].title)}${modeOf(next) !== 'lesson' ? ` (${MODE_SHORT[modeOf(next)].toLowerCase()})` : ''}</button>`
+          : st === 'official' ? `<button class="btn primary" data-act="start-standard">Retraining complete. Take the official-format test</button>`
+          : st === 'ready' ? `<button class="btn primary" data-act="go" data-arg="ready">Retraining complete. See your readiness report</button>`
+          : `<button class="btn primary" data-act="start-exam" data-arg="${nextFlowKind()}">Retraining complete. Take the next test</button>`;
+        return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Drill</div><h1>${finished ? 'Topic done.' : 'Still shaky.'} ${c} of ${done.length} correct</h1><p class="ink2" style="margin-top:6px">${finished ? `Three in a row on ${esc(L[topic0].title)}. That counts as retrained.` : `Ten questions on ${esc(L[topic0].title)} without three in a row. Drill it again, or switch this topic to the lesson.`}</p></div>
+          <div class="row" style="flex-wrap:wrap">${finished ? nextBtn : `<button class="btn primary" data-act="retrain-open" data-arg="${topic0}">Drill it again</button><button class="btn" data-act="retrain-switch" data-arg="${topic0}">Switch this topic to the lesson</button>`}<button class="btn ghost" data-act="go" data-arg="tutorial">Back to your tutorial</button></div></div>`;
+      }
       return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Drill session complete</div><h1>${c} of ${done.length} correct</h1></div>
         <div class="card lift stack"><h3>Topics covered</h3><div class="topic-list">${tr.topics.map(t => `<div class="topic-item"><div><div class="t-title">${esc(L[t].title)}</div><div class="t-sub">${topicMastered(t) ? 'Mastered' : `${topicPriority(t)} priority points remaining`}</div></div><span class="pill ${topicMastered(t) ? 'good' : 'warn'}">${topicMastered(t) ? 'DONE' : 'KEEP GOING'}</span></div>`).join('')}</div></div>
         <div class="row">${still.length ? `<button class="btn primary" data-act="start-train">Next session (${still.length} left)</button>` : ''}<button class="btn ghost" data-act="go" data-arg="home">Home</button></div></div>`;
@@ -983,10 +1014,12 @@
       <div class="card lift">${questionCard(tr, { immediate: true, title: esc(l.title) })}</div>
       <p class="muted" style="font-size:.9rem">Drill ${tr.drills + 1}. Three correct in a row completes this topic.</p></div>`;
   }
-  function startTrain(topics) {
+  // opts.plan marks a session opened from a retraining entry: its end screen leads to the next entry
+  // (or the next test) instead of another weak-topic session, and End session returns to the tutorial.
+  function startTrain(topics, opts) {
     const list = topics && topics.length ? topics : weakTopics().slice(0, 3);
     if (!list.length) { S.active = { kind: 'train', phase: 'pick' }; go('train'); return; }
-    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true, streak: 0, drills: 0, log: [], used: [] };
+    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true, streak: 0, drills: 0, log: [], used: [], fromPlan: !!(opts && opts.plan) };
     go('train');
   }
   function extendQueue(tr) {
@@ -1236,7 +1269,7 @@
       case 'course': railOpen = false; return go('course', arg);
       case 'lesson': railOpen = false; if (deepOpen !== arg) deepOpen = null; if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== arg) S.active = null; return go('lesson', arg);
       case 'start-checkpoint': { const items = pickForLesson(arg, CHECKPOINT_N, new Set(), 0.3); if (!items.length) { toast('No questions for this lesson yet.'); return; } S.active = { kind: 'checkpoint', lesson: arg, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true }; save(); render(); return; }
-      case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
+      case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); const en = planEntry(arg); if (en && S.plan && S.plan.source === 'test' && modeOf(en) !== 'lesson') return openEntry(en); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
       case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
@@ -1281,7 +1314,10 @@
       case 'pick-train': { S.active = { kind: 'train', phase: 'pick' }; return go('train'); }
       case 'train-topic': { startTrain([arg]); return; }
       case 'train-drills': { const tr = S.active; if (!tr) return; tr.phase = 'drill'; tr.items = []; tr.i = 0; tr.answers = []; tr.used = tr.used || []; extendQueue(tr); save(); render(); return; }
-      case 'abandon-train': { S.active = null; save(); return go('train'); }
+      case 'abandon-train': { const fromPlan = !!(S.active && S.active.fromPlan); S.active = null; save(); return go(fromPlan ? 'tutorial' : 'train'); }
+      case 'retrain-open': { openEntry(planEntry(arg)); return; }
+      case 'retrain-start': { const rem = planRemaining(); if (rem.length) openEntry(rem[0]); else go('tutorial'); return; }
+      case 'retrain-switch': { const en = planEntry(arg); if (!en) return; en.mode = 'lesson'; save(); openEntry(en); return; }
       case 'upgrade': { if (course.upgradeUrl) { location.href = course.upgradeUrl; return; } toast('The full course is not for sale yet. Everything is free for now.'); return; }
       case 'deep-toggle': { deepOpen = deepOpen === arg ? null : arg; render(); if (deepOpen) { const el = $('#deep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
       case 'print-cheat': { if (S.view.name !== 'cheatsheet') go('cheatsheet'); setTimeout(() => window.print(), 120); return; }
@@ -1357,6 +1393,16 @@
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    // Retraining paths: every entry carries a suggested mode and a score; the results page shows the
+    // strength chart and the picker; a drill entry opens a plan-flagged drill session.
+    if (S.plan) {
+      if (!S.plan.lessons.every(e => MODES.includes(e.mode) && MODES.includes(e.suggested) && typeof e.score === 'number' && e.why)) throw new Error('retraining entries lack mode, suggested, score, or why');
+      go('results', 'results:1'); if (!$('.retrain-card') || !$('.strength .bar-row') || document.querySelectorAll('.retrain-row').length !== S.plan.lessons.length) throw new Error('results page lacks the path picker or the strength chart');
+      const e0 = S.plan.lessons[0]; const keep = e0.mode; e0.mode = 'drill'; openEntry(e0);
+      if (!S.active || S.active.kind !== 'train' || !S.active.fromPlan || S.active.topics[0] !== e0.id) throw new Error('a drill entry did not open a plan drill session');
+      S.active = null; e0.mode = keep; applyPreset(S.plan, 'deep'); if (presetOf(S.plan) !== 'deep' || !S.plan.lessons.every(e => e.mode === 'deep')) throw new Error('the All extended preset did not apply'); applyPreset(S.plan, 'suggested');
+      log.push(`retrain entries=${S.plan.lessons.length} preset=${presetOf(S.plan)} modes=${S.plan.lessons.map(e => e.mode).join(',')} minutes=${planMinutes(S.plan.lessons)}`);
+    }
     // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the passes alone.
     const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
     const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });

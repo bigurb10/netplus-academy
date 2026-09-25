@@ -140,5 +140,53 @@ const minutesOf = w => parseInt((w.$('.retrain-card h3').textContent.match(/abou
   check('adopting builds the plan from the custom test', state(w).plan.examIdx === customIdx && !!w.$('.retrain-card') && w.$$('.retrain-row').length > 0);
 }
 
+// ----- Part 3: running a path -----
+// Answer the current drill or checkpoint question and continue.
+const answer = (w, ok) => { const a = state(w).active; const q = fat(a.items[a.i]); w.click(w.$(`[data-act="opt"][data-arg="${ok ? q.c : (q.c + 1) % q.a.length}"]`)); w.click(w.$('[data-act="submit"]')); w.click(w.$('[data-act="next"]')); };
+{
+  const w = bootWith(seeded()); const s = takeTest(w, 'full', [T1, T2]);
+  check('fixture: both entries suggest drills', s.plan.lessons.every(e => e.mode === 'drill'), s.plan.lessons.map(e => e.mode).join(','));
+  const first = s.plan.lessons[0].id, second = s.plan.lessons[1].id;
+  act(w, 'retrain-start');
+  const a = state(w).active;
+  check('Start retraining opens the first entry as a drill flagged from the plan', !!a && a.kind === 'train' && a.fromPlan === true && a.topics.length === 1 && a.topics[0] === first && /Refresher/.test(w.text()), JSON.stringify(a && [a.kind, a.fromPlan, a.topics]));
+  act(w, 'train-drills');
+  answer(w, true); answer(w, true); answer(w, true);
+  check('three in a row stamps drilledAt and ends the session', state(w).topics[first].drilledAt > 0 && state(w).active === null, JSON.stringify(state(w).topics[first]));
+  check('the end screen says the topic is done and offers the next entry', /Topic done/.test(w.text()) && !!w.$(`[data-act="retrain-open"][data-arg="${second}"]`), w.$('h1') && w.$('h1').textContent);
+  act(w, 'go', 'tutorial');
+  check('the Tutorial tab shows one to go, a Drill pill, and a Change your path button', /1 lesson to go/.test(w.text()) && w.$$('.pill').some(p => p.textContent === 'Drill') && !!w.$(`[data-act="go"][data-arg="results:${s.exams.length - 1}"]`), w.$('h1') && w.$('h1').textContent);
+  check('the remaining row opens by mode', !!w.$(`.option[data-act="retrain-open"][data-arg="${second}"]`));
+  act(w, 'go', 'home');
+  check('Home names the drill as the next step', /^Drill: /.test(w.$('.card.lift h2').textContent) && !!w.$(`[data-act="retrain-open"][data-arg="${second}"]`), w.$('.card.lift h2').textContent);
+  act(w, 'retrain-open', second); act(w, 'abandon-train');
+  check('End session on a plan drill returns to the Tutorial tab', w.location.hash === '#tutorial' && state(w).active === null, w.location.hash);
+}
+{
+  const w = bootWith(seeded()); takeTest(w, 'full', [T1]);
+  act(w, 'retrain-mode', `${T1}:deep`); act(w, 'retrain-open', T1);
+  check('an extended entry opens the lesson with the deeper explanation expanded and an Extended pill', w.location.hash === `#lesson/${T1}` && !!w.$('#deep') && w.$$('.pill').some(p => p.textContent === 'Extended'), `${w.location.hash} deep=${!!w.$('#deep')}`);
+  act(w, 'deep-toggle', T1);
+  check('Hide still works on an extended entry', !w.$('#deep'));
+  act(w, 'go', 'home'); act(w, 'retrain-open', T1);
+  check('reopening the extended entry expands it again', !!w.$('#deep'));
+  const legacy = state(w); legacy.plan.lessons.forEach(e => { delete e.mode; delete e.suggested; delete e.score; delete e.why; }); delete legacy.plan.preset;
+  const w2 = bootWith(legacy); act(w2, 'go', 'results:' + (legacy.exams.length - 1));
+  check('a legacy plan renders the picker with Lesson pressed and Suggested pressed', w2.$$('.retrain-row').length === 1 && !!w2.$(`.chip.mode[data-arg="${T1}:lesson"][aria-pressed="true"]`) && !!w2.$('.preset-row .chip[data-arg="suggested"][aria-pressed="true"]'));
+  act(w2, 'retrain-open', T1);
+  check('a legacy entry opens the lesson without the deeper explanation', w2.location.hash === `#lesson/${T1}` && !w2.$('#deep'), w2.location.hash);
+}
+{
+  const w = bootWith(seeded()); takeTest(w, 'full', [T1]);
+  act(w, 'retrain-start'); act(w, 'train-drills');
+  for (let i = 0; i < 10; i++) answer(w, i % 3 !== 2);
+  check('ten drills without three in a row end the topic unfinished', state(w).active === null && !(state(w).topics[T1].drilledAt > 0) && /Still shaky/.test(w.text()) && !!w.$(`[data-act="retrain-switch"][data-arg="${T1}"]`), w.$('h1') && w.$('h1').textContent);
+  act(w, 'retrain-switch', T1);
+  check('switching moves the entry to the lesson and opens it', entry(state(w), T1).mode === 'lesson' && w.location.hash === `#lesson/${T1}`, w.location.hash);
+  // The checkpoint's Next button follows the next entry's mode.
+  act(w, 'start-checkpoint', T1); for (let i = 0; i < 4; i++) answer(w, true);
+  check('passing the checkpoint completes the entry', /Tutorial complete|Retraining complete/.test(w.text()) && !!w.$('[data-act="finish-checkpoint"][data-arg="__test"]'), w.text().slice(0, 0));
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All retrain tests passed.');
