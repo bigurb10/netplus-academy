@@ -1,8 +1,11 @@
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (the only one that asks how sure you are) -> personalized tutorial ->
-   50-question test -> retraining tutorial built from the misses -> practice tests until three of the
+   50-question test -> retraining built from the misses -> practice tests until three of the
    last five score 80% or better -> one official-format test at the real exam's own passing score.
-   Every test ends with an explanation of each wrong answer (and, on the starter, each lucky guess).
+   Every test ends with an explanation of each wrong answer (and, on the starter, each lucky guess),
+   a ranked strongest-to-weakest chart (engine/strength.js), and a retraining path: each missed topic
+   as a drill, the lesson, or the lesson with its deeper explanation, suggested from the last two
+   tests and recent checkpoints and changeable per topic. The next test is never blocked.
    After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
    Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
    only the starter test asks a sureness question; checkpoints, drills, and every other test do not. */
@@ -48,6 +51,9 @@
   lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
   const gens = FRA.generators || {};
   document.title = course.name;
+  // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
+  const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
+  const STRENGTH_META = { domains: course.domains.map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
 
   // ---------- access ----------
   // Free set: the cheat sheet, the starter test, and the lessons below. Everything else needs entitlement.
@@ -161,8 +167,10 @@
     for (let i = 0; i < keys.length - STASH_KEEP; i++) { try { localStorage.removeItem(keys[i]); } catch (e) { /* ignore */ } }
   }
 
-  const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
-  const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
+  // lastScore/lastAt: the most recent checkpoint, pass or fail (retraining scores and the strength chart read them).
+  const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0, lastScore: 0, lastAt: 0 });
+  // drilledAt: when a drill on the topic last reached three correct in a row (completes a retraining entry).
+  const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0, drilledAt: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
   // Checkpoint credit: every correct answer counts. Checkpoints ask no sureness; only the starter test does.
   const cpScore = s => s.answers.filter(a => a.correct).length;
@@ -299,15 +307,48 @@
     const list = Object.values(entries).sort((a, b) => L[a.id].index - L[b.id].index);
     return { source: 'starter', examIdx, createdAt: Date.now(), lessons: list, domPts, depth };
   }
+  // ---------- retraining paths ----------
+  // Every entry in a plan built from a test carries a mode: drill (refresher, then questions until
+  // three in a row), lesson (the lesson and its checkpoint), or deep (the lesson with its deeper
+  // explanation open, then the checkpoint). The mode is suggested from the score below and the
+  // learner can change it per entry or for the whole plan. Entries saved before modes existed
+  // read as lesson.
+  const MODES = ['drill', 'lesson', 'deep'];
+  const MODE_LABEL = { drill: 'Drill', lesson: 'Lesson', deep: 'Extended lesson' };
+  const PRESET_LABEL = { suggested: 'Suggested', drill: 'All drills', lesson: 'All lessons', deep: 'All extended', custom: 'Custom' };
+  const modeOf = e => (e && MODES.includes(e.mode)) ? e.mode : 'lesson';
+  const suggestMode = score => score <= 1 ? 'drill' : score < 2.5 ? 'lesson' : 'deep';
+  // The score behind the suggestion: misses on this test count 1 each, misses on the previous
+  // non-starter test 0.5 each, and each wrong answer on the topic's most recent checkpoint since
+  // that previous test 0.5. A snapshot taken when the test is scored; the starter never counts.
+  function retrainWhy(topic, rec, prev) {
+    const missesIn = r => ((r && r.review) || []).filter(x => !x.correct && (fat(x.q) || {}).t === topic).length;
+    const here = missesIn(rec), before = prev ? missesIn(prev) : 0;
+    const ls = S.lessons[topic]; const since = prev ? prev.date : 0;
+    const cpWrong = ls && ls.lastAt > since && ls.lastAt < rec.date ? Math.max(0, CHECKPOINT_N - (ls.lastScore || 0)) : 0;
+    return { here, before, cpWrong, score: here + 0.5 * before + 0.5 * cpWrong };
+  }
+  // The chip to show pressed: the preset the learner last chose while the modes still match it, else Custom.
+  function presetOf(plan) {
+    const list = (plan && plan.lessons) || []; const p = (plan && plan.preset) || 'suggested';
+    const matches = list.every(e => modeOf(e) === (p === 'suggested' ? (e.suggested || 'lesson') : p));
+    return matches ? p : 'custom';
+  }
+  function applyPreset(plan, p) { plan.lessons.forEach(e => { e.mode = p === 'suggested' ? (e.suggested || 'lesson') : p; }); plan.preset = p; }
+  const deepMinutesCache = {};
+  function deepMinutes(id) { if (deepMinutesCache[id] == null) { const d = FRA.deep && FRA.deep[id]; deepMinutesCache[id] = d ? Math.ceil(String(d).split(/\s+/).length / 200) : 0; } return deepMinutesCache[id]; }
+  function entryMinutes(e) { const m = modeOf(e); const l = L[e.id]; const base = ((l && l.minutes) || 6) + 3; return m === 'drill' ? 5 : m === 'deep' ? base + deepMinutes(e.id) : base; }
   function planFromTest(rec, examIdx) {
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
       if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, pick: r.pick, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
-    const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
-      .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
-    return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, pts };
+    const prevIdx = FRAStrength.windowOf(S.exams, examIdx).previousIdx; const prev = prevIdx >= 0 ? S.exams[prevIdx] : null;
+    const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2);
+    list.forEach(e => { const w = retrainWhy(e.id, rec, prev); e.score = w.score; e.why = { here: w.here, before: w.before, cpWrong: w.cpWrong }; e.suggested = suggestMode(w.score); e.mode = e.suggested; });
+    list.sort((a, b) => (b.score - a.score) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
+    return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, preset: 'suggested' };
   }
   // Path choice after the starter test: the tailored plan, or every lesson in course order. Entries tied to a missed or
   // guessed question keep their reasons either way, so those lessons still open with the learner's answer.
@@ -324,9 +365,12 @@
   const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
   const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
   const planEntry = id => S.plan ? S.plan.lessons.find(e => e.id === id) : null;
-  const planDone = id => { const ls = S.lessons[id]; return !!(ls && ls.status === 'passed' && S.plan && ls.passedAt >= S.plan.createdAt); };
+  // An entry is done when its checkpoint passed after the plan was made OR its topic was drilled to
+  // three in a row after the plan was made, whatever its mode (the mode only decides what opens).
+  // engine/summary.js mirrors this for the account page.
+  const planDone = id => { if (!S.plan) return false; const at = S.plan.createdAt; const ls = S.lessons[id]; const t = S.topics[id]; return !!((ls && ls.status === 'passed' && ls.passedAt >= at) || (t && t.drilledAt > 0 && t.drilledAt >= at)); };
   const planRemaining = () => S.plan ? S.plan.lessons.filter(e => !planDone(e.id)) : [];
-  const planMinutes = list => list.reduce((a, e) => a + (L[e.id].minutes || 6) + 3, 0);
+  const planMinutes = list => list.reduce((a, e) => a + entryMinutes(e), 0);
 
   // ---------- stage ----------
   function stage() {
@@ -1133,13 +1177,13 @@
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
       let passedNow = false;
-      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); ls.lastScore = score; ls.lastAt = Date.now(); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
       save(); if (passedNow && window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
       const doneTopic = sess.streak >= 3 || sess.drills >= 10;
-      if (doneTopic) { const t = sess.topics[sess.ti]; if (sess.streak >= 3) { const ts = tstat(t); ts.streak = Math.max(ts.streak, 3); ts.hist = []; } sess.ti++; sess.phase = 'lesson'; sess.i = 0; sess.items = []; sess.answers = []; sess.streak = 0; sess.drills = 0; }
+      if (doneTopic) { const t = sess.topics[sess.ti]; if (sess.streak >= 3) { const ts = tstat(t); ts.streak = Math.max(ts.streak, 3); ts.hist = []; ts.drilledAt = Date.now(); } sess.ti++; sess.phase = 'lesson'; sess.i = 0; sess.items = []; sess.answers = []; sess.streak = 0; sess.drills = 0; }
       else if (sess.i >= sess.items.length) extendQueue(sess);
       save(); render();
     }
