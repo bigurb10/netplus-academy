@@ -34,9 +34,17 @@
     const passWindow = Number(m.passWindow) > 0 ? Number(m.passWindow) : 5;
     const passes = Number(s.passes) > 0 ? Number(s.passes) : 0;
     const official = obj(s.official);
-    // Same rule as planDone() in app.js: a plan lesson counts only when it was passed after
-    // the plan was made, so an old pass cannot satisfy a new retraining plan.
-    const planDone = id => { const ls = obj(lessons[id]); return !!(ls && ls.status === 'passed' && plan && Number(ls.passedAt) >= Number(plan.createdAt)); };
+    const topics = obj(s.topics) || {};
+    // Same rule as planDone() in app.js: a plan entry counts when its checkpoint was passed after
+    // the plan was made, OR its topic was drilled to three in a row after the plan was made,
+    // whatever the entry's mode (the mode only decides what opens). An old pass or drill cannot
+    // satisfy a new retraining plan.
+    const planDone = id => {
+      if (!plan) return false;
+      const at = Number(plan.createdAt);
+      const ls = obj(lessons[id]); const t = obj(topics[id]);
+      return !!((ls && ls.status === 'passed' && Number(ls.passedAt) >= at) || (t && Number(t.drilledAt) > 0 && Number(t.drilledAt) >= at));
+    };
     const planLeft = plan ? plan.lessons.filter(e => obj(e) && !planDone(e.id)).length : 0;
     const has = kind => exams.some(e => e.kind === kind);
     let stage;

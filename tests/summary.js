@@ -44,5 +44,18 @@ check('a null state does not throw', (() => { try { const s = summarize(null, ME
 check('garbage fields do not throw', (() => { try { const s = summarize({ lessons: 'x', exams: 'y', plan: 5, passes: 'z', official: 'w' }, {}); return s.stage === 'starter' && s.passesNeeded === 3 && s.passWindow === 5 && s.lessonsTotal === 0; } catch (e) { return false; } })());
 check('a null entry in exams or plan.lessons is skipped', (() => { try { return stageOf({ exams: [null, exam('starter', 1)], plan: { source: 'starter', createdAt: 1, lessons: [null, { id: 'q' }] } }) === 'tutorial'; } catch (e) { return false; } })());
 
+// Retraining entries complete on a checkpoint pass OR a drill to three in a row after the plan
+// was made, whatever their mode (the mode only decides what opens). Same rule as planDone() in app.js.
+const retrainPlan = mode => ({ source: 'test', createdAt: 10, lessons: [{ id: 'u1l1', mode }] });
+check('a drilled topic completes its plan entry',
+  stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), topics: { u1l1: { drilledAt: 11 } } }) === 'practice');
+check('a drill before the plan was made does not count',
+  stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), topics: { u1l1: { drilledAt: 9 } } }) === 'retrain');
+check('a drill completes a lesson-mode entry too',
+  stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('lesson'), topics: { u1l1: { drilledAt: 12 } } }) === 'practice');
+check('a checkpoint pass completes a drill-mode entry too',
+  stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), lessons: { u1l1: { status: 'passed', passedAt: 12 } } }) === 'practice');
+check('garbage topics do not throw', (() => { try { return stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), topics: 'x' }) === 'retrain'; } catch (e) { return false; } })());
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All summary tests passed.');

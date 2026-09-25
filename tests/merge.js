@@ -96,6 +96,20 @@ check('lesson status takes the higher rank', m.lessons.a.status === 'passed', m.
 check('lesson best takes the max', m.lessons.a.best === 90, m.lessons.a.best);
 check('lesson attempts take the max, not the sum', m.lessons.a.attempts === 2, m.lessons.a.attempts);
 check('lesson passedAt takes the max', m.lessons.a.passedAt === 500);
+// The most recent checkpoint's score and time travel together: a max of each would pair a
+// score with the wrong checkpoint.
+m = M.mergeMaps(st({ lessons: { a: { status: 'read', best: 2, attempts: 1, passedAt: 0, lastScore: 2, lastAt: 100 } } }),
+                st({ lessons: { a: { status: 'read', best: 3, attempts: 2, passedAt: 0, lastScore: 3, lastAt: 200 } } }));
+check('lastScore/lastAt come together from the newer checkpoint', m.lessons.a.lastScore === 3 && m.lessons.a.lastAt === 200, JSON.stringify(m.lessons.a));
+m = M.mergeMaps(st({ lessons: { a: { status: 'read', best: 1, attempts: 1, passedAt: 0, lastScore: 1, lastAt: 300 } } }),
+                st({ lessons: { a: { status: 'read', best: 3, attempts: 2, passedAt: 0, lastScore: 3, lastAt: 200 } } }));
+check('the newer checkpoint wins even with the lower score', m.lessons.a.lastScore === 1 && m.lessons.a.lastAt === 300, JSON.stringify(m.lessons.a));
+m = M.mergeMaps(st({ lessons: { a: { status: 'read', best: 1, attempts: 1, passedAt: 0 } } }),
+                st({ lessons: { a: { status: 'read', best: 1, attempts: 1, passedAt: 0, lastScore: 4, lastAt: 9 } } }));
+check('a side without checkpoint fields yields to the side with them', m.lessons.a.lastScore === 4 && m.lessons.a.lastAt === 9, JSON.stringify(m.lessons.a));
+m = M.mergeMaps(st({ lessons: { a: { status: 'read', best: 1, attempts: 1, passedAt: 0 } } }),
+                st({ lessons: { a: { status: 'read', best: 1, attempts: 1, passedAt: 0 } } }));
+check('two sides without checkpoint fields produce none', !('lastScore' in m.lessons.a) && !('lastAt' in m.lessons.a), JSON.stringify(m.lessons.a));
 
 m = M.mergeMaps(st({ lessons: { a: { status: 'passed', best: 90, attempts: 1, passedAt: 5 } } }),
                 st({ lessons: { b: { status: 'read', best: 10, attempts: 1, passedAt: 0 } } }));

@@ -66,12 +66,20 @@
     return out;
   }
 
-  const mergeLesson = (x, y) => ({
-    status: rank(x.status) >= rank(y.status) ? x.status : y.status,
-    best: max(x.best, y.best),
-    attempts: max(x.attempts, y.attempts),
-    passedAt: max(x.passedAt, y.passedAt)
-  });
+  const mergeLesson = (x, y) => {
+    const out = {
+      status: rank(x.status) >= rank(y.status) ? x.status : y.status,
+      best: max(x.best, y.best),
+      attempts: max(x.attempts, y.attempts),
+      passedAt: max(x.passedAt, y.passedAt)
+    };
+    // The most recent checkpoint's score and time travel together, from the side with the
+    // newer checkpoint: a max of each field would pair a score with a different checkpoint's
+    // time. A side that never recorded one (a blob from before the field existed) yields.
+    const cp = y.lastAt != null && (x.lastAt == null || (y.lastAt || 0) > (x.lastAt || 0)) ? y : (x.lastAt != null ? x : null);
+    if (cp) { out.lastScore = cp.lastScore; out.lastAt = cp.lastAt; }
+    return out;
+  };
 
   const mergeQstat = (x, y) => ({
     seen: max(x.seen, y.seen), correct: max(x.correct, y.correct),
