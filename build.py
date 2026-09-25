@@ -93,6 +93,7 @@ def build_account():
     table = json.dumps([course_meta(c) for c in ids], ensure_ascii=True).replace("</", "<\\/")
     marker = "<script>\n(function () {\n  // FRA account page"
     html = inline_engine(html, "../engine/summary.js", "summary.js")
+    html = inline_engine(html, "../engine/strength.js", "strength.js")
     assert marker in html, "account/index.html no longer matches the strings build_account() inlines"
     html = html.replace(marker, "<script>window.FRA_COURSES = " + table + ";</script>\n" + marker)
     assert "window.FRA_COURSES = [" in html and "<style>" in html and 'src="../engine/' not in html
@@ -108,6 +109,7 @@ def build(course_id):
     css = read(os.path.join(ENGINE, "styles.css"))
     scripts = ("\n".join(read(p) for p in course_files(course_dir)) + "\n"
                + read(os.path.join(ENGINE, "merge.js")) + "\n"
+               + read(os.path.join(ENGINE, "strength.js")) + "\n"
                + read(os.path.join(ENGINE, "auth.js")) + "\n"
                + read(os.path.join(ENGINE, "sync.js")) + "\n"
                + read(os.path.join(ENGINE, "app.js")))

@@ -21,6 +21,7 @@ function boot(opts) {
   for (const f of courseFiles(o.courseDir)) w.eval(fs.readFileSync(f, 'utf8'));
   if (o.beforeApp) o.beforeApp(w);
   w.eval(fs.readFileSync(path.join(o.engineDir, 'merge.js'), 'utf8'));
+  w.eval(fs.readFileSync(path.join(o.engineDir, 'strength.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(o.engineDir, 'auth.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(o.engineDir, 'sync.js'), 'utf8'));
   // Runs after merge/auth/sync are loaded (window.FRAAuth/FRASync exist) but before app.js's
