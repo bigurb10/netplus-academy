@@ -45,3 +45,12 @@ a.brand { color: inherit; text-decoration: none; }
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 4px 0 6px; }
 .fact dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .fact dd { margin: 0; font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; }
+
+/* Account page: the strongest-to-weakest chart on each course card (engine/strength.js). */
+.sbars { display: grid; gap: 4px; margin: 2px 0 4px; }
+.sbar { display: grid; grid-template-columns: 96px 1fr 40px; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--ink-2); }
+.sbar i { display: block; height: 6px; background: var(--accent, #C25E1F); border-radius: 999px; }
+.sbar i.dim { background: var(--line); }
+.sbar b { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.card p.weakest { flex: 0 0 auto; font-size: 0.85rem; margin: 0 0 4px; }
+.card p.weakest a { color: inherit; }

@@ -56,7 +56,13 @@
 
     // Per lesson: weighted correct and attempts, and the miss tally by source.
     const T = {}; lessons.forEach(l => { T[l.id] = { wc: 0, wa: 0, here: 0, before: 0, cpWrong: 0 }; });
-    const lessonOf = q => { if (typeof q === 'string') return qmap[q] || null; const o = obj(q); return o && o.t != null ? o.t : null; };
+    // A review item names its lesson through the question: generated questions are stored whole
+    // ({ t }), bank questions by id. meta.questions maps ids when the caller has the bank; without
+    // it, every pack's bank ids are spelled <lessonId>-<n>, so the lesson is the id minus its tail.
+    const lessonOf = q => {
+      if (typeof q === 'string') { if (qmap[q]) return qmap[q]; const t = q.replace(/-\d+$/, ''); return T[t] ? t : null; }
+      const o = obj(q); return o && o.t != null ? o.t : null;
+    };
     const tally = (rec, weight, key) => {
       const review = obj(rec) && Array.isArray(rec.review) ? rec.review : [];
       review.forEach(r => {

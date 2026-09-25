@@ -32,9 +32,9 @@
   // FRA account page: read-only over the account's synced copy. It never writes, never
   // merges, and never reads this device's local progress -- the course pages push within
   // seconds of a change, so a stale number here is a sync problem to fix at the source.
-  var A = window.FRAAuth, SUM = window.FRASummary;
+  var A = window.FRAAuth, SUM = window.FRASummary, ST = window.FRAStrength;
   // Injected by build.py (window.FRA_COURSES): id, name, exam, lessons, passPct,
-  // passesNeeded, passWindow, examQuestions, in catalog order.
+  // passesNeeded, passWindow, examQuestions, checkpointN, domains, lessonList, in catalog order.
   var COURSES = Array.isArray(window.FRA_COURSES) ? window.FRA_COURSES : [];
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
@@ -65,6 +65,19 @@
     $('acct').innerHTML = '<button class="btn ghost small" data-act="sign-out">Sign out</button>';
   }
   function fact(k, v) { return '<div class="fact"><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>'; }
+  // Where the learner stands on this course: exam domains ranked strongest to weakest over the
+  // last two tests and recent checkpoints (engine/strength.js), then the three weakest topics as
+  // links into the course. Nothing until there is a test or a checkpoint to rank.
+  function strength(state, c) {
+    if (!ST || !Array.isArray(c.domains) || !Array.isArray(c.lessonList)) return '';
+    var r = ST.compute(state, { domains: c.domains, lessons: c.lessonList, checkpointN: c.checkpointN || 4 });
+    if (!r.hasData) return '';
+    var bars = r.domains.map(function (d) {
+      return '<div class="sbar" title="' + esc(d.name) + '"><span>' + esc(d.short) + '</span><i' + (d.acc == null ? ' class="dim"' : '') + ' style="width:' + (d.acc == null ? 100 : d.acc) + '%"></i><b>' + (d.acc == null ? '&ndash;' : d.acc + '%') + '</b></div>';
+    }).join('');
+    var weak = r.weakest.slice(0, 3).map(function (x) { return '<a href="/' + encodeURIComponent(c.id) + '/#lesson/' + encodeURIComponent(x.id) + '">' + esc(x.title) + '</a>'; }).join(', ');
+    return '<div class="sbars" title="Strongest to weakest: your last two tests and recent checkpoints">' + bars + '</div>' + (weak ? '<p class="weakest muted">Weakest: ' + weak + '</p>' : '');
+  }
   function card(it) {
     var c = it.course, href = '/' + encodeURIComponent(c.id) + '/';
     var head = '<h3><a href="' + href + '">' + esc(c.name) + '</a></h3><p class="exam">' + esc(c.exam) + '</p>';
@@ -84,7 +97,7 @@
       + fact('Official-format test', s.official && s.official.date ? 'Passed ' + dateOf(s.official.date) : 'Not yet')
       + fact('Last studied', s.lastStudied ? ago(s.lastStudied) : 'Not yet')
       + fact('Last synced', synced === synced ? ago(synced) : 'Unknown')
-      + '</dl><a class="go" href="' + href + '">Continue</a></div>';
+      + '</dl>' + strength(it.state, c) + '<a class="go" href="' + href + '">Continue</a></div>';
   }
   function get(tok, p) {
     return fetch(api(p), { headers: { Authorization: 'Bearer ' + tok } }).then(function (r) {

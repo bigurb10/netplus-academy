@@ -18,7 +18,9 @@ const inline = (html.match(/<script>([\s\S]*?)<\/script>/g) || []).map(s => s.re
 if (!inline) throw new Error('could not find the account page script in account/index.html');
 
 const COURSES = [
-  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 },
+  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50, checkpointN: 4,
+    domains: [{ id: 1, name: 'Networking Concepts', short: 'Concepts', pct: 23 }, { id: 2, name: 'Network Implementation', short: 'Implementation', pct: 20 }],
+    lessonList: [{ id: 'u1l1', title: 'Networks and Their Types', domain: 1 }, { id: 'u1l2', title: 'The OSI Model', domain: 1 }, { id: 'u2l1', title: 'Cables', domain: 2 }] },
   { id: 'secplus', name: 'SecPlus Academy', exam: 'CompTIA Security+ SY0-701', lessons: 54, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 },
   { id: 'cbet', name: 'CBET Academy', exam: 'AAMI CBET', lessons: 60, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 }
 ];
@@ -36,6 +38,7 @@ function run(opts) {
   if (!w.TextEncoder) w.TextEncoder = TextEncoder;
   w.eval(fs.readFileSync(path.join(ROOT, 'engine', 'auth.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(ROOT, 'engine', 'summary.js'), 'utf8'));
+  w.eval(fs.readFileSync(path.join(ROOT, 'engine', 'strength.js'), 'utf8'));
   w.FRA_COURSES = COURSES;
   if (opts.token !== false) {
     w.localStorage.setItem('fra.auth.v1', JSON.stringify(Object.assign(
@@ -129,6 +132,23 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     w.click(w.$('[data-act="retry"]'));
     await settle();
     check('Retry reloads and renders the courses', w.$$('.card').length === 3 && !w.$('[data-act="retry"]'));
+  }
+
+  // 6) The strongest/weakest chart per course: ranked domain bars and the weakest topics as links.
+  {
+    const rec = Object.assign(exam('practice', 60), { review: [{ q: 'u1l2-1', correct: false }, { q: 'u1l1-1', correct: true }, { q: 'u2l1-1', correct: true }] });
+    const netplus = { v: 3, lessons: { u1l2: { status: 'read', best: 1, attempts: 1, passedAt: 0, lastScore: 1, lastAt: 5000 } }, topics: {}, exams: [exam('starter', 40), rec], passes: 0, official: null, plan: null, touchedAt: Date.now() };
+    const { w } = run({ fetch: [
+      ['/v1/progress', res(200, [{ course_id: 'netplus', version: 2, updated_at: new Date().toISOString() }])],
+      ['/v1/progress/netplus', res(200, { state: netplus, version: 2 })]
+    ] });
+    await w.FRA_ACCOUNT.ready;
+    const card = w.$$('.card')[0];
+    const bars = card.querySelectorAll('.sbars .sbar');
+    check('the chart has one bar per domain', bars.length === 2, bars.length);
+    check('bars run strongest to weakest', bars.length === 2 && /Implementation/.test(bars[0].textContent) && /100%/.test(bars[0].textContent) && /Concepts/.test(bars[1].textContent), [...bars].map(b => b.textContent).join(' | '));
+    check('the weakest line links the topic into the course', !!card.querySelector('.weakest a[href="/netplus/#lesson/u1l2"]') && /OSI Model/.test(card.querySelector('.weakest').textContent), card.querySelector('.weakest') && card.querySelector('.weakest').textContent);
+    check('courses without data show no chart', w.$$('.card').slice(1).every(c => !c.querySelector('.sbars') && !c.querySelector('.weakest')));
   }
 
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }

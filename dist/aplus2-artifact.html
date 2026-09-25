@@ -357,6 +357,16 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .acr-table td:first-child { font-family: var(--font-mono); font-size: 7.2pt; }
 }
 
+/* Where you stand (results page): ranked domain bars with a this-test tag under each label. */
+.strength .tag { display: block; font-size: 0.8rem; }
+/* The retraining path picker: one row per missed topic with its three depth chips. */
+.retrain-row { padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+.retrain-row.done { opacity: 0.7; }
+.retrain-row .t-title { font-weight: 600; }
+.retrain-row .t-sub { font-size: 0.85rem; color: var(--muted); }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
 </style>
 <div id="app"></div>
 <script>
@@ -5604,12 +5614,20 @@ FRA.questions.push(
     return out;
   }
 
-  const mergeLesson = (x, y) => ({
-    status: rank(x.status) >= rank(y.status) ? x.status : y.status,
-    best: max(x.best, y.best),
-    attempts: max(x.attempts, y.attempts),
-    passedAt: max(x.passedAt, y.passedAt)
-  });
+  const mergeLesson = (x, y) => {
+    const out = {
+      status: rank(x.status) >= rank(y.status) ? x.status : y.status,
+      best: max(x.best, y.best),
+      attempts: max(x.attempts, y.attempts),
+      passedAt: max(x.passedAt, y.passedAt)
+    };
+    // The most recent checkpoint's score and time travel together, from the side with the
+    // newer checkpoint: a max of each field would pair a score with a different checkpoint's
+    // time. A side that never recorded one (a blob from before the field existed) yields.
+    const cp = y.lastAt != null && (x.lastAt == null || (y.lastAt || 0) > (x.lastAt || 0)) ? y : (x.lastAt != null ? x : null);
+    if (cp) { out.lastScore = cp.lastScore; out.lastAt = cp.lastAt; }
+    return out;
+  };
 
   const mergeQstat = (x, y) => ({
     seen: max(x.seen, y.seen), correct: max(x.correct, y.correct),
@@ -5733,6 +5751,109 @@ FRA.questions.push(
   }
 
   return { VERSION, isOfficialRecord, recomputeQualification, examId, mergeMaps, remapExamIdx, mergeState };
+}));
+
+'use strict';
+// The recency-weighted picture of where a learner stands: exam domains ranked strongest to
+// weakest, and the five weakest topics. Shared by the course engine (the results page) and
+// the account page, so it is pure: no window, no storage, and it never throws on a malformed
+// state (missing or odd fields read as empty).
+//
+// The window: the latest non-starter test (every answer weighs 1), the non-starter test before
+// it (0.5), and each lesson's most recent checkpoint when it was taken after that previous test
+// (0.5 per question). There is no upper bound on checkpoints: the chart is the learner's standing
+// now, so retraining done after the latest test counts. The starter test never contributes.
+//
+// Loaded as a plain script (sets window.FRAStrength) and as a CommonJS module for tests, the
+// same way engine/merge.js and engine/summary.js are.
+(function (root, factory) {
+  const api = factory();
+  root.FRAStrength = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+}(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  const VERSION = 1;
+  const obj = v => (v && typeof v === 'object') ? v : null;
+  const num = v => (typeof v === 'number' && isFinite(v)) ? v : 0;
+  const isTest = e => !!obj(e) && e.kind !== 'starter';
+
+  // The two tests that define the window. examIdx pins "latest" when it names a non-starter
+  // test; otherwise latest is the most recent non-starter test. previousIdx is the most recent
+  // non-starter test before latest. Either is -1 when there is none.
+  function windowOf(exams, examIdx) {
+    const ex = Array.isArray(exams) ? exams : [];
+    let latestIdx = -1;
+    if (typeof examIdx === 'number' && isTest(ex[examIdx])) latestIdx = examIdx;
+    else for (let i = ex.length - 1; i >= 0; i--) if (isTest(ex[i])) { latestIdx = i; break; }
+    let previousIdx = -1;
+    for (let i = latestIdx - 1; i >= 0; i--) if (isTest(ex[i])) { previousIdx = i; break; }
+    return { latestIdx, previousIdx };
+  }
+
+  // meta: { domains: [{ id, short, name, pct }], lessons: [{ id, title, domain }], checkpointN,
+  //         questions?: { questionId: lessonId } }  (questions resolves review items stored by id)
+  // Returns { hasData, latestIdx, previousIdx,
+  //           domains: [{ id, short, name, pct, acc, wc, wa, thisTest: { c, t } | null }] ranked
+  //             strongest first (no data last),
+  //           weakest: [{ id, title, domain, score, here, before, cpWrong }] up to five, worst first }
+  function compute(state, meta, examIdx) {
+    const s = obj(state) || {}; const m = obj(meta) || {};
+    const domains = Array.isArray(m.domains) ? m.domains.filter(obj) : [];
+    const lessons = Array.isArray(m.lessons) ? m.lessons.filter(obj) : [];
+    const qmap = obj(m.questions) || {};
+    const N = num(m.checkpointN) > 0 ? num(m.checkpointN) : 4;
+    const order = {}; lessons.forEach((l, i) => { order[l.id] = i; });
+    const pctOf = {}; domains.forEach(d => { pctOf[String(d.id)] = num(d.pct); });
+    const exams = Array.isArray(s.exams) ? s.exams : [];
+    const w = windowOf(exams, examIdx);
+    const latest = w.latestIdx >= 0 ? exams[w.latestIdx] : null;
+    const previous = w.previousIdx >= 0 ? exams[w.previousIdx] : null;
+    const since = previous ? num(previous.date) : 0;
+
+    // Per lesson: weighted correct and attempts, and the miss tally by source.
+    const T = {}; lessons.forEach(l => { T[l.id] = { wc: 0, wa: 0, here: 0, before: 0, cpWrong: 0 }; });
+    // A review item names its lesson through the question: generated questions are stored whole
+    // ({ t }), bank questions by id. meta.questions maps ids when the caller has the bank; without
+    // it, every pack's bank ids are spelled <lessonId>-<n>, so the lesson is the id minus its tail.
+    const lessonOf = q => {
+      if (typeof q === 'string') { if (qmap[q]) return qmap[q]; const t = q.replace(/-\d+$/, ''); return T[t] ? t : null; }
+      const o = obj(q); return o && o.t != null ? o.t : null;
+    };
+    const tally = (rec, weight, key) => {
+      const review = obj(rec) && Array.isArray(rec.review) ? rec.review : [];
+      review.forEach(r => {
+        const item = obj(r); if (!item) return;
+        const t = lessonOf(item.q); const x = t != null && T[t]; if (!x) return;
+        x.wa += weight; if (item.correct) x.wc += weight; else x[key] += 1;
+      });
+    };
+    if (latest) tally(latest, 1, 'here');
+    if (previous) tally(previous, 0.5, 'before');
+    const ls = obj(s.lessons) || {};
+    lessons.forEach(l => {
+      const st = obj(ls[l.id]); if (!st || !(num(st.lastAt) > since)) return;
+      const score = Math.max(0, Math.min(N, num(st.lastScore)));
+      T[l.id].wa += 0.5 * N; T[l.id].wc += 0.5 * score; T[l.id].cpWrong += N - score;
+    });
+
+    const D = {}; domains.forEach(d => { D[String(d.id)] = { wc: 0, wa: 0 }; });
+    lessons.forEach(l => { const d = D[String(l.domain)]; if (!d) return; d.wc += T[l.id].wc; d.wa += T[l.id].wa; });
+    const thisBy = latest && typeof examIdx === 'number' && obj(latest.byDomain) ? latest.byDomain : null;
+    const out = domains.map(d => {
+      const k = String(d.id); const x = D[k]; const acc = x.wa > 0 ? Math.round(100 * x.wc / x.wa) : null;
+      const tb = thisBy && obj(thisBy[k]);
+      return { id: d.id, short: d.short, name: d.name, pct: num(d.pct), acc, wc: x.wc, wa: x.wa, thisTest: tb ? { c: num(tb.c), t: num(tb.t) } : null };
+    });
+    out.sort((a, b) => (b.acc == null ? 0 : 1) - (a.acc == null ? 0 : 1) || (b.acc || 0) - (a.acc || 0) || b.pct - a.pct);
+
+    const weakest = lessons.map(l => { const x = T[l.id]; return { id: l.id, title: l.title, domain: l.domain, score: x.here + 0.5 * x.before + 0.5 * x.cpWrong, here: x.here, before: x.before, cpWrong: x.cpWrong }; })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score || (pctOf[String(b.domain)] || 0) - (pctOf[String(a.domain)] || 0) || order[a.id] - order[b.id])
+      .slice(0, 5);
+
+    return { hasData: out.some(d => d.wa > 0), latestIdx: w.latestIdx, previousIdx: w.previousIdx, domains: out, weakest };
+  }
+
+  return { VERSION, compute, windowOf };
 }));
 
 'use strict';
@@ -6545,9 +6666,12 @@ FRA.questions.push(
 
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (the only one that asks how sure you are) -> personalized tutorial ->
-   50-question test -> retraining tutorial built from the misses -> practice tests until three of the
+   50-question test -> retraining built from the misses -> practice tests until three of the
    last five score 80% or better -> one official-format test at the real exam's own passing score.
-   Every test ends with an explanation of each wrong answer (and, on the starter, each lucky guess).
+   Every test ends with an explanation of each wrong answer (and, on the starter, each lucky guess),
+   a ranked strongest-to-weakest chart (engine/strength.js), and a retraining path: each missed topic
+   as a drill, the lesson, or the lesson with its deeper explanation, suggested from the last two
+   tests and recent checkpoints and changeable per topic. The next test is never blocked.
    After the starter test the learner picks a path: the tailored tutorial or the whole course in order.
    Acronyms in tutorials and the cheat sheet are hover links (FRA.acronyms); every lesson can be rated 1 to 10;
    only the starter test asks a sureness question; checkpoints, drills, and every other test do not. */
@@ -6593,6 +6717,9 @@ FRA.questions.push(
   lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
   const gens = FRA.generators || {};
   document.title = course.name;
+  // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
+  const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
+  const STRENGTH_META = { domains: course.domains.map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
 
   // ---------- access ----------
   // Free set: the cheat sheet, the starter test, and the lessons below. Everything else needs entitlement.
@@ -6706,8 +6833,10 @@ FRA.questions.push(
     for (let i = 0; i < keys.length - STASH_KEEP; i++) { try { localStorage.removeItem(keys[i]); } catch (e) { /* ignore */ } }
   }
 
-  const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0 });
-  const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 });
+  // lastScore/lastAt: the most recent checkpoint, pass or fail (retraining scores and the strength chart read them).
+  const lstat = id => S.lessons[id] || (S.lessons[id] = { status: 'new', best: 0, attempts: 0, passedAt: 0, lastScore: 0, lastAt: 0 });
+  // drilledAt: when a drill on the topic last reached three correct in a row (completes a retraining entry).
+  const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0, drilledAt: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
   // Checkpoint credit: every correct answer counts. Checkpoints ask no sureness; only the starter test does.
   const cpScore = s => s.answers.filter(a => a.correct).length;
@@ -6844,15 +6973,59 @@ FRA.questions.push(
     const list = Object.values(entries).sort((a, b) => L[a.id].index - L[b.id].index);
     return { source: 'starter', examIdx, createdAt: Date.now(), lessons: list, domPts, depth };
   }
+  // ---------- retraining paths ----------
+  // Every entry in a plan built from a test carries a mode: drill (refresher, then questions until
+  // three in a row), lesson (the lesson and its checkpoint), or deep (the lesson with its deeper
+  // explanation open, then the checkpoint). The mode is suggested from the score below and the
+  // learner can change it per entry or for the whole plan. Entries saved before modes existed
+  // read as lesson.
+  const MODES = ['drill', 'lesson', 'deep'];
+  const MODE_LABEL = { drill: 'Drill', lesson: 'Lesson', deep: 'Extended lesson' };
+  const MODE_SHORT = { drill: 'Drill', lesson: 'Lesson', deep: 'Extended' };
+  const PRESET_LABEL = { suggested: 'Suggested', drill: 'All drills', lesson: 'All lessons', deep: 'All extended', custom: 'Custom' };
+  const modeOf = e => (e && MODES.includes(e.mode)) ? e.mode : 'lesson';
+  const suggestMode = score => score <= 1 ? 'drill' : score < 2.5 ? 'lesson' : 'deep';
+  // The score behind the suggestion: misses on this test count 1 each, misses on the previous
+  // non-starter test 0.5 each, and each wrong answer on the topic's most recent checkpoint since
+  // that previous test 0.5. A snapshot taken when the test is scored; the starter never counts.
+  function retrainWhy(topic, rec, prev) {
+    const missesIn = r => ((r && r.review) || []).filter(x => !x.correct && (fat(x.q) || {}).t === topic).length;
+    const here = missesIn(rec), before = prev ? missesIn(prev) : 0;
+    const ls = S.lessons[topic]; const since = prev ? prev.date : 0;
+    const cpWrong = ls && ls.lastAt > since && ls.lastAt < rec.date ? Math.max(0, CHECKPOINT_N - (ls.lastScore || 0)) : 0;
+    return { here, before, cpWrong, score: here + 0.5 * before + 0.5 * cpWrong };
+  }
+  // The chip to show pressed: the preset the learner last chose while the modes still match it, else Custom.
+  function presetOf(plan) {
+    const list = (plan && plan.lessons) || []; const p = (plan && plan.preset) || 'suggested';
+    const matches = list.every(e => modeOf(e) === (p === 'suggested' ? (e.suggested || 'lesson') : p));
+    return matches ? p : 'custom';
+  }
+  function applyPreset(plan, p) { plan.lessons.forEach(e => { e.mode = p === 'suggested' ? (e.suggested || 'lesson') : p; }); plan.preset = p; }
+  // Open a retraining entry the way its mode says: a plan-flagged single-topic drill session, the
+  // lesson, or the lesson with its deeper explanation expanded.
+  function openEntry(en) {
+    if (!en || !L[en.id]) return;
+    const m = modeOf(en);
+    if (m === 'drill') { if (S.active && S.active.kind !== 'checkpoint' && S.active.kind !== 'train' && !confirm('You have an unfinished test. Discard it and drill instead?')) return; startTrain([en.id], { plan: true }); return; }
+    if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== en.id) S.active = null;
+    deepAuto = m === 'deep' ? en.id : null; deepOpen = m === 'deep' ? en.id : null; railOpen = false;
+    go('lesson', en.id);
+  }
+  const deepMinutesCache = {};
+  function deepMinutes(id) { if (deepMinutesCache[id] == null) { const d = FRA.deep && FRA.deep[id]; deepMinutesCache[id] = d ? Math.ceil(String(d).split(/\s+/).length / 200) : 0; } return deepMinutesCache[id]; }
+  function entryMinutes(e) { const m = modeOf(e); const l = L[e.id]; const base = ((l && l.minutes) || 6) + 3; return m === 'drill' ? 5 : m === 'deep' ? base + deepMinutes(e.id) : base; }
   function planFromTest(rec, examIdx) {
     const entries = {}; const pts = {};
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const p = points(r.correct, r.conf); pts[q.t] = (pts[q.t] || 0) + p;
       if (p >= 2) { (entries[q.t] = entries[q.t] || { id: q.t, reasons: [] }).reasons.push({ kind: kindOf(r.correct, r.conf), q: r.q, choice: r.choice, pick: r.pick, conf: rec.noConf ? null : r.conf, source: 'test' }); }
     });
-    const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2)
-      .sort((a, b) => (pts[b.id] - pts[a.id]) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
-    return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, pts };
+    const prevIdx = FRAStrength.windowOf(S.exams, examIdx).previousIdx; const prev = prevIdx >= 0 ? S.exams[prevIdx] : null;
+    const list = Object.values(entries).filter(e => (pts[e.id] || 0) >= 2);
+    list.forEach(e => { const w = retrainWhy(e.id, rec, prev); e.score = w.score; e.why = { here: w.here, before: w.before, cpWrong: w.cpWrong }; e.suggested = suggestMode(w.score); e.mode = e.suggested; });
+    list.sort((a, b) => (b.score - a.score) || (DOMAINS[L[b.id].domain].pct - DOMAINS[L[a.id].domain].pct) || (L[a.id].index - L[b.id].index));
+    return { source: 'test', examIdx, createdAt: Date.now(), lessons: list, preset: 'suggested' };
   }
   // Path choice after the starter test: the tailored plan, or every lesson in course order. Entries tied to a missed or
   // guessed question keep their reasons either way, so those lessons still open with the learner's answer.
@@ -6869,9 +7042,12 @@ FRA.questions.push(
   const lastStarterIdx = () => { for (let i = S.exams.length - 1; i >= 0; i--) if (S.exams[i].kind === 'starter') return i; return -1; };
   const fullCourseMinutes = () => planMinutes(lessons.map(l => ({ id: l.id })));
   const planEntry = id => S.plan ? S.plan.lessons.find(e => e.id === id) : null;
-  const planDone = id => { const ls = S.lessons[id]; return !!(ls && ls.status === 'passed' && S.plan && ls.passedAt >= S.plan.createdAt); };
+  // An entry is done when its checkpoint passed after the plan was made OR its topic was drilled to
+  // three in a row after the plan was made, whatever its mode (the mode only decides what opens).
+  // engine/summary.js mirrors this for the account page.
+  const planDone = id => { if (!S.plan) return false; const at = S.plan.createdAt; const ls = S.lessons[id]; const t = S.topics[id]; return !!((ls && ls.status === 'passed' && ls.passedAt >= at) || (t && t.drilledAt > 0 && t.drilledAt >= at)); };
   const planRemaining = () => S.plan ? S.plan.lessons.filter(e => !planDone(e.id)) : [];
-  const planMinutes = list => list.reduce((a, e) => a + (L[e.id].minutes || 6) + 3, 0);
+  const planMinutes = list => list.reduce((a, e) => a + entryMinutes(e), 0);
 
   // ---------- stage ----------
   function stage() {
@@ -6909,7 +7085,9 @@ FRA.questions.push(
     if (S.active) return { label: S.active.kind === 'train' ? 'Resume drills' : S.active.kind === 'checkpoint' ? 'Resume the lesson checkpoint' : 'Resume your test', act: 'resume', arg: '' };
     const st = stage();
     if (st === 'starter') return { label: 'Take the 10-question starter test', act: 'start-exam', arg: 'starter', sub: 'Two questions from each exam domain, with a confidence rating on each. It builds your tutorial.' };
-    if (st === 'tutorial' || st === 'retrain') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${st === 'tutorial' ? (S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial') : 'Continue retraining'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
+    if (st === 'retrain') { const rem = planRemaining(); const e0 = rem[0]; const l = L[e0.id]; const m = modeOf(e0); const p = presetOf(S.plan);
+      return { label: `${m === 'drill' ? 'Drill' : m === 'deep' ? 'Extended lesson' : 'Continue retraining'}: ${l.title}`, act: 'retrain-open', arg: l.id, sub: `${plural(rem.length, 'topic')} left, about ${planMinutes(rem)} minutes. ${p === 'suggested' ? 'Suggested path' : p === 'custom' ? 'Your own path' : PRESET_LABEL[p]}; change it from the Tutorial tab.` }; }
+    if (st === 'tutorial') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${OFFICIAL_PCT}% or better, the real exam's passing score, within the time limit and you are cleared to book.` };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
@@ -6921,6 +7099,7 @@ FRA.questions.push(
   const app = $('#app');
   let railOpen = false; let timerHandle = null; let toastHandle = null;
   let deepOpen = null; // lesson id whose deeper explanation is expanded
+  let deepAuto = null; // lesson id whose deeper explanation was auto-expanded for an extended retraining entry (so Hide sticks)
   let fb = null; let fbReg = []; // open feedback form, and the questions rendered this pass (for flag buttons)
   let acrOpen = null; // { key, sense } of the acronym whose deeper explanation is open
   let syncStatus = 'idle'; // 'idle' | 'syncing' | 'offline' | 'error', set by FRASync's onStatus; painted by paintSyncBadge (Task 6)
@@ -7137,6 +7316,7 @@ FRA.questions.push(
     }
     const rem = planRemaining(); const done = S.plan.lessons.length - rem.length;
     const src = S.exams[S.plan.examIdx]; const full = S.plan.scope === 'full';
+    const isTestPlan = S.plan.source === 'test'; const openAct = isTestPlan ? 'retrain-open' : 'lesson';
     const tailoredN = S.plan.source === 'starter' && src ? planFromStarter(src, S.plan.examIdx).lessons.length : 0;
     const byUnit = {}; S.plan.lessons.forEach(e => { const u = L[e.id].unit; (byUnit[u.id] = byUnit[u.id] || { u, list: [] }).list.push(e); });
     const groups = Object.values(byUnit).sort((a, b) => S.plan.source === 'starter' ? a.u.n - b.u.n : Math.min(...a.list.map(e => S.plan.lessons.indexOf(e))) - Math.min(...b.list.map(e => S.plan.lessons.indexOf(e))));
@@ -7145,10 +7325,10 @@ FRA.questions.push(
         <h1>${rem.length ? `${plural(rem.length, 'lesson')} to go, about ${planMinutes(rem)} minutes` : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
       ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
-      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft"><p class="ink2" style="font-size:.95rem">Ordered worst first: topics where you were wrong and confident come before topics you guessed. Each lesson opens with the exact question you missed.</p></div>`}
-      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="lesson" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${presetOf(S.plan) === 'suggested' ? 'suggested' : presetOf(S.plan) === 'custom' ? 'your own mix' : PRESET_LABEL[presetOf(S.plan)].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
+      ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="${openAct}" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}${isTestPlan && modeOf(rem[0]) !== 'lesson' ? ` (${MODE_SHORT[modeOf(rem[0])].toLowerCase()})` : ''}</button></div>` : `<div class="ready-banner"><strong>All ${S.plan.lessons.length} lessons passed.</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
-        ${g.list.map(e => `<button class="option" data-act="lesson" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span>${planDone(e.id) ? '<span class="pill good">DONE</span>' : reasonPill(e)}</button>`).join('')}</div>`).join('')}
+        ${g.list.map(e => `<button class="option" data-act="${openAct}" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span><span class="row" style="gap:6px">${planDone(e.id) ? '<span class="pill good">DONE</span>' : `${isTestPlan ? `<span class="pill accent">${MODE_SHORT[modeOf(e)]}</span>` : ''}${reasonPill(e)}`}</span></button>`).join('')}</div>`).join('')}
       <div class="row"><button class="btn ghost" data-act="go" data-arg="course">Browse all ${lessons.length} lessons</button></div>
     </div>`;
   }
@@ -7177,6 +7357,9 @@ FRA.questions.push(
     const ls = lstat(id); if (ls.status === 'new') { ls.status = 'read'; save(); }
     const entry = planEntry(id); const rem = planRemaining(); const posInPlan = entry ? rem.findIndex(e => e.id === id) : -1;
     const nextInPlan = entry ? rem.find(e => e.id !== id) : null;
+    // An extended retraining entry opens with the deeper explanation expanded, once; Hide then sticks.
+    const extended = !!(entry && S.plan.source === 'test' && modeOf(entry) === 'deep');
+    if (extended && !planDone(id) && deepAuto !== id) { deepAuto = id; deepOpen = id; }
     const idx = lessons.indexOf(l); const nextLesson = lessons[idx + 1]; const prevLesson = lessons[idx - 1];
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
@@ -7193,7 +7376,7 @@ FRA.questions.push(
       const st = stage();
       let nextBtn = '';
       if (passed) {
-        if (nextInPlan) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextInPlan.id}">Next in tutorial: ${esc(L[nextInPlan.id].title)}</button>`;
+        if (nextInPlan) { const nm = S.plan.source === 'test' ? modeOf(nextInPlan) : 'lesson'; nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextInPlan.id}">Next in ${S.plan.source === 'test' ? 'retraining' : 'tutorial'}: ${esc(L[nextInPlan.id].title)}${nm !== 'lesson' ? ` (${MODE_SHORT[nm].toLowerCase()})` : ''}</button>`; }
         else if (S.plan && !planRemaining().length) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="__test">Tutorial complete. Take the ${EXAM_N}-question ${st === 'fulltest' ? 'test' : 'practice test'}</button>`;
         else if (nextLesson) nextBtn = `<button class="btn primary" data-act="finish-checkpoint" data-arg="${nextLesson.id}">Next lesson: ${esc(nextLesson.title)}</button>`;
       }
@@ -7204,9 +7387,10 @@ FRA.questions.push(
     }
     return `<div class="content stack" style="gap:20px">
       <div class="lesson-head">
-        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span><span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
+        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· tutorial lesson ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
         <h1>${esc(l.title)}</h1>
         ${domainReason && !callouts ? `<p class="ink2">${esc(lessonWhy(domainReason))}</p>` : ''}
+        ${extended && !planDone(id) ? `<p class="ink2">Extended lesson: read the lesson and the deeper explanation below, then take the checkpoint.</p>` : ''}
       </div>
       ${callouts}
       <article class="lesson-body">${renderBody(l.body)}</article>
@@ -7344,6 +7528,42 @@ FRA.questions.push(
     if (window.FRASync) FRASync.pushNow();
     return viewResults(String(examIdx));
   }
+  // The plain-words breakdown behind a retraining score or a weakest-topic row.
+  function whyText(x) {
+    const parts = [];
+    if (x.here) parts.push(x.here === 1 ? 'missed here' : `missed ${x.here} here`);
+    if (x.before) parts.push(x.before === 1 ? 'missed on your last test' : `missed ${x.before} on your last test`);
+    if (x.cpWrong) parts.push(`checkpoint ${Math.max(0, CHECKPOINT_N - x.cpWrong)} of ${CHECKPOINT_N}`);
+    return parts.join(' · ');
+  }
+  // Where you stand: exam domains ranked strongest to weakest over the last two tests and recent
+  // checkpoints (engine/strength.js), then the weakest topics. idx pins "this test".
+  function strengthCard(idx) {
+    const r = FRAStrength.compute(S, STRENGTH_META, idx);
+    if (!r.hasData) return `<div class="card strength stack"><h3>Where you stand</h3><p class="ink2">Your first test fills this in.</p></div>`;
+    const bars = r.domains.map(d => `<div class="bar-row"><span class="label">${esc(d.short)} <span class="muted">${d.pct}%</span>${d.thisTest ? `<span class="tag muted">this test ${d.thisTest.c}/${d.thisTest.t}</span>` : ''}</span><div class="track"><i class="${d.acc == null ? 'dim' : ''}" style="width:${d.acc == null ? 100 : d.acc}%"></i></div><span class="value">${d.acc == null ? '&mdash;' : d.acc + '%'}</span></div>`).join('');
+    const weak = r.weakest.length ? `<div class="weakest stack" style="gap:8px"><h3>Weakest topics</h3><div class="topic-list">${r.weakest.map(x => `<div class="topic-item"><div><div class="t-title">${esc(x.title)}</div><div class="t-sub">${esc(DOMAINS[L[x.id].domain].short)} · ${esc(whyText(x))}</div></div><button class="btn small ghost" data-act="lesson" data-arg="${x.id}">Lesson</button></div>`).join('')}</div></div>` : '';
+    return `<div class="card strength stack"><div><h3>Where you stand</h3><p class="muted" style="font-size:.9rem;margin-top:4px">Strongest to weakest. This test counts most, your previous test half, and your recent checkpoints half. The starter test is not included.</p></div><div class="bars">${bars}</div>${weak}</div>`;
+  }
+  // The path picker: a depth per missed topic, presets for all of them, and the estimate for what is left.
+  function retrainCard(idx) {
+    const plan = S.plan; const rem = planRemaining(); const p = presetOf(plan);
+    const presets = ['suggested', 'drill', 'lesson', 'deep'].map(k => `<button class="chip preset" data-act="retrain-preset" data-arg="${k}" aria-pressed="${p === k}">${PRESET_LABEL[k]}</button>`).join('') + (p === 'custom' ? `<span class="chip preset" data-arg="custom" aria-pressed="true">Custom</span>` : '');
+    const rows = plan.lessons.map(en => { const l = L[en.id]; if (!l) return ''; const m = modeOf(en); const done = planDone(en.id);
+      return `<div class="retrain-row ${done ? 'done' : ''}" data-id="${en.id}"><div class="row spread" style="gap:8px;align-items:flex-start"><div><div class="t-title">${esc(l.title)}</div><div class="t-sub">${esc(DOMAINS[l.domain].short)}${en.why ? ' · ' + esc(whyText(en.why)) : ''}${en.suggested ? ` · suggested: ${MODE_LABEL[en.suggested].toLowerCase()}` : ''}</div></div>${done ? '<span class="pill good">DONE</span>' : `<button class="btn small ghost" data-act="retrain-open" data-arg="${en.id}">Open</button>`}</div><div class="modes">${MODES.map(k => `<button class="chip mode" data-act="retrain-mode" data-arg="${en.id}:${k}" aria-pressed="${m === k}">${MODE_SHORT[k]}</button>`).join('')}</div></div>`; }).join('');
+    const startBtn = rem.length ? `<button class="btn primary" data-act="retrain-start">${rem.length < plan.lessons.length ? 'Continue retraining' : 'Start retraining'}</button>` : '';
+    return `<div class="card lift stack retrain-card"><div class="row spread"><div><div class="eyebrow">Retraining</div><h3>${rem.length ? `${plural(rem.length, 'topic')} to retrain, about ${planMinutes(rem)} minutes` : 'Retraining complete'}</h3><p class="ink2">Pick a depth for each topic, or one depth for all of them. Drill: a refresher, then questions until three in a row. Lesson: the lesson and its checkpoint. Extended: the lesson with its deeper explanation, then the checkpoint. You can take the next test at any time, finished or not.</p></div>${startBtn}</div>
+      <div class="preset-row row" style="gap:6px;flex-wrap:wrap">${presets}</div>
+      <div class="stack" style="gap:8px">${rows}</div>
+      <p class="muted" style="font-size:.9rem">How the suggestion works: one miss with no history suggests a drill. A repeat miss suggests the lesson. Missed on both of your last two tests, or a failed checkpoint too, suggests the extended lesson. Your last test counts half as much as this one; the starter test never counts.</p>
+      <div class="row">${startBtn}<button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button></div></div>`;
+  }
+  // A custom test taken while retraining from another test is still in progress does not replace
+  // that plan on its own; the learner can keep going or rebuild from this test's misses.
+  function planInProgressCard(idx) {
+    const src = S.exams[S.plan.examIdx]; const rem = planRemaining();
+    return `<div class="card lift stack"><div><div class="eyebrow">Retraining in progress</div><h3>${plural(rem.length, 'topic')} left from your ${src ? testLabel(src).toLowerCase() : 'test'}${src ? ` on ${fmtDate(src.date)}` : ''}</h3><p class="ink2">This custom test does not replace it. Keep going, or build a new path from this test's misses instead.</p></div><div class="row"><button class="btn primary" data-act="retrain-start">Continue retraining</button><button class="btn" data-act="retrain-adopt" data-arg="${idx}">Build a path from this test instead</button></div></div>`;
+  }
   function viewResults(arg) {
     const idx = parseInt(String(arg).replace('results:', ''), 10); const e = S.exams[idx];
     if (!e) return viewTestsHub();
@@ -7379,8 +7599,8 @@ FRA.questions.push(
       }
     } else {
       headline = passed ? (S.official && S.official.examIdx === idx ? 'Official-format test passed. You are cleared to book the exam.' : 'Passing score.') : e.pct >= 70 ? 'Close. Not there yet.' : 'Below the line. Now you know what to retrain.';
-      planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Retraining tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3><p class="ink2">Worst first. Each lesson opens with the question you missed.</p></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start retraining</button></div>
-        <div class="topic-list">${S.plan.lessons.slice(0, 8).map(en => `<div class="topic-item"><div><div class="t-title">${esc(L[en.id].title)}</div><div class="t-sub">${en.reasons.map(r => KIND_LABEL[r.kind]).join(', ')}</div></div>${reasonPill(en)}</div>`).join('')}${S.plan.lessons.length > 8 ? `<button class="btn ghost small" data-act="go" data-arg="tutorial">and ${S.plan.lessons.length - 8} more</button>` : ''}</div></div>`
+      planCard = planIsFromThis ? retrainCard(idx)
+        : e.kind === 'custom' && misses.length && S.plan && S.plan.source === 'test' && planRemaining().length ? planInProgressCard(idx)
         : e.kind === 'custom' ? `<div class="ready-banner"><strong>${misses.length || guesses.length ? 'Your misses and guesses now feed your weak-topic list.' : 'No misses and no guesses.'}</strong> Custom tests do not count toward qualifying. <button class="btn primary small" data-act="go" data-arg="exam" style="margin-left:8px">Set up another</button></div>`
         : `<div class="ready-banner"><strong>${e.noConf ? 'No misses.' : 'No misses and no guesses.'}</strong> ${stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'You have qualified; the official-format test is the final step.' : 'Nothing to retrain. Keep your last five strong with another practice test.'} ${stage() === 'official' ? `<button class="btn primary small" data-act="start-standard" style="margin-left:8px">Official-format test</button>` : stage() !== 'ready' ? `<button class="btn primary small" data-act="start-exam" data-arg="practice" style="margin-left:8px">Practice test</button>` : ''}</div>`;
     }
@@ -7401,7 +7621,7 @@ FRA.questions.push(
         <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} Practice tests here pass at ${PASS_PCT}%; the official-format test uses the real exam's passing score, ${OFFICIAL_PCT}%.`}</div>
         <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted toward qualifying</span>' : `<span class="pill ${S.passes >= PASSES_NEEDED ? 'good' : ''}">${S.passes} of your last ${PASS_WINDOW} passed</span>`) : ''}</div>
         <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
-      <div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>
+      ${isStarter ? `<div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>` : strengthCard(idx)}
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
       ${guesses.length ? `<div class="card"><h3 style="margin-bottom:6px">Right, but you were not sure (${guesses.length})</h3><p class="muted" style="font-size:.9rem;margin-bottom:6px">These count as gaps. Read why the answer is right so it stops being a guess.</p>${guesses.map(r => reviewItem(r, false)).join('')}</div>` : ''}
@@ -7428,7 +7648,19 @@ FRA.questions.push(
     }
     if (tr.ti >= tr.topics.length) {
       const done = tr.log; const c = done.filter(x => x.correct).length; const still = weakTopics();
+      const fromPlan = !!tr.fromPlan; const topic0 = tr.topics[0];
       S.active = null; save();
+      if (fromPlan && L[topic0]) {
+        // A retraining drill: done means three in a row (the entry is complete); otherwise ten
+        // questions went by without one, and the learner can drill again or take the lesson instead.
+        const finished = planDone(topic0); const next = planRemaining()[0]; const st = stage();
+        const nextBtn = next ? `<button class="btn primary" data-act="retrain-open" data-arg="${next.id}">Next: ${esc(L[next.id].title)}${modeOf(next) !== 'lesson' ? ` (${MODE_SHORT[modeOf(next)].toLowerCase()})` : ''}</button>`
+          : st === 'official' ? `<button class="btn primary" data-act="start-standard">Retraining complete. Take the official-format test</button>`
+          : st === 'ready' ? `<button class="btn primary" data-act="go" data-arg="ready">Retraining complete. See your readiness report</button>`
+          : `<button class="btn primary" data-act="start-exam" data-arg="${nextFlowKind()}">Retraining complete. Take the next test</button>`;
+        return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Drill</div><h1>${finished ? 'Topic done.' : 'Still shaky.'} ${c} of ${done.length} correct</h1><p class="ink2" style="margin-top:6px">${finished ? `Three in a row on ${esc(L[topic0].title)}. That counts as retrained.` : `Ten questions on ${esc(L[topic0].title)} without three in a row. Drill it again, or switch this topic to the lesson.`}</p></div>
+          <div class="row" style="flex-wrap:wrap">${finished ? nextBtn : `<button class="btn primary" data-act="retrain-open" data-arg="${topic0}">Drill it again</button><button class="btn" data-act="retrain-switch" data-arg="${topic0}">Switch this topic to the lesson</button>`}<button class="btn ghost" data-act="go" data-arg="tutorial">Back to your tutorial</button></div></div>`;
+      }
       return `<div class="content stack" style="gap:18px"><div><div class="eyebrow">Drill session complete</div><h1>${c} of ${done.length} correct</h1></div>
         <div class="card lift stack"><h3>Topics covered</h3><div class="topic-list">${tr.topics.map(t => `<div class="topic-item"><div><div class="t-title">${esc(L[t].title)}</div><div class="t-sub">${topicMastered(t) ? 'Mastered' : `${topicPriority(t)} priority points remaining`}</div></div><span class="pill ${topicMastered(t) ? 'good' : 'warn'}">${topicMastered(t) ? 'DONE' : 'KEEP GOING'}</span></div>`).join('')}</div></div>
         <div class="row">${still.length ? `<button class="btn primary" data-act="start-train">Next session (${still.length} left)</button>` : ''}<button class="btn ghost" data-act="go" data-arg="home">Home</button></div></div>`;
@@ -7448,10 +7680,12 @@ FRA.questions.push(
       <div class="card lift">${questionCard(tr, { immediate: true, title: esc(l.title) })}</div>
       <p class="muted" style="font-size:.9rem">Drill ${tr.drills + 1}. Three correct in a row completes this topic.</p></div>`;
   }
-  function startTrain(topics) {
+  // opts.plan marks a session opened from a retraining entry: its end screen leads to the next entry
+  // (or the next test) instead of another weak-topic session, and End session returns to the tutorial.
+  function startTrain(topics, opts) {
     const list = topics && topics.length ? topics : weakTopics().slice(0, 3);
     if (!list.length) { S.active = { kind: 'train', phase: 'pick' }; go('train'); return; }
-    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true, streak: 0, drills: 0, log: [], used: [] };
+    S.active = { kind: 'train', topics: list, ti: 0, phase: 'lesson', items: [], i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true, streak: 0, drills: 0, log: [], used: [], fromPlan: !!(opts && opts.plan) };
     go('train');
   }
   function extendQueue(tr) {
@@ -7678,13 +7912,13 @@ FRA.questions.push(
     if (sess.kind === 'checkpoint') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
       let passedNow = false;
-      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
+      if (sess.i >= sess.items.length) { const score = cpScore(sess); const ls = lstat(sess.lesson); ls.attempts++; ls.best = Math.max(ls.best, score); ls.lastScore = score; ls.lastAt = Date.now(); if (score >= CHECKPOINT_PASS) { ls.status = 'passed'; ls.passedAt = Date.now(); passedNow = true; } }
       save(); if (passedNow && window.FRASync) FRASync.pushNow(); render(); return;
     }
     if (sess.kind === 'train') {
       sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false;
       const doneTopic = sess.streak >= 3 || sess.drills >= 10;
-      if (doneTopic) { const t = sess.topics[sess.ti]; if (sess.streak >= 3) { const ts = tstat(t); ts.streak = Math.max(ts.streak, 3); ts.hist = []; } sess.ti++; sess.phase = 'lesson'; sess.i = 0; sess.items = []; sess.answers = []; sess.streak = 0; sess.drills = 0; }
+      if (doneTopic) { const t = sess.topics[sess.ti]; if (sess.streak >= 3) { const ts = tstat(t); ts.streak = Math.max(ts.streak, 3); ts.hist = []; ts.drilledAt = Date.now(); } sess.ti++; sess.phase = 'lesson'; sess.i = 0; sess.items = []; sess.answers = []; sess.streak = 0; sess.drills = 0; }
       else if (sess.i >= sess.items.length) extendQueue(sess);
       save(); render();
     }
@@ -7701,11 +7935,14 @@ FRA.questions.push(
       case 'course': railOpen = false; return go('course', arg);
       case 'lesson': railOpen = false; if (deepOpen !== arg) deepOpen = null; if (S.active && S.active.kind === 'checkpoint' && S.active.lesson !== arg) S.active = null; return go('lesson', arg);
       case 'start-checkpoint': { const items = pickForLesson(arg, CHECKPOINT_N, new Set(), 0.3); if (!items.length) { toast('No questions for this lesson yet.'); return; } S.active = { kind: 'checkpoint', lesson: arg, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, noConf: true }; save(); render(); return; }
-      case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); return go('lesson', arg); }
+      case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); const en = planEntry(arg); if (en && S.plan && S.plan.source === 'test' && modeOf(en) !== 'lesson') return openEntry(en); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
       case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
       case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
+      case 'retrain-preset': { if (!S.plan || S.plan.source !== 'test' || !PRESET_LABEL[arg] || arg === 'custom') return; applyPreset(S.plan, arg); save(); render(); return; }
+      case 'retrain-mode': { const [id, m] = String(arg).split(':'); const en = planEntry(id); if (!en || !S.plan || S.plan.source !== 'test' || !MODES.includes(m)) return; en.mode = m; save(); render(); return; }
+      case 'retrain-adopt': { const i = parseInt(arg, 10); const rec = S.exams[i]; if (!rec || rec.kind === 'starter') return; const plan = planFromTest(rec, i); if (!plan.lessons.length) { toast('Nothing to retrain from that test.'); return; } S.plan = plan; save(); render(); toast('Retraining rebuilt from this test.'); return; }
       case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
       case 'sign-out': {
         // Sign-out clears the token, never the local blob. The learner keeps studying
@@ -7743,7 +7980,10 @@ FRA.questions.push(
       case 'pick-train': { S.active = { kind: 'train', phase: 'pick' }; return go('train'); }
       case 'train-topic': { startTrain([arg]); return; }
       case 'train-drills': { const tr = S.active; if (!tr) return; tr.phase = 'drill'; tr.items = []; tr.i = 0; tr.answers = []; tr.used = tr.used || []; extendQueue(tr); save(); render(); return; }
-      case 'abandon-train': { S.active = null; save(); return go('train'); }
+      case 'abandon-train': { const fromPlan = !!(S.active && S.active.fromPlan); S.active = null; save(); return go(fromPlan ? 'tutorial' : 'train'); }
+      case 'retrain-open': { openEntry(planEntry(arg)); return; }
+      case 'retrain-start': { const rem = planRemaining(); if (rem.length) openEntry(rem[0]); else go('tutorial'); return; }
+      case 'retrain-switch': { const en = planEntry(arg); if (!en) return; en.mode = 'lesson'; save(); openEntry(en); return; }
       case 'upgrade': { if (course.upgradeUrl) { location.href = course.upgradeUrl; return; } toast('The full course is not for sale yet. Everything is free for now.'); return; }
       case 'deep-toggle': { deepOpen = deepOpen === arg ? null : arg; render(); if (deepOpen) { const el = $('#deep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
       case 'print-cheat': { if (S.view.name !== 'cheatsheet') go('cheatsheet'); setTimeout(() => window.print(), 120); return; }
@@ -7819,6 +8059,16 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    // Retraining paths: every entry carries a suggested mode and a score; the results page shows the
+    // strength chart and the picker; a drill entry opens a plan-flagged drill session.
+    if (S.plan) {
+      if (!S.plan.lessons.every(e => MODES.includes(e.mode) && MODES.includes(e.suggested) && typeof e.score === 'number' && e.why)) throw new Error('retraining entries lack mode, suggested, score, or why');
+      go('results', 'results:1'); if (!$('.retrain-card') || !$('.strength .bar-row') || document.querySelectorAll('.retrain-row').length !== S.plan.lessons.length) throw new Error('results page lacks the path picker or the strength chart');
+      const e0 = S.plan.lessons[0]; const keep = e0.mode; e0.mode = 'drill'; openEntry(e0);
+      if (!S.active || S.active.kind !== 'train' || !S.active.fromPlan || S.active.topics[0] !== e0.id) throw new Error('a drill entry did not open a plan drill session');
+      S.active = null; e0.mode = keep; applyPreset(S.plan, 'deep'); if (presetOf(S.plan) !== 'deep' || !S.plan.lessons.every(e => e.mode === 'deep')) throw new Error('the All extended preset did not apply'); applyPreset(S.plan, 'suggested');
+      log.push(`retrain entries=${S.plan.lessons.length} preset=${presetOf(S.plan)} modes=${S.plan.lessons.map(e => e.mode).join(',')} minutes=${planMinutes(S.plan.lessons)}`);
+    }
     // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the passes alone.
     const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
     const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });

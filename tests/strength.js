@@ -70,6 +70,7 @@ check('custom tests are tests', ST.compute({ exams: [exam('custom', 1, [rv('b1',
   check('ties in the weakest list break by the domain exam weight', r.weakest[0].id === 'a1' && r.weakest[1].id === 'b1', JSON.stringify(r.weakest.map(w => w.id)));
 }
 check('a question stored by id resolves through meta.questions', ST.compute({ exams: [exam('practice', 1, [{ q: 'q7', correct: false }])] }, Object.assign({ questions: { q7: 'b1' } }, META)).weakest[0].id === 'b1');
+check('without meta.questions, a bank id resolves by its <lesson>-<n> spelling', ST.compute({ exams: [exam('practice', 1, [{ q: 'b1-3', correct: false }, { q: 'zz-1', correct: false }])] }, META).weakest.map(w => w.id).join() === 'b1');
 check('a lastScore above checkpointN is clamped', ST.compute({ lessons: { a1: { lastScore: 9, lastAt: 5 } } }, META).weakest.length === 0);
 
 if (fails.length) { console.error(`strength: ${fails.length} failed`); process.exit(1); }
