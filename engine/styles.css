@@ -350,3 +350,13 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .acr-table td { padding: 1.5pt 3pt; }
   .acr-table td:first-child { font-family: var(--font-mono); font-size: 7.2pt; }
 }
+
+/* Where you stand (results page): ranked domain bars with a this-test tag under each label. */
+.strength .tag { display: block; font-size: 0.8rem; }
+/* The retraining path picker: one row per missed topic with its three depth chips. */
+.retrain-row { padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+.retrain-row.done { opacity: 0.7; }
+.retrain-row .t-title { font-weight: 600; }
+.retrain-row .t-sub { font-size: 0.85rem; color: var(--muted); }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }

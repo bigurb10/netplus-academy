@@ -102,5 +102,43 @@ const entry = (s, id) => s.plan && s.plan.lessons.find(e => e.id === id);
   check('a drill from before the plan does not', /1 lesson to go/.test(w3.text()), w3.$('h1') && w3.$('h1').textContent);
 }
 
+// ----- Part 2: the results page -----
+const minutesOf = w => parseInt((w.$('.retrain-card h3').textContent.match(/about (\d+) minute/) || [])[1], 10);
+{
+  const w = bootWith(seeded({ exams: [starterRec(), mkExam('practice', NOW - 50000, [T2], [T1])] }));
+  const s = takeTest(w, 'practice', [T1, T2]); const idx = s.exams.length - 1;
+  check('the where-you-stand card ranks every domain', w.$$('.strength .bar-row').length === DOMAIN_IDS.length, w.$$('.strength .bar-row').length);
+  const vals = w.$$('.strength .bar-row .value').map(el => parseInt(el.textContent, 10)).filter(n => !isNaN(n));
+  check('bars run strongest to weakest', vals.length > 0 && vals.every((v, i) => i === 0 || vals[i - 1] >= v), vals.join(','));
+  check('each bar tags this test', w.$$('.strength .bar-row .tag').length === DOMAIN_IDS.length);
+  check('the weakest list names the missed topics', [T1, T2].every(t => w.$$('.weakest .topic-item').some(el => el.textContent.includes(findLesson(t).title))), w.$$('.weakest .topic-item').map(el => el.querySelector('.t-title').textContent).join(' | '));
+  check('the old per-test domain card is gone', !w.$$('h3').some(h => h.textContent === 'By domain'));
+  check('one retraining row per entry with three mode chips each', w.$$('.retrain-row').length === 2 && w.$$('.retrain-row').every(r => r.querySelectorAll('.chip.mode').length === 3), w.$$('.retrain-row').length);
+  check('the suggested mode is pressed on each row', w.$$('.retrain-row').every(r => { const c = r.querySelector('.chip.mode[aria-pressed="true"]'); return c && c.dataset.arg === `${r.dataset.id}:${entry(state(w), r.dataset.id).suggested}`; }));
+  check('the Suggested preset chip is pressed', !!w.$('.preset-row .chip[data-arg="suggested"][aria-pressed="true"]'));
+  check('the next test button is at the top and the bottom', w.$$('[data-act="start-exam"][data-arg="practice"]').length >= 2, w.$$('[data-act="start-exam"]').length);
+  act(w, 'retrain-preset', 'deep');
+  check('All extended sets every mode to deep and presses its chip', state(w).plan.lessons.every(e => e.mode === 'deep') && state(w).plan.preset === 'deep' && !!w.$('.preset-row .chip[data-arg="deep"][aria-pressed="true"]') && !w.$('.preset-row .chip[data-arg="suggested"][aria-pressed="true"]'));
+  const deepMin = minutesOf(w);
+  act(w, 'retrain-preset', 'drill'); const drillMin = minutesOf(w);
+  check('the estimate follows the modes', deepMin > drillMin, `${deepMin} vs ${drillMin}`);
+  act(w, 'retrain-mode', `${T1}:lesson`);
+  check('one manual change makes the preset Custom', entry(state(w), T1).mode === 'lesson' && entry(state(w), T2).mode === 'drill' && !!w.$('.preset-row [data-arg="custom"][aria-pressed="true"]') && !w.$('.preset-row .chip[data-arg="drill"][aria-pressed="true"]'));
+  act(w, 'retrain-preset', 'suggested');
+  check('Suggested restores every suggested mode', state(w).plan.lessons.every(e => e.mode === e.suggested) && !!w.$('.preset-row .chip[data-arg="suggested"][aria-pressed="true"]'));
+  act(w, 'go', 'exam'); act(w, 'go', 'results:' + idx);
+  check('the picker is still there when the results page is revisited', !!w.$('.retrain-card') && w.$$('.retrain-row').length === 2);
+}
+{
+  const w = bootWith(seeded()); const s1 = takeTest(w, 'full', [T1]); const fullIdx = s1.exams.length - 1;
+  act(w, 'go', 'exam'); w.$('#su-n').value = '10'; act(w, 'start-custom');
+  const all = []; pack.FRA.units.forEach(u => u.lessons.forEach(l => all.push(l.id)));
+  const items = state(w).active.items; items.forEach(it => { const q = fat(it); w.click(w.$(`[data-act="opt"][data-arg="${(q.c + 1) % q.a.length}"]`)); w.click(w.$('[data-act="submit"]')); });
+  const s2 = state(w); const customIdx = s2.exams.length - 1;
+  check('a custom test during retraining keeps the plan and offers a path from it', s2.exams[customIdx].kind === 'custom' && s2.plan.examIdx === fullIdx && !!w.$('[data-act="retrain-adopt"]') && !w.$('.retrain-card'));
+  act(w, 'retrain-adopt', String(customIdx));
+  check('adopting builds the plan from the custom test', state(w).plan.examIdx === customIdx && !!w.$('.retrain-card') && w.$$('.retrain-row').length > 0);
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All retrain tests passed.');
