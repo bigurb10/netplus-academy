@@ -225,6 +225,22 @@ r = M.mergeState(full({ plan: null, path: null }), full({ plan: null, path: null
 check('a null plan and a null path pass through without throwing',
   r.plan === null && r.path === null, JSON.stringify({ plan: r.plan, path: r.path }));
 
+// An edited retraining plan (a mode changed on one device) shares its twin's createdAt; changedAt
+// decides, in either argument order. A newer plan still beats an edited older one outright.
+{
+  const twinA = { examIdx: 0, createdAt: 100, changedAt: 100, preset: 'suggested', lessons: [{ id: 'u1l1', mode: 'drill', suggested: 'drill' }] };
+  const twinB = { examIdx: 0, createdAt: 100, changedAt: 150, preset: 'custom', lessons: [{ id: 'u1l1', mode: 'deep', suggested: 'drill' }] };
+  const ex = [exam({ id: 'p1', date: 1 })];
+  const r1 = M.mergeState(full({ exams: ex, plan: twinA }), full({ exams: ex, plan: twinB }), OPTS);
+  const r2 = M.mergeState(full({ exams: ex, plan: twinB }), full({ exams: ex, plan: twinA }), OPTS);
+  check('an edited plan wins over its unedited twin, edited side second', r1.plan.lessons[0].mode === 'deep' && r1.plan.preset === 'custom', JSON.stringify(r1.plan));
+  check('an edited plan wins over its unedited twin, edited side first', r2.plan.lessons[0].mode === 'deep' && r2.plan.preset === 'custom', JSON.stringify(r2.plan));
+  const legacyTwin = { examIdx: 0, createdAt: 100, lessons: [{ id: 'u1l1' }] };
+  check('a plan without changedAt loses to its edited twin', M.mergeState(full({ exams: ex, plan: twinB }), full({ exams: ex, plan: legacyTwin }), OPTS).plan.lessons[0].mode === 'deep');
+  const newer = { examIdx: 0, createdAt: 200, lessons: [{ id: 'u1l2', mode: 'lesson' }] };
+  check('a newer plan beats an edited older one regardless of changedAt', M.mergeState(full({ exams: ex, plan: twinB }), full({ exams: ex, plan: newer }), OPTS).plan.createdAt === 200);
+}
+
 const planRefA = { examIdx: 0, createdAt: 5, lessons: [] };
 const stateWithPlanA = full({ exams: [exam({ id: 'plan-ref', date: 1 })], plan: planRefA });
 const stateWithPlanB = full({ exams: [] });

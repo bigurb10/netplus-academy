@@ -96,10 +96,10 @@ const entry = (s, id) => s.plan && s.plan.lessons.find(e => e.id === id);
   const w = bootWith(seeded()); const s = takeTest(w, 'full', [T1]);
   s.topics[T1] = Object.assign(s.topics[T1] || { hist: [], attempts: 0, correct: 0, streak: 0, last: 0 }, { drilledAt: s.plan.createdAt + 1 });
   const w2 = bootWith(s); act(w2, 'go', 'tutorial');
-  check('a topic drilled after the plan was made completes its entry', /Tutorial complete/.test(w2.text()), w2.$('h1') && w2.$('h1').textContent);
+  check('a topic drilled after the plan was made completes its entry', /Retraining complete/.test(w2.text()), w2.$('h1') && w2.$('h1').textContent);
   s.topics[T1].drilledAt = s.plan.createdAt - 1;
   const w3 = bootWith(s); act(w3, 'go', 'tutorial');
-  check('a drill from before the plan does not', /1 lesson to go/.test(w3.text()), w3.$('h1') && w3.$('h1').textContent);
+  check('a drill from before the plan does not', /1 topic to go/.test(w3.text()), w3.$('h1') && w3.$('h1').textContent);
 }
 
 // ----- Part 2: the results page -----
@@ -165,7 +165,7 @@ const answer = (w, ok) => { const a = state(w).active; const q = fat(a.items[a.i
   check('three in a row stamps drilledAt and ends the session', state(w).topics[first].drilledAt > 0 && state(w).active === null, JSON.stringify(state(w).topics[first]));
   check('the end screen says the topic is done and offers the next entry', /Topic done/.test(w.text()) && !!w.$(`[data-act="retrain-open"][data-arg="${second}"]`), w.$('h1') && w.$('h1').textContent);
   act(w, 'go', 'tutorial');
-  check('the Tutorial tab shows one to go, a Drill pill, and a Change your path button', /1 lesson to go/.test(w.text()) && w.$$('.pill').some(p => p.textContent === 'Drill') && !!w.$(`[data-act="go"][data-arg="results:${s.exams.length - 1}"]`), w.$('h1') && w.$('h1').textContent);
+  check('the Tutorial tab shows one to go, a Drill pill, and a Change your path button', /1 topic to go/.test(w.text()) && w.$$('.pill').some(p => p.textContent === 'Drill') && !!w.$(`[data-act="go"][data-arg="results:${s.exams.length - 1}"]`), w.$('h1') && w.$('h1').textContent);
   check('the remaining row opens by mode', !!w.$(`.option[data-act="retrain-open"][data-arg="${second}"]`));
   act(w, 'go', 'home');
   check('Home names the drill as the next step', /^Drill: /.test(w.$('.card.lift h2').textContent) && !!w.$(`[data-act="retrain-open"][data-arg="${second}"]`), w.$('.card.lift h2').textContent);
@@ -196,6 +196,40 @@ const answer = (w, ok) => { const a = state(w).active; const q = fat(a.items[a.i
   // The checkpoint's Next button follows the next entry's mode.
   act(w, 'start-checkpoint', T1); for (let i = 0; i < 4; i++) answer(w, true);
   check('passing the checkpoint completes the entry', /Tutorial complete|Retraining complete/.test(w.text()) && !!w.$('[data-act="finish-checkpoint"][data-arg="__test"]'), w.text().slice(0, 0));
+}
+
+// ----- Part 4: review follow-ups -----
+{
+  const w = bootWith(seeded()); const s = takeTest(w, 'full', [T1, T2]);
+  const first = s.plan.lessons[0].id, second = s.plan.lessons[1].id;
+  act(w, 'retrain-mode', `${first}:lesson`); act(w, 'retrain-mode', `${second}:deep`);
+  act(w, 'retrain-open', first); act(w, 'start-checkpoint', first); for (let i = 0; i < 4; i++) answer(w, true);
+  const nb = w.$(`[data-act="finish-checkpoint"][data-arg="${second}"]`);
+  check('the checkpoint Next button names the next entry with its mode', !!nb && /extended/.test(nb.textContent), nb && nb.textContent);
+  w.click(nb);
+  check('Next opens the extended entry with the deeper explanation', w.location.hash === `#lesson/${second}` && !!w.$('#deep') && w.$$('.pill').some(p => p.textContent === 'Extended'), w.location.hash);
+  // A drill entry with an unfinished exam asks first; No leaves the exam alone, Yes replaces it.
+  act(w, 'retrain-mode', `${second}:drill`);
+  act(w, 'go', 'home'); act(w, 'start-exam', 'practice'); const before = JSON.stringify(state(w).active.items);
+  w.confirm = () => false; act(w, 'retrain-open', second);
+  check('No on the confirm keeps the unfinished exam', state(w).active && state(w).active.kind === 'practice' && JSON.stringify(state(w).active.items) === before);
+  w.confirm = () => true; act(w, 'retrain-open', second);
+  check('Yes on the confirm opens the drill', state(w).active && state(w).active.kind === 'train' && state(w).active.fromPlan === true);
+  // A results page for a record without byDomain still renders the chart, without this-test tags.
+  const legacy = state(w); legacy.active = null; delete legacy.exams[legacy.exams.length - 1].byDomain;
+  const w2 = bootWith(legacy); act(w2, 'go', 'results:' + (legacy.exams.length - 1));
+  check('a record without byDomain renders the chart without this-test tags', w2.$$('.strength .bar-row').length === DOMAIN_IDS.length && w2.$$('.strength .tag').length === 0 && !!w2.$('.retrain-card'));
+}
+{
+  // Every in-place edit stamps changedAt so the merge can tell an edited plan from its twin.
+  const w = bootWith(seeded()); const s = takeTest(w, 'full', [T1]); const c0 = s.plan.changedAt;
+  check('a new plan is stamped with changedAt', c0 > 0 && s.plan.createdAt === c0, JSON.stringify([s.plan.createdAt, c0]));
+  while (Date.now() <= c0) { /* next millisecond */ }
+  act(w, 'retrain-mode', `${T1}:deep`);
+  check('a mode change bumps changedAt and leaves createdAt alone', state(w).plan.changedAt > c0 && state(w).plan.createdAt === s.plan.createdAt, JSON.stringify([state(w).plan.createdAt, state(w).plan.changedAt]));
+  const c1 = state(w).plan.changedAt; while (Date.now() <= c1) { /* next millisecond */ }
+  act(w, 'retrain-preset', 'drill');
+  check('a preset change bumps changedAt', state(w).plan.changedAt > c1);
 }
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }

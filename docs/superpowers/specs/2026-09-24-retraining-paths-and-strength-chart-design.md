@@ -29,9 +29,13 @@ both at the end of the test and on the account page.
   Each entry gains `mode` (`drill` | `lesson` | `deep`), `suggested` (the mode the rule
   picked), `score`, and `why = { here, before, cpWrong }`. The plan stores `preset`, the
   preset the learner last chose (`suggested` for a new plan); the chip shown pressed is that
-  preset while every entry's mode still matches it, otherwise Custom. Plans from the starter
-  test are untouched. Entries saved before this change have no `mode` and are read as
-  `lesson`; a plan without `preset` reads as `suggested`.
+  preset while every entry's mode still matches it, otherwise Custom. Every in-place edit of
+  the plan (a preset, a topic's mode, the switch from a shaky drill, a starter path switch)
+  stamps `plan.changedAt`; `merge.js` picks the plan side by `createdAt` first and `changedAt`
+  second, so a mode chosen on one device reaches the other instead of the two devices trading
+  their own copies on every pull. Plans from the starter test are otherwise untouched. Entries
+  saved before this change have no `mode` and are read as `lesson`; a plan without `preset`
+  reads as `suggested`; a plan without `changedAt` loses a tie to one that has it.
 
 ### The retraining window and score
 
@@ -90,10 +94,14 @@ Order of the non-starter results page, top to bottom:
      a repeat miss suggests the lesson; missed on both tests or a failed checkpoint too
      suggests the extended lesson.
    When the plan is from another test (custom test case), the in-progress card from section 1.
-   On an older full or practice test whose plan a later test replaced, a small card says so
-   and offers "Rebuild retraining from this test instead" (`retrain-adopt`), so a revisited
-   results page never claims "No misses". When there is nothing to retrain, the existing
-   "No misses" banner.
+   On a full or practice test with misses that is not the plan's source (usually an older test
+   whose plan a later test replaced), a small card says which case applies and offers "Retrain
+   from this test instead" (`retrain-adopt`; it confirms first when it would replace an
+   unfinished starter tutorial), so a revisited results page never claims "No misses". When
+   there is nothing to retrain, the existing "No misses" banner.
+
+Copy for a test-sourced plan counts "topics" and says "done" (Tutorial tab, Home stat, lesson
+head, checkpoint result), never "lessons passed"; the initial tutorial keeps its wording.
 5. Wrong answers explained (unchanged).
 6. The bottom row with the next-test button (unchanged).
 

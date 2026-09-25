@@ -133,7 +133,7 @@
 
   // Merge two complete state blobs. Commutative and idempotent: the result depends on the
   // contents, never on which side is passed first - except an exact tie on pathAt (for path),
-  // settingsAt (for settings), or createdAt (for plan) with the two sides' path/settings/plan
+  // settingsAt (for settings), or createdAt then changedAt (for plan) with the two sides' path/settings/plan
   // actually differing, where the pick falls back to argument order. Accepted: real clocks
   // essentially never tie, and the fallback still always resolves to one side's real value, never
   // a mix.
@@ -142,7 +142,11 @@
     const exams = unionBy(a.exams, b.exams, examId, (x, y) => (y.pct || 0) > (x.pct || 0) ? y : x)
       .slice().sort((x, y) => (x.date || 0) - (y.date || 0) || examId(x).localeCompare(examId(y)));
     const feedback = unionBy(a.feedback, b.feedback, f => f.id, (x, y) => x.sent ? x : y);
-    const planSide = (b.plan && (!a.plan || (b.plan.createdAt || 0) > (a.plan.createdAt || 0))) ? b : a;
+    // A retraining plan is edited in place (a topic's mode, the preset), so two devices can hold
+    // twins with the same createdAt; changedAt, stamped on every edit, breaks that tie. A newer
+    // plan (a later createdAt) wins outright whatever the edits on the older one.
+    const newerPlan = (x, y) => (x.createdAt || 0) > (y.createdAt || 0) || ((x.createdAt || 0) === (y.createdAt || 0) && (x.changedAt || 0) > (y.changedAt || 0));
+    const planSide = (b.plan && (!a.plan || newerPlan(b.plan, a.plan))) ? b : a;
     // path rides on pathAt, NOT touchedAt -- the same fix settings got. touchedAt is stamped
     // by save() on every navigation, so it means "last opened"; resolving path on it let a
     // device that was merely opened later win over the device where the path was actually
