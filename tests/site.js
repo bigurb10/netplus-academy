@@ -102,7 +102,8 @@ site.buildCourse(fake, { out: out2, origin: 'https://example.test' });
 const fp = fs.readFileSync(path.join(out2, 'fake', 'lessons', 'u1l1-tom-jerry-script', 'index.html'), 'utf8');
 check('slug is the id plus the hyphenated title', site.slug(fake.units[0].lessons[0]) === 'u1l1-tom-jerry-script');
 check('title and body text are HTML-escaped', fp.includes('<title>Tom &amp; Jerry &lt;script&gt; |') && fp.includes('<p>One &amp; two &lt;b&gt;.</p>') && !fp.includes('<script>'.replace('<', '<') + 'alert'));
-check('JSON-LD escapes < so a title cannot close the script tag', !/<script type="application\/ld\+json">[^]*?<script>/.test(fp) && fp.includes('\\u003cscript>'));
+const ldBlocks = [...fp.matchAll(/<script type="application\/ld\+json">([^]*?)<\/script>/g)].map(x => x[1]);
+check('JSON-LD escapes < so a title cannot close the script tag', ldBlocks.length > 0 && ldBlocks.every(b => !/<script/i.test(b)) && fp.includes('\\u003cscript>'), ldBlocks.length);
 check('a description with quotes is attribute-safe', fp.includes('content="One &amp; two &lt;b&gt;."'));
 
 // ----- 3. Analytics snippet -----
