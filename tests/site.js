@@ -105,6 +105,19 @@ check('title and body text are HTML-escaped', fp.includes('<title>Tom &amp; Jerr
 check('JSON-LD escapes < so a title cannot close the script tag', !/<script type="application\/ld\+json">[^]*?<script>/.test(fp) && fp.includes('\\u003cscript>'));
 check('a description with quotes is attribute-safe', fp.includes('content="One &amp; two &lt;b&gt;."'));
 
+// ----- 3. Analytics snippet -----
+{
+  const dirs = [];
+  const build = (analytics) => { const o = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-ga-')); dirs.push(o); site.buildAll({ courseDirs: [mini], out: o, origin: 'https://example.test/', analytics }); return fs.readFileSync(path.join(o, 'mini', 'lessons', 'index.html'), 'utf8'); };
+  const withId = build('G-TEST1234');
+  const n = (withId.match(/googletagmanager\.com\/gtag\/js\?id=G-TEST1234/g) || []).length;
+  check('with an ID, a static page carries the gtag snippet once, inside <head>', n === 1 && withId.indexOf('gtag/js?id=G-TEST1234') < withId.indexOf('</head>') && withId.includes("gtag('config','G-TEST1234')"), n);
+  check('with an empty ID, a static page never mentions googletagmanager', !build('').includes('googletagmanager'));
+  let threw = null; try { build('UA-12345-1'); } catch (e) { threw = e.message; }
+  check('a malformed ID fails the static build', !!threw && /G-XXXXXXXXXX/.test(threw), threw);
+  for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+}
+
 fs.rmSync(out, { recursive: true, force: true }); fs.rmSync(out2, { recursive: true, force: true });
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

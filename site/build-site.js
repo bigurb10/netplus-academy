@@ -23,6 +23,16 @@ const ORIGIN = 'https://fieldreadyacademy.com';
 const BRAND = 'FieldReady Academy';
 const FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">';
 const ICONS = '<link rel="icon" href="/favicon.ico" sizes="32x32">\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">';
+// Google Analytics 4: analytics.json is the one place the Measurement ID lives (build.py reads
+// the same file). Empty means no snippet on any page.
+const ANALYTICS = path.join(ROOT, 'analytics.json');
+function gaId() { return (JSON.parse(fs.readFileSync(ANALYTICS, 'utf8')).ga4MeasurementId || '').trim(); }
+function gaSnippet(id) {
+  if (!id) return '';
+  if (!/^G-[A-Z0-9]{4,}$/.test(id)) throw new Error(`analytics.json: ga4MeasurementId must look like G-XXXXXXXXXX, got ${JSON.stringify(id)}`);
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${id}');</script>\n`;
+}
+let analyticsSnippet = ''; // set by buildCourse for the pages it writes; shell() reads it
 const DESC_MAX = 155;
 
 // ---------- loading a pack ----------
@@ -129,7 +139,7 @@ ${FONTS}
 <link rel="stylesheet" href="/catalog.css">
 <link rel="stylesheet" href="/site.css">
 ${(p.jsonld || []).map(ld).join('\n')}
-</head>
+${analyticsSnippet}</head>
 <body>
 <header class="site-head">
   <div class="wrap row spread">
@@ -335,6 +345,7 @@ function writePage(out, urlPath, html) {
 }
 
 function buildCourse(FRA, opts) {
+  analyticsSnippet = gaSnippet(opts.analytics !== undefined ? opts.analytics : gaId());
   const origin = (opts.origin || ORIGIN).replace(/\/$/, '');
   const m = model(FRA);
   const R = makeRenderer(m.acronyms);
@@ -360,7 +371,7 @@ function buildAll(opts) {
   const out = opts.out || path.join(ROOT, 'dist', 'site');
   const dirs = opts.courseDirs || courseDirs();
   fs.mkdirSync(out, { recursive: true });
-  const results = dirs.map(dir => buildCourse(loadPack(dir), { out, origin }));
+  const results = dirs.map(dir => buildCourse(loadPack(dir), { out, origin, analytics: opts.analytics }));
   const urls = ['/'].concat(...results.map(r => r.pages.map(p => p.url)));
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
@@ -376,4 +387,4 @@ if (require.main === module) {
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
 
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, buildCourse, buildAll, sitemap, robots, ORIGIN, BRAND };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, buildCourse, buildAll, sitemap, robots, gaSnippet, ORIGIN, BRAND };

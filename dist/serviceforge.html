@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>ServiceForge — FieldReady Academy</title>
+  <meta name="description" content="Connect ServiceForge to Claude, ChatGPT, Gemini or Copilot and ask your AI about medical equipment faults, error codes, part numbers, PM intervals and service access codes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
+  <link rel="stylesheet" href="../catalog.css">
+  <style>
+    .back { display: inline-block; margin-bottom: 14px; color: var(--accent); text-decoration: none;
+            font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; }
+    .urlbox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--surface);
+              border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px;
+              padding: 14px 18px; margin: 18px 0 8px; }
+    .urlbox code { font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+                   font-size: 1.02rem; color: var(--ink); word-break: break-all; }
+    .urlbox button { font: inherit; font-family: "Archivo", system-ui, sans-serif; font-weight: 600;
+                     font-size: 0.85rem; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+                     border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+    .urlbox button:hover { border-color: var(--accent); color: var(--accent); }
+    .host { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+            padding: 18px 22px; margin: 14px 0; }
+    .host h3 { font-size: 1.1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .host ol { padding-left: 20px; line-height: 1.7; color: var(--ink-2); margin: 12px 0 0; }
+    .host ol code, .host p code { font-family: ui-monospace, Menlo, Consolas, monospace;
+                                  font-size: 0.92em; background: var(--bg); border: 1px solid var(--line);
+                                  border-radius: 4px; padding: 1px 5px; }
+    .tag { padding: 3px 10px; border-radius: 999px; font-family: "Archivo", system-ui, sans-serif;
+           font-size: 0.72rem; font-weight: 600; background: var(--good-soft); color: var(--good); }
+    .tag.warn { background: var(--accent-soft); color: var(--accent); }
+    .note { color: var(--ink-2); font-size: 0.95rem; margin: 12px 0 0; }
+    .asks { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+           padding: 14px 18px; color: var(--ink-2); font-size: 0.97rem; }
+    .ask strong { color: var(--ink); font-family: "Archivo", system-ui, sans-serif; font-weight: 600;
+                  display: block; margin-bottom: 4px; font-size: 0.86rem; }
+    table.limits { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.96rem; }
+    table.limits th, table.limits td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line);
+                                       vertical-align: top; }
+    table.limits th { font-family: "Archivo", system-ui, sans-serif; font-size: 0.82rem; color: var(--muted);
+                      text-transform: uppercase; letter-spacing: 0.04em; }
+    table.limits td:first-child { white-space: nowrap; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+      <h1>ServiceForge</h1>
+      <p>A troubleshooting knowledge base for biomed and HTM technicians. Connect it to the AI you already use and ask in your own words. Free while we launch.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <a class="back" href="../">&larr; All courses</a>
+
+    <h2>The connector address</h2>
+    <p class="note">Every setup below asks for this URL. Nothing to install. The first time you connect you will be asked to sign in or create a free account: enter your email and the six-digit code we send you.</p>
+    <div class="urlbox">
+      <code id="mcp-url">https://mcp.fieldreadyacademy.com/mcp</code>
+      <button type="button" id="copy">Copy</button>
+    </div>
+
+    <h2>What you can ask once it is connected</h2>
+    <div class="asks">
+      <div class="ask"><strong>Faults</strong>"Philips MP70 won't power on" &mdash; ranked causes, then the checks with test points and expected values.</div>
+      <div class="ask"><strong>Error codes</strong>"AMX-4 code 439" &mdash; what it means, what triggers it, what to do.</div>
+      <div class="ask"><strong>Part numbers</strong>"Rotor control board for an AMX-4" &mdash; the exact number, as the OEM lists it.</div>
+      <div class="ask"><strong>PM</strong>"How often should I PM a PB 840?" &mdash; the OEM interval and checklist, plus what other sites report doing.</div>
+      <div class="ask"><strong>Access codes</strong>"Service code for a PageWriter TC70" &mdash; documented defaults and how to enter them.</div>
+      <div class="ask"><strong>Your own fixes</strong>When you solve something, your AI can log it so the next technician finds it.</div>
+    </div>
+    <p class="note">Answers come back in two labelled parts: what ServiceForge holds, kept separate from what your AI knows on its own. You always see which is which.</p>
+
+    <h2>Setting it up</h2>
+
+    <div class="host">
+      <h3>Claude <span class="tag">Free, Pro and Max</span></h3>
+      <ol>
+        <li>Open Claude in a web browser at <code>claude.ai</code> and sign in.</li>
+        <li>Go to <strong>Settings &rarr; Connectors</strong>.</li>
+        <li>Choose <strong>Add custom connector</strong>.</li>
+        <li>Paste the URL. Claude detects the settings for you &mdash; <strong>Authentication: &ldquo;Sign in now&rdquo;</strong> and <strong>OAuth client: &ldquo;Use Claude&rsquo;s published identity&rdquo;</strong>, each marked <em>Detected</em>. Leave them as shown.</li>
+        <li>Click <strong>Add</strong>, then sign in or create a free account when Claude opens the sign-in page. Start a new chat and ask an equipment question.</li>
+      </ol>
+      <p class="note">Add it on the web once and it works in the phone app too. On a Free plan you get one custom connector, so this would be it. On a Team or Enterprise account an owner adds it under Organization settings and everyone can then connect. If the sign-in page never opens, edit the connector and set <strong>OAuth client</strong> to <strong>Register automatically</strong>, then try again.</p>
+    </div>
+
+    <div class="host">
+      <h3>ChatGPT <span class="tag">Plus, Pro, Team, Enterprise, Edu</span></h3>
+      <ol>
+        <li>Open <code>chatgpt.com</code> in a browser and sign in.</li>
+        <li>In <strong>Settings</strong>, turn on <strong>Developer mode</strong> (under Connectors or Apps, depending on your plan).</li>
+        <li>Choose <strong>Create</strong> or <strong>Add custom connector</strong> and paste the URL.</li>
+        <li>Set authentication to <strong>OAuth</strong>, save, and sign in or create a free account when prompted. Then enable it in a new chat.</li>
+      </ol>
+      <p class="note">Custom connectors are not available on the free ChatGPT tier. On Business and Enterprise accounts an administrator has to switch developer mode on before you will see the option.</p>
+    </div>
+
+    <div class="host">
+      <h3>Gemini <span class="tag warn">Personal Google accounts only</span></h3>
+      <ol>
+        <li>Open <code>gemini.google.com</code> and sign in with a personal Google account.</li>
+        <li>Go to <strong>Settings &amp; help &rarr; Connected Apps</strong>.</li>
+        <li>Under <strong>Custom apps</strong>, choose <strong>Add a custom app</strong> and paste the URL.</li>
+      </ol>
+      <p class="note"><strong>Read this before you try:</strong> custom apps need Gemini Spark access, and they are blocked on Google Workspace accounts &mdash; so a hospital-issued Google account will not work. ServiceForge also now requires a sign-in, and the personal-account custom-app flow may not complete it. Use a personal account with Spark, or &mdash; more reliably &mdash; use Claude or ChatGPT instead.</p>
+    </div>
+
+    <div class="host">
+      <h3>Microsoft Copilot <span class="tag warn">Requires an administrator</span></h3>
+      <p class="note">Copilot has no place for an individual to paste a connector URL. It has to be added as an action in <strong>Copilot Studio</strong> by someone with maker or admin rights in your tenant &mdash; usually your IT department, not you.</p>
+      <ol>
+        <li>In Copilot Studio, open the agent you want to extend.</li>
+        <li>Go to <strong>Tools &rarr; Add a tool &rarr; New tool &rarr; Model Context Protocol</strong>.</li>
+        <li>Enter the URL above. For authentication choose <strong>OAuth 2.0</strong> with dynamic discovery (automatic registration) &mdash; not &ldquo;no authentication.&rdquo; Copilot Studio registers itself and each user signs in.</li>
+        <li>Publish the agent so your users get the tools.</li>
+      </ol>
+      <p class="note">If you do not have Copilot Studio access, send your IT group this page and the URL.</p>
+    </div>
+
+    <h2>Worth knowing</h2>
+    <table class="limits">
+      <tr><th>Point</th><th>What it means</th></tr>
+      <tr><td>It is free</td><td>Free right now. You sign in with a free account &mdash; no payment. Pricing may come once the knowledge base is bigger; nothing you contribute now gets taken away.</td></tr>
+      <tr><td>Your AI does the talking</td><td>ServiceForge only supplies the facts. The reasoning and the bill are your AI subscription's.</td></tr>
+      <tr><td>Not a substitute for the manual</td><td>Follow OEM procedure and your facility's policy. Confirm anything safety-critical against the manual for your exact model and revision.</td></tr>
+      <tr><td>Contributions are open</td><td>Anything logged shows as one technician's unverified experience until others confirm it.</td></tr>
+    </table>
+
+    <h2>If it does not work</h2>
+    <p class="note">Check <a href="https://mcp.fieldreadyacademy.com/health" style="color:var(--accent)">the status endpoint</a> &mdash; it should return <code>{"status":"ok"}</code>. If that is fine but your AI still cannot see the tools, remove the connector and add it again; the URL must end in <code>/mcp</code>. Menu names move around as these products change, so if a step above does not match what you see, look for anything called connectors, custom apps, or MCP servers.</p>
+  </main>
+
+  <script>
+    document.getElementById('copy').addEventListener('click', async function () {
+      var button = this;
+      try {
+        await navigator.clipboard.writeText(document.getElementById('mcp-url').textContent.trim());
+        button.textContent = 'Copied';
+      } catch (err) {
+        // Clipboard is blocked in some browsers and over plain http; select it instead
+        // so the address can still be copied by hand.
+        var range = document.createRange();
+        range.selectNodeContents(document.getElementById('mcp-url'));
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        button.textContent = 'Select and copy';
+      }
+      setTimeout(function () { button.textContent = 'Copy'; }, 2500);
+    });
+  </script>
+</body>
+</html>

@@ -6,7 +6,7 @@ python build.py netplus    builds one course
 dist/<course>.html           - complete standalone page (open locally or host anywhere)
 dist/<course>-artifact.html  - body-only fragment for publishing as a Claude artifact
 """
-import os, re, sys
+import os, re, sys, json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ENGINE = os.path.join(ROOT, "engine")
@@ -81,9 +81,50 @@ def inline_engine(html, rel_src, engine_file):
     return html.replace(tag, "<script>\n" + js + "\n</script>")
 
 
+# ---------- Google Analytics 4 ----------
+# analytics.json is the one place the Measurement ID lives (site/build-site.js reads the
+# same file). A GA4 ID is public in every page's source, so it is committed. Empty means
+# no snippet anywhere: local builds and tests carry no tracking.
+ANALYTICS = os.path.join(ROOT, "analytics.json")
+
+
+def ga_id():
+    """The GA4 Measurement ID from analytics.json, or '' for no tracking."""
+    with open(ANALYTICS, encoding="utf-8") as f:
+        mid = (json.load(f).get("ga4MeasurementId") or "").strip()
+    assert mid == "" or re.fullmatch(r"G-[A-Z0-9]{4,}", mid), \
+        f"analytics.json: ga4MeasurementId must look like G-XXXXXXXXXX, got {mid!r}"
+    return mid
+
+
+def ga_snippet(mid=None):
+    """Google's gtag snippet for the ID, or '' when there is none."""
+    mid = ga_id() if mid is None else mid
+    if not mid:
+        return ""
+    return ('<script async src="https://www.googletagmanager.com/gtag/js?id=' + mid + '"></script>\n'
+            '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}'
+            "gtag('js',new Date());gtag('config','" + mid + "');</script>\n")
+
+
+def with_analytics(html):
+    """Insert the analytics snippet before the page's one </head>."""
+    assert html.count("</head>") == 1, "expected exactly one </head>"
+    return html.replace("</head>", ga_snippet() + "</head>")
+
+
+def build_serviceforge():
+    """dist/serviceforge.html - the ServiceForge connector page, with analytics."""
+    html = with_analytics(read(os.path.join(ROOT, "serviceforge", "index.html")))
+    os.makedirs(DIST, exist_ok=True)
+    with open(os.path.join(DIST, "serviceforge.html"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(html)
+    print(f"  wrote dist/serviceforge.html {len(html)} bytes")
+
+
 def build_catalog():
     """dist/index.html - the catalog with engine/auth.js inlined for its header control."""
-    html = inline_engine(read(os.path.join(ROOT, "index.html")), "engine/auth.js", "auth.js")
+    html = with_analytics(inline_engine(read(os.path.join(ROOT, "index.html")), "engine/auth.js", "auth.js"))
     assert "engine/auth.js" not in html
     os.makedirs(DIST, exist_ok=True)
     with open(os.path.join(DIST, "index.html"), "w", encoding="utf-8") as f:
@@ -106,6 +147,7 @@ def build_account():
     assert marker in html, "account/index.html no longer matches the strings build_account() inlines"
     html = html.replace(marker, "<script>window.FRA_COURSES = " + table + ";</script>\n" + marker)
     assert "window.FRA_COURSES = [" in html and "<style>" in html and 'src="../engine/' not in html
+    html = with_analytics(html)
     os.makedirs(DIST, exist_ok=True)
     with open(os.path.join(DIST, "account.html"), "w", encoding="utf-8") as f:
         f.write(html)
@@ -153,7 +195,7 @@ def build(course_id):
 <style>
 {css}
 </style>
-</head>
+{ga_snippet()}</head>
 <body>
 <div id="app"></div>
 <script>
@@ -195,6 +237,7 @@ def build_callback():
         "<script>\n" + read(os.path.join(ENGINE, "auth.js")) + "\n</script>")
     assert "<style>" in html and "engine/auth.js" not in html, \
         "callback/index.html no longer matches the strings build_callback() inlines"
+    html = with_analytics(html)
     os.makedirs(DIST, exist_ok=True)
     out = os.path.join(ROOT, "dist", "callback.html")
     with open(out, "w", encoding="utf-8") as f:
@@ -207,5 +250,6 @@ if __name__ == "__main__":
     for cid in wanted:
         build(cid)
     build_callback()
+    build_serviceforge()
     build_catalog()
     build_account()
