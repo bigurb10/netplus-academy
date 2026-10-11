@@ -497,10 +497,11 @@
       <div class="shell">
         <header class="topbar">
           <button class="rail-toggle" data-act="toggle-rail" aria-label="Toggle lesson outline">Units</button>
-          <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span> ${esc(course.name)}</button>
+          ${course.catalogUrl ? `<a class="brand site" href="${esc(course.catalogUrl)}" title="${esc(course.brand)}: all courses"><span class="mark">FR</span></a>` : ''}
+          <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span><span class="name">${esc(course.name)}</span></button>
           ${acctHtml()}
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a>` : ''}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and recent passes">
             <span class="eyebrow">Readiness</span>

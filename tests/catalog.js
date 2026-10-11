@@ -57,6 +57,22 @@ function run(token) {
     const who = w.$('#acct a.who');
     check('signed in without a name: "My progress" links to /account/', !!who && who.textContent === 'My progress' && who.getAttribute('href') === '/account/', who && who.outerHTML);
   }
+  // ----- The logo goes home; the main page links to ServiceForge (Blake, 2026-10-11) -----
+  {
+    const w = run(null);
+    const brand = w.$('header .brand');
+    check('the logo is a link to the main page', !!brand && brand.tagName === 'A' && brand.getAttribute('href') === '/', brand && brand.outerHTML);
+    const sf = [...w.document.querySelectorAll('main a')].filter(a => /serviceforge\/$/.test(a.getAttribute('href') || ''));
+    check('the main page links to ServiceForge', sf.length >= 1 && sf.some(a => a.textContent.trim() === 'ServiceForge'), sf.length);
+  }
+  // ----- The ServiceForge page (serviceforge/index.html, built to dist/serviceforge.html) -----
+  {
+    const sfHtml = fs.readFileSync(path.join(ROOT, 'serviceforge', 'index.html'), 'utf8');
+    const d = new JSDOM(sfHtml, { url: 'https://fieldreadyacademy.com/serviceforge/' }).window.document;
+    const brand = d.querySelector('header .brand');
+    check('the ServiceForge page logo is a link to the main page', !!brand && brand.tagName === 'A' && brand.getAttribute('href') === '/', brand && brand.outerHTML);
+    check('the ServiceForge page keeps its All courses link', !!d.querySelector('main a.back[href="../"]'));
+  }
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All catalog tests passed.');
   process.exit(0);

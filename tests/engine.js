@@ -373,6 +373,17 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('signed-out topbar has no .acct', !w13.$('.topbar .acct'));
   }
 
+  // 1b) The FieldReady mark goes home and the nav links to ServiceForge (Blake, 2026-10-11).
+  // The mark matters most on phones, where .nav (and with it "All courses") is hidden.
+  {
+    const w = boot({ courseDir: dir }); gotoExempt(w, 'cheatsheet');
+    const site = w.$('.topbar a.brand.site');
+    check('the topbar has the FieldReady mark linking to the catalog', !!site && site.getAttribute('href') === '../' && site.textContent.trim() === 'FR', site && site.outerHTML);
+    const links = [...w.document.querySelectorAll('.topbar .nav a')].map(a => [a.textContent.trim(), a.getAttribute('href')]);
+    check('the nav ends with All courses then ServiceForge', JSON.stringify(links.slice(-2)) === JSON.stringify([['All courses', '../'], ['ServiceForge', '../serviceforge/']]), JSON.stringify(links));
+    check('the course brand still goes to course Home', !!w.$('.topbar button.brand[data-act="go"][data-arg="home"]'));
+  }
+
   // 2) Signed in: the topbar shows the account, the sync dot, and sign-out -- never sign-in.
   {
     const { w: w14 } = bootSignedInAs('learner@example.com', [res(404)]);
