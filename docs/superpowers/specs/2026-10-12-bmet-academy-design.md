@@ -216,7 +216,8 @@ from scenario values against the manual's limits.
 **4.3 Patient simulator and monitor** (`monitor`). Controls on the simulator side: ECG
 rate (30 to 300), rhythm (normal sinus, asystole, ventricular fibrillation), SpO2 (70 to
 100), NIBP systolic and diastolic. The monitor side shows a strip figure and numerics
-after a short settle, and an alarm banner for asystole and fibrillation. Scenario: per
+once the learner applies the simulator settings, and an alarm banner for asystole and
+fibrillation. Scenario: per
 parameter offsets the monitor adds (`hrErr`, `spo2Err`, `sysErr`, `diaErr`) and a
 tolerance block from the manual. Rules: the verdict truth is in-tolerance for every
 parameter the lab asks about.
