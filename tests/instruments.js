@@ -163,6 +163,9 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   const dmmLab = lab('dmm', Object.assign({ svg: '<svg width="200" height="100"></svg>', points: { A: [10, 10], B: [50, 10], C: [90, 10] } }, DMM), []);
   I.render(box, dmmLab, ui, {});
   check('dmm: draws the circuit, a hotspot per test point, the dial, power, and the kit toggle', box.querySelectorAll('.tp').length === 3 && box.querySelectorAll('[data-ins="fn"]').length === 6 && !!box.querySelector('[data-ins="power"]') && !!box.querySelector('[data-field="kit"]') && box.querySelector('[data-readout]').textContent === '--');
+  check('dmm: hotspots are placed in percent of the drawing size', /left:5%;top:10%/.test(box.querySelector('[data-ins="tp"][data-arg="A"]').getAttribute('style')) && /left:45%;top:10%/.test(box.querySelector('[data-ins="tp"][data-arg="C"]').getAttribute('style')), box.querySelector('[data-ins="tp"][data-arg="A"]').getAttribute('style'));
+  check('dmm: a viewBox-only drawing still places hotspots', (() => { const b = w.document.createElement('div'); I.render(b, lab('dmm', Object.assign({ svg: '<svg viewBox="0 0 400 200"></svg>', points: { A: [100, 50] } }, DMM), []), {}, {}); return /left:25%;top:25%/.test(b.querySelector('.tp').getAttribute('style')); })());
+  check('dmm: a point with no coordinates renders at the origin instead of throwing', (() => { const b = w.document.createElement('div'); I.render(b, lab('dmm', Object.assign({ svg: '<svg width="200" height="100"></svg>', points: { A: null } }, DMM), []), {}, {}); return /left:0%;top:0%/.test(b.querySelector('.tp').getAttribute('style')); })());
   click('[data-ins="tp"][data-arg="A"]'); click('[data-ins="tp"][data-arg="B"]');
   check('dmm: two clicks place red then black and read DC volts', ui.a === 'A' && ui.b === 'B' && ui.readout && near(ui.readout.value, 9, 0.011) && /V$/.test(box.querySelector('[data-readout]').textContent), JSON.stringify(ui.readout));
   click('[data-ins="fn"][data-arg="ohm"]');
@@ -184,7 +187,9 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   fresh(); ui = {};
   I.render(box, lab('monitor', MON, []), ui, {});
   check('monitor: simulator controls and an empty screen before Apply', box.querySelectorAll('input[data-field]').length === 4 && !!box.querySelector('select[data-field="rhythm"]') && !box.querySelector('.fig.strip'));
-  set('[data-field="hr"]', '60'); set('[data-field="spo2"]', '95'); click('[data-ins="apply"]');
+  set('[data-field="hr"]', '60');
+  check('monitor: a typed field is not repainted away', box.querySelector('[data-field="hr"]').value === '60' && ui.hr === 60);
+  set('[data-field="spo2"]', '95'); click('[data-ins="apply"]');
   check('monitor: Apply shows the numerics with the scenario offsets and a strip at the shown rate', ui.readout && ui.readout.hr === 61 && ui.readout.spo2 === 94 && /61/.test(box.querySelector('.ins-numerics').textContent) && box.querySelector('.fig.strip').getAttribute('data-rate') === '61');
   set('[data-field="rhythm"]', 'asystole'); click('[data-ins="apply"]');
   check('monitor: asystole shows the alarm and a flat strip', /ASYSTOLE/.test(box.querySelector('.ins-alarm').textContent) && box.querySelector('.fig.strip').getAttribute('data-beats') === '0');
@@ -192,7 +197,9 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   fresh(); ui = {};
   I.render(box, lab('infusion', INF, []), ui, {});
   check('infusion: rate and VTBI fields, a Start button, an empty cylinder', !!box.querySelector('[data-field="rate"]') && !!box.querySelector('[data-ins="start"]') && box.querySelector('.fig.cylinder').getAttribute('data-value') === '0');
-  set('[data-field="rate"]', '100'); click('[data-ins="start"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]');
+  set('[data-field="rate"]', '100');
+  check('infusion: a typed rate is kept without a repaint', box.querySelector('[data-field="rate"]').value === '100' && ui.rate === 100);
+  click('[data-ins="start"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]');
   check('infusion: thirty minutes at 100 mL/h fills the cylinder to the true delivery, read to the graduation', ui.elapsed === 30 && ui.readout && ui.readout.volume === 52 && box.querySelector('.fig.cylinder').getAttribute('data-value') === '52' && /30 min/.test(box.textContent), JSON.stringify(ui.readout));
   click('[data-ins="stop"]');
   check('infusion: Stop keeps the volume and offers Start again', ui.running === false && !!box.querySelector('[data-ins="start"]') && ui.readout.volume === 52);
@@ -204,6 +211,8 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('defib: Charge arms the selected energy', ui.energy === 200 && ui.charged === true && /CHARGED 200 J/.test(box.textContent));
   click('[data-ins="discharge"]');
   check('defib: Discharge reads the delivered energy on the analyzer and disarms', ui.readout && ui.readout.delivered === 204 && /204 J delivered/.test(box.textContent) && ui.charged === false);
+  click('[data-ins="energy"][data-arg="50"]');
+  check('defib: changing the energy clears the analyzer reading', ui.readout === null && /--/.test(box.querySelector('.ins-screen [data-readout]').textContent));
 }
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }

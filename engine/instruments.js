@@ -233,12 +233,23 @@
   const sel = (ui, field, opts) => `<select data-field="${field}">${opts.map(([v, l]) => `<option value="${v}" ${ui[field] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const numField = (ui, field, label, min, max, dis) => `<label class="field">${label}<input type="number" data-field="${field}" min="${min}" max="${max}" value="${ui[field]}" ${dis ? 'disabled' : ''}></label>`;
 
+  // The drawing's natural size, from its width/height attributes or its viewBox, so hotspots can be
+  // placed in percent and follow the SVG when CSS scales it to a narrow screen.
+  function drawingSize(svg) {
+    const s = String(svg || '');
+    const w = /\bwidth="(\d+(?:\.\d+)?)"/.exec(s), h = /\bheight="(\d+(?:\.\d+)?)"/.exec(s);
+    if (w && h) return { w: Number(w[1]), h: Number(h[1]) };
+    const vb = /\bviewBox="\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*"/.exec(s);
+    return vb ? { w: Number(vb[1]), h: Number(vb[2]) } : { w: 0, h: 0 };
+  }
   // ---- dmm: a function dial, a circuit power switch, two probes placed on drawn test points ----
   const DMM_FNS = [['vdc', 'V DC'], ['vac', 'V AC'], ['ohm', 'Ohms'], ['adc', 'A DC'], ['cont', 'Continuity'], ['diode', 'Diode']];
   function dmmInit(lab, ui) { if (!ui.fn) { ui.fn = 'vdc'; ui.power = obj(lab.scenario).power !== false; ui.a = null; ui.b = null; ui.next = 'a'; ui.kit = false; ui.readout = null; } }
   PANEL.dmm = (lab, ui) => {
     dmmInit(lab, ui); const sc = obj(lab.scenario); const pts = obj(sc.points); const r = ui.readout;
-    const hot = Object.keys(pts).map(p => `<button type="button" class="tp ${ui.a === p ? 'red' : ui.b === p ? 'black' : ''}" data-ins="tp" data-arg="${esc(p)}" style="left:${num(pts[p][0])}px;top:${num(pts[p][1])}px" title="Test point ${esc(p)}">${esc(p)}</button>`).join('');
+    const size = drawingSize(sc.svg);
+    const pct = (v, total) => total > 0 ? Number((100 * num(v) / total).toFixed(2)) : 0;
+    const hot = Object.keys(pts).map(p => { const xy = pts[p] || []; return `<button type="button" class="tp ${ui.a === p ? 'red' : ui.b === p ? 'black' : ''}" data-ins="tp" data-arg="${esc(p)}" style="left:${pct(xy[0], size.w)}%;top:${pct(xy[1], size.h)}%" title="Test point ${esc(p)}">${esc(p)}</button>`; }).join('');
     return `<div class="ins dmm">
       <div class="ins-drawing">${sc.svg || ''}${hot}</div>
       <div class="ins-panel">
@@ -315,7 +326,7 @@
   };
   HANDLE.defib = (lab, ui, act, arg) => {
     defInit(lab, ui);
-    if (act === 'energy') { ui.energy = num(arg); ui.charged = false; return true; }
+    if (act === 'energy') { ui.energy = num(arg); ui.charged = false; ui.readout = null; return true; }
     if (act === 'charge') { ui.charged = true; return true; }
     if (act === 'discharge') { if (!ui.charged) return false; ui.readout = compute.defib(lab.scenario, { energy: ui.energy }); ui.charged = false; return true; }
     return false;
