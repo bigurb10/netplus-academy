@@ -244,7 +244,9 @@ output, an inspection checklist) and asks choice and verdict tasks.
 
 **5.1 Untested domains.** A domain with `quota: 0` is untested. `TESTED_IDS` replaces
 `DOMAIN_IDS` in the starter sampler, `buildExam`, the custom test setup weights, domain
-accuracy bars, readiness, and strength ranking. `STARTER_N` is `TESTED_IDS.length *
+accuracy bars, readiness, and strength ranking. Untested lessons also stay out of the
+readiness meter, the weak-topics list, and the strength chart's weakest list; they keep
+checkpoints and count toward lessons passed and the certificate. `STARTER_N` is `TESTED_IDS.length *
 starterPerDomain`. Lessons in an untested domain still appear in the rail and the "whole
 course" path, have checkpoints, count toward lessons passed, and are required for the
 certificate. The lesson header shows "Not on the exam" for them. The self-test fails if

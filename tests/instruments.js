@@ -79,6 +79,7 @@ check('verdict: a safety scenario without limits has no computed verdict', I.tru
 check('verdict: a defib scenario without energies has no computed verdict', I.truth.verdict(lab('defib', Object.assign({}, DEF, { energies: [] }), [])) === null);
 check('verdict: a monitor scenario without tolerance has no computed verdict', I.truth.verdict(lab('monitor', Object.assign({}, MON, { tolerance: null }), [])) === null);
 check('verdict: an infusion scenario without tolerance has no computed verdict', I.truth.verdict(lab('infusion', Object.assign({}, INF, { tolerance: undefined }), [])) === null);
+check('verdict: a defib scenario without tolerance has no computed verdict', I.truth.verdict(lab('defib', Object.assign({}, DEF, { tolerance: null }), [])) === null);
 
 // ---------- measure ----------
 check('measure: a dmm task resolves through compute', (() => { const m = I.measure(lab('dmm', DMM, []), { id: 'v', kind: 'reading', measure: { fn: 'vdc', a: 'A', b: 'B' } }); return m && near(m.value, 9, 0.011) && m.lsd === 0.01; })());
@@ -135,17 +136,21 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('render: figures draws every figure with its caption', el.querySelectorAll('svg.fig').length === 2 && /Meter one/.test(el.textContent));
 
   // Re-rendering on the same element must not stack handlers: one click runs the current panel's handler once.
+  // render() draws only a name listed in NAMES, so the spy is registered there too.
   let hits = 0;
+  I.NAMES.push('spy');
   I.PANEL.spy = () => '<button type="button" data-ins="x">x</button>';
   I.HANDLE.spy = () => { hits++; return false; };
   const spyLab = lab('spy', {}, []);
   I.render(el, spyLab, {}, {}); I.render(el, spyLab, {}, {}); I.render(el, spyLab, {}, {});
   el.querySelector('[data-ins="x"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
   check('render: three renders on one element wire one handler, which runs once per click', hits === 1, hits);
-  delete I.PANEL.spy; delete I.HANDLE.spy;
+  delete I.PANEL.spy; delete I.HANDLE.spy; I.NAMES.pop();
 
   I.render(el, lab('nope', {}, []), {}, {});
   check('render: an unknown instrument says so instead of throwing', /Unknown instrument/.test(el.textContent));
+  I.render(el, lab('constructor', {}, []), {}, {});
+  check('render: a prototype-key instrument name is unknown, not a function call', /Unknown instrument/.test(el.textContent));
 }
 
 // ---------- the five interactive panels (jsdom) ----------

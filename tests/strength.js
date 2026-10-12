@@ -72,6 +72,13 @@ check('custom tests are tests', ST.compute({ exams: [exam('custom', 1, [rv('b1',
 check('a question stored by id resolves through meta.questions', ST.compute({ exams: [exam('practice', 1, [{ q: 'q7', correct: false }])] }, Object.assign({ questions: { q7: 'b1' } }, META)).weakest[0].id === 'b1');
 check('without meta.questions, a bank id resolves by its <lesson>-<n> spelling', ST.compute({ exams: [exam('practice', 1, [{ q: 'b1-3', correct: false }, { q: 'zz-1', correct: false }])] }, META).weakest.map(w => w.id).join() === 'b1');
 check('a lastScore above checkpointN is clamped', ST.compute({ lessons: { a1: { lastScore: 9, lastAt: 5 } } }, META).weakest.length === 0);
+// A lesson in an untested domain (quota 0) is course content outside the exam: both callers list
+// the tested domains only, so it is never ranked, however badly its checkpoint went.
+{
+  const untested = Object.assign({}, META, { lessons: META.lessons.concat([{ id: 'x1', title: 'X one', domain: 9 }]) });
+  const r = ST.compute({ lessons: { x1: { lastScore: 0, lastAt: 5 } } }, untested);
+  check('a lesson whose domain is absent from meta.domains never appears in weakest', r.weakest.length === 0, JSON.stringify(r.weakest));
+}
 
 if (fails.length) { console.error(`strength: ${fails.length} failed`); process.exit(1); }
 console.log('strength: all OK'); process.exit(0);

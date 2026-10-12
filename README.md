@@ -12,7 +12,7 @@ Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses:
 
 ## Layout
 
-- `engine/app.js`, `engine/styles.css`: the course engine. It reads `FRA.course` and the pack data; it contains nothing course-specific.
+- `engine/app.js`, `engine/styles.css`, `engine/instruments.js`: the course engine. It reads `FRA.course` and the pack data; it contains nothing course-specific.
 - `courses/<id>/course.js`: the course manifest: id, name, badge, exam, domains with weights and full-test quotas, test sizes and pass bar, starter pools and core lessons, access settings, exam-day tips.
 - `courses/<id>/curriculum-*.js`: units and lessons. Lesson bodies use a tiny markup: `## ` heading, `- ` bullet, `1. ` numbered step, `> ` exam tip, ``` fenced block for diagrams and tables, `{{code}}`, `**bold**`.
 - `courses/<id>/questions-*.js`: the question bank. Each question has an id, lesson id `t`, stem `q`, four options `a`, correct index `c`, and explanation `e`.
@@ -45,8 +45,8 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 
 ## Adding a course
 
-1. Copy `courses/netplus/course.js` to `courses/<id>/course.js` and fill in every field. Domain ids are what lessons reference.
-2. Write `cheatsheet.js`, then `curriculum-*.js`, then `questions-*.js` (five or more per lesson), then `deep-*.js` (one entry per lesson; the self-test fails if any lesson lacks one), then `generators.js` if anything is computable.
+1. Copy `courses/netplus/course.js` to `courses/<id>/course.js` and fill in every field. Domain ids are what lessons reference. Optional: `certificate: true` adds the certificate of completion.
+2. Write `cheatsheet.js`, then `curriculum-*.js`, then `questions-*.js` (five or more per lesson), then `deep-*.js` (one entry per lesson; the self-test fails if any lesson lacks one), then `generators.js` if anything is computable, and `labs-*.js` if any lesson has a hands-on lab (`lab: "<id>"` on the lesson; the self-test validates every lab through `FRAInstruments.validate`).
 3. Write `acronyms.js`: run `node tests/acronyms.js courses/<id>` and add an entry for every token it reports (copy shared ones from another pack's `acronyms.js`, checking that the meaning fits this course), or put non-acronym uppercase words on the ignore list, until it passes.
 4. Create `<id>/index.html` from `netplus/index.html` with the new script list, keeping both `../engine/merge.js` and `../engine/app.js` (in that order, `merge.js` first) after the course scripts, and add a card to `index.html`.
 5. Run `npm test` and `python build.py <id>`.
@@ -61,4 +61,4 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 
 ## Testing
 
-`npm test` runs `tests/selftest.js` (the engine's `#selftest` flow under jsdom for every course plus the `tests/fixtures/mini` three-domain course), `tests/gating.js`, and `tests/acronyms.js` (every glossary entry complete, every acronym in the text covered, no stale ignore entries). You can also open any `<id>/index.html` from disk with `#selftest` on the URL to see the same log in a browser.
+`npm test` runs every suite under `tests/` (the list is the `test` script in `package.json`), from `tests/selftest.js` (the engine's `#selftest` flow under jsdom for every course plus the `tests/fixtures/mini` fixture) through `tests/gating.js`, `tests/acronyms.js` (every glossary entry complete, every acronym in the text covered, no stale ignore entries), `tests/instruments.js`, `tests/engine.js`, `tests/sync.js` and the rest. The mini fixture is a four-domain course: three tested domains, one untested, eight lessons, and one lab. You can also open any `<id>/index.html` from disk with `#selftest` on the URL to see the same log in a browser.

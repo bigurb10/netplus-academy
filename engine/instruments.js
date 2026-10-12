@@ -117,6 +117,9 @@
       case 'defib': {
         if (!Array.isArray(sc.energies) || !sc.energies.length) return null;
         const t = obj(sc.tolerance);
+        // Without a tolerance from the manual there is nothing to judge against: num() would read
+        // a missing floor and pct as 0 and call every delivered energy a failure.
+        if (typeof t.pct !== 'number' && typeof t.floor !== 'number') return null;
         return sc.energies.every(e => { const d = compute.defib(sc, { energy: e }).delivered; return Math.abs(d - num(e)) <= Math.max(num(t.floor), num(t.pct) / 100 * num(e)); }) ? 'pass' : 'fail';
       }
       default: return null;
@@ -335,7 +338,9 @@
   };
 
   function render(el, lab, ui, api) {
-    const draw = lab && PANEL[lab.instrument];
+    // Only a name this module knows draws a panel: PANEL is a plain object, so an instrument
+    // named "constructor" or "toString" would otherwise resolve to an inherited function.
+    const draw = lab && NAMES.indexOf(lab.instrument) >= 0 ? PANEL[lab.instrument] : null;
     if (!draw) { el.innerHTML = '<p class="muted">Unknown instrument.</p>'; return; }
     // One listener pair per element; the handlers read the latest lab/ui/api from the holder, so a
     // re-render on the same element replaces the panel instead of stacking a second handler.

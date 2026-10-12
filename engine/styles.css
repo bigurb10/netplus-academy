@@ -375,6 +375,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 
 /* Labs (engine/app.js labCard) and virtual instruments (engine/instruments.js) */
 .lab .lab-kit ul { margin: 0; padding-left: 20px; }
+.lab.done { border-color: var(--good); background: var(--good-soft); }
+.lab-fold > summary { cursor: pointer; color: var(--ink-2); font-size: 0.95rem; }
 .lab-task { border-top: 1px solid var(--line); padding-top: 12px; }
 .lab-task.ok { opacity: 0.85; }
 .lab-task .lab-in { width: 150px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; background: var(--surface); color: var(--ink); }

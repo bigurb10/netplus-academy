@@ -908,6 +908,23 @@ function state(extra) {
       h.calls[1] && h.calls[1].headers['If-Match'] === '"5"', h.calls[1] && JSON.stringify(h.calls[1].headers));
   }
 
+  // ----- the additive labs map and certAt stamp must not look like a change -----
+  // mergeState (engine/merge.js) always emits `labs`, even {}, and `certAt`, 0 by default, so the
+  // merge of a server row written before either field existed differs from that row by two keys.
+  // hashOf() strips both for exactly this reason; without the strips, every pull of such a row
+  // burns a spurious PUT. hashOf is private, so the observable equivalent is pinned here: adopt a
+  // blob with neither key and the push that follows must find nothing owed.
+  {
+    const remote = state();                              // a row from before labs and certAt existed
+    const h = harness([res(200, { state: remote, version: 7 }, '"7"'), res(200, { version: 8 }, '"8"')]);
+    let local = state({ labs: {}, certAt: 0 });           // what fresh() and every merge produce
+    h.w.FRASync.init({ courseId: 'netplus', getState: () => local, adopt: s => { local = s; } });
+    await h.w.FRASync.pull();
+    const ok = await h.w.FRASync.pushNow();
+    check('an empty labs map and certAt 0 hash the same as a blob without them (no spurious push)',
+      ok === false && h.calls.length === 1, `${ok} / ${h.calls.length} call(s) / labs=${JSON.stringify(local.labs)} certAt=${local.certAt}`);
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

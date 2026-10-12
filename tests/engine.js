@@ -768,6 +768,12 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('mini: an untested lesson passes its checkpoint', st().lessons.u3l1.status === 'passed');
     act(w, 'go', 'home');
     check('mini: lessons passed counts the untested lesson out of all 8', /1\s*\/ 8/.test(w.$$('.stat').map(e => e.textContent).join(' ')), w.$$('.stat').map(e => e.textContent).join(' | '));
+    // A fresh checkpoint on the same untested lesson, every answer wrong: it earns priority points
+    // like any other lesson, but it is not an exam topic, so it must never be offered for drills.
+    act(w, 'lesson', 'u3l1'); act(w, 'start-checkpoint', 'u3l1');
+    for (let k = 0; k < 4; k++) { const s = st().active; const q = fat(s.items[s.i]); w.click(w.$(`[data-act="opt"][data-arg="${(q.c + 1) % 4}"]`)); w.click(w.$('[data-act="submit"]')); w.click(w.$('[data-act="next"]')); }
+    act(w, 'go', 'home');
+    check('an untested lesson never appears in weak topics', !/D One/.test((w.$$('.topic-list').map(e => e.textContent).join(' '))), w.$$('.topic-list').map(e => e.textContent).join(' | '));
     w.close();
   }
 
@@ -802,6 +808,7 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.click(w.$('[data-act="lab-answer"][data-arg="ok:fail"]'));
     const lab = st().labs['mini-ping'];
     check('the last right answer marks the lab done with a timestamp', lab.done === true && lab.at > 0 && /LAB DONE/.test(w.$('#lab').textContent));
+    check('a done lab folds its tasks behind a summary', !!w.$('#lab.done details.lab-fold') && !w.$('#lab details.lab-fold').open);
     check('a Redo button appears once done', !!w.$('[data-act="lab-redo"]'));
     act(w, 'go', 'home');
     check('home shows Labs done 1 of 1', /Labs done/.test(w.text()) && /1\s*\/ 1/.test(w.$$('.stat').map(e => e.textContent).join(' ')), w.$$('.stat').map(e => e.textContent).join(' | '));
@@ -858,6 +865,9 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     act(w, 'go', 'progress');
     check('without the flag there is no certificate card', !/Certificate of completion/.test(w.text()));
     w.close();
+    w = boot({ courseDir: mini, hash: '#certificate' });
+    check('the certificate hash on a course without one lands on Progress', w.location.hash === '#progress' && /Progress/.test(w.text()), w.location.hash);
+    w.close();
     // Everything done, seeded straight into storage. Signed out, so the name is typed.
     const passed = {}; ['u1l1', 'u1l2', 'u1l3', 'u2l1', 'u2l2', 'u2l3', 'u3l1', 'u3l2'].forEach(id => { passed[id] = { status: 'passed', best: 4, attempts: 1, passedAt: 5, lastScore: 4, lastAt: 5 }; });
     const rec = (id, kind, date, extra) => Object.assign({ id, date, kind, score: 9, total: 10, pct: 90, byDomain: {}, review: [], seconds: 60, minutes: 0, setup: null, noConf: true }, extra || {});
@@ -872,10 +882,19 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('the earned date is recorded', st().certAt > 0);
     w.$('#cert-name').value = 'Pat Learner'; act(w, 'cert-name');
     check('saving the name puts it on the certificate and enables Print', /Pat Learner/.test(w.$('.cert-name').textContent) && !w.$('[data-act="print-cert"]').disabled && st().settings.certName === 'Pat Learner' && st().settingsAt > 0);
+    const nameAt = st().settingsAt;
+    await new Promise(r => setTimeout(r, 5));                            // past the millisecond the first save stamped
+    w.$('#cert-name').value = 'Pat Learner'; act(w, 'cert-name');
+    check('saving an unchanged name does not restamp settings', st().settingsAt === nameAt, `${nameAt} -> ${st().settingsAt}`);
     act(w, 'print-cert'); await new Promise(r => setTimeout(r, 200));   // print-cert prints after a 120 ms settle
     check('Print calls window.print', w.printed === 1, w.printed);
     act(w, 'go', 'home');
     check('home offers the certificate once earned', !!w.$('[data-act="go"][data-arg="certificate"]'));
+    // Earned is earned: redoing the lab clears that lab, but the certificate already issued stands.
+    const certAt = st().certAt;
+    act(w, 'lesson', 'u1l2'); w.click(w.$('[data-act="lab-redo"]'));
+    act(w, 'go', 'certificate');
+    check('redoing a lab does not revoke an earned certificate', /Earned/.test(w.text()) && st().certAt === certAt, `${certAt} -> ${st().certAt}`);
     w.close();
     // Signed in: the account name is used and no name field is shown.
     w = boot({ courseDir: mini, hash: '#certificate', beforeApp: x => { seed(x); x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'pat@example.com', name: 'Sam Tech' })); }, beforeAppJs: x => { x.fetch = () => Promise.reject(new Error('offline')); } });

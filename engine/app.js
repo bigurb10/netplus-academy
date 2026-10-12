@@ -59,6 +59,10 @@
   const byLesson = {}; bank.forEach(q => { (byLesson[q.t] = byLesson[q.t] || []).push(q); });
   const lessonsByDomain = {}; DOMAIN_IDS.forEach(d => { lessonsByDomain[d] = []; });
   lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
+  // The lessons a test can ever draw from. An untested-domain lesson keeps its checkpoint and
+  // counts toward lessons passed and the certificate, but never feeds the readiness meter, the
+  // weak-topic lists (Home, drills), or the strength chart's weakest list.
+  const TESTED_LESSONS = lessons.filter(l => !UNTESTED.has(l.domain));
   const gens = FRA.generators || {};
   // Labs (FRA.labs; spec section 3). A lesson names its lab with `lab: "<id>"` and the lab points
   // back with `lesson`. Instruments are drawn by engine/instruments.js, read at render time only,
@@ -441,15 +445,15 @@
 
   function lastExam(kind) { for (let i = S.exams.length - 1; i >= 0; i--) if (!kind || S.exams[i].kind === kind) return S.exams[i]; return null; }
   function weakTopics() {
-    return lessons.map(l => ({ l, p: topicPriority(l.id) })).filter(x => x.p > 0 && !topicMastered(x.l.id))
+    return TESTED_LESSONS.map(l => ({ l, p: topicPriority(l.id) })).filter(x => x.p > 0 && !topicMastered(x.l.id))
       .sort((a, b) => b.p - a.p || DOMAINS[b.l.domain].pct - DOMAINS[a.l.domain].pct).map(x => x.l.id);
   }
   function readiness() {
     const ex = S.exams.filter(e => e.kind === 'practice' || e.kind === 'full').slice(-3);
     const examPart = ex.length ? ex.reduce((a, e) => a + e.pct, 0) / ex.length : 0;
-    const touched = lessons.filter(l => (S.topics[l.id] || { attempts: 0 }).attempts > 0);
-    const mastered = lessons.filter(l => topicMastered(l.id)).length;
-    const masteryPart = touched.length ? 100 * mastered / lessons.length : 0;
+    const touched = TESTED_LESSONS.filter(l => (S.topics[l.id] || { attempts: 0 }).attempts > 0);
+    const mastered = TESTED_LESSONS.filter(l => topicMastered(l.id)).length;
+    const masteryPart = touched.length ? 100 * mastered / TESTED_LESSONS.length : 0;
     const streakPart = 100 * Math.min(S.passes, PASSES_NEEDED) / PASSES_NEEDED;
     if (!ex.length && !touched.length) return 0;
     return Math.round(0.5 * examPart + 0.3 * masteryPart + 0.2 * streakPart);
@@ -517,6 +521,9 @@
   function render() { paint(); syncHistory(); }
   function paint() {
     const v = S.view || { name: 'home' };
+    // A course without a certificate has no certificate view: #certificate lands on Progress, and
+    // syncHistory then writes #progress so the hash never names a view that is not on screen.
+    if (v.name === 'certificate' && !CERT) { S.view = { name: 'progress' }; return paint(); }
     fbReg = []; acrHide();
     if (stage() === 'starter' && !S.active && !WELCOME_EXEMPT.includes(v.name)) { app.innerHTML = viewWelcome() + fbModal() + acrModal(); return; }
     let main = '';
@@ -806,12 +813,15 @@
     const okN = lab.tasks.filter(t => ls.ok[t.id] === true).length; const done = !!ls.done;
     const kit = Array.isArray(lab.kit) && lab.kit.length ? `<div class="lab-kit"><div class="eyebrow">Kit</div><ul>${lab.kit.map(k => `<li>${inline(k)}</li>`).join('')}</ul></div>` : '';
     const manual = lab.manual ? `<div class="callout accent lab-manual"><div class="eyebrow">From the service manual</div><div class="lesson-body">${renderBody(lab.manual)}</div></div>` : '';
-    return `<section class="card lift stack lab ${done ? 'done' : ''}" id="lab">
-      <div class="row spread"><div><div class="eyebrow">Lab · ${kit ? 'your kit or the virtual instrument' : 'virtual instrument'}</div><h3>${esc(lab.title)}</h3></div>${done ? '<span class="pill good">LAB DONE</span>' : `<span class="pill">${okN} of ${n} tasks</span>`}</div>
-      <div class="lesson-body">${renderBody(lab.intro || '')}</div>
+    // The body of the lab: everything but the header row and the Redo button. Once the lab is
+    // done the card collapses to a green summary (spec section 3) and this folds away behind it.
+    const body = `<div class="lesson-body">${renderBody(lab.intro || '')}</div>
       ${kit}${manual}
       <div class="instrument" id="instrument" data-lab="${esc(lab.id)}"></div>
-      <div class="lab-tasks stack">${lab.tasks.map((t, i) => labTask(lab, t, i, ls)).join('')}</div>
+      <div class="lab-tasks stack">${lab.tasks.map((t, i) => labTask(lab, t, i, ls)).join('')}</div>`;
+    return `<section class="card lift stack lab ${done ? 'done' : ''}" id="lab">
+      <div class="row spread"><div><div class="eyebrow">Lab · ${kit ? 'your kit or the virtual instrument' : 'virtual instrument'}</div><h3>${esc(lab.title)}</h3></div>${done ? '<span class="pill good">LAB DONE</span>' : `<span class="pill">${okN} of ${n} tasks</span>`}</div>
+      ${done ? `<details class="lab-fold"><summary>Show the lab again</summary>${body}</details>` : body}
       ${done ? `<div class="row"><button class="btn ghost small" data-act="lab-redo" data-arg="${esc(lab.id)}">Redo this lab</button></div>` : ''}
     </section>`;
   }
@@ -830,7 +840,7 @@
     const el = $('#instrument'); if (!el) return;
     const lab = LABS[el.dataset.lab]; const ins = window.FRAInstruments;
     if (!lab || !ins || typeof ins.render !== 'function') { el.innerHTML = '<p class="muted">This lab is unavailable: the instrument module did not load. The tasks below still work with your own kit.</p>'; return; }
-    try { ins.render(el, lab, instUi(lab.id), { toast }); } catch (err) { el.innerHTML = '<p class="muted">This lab is unavailable.</p>'; }
+    try { ins.render(el, lab, instUi(lab.id), { toast }); } catch (err) { console.warn('instrument failed to render', err); el.innerHTML = '<p class="muted">This lab is unavailable.</p>'; }
   }
 
   // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
@@ -1168,7 +1178,12 @@
     const lessonsLeft = lessons.filter(l => lstat(l.id).status !== 'passed').length;
     const labsLeft = labIds.filter(id => !labDone(id)).length;
     const officialLeft = S.official ? 0 : 1;
-    return { ok: !lessonsLeft && !labsLeft && !officialLeft, lessonsLeft, labsLeft, officialLeft };
+    // Earned once, earned for good: a lab Redo (which clears that lab's `done`) or any later
+    // state change must not revoke a certificate already issued. S.certAt is stamped the first
+    // time the page renders it, and S.official is kept in the condition so viewCertificate may
+    // always dereference S.official.pct.
+    const earned = !lessonsLeft && !labsLeft && !officialLeft;
+    return { ok: earned || !!(S.certAt > 0 && S.official), lessonsLeft, labsLeft, officialLeft };
   }
   // The signed-in account's name when it has one, else the name typed on the certificate page.
   function certName() {
@@ -1458,7 +1473,9 @@
       case 'lab-answer': { const i = String(arg).indexOf(':'); const tid = String(arg).slice(0, i), val = String(arg).slice(i + 1); const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === tid); if (!t) return;
         checkLab(lab, t, t.kind === 'verdict' ? val : parseInt(val, 10)); render(); return; }
       case 'lab-redo': { const lab = LABS[arg]; if (!lab) return; S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} }; save(); render(); return; }
-      case 'cert-name': { const el = $('#cert-name'); const v = el ? String(el.value).trim().slice(0, 80) : ''; S.settings.certName = v; markSettingsChanged(); save(); render(); if (v) toast('Name saved'); return; }
+      // Saving the same name again is not a settings change: restamping settingsAt would hand the
+      // merge a newer settings side for nothing.
+      case 'cert-name': { const el = $('#cert-name'); const v = el ? String(el.value).trim().slice(0, 80) : ''; const same = v === (S.settings.certName || ''); S.settings.certName = v; if (!same) markSettingsChanged(); save(); render(); if (v) toast('Name saved'); return; }
       case 'print-cert': { if (S.view.name !== 'certificate') go('certificate'); setTimeout(() => window.print(), 120); return; }
       case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
       case 'sign-out': {

@@ -516,7 +516,10 @@ section.cat + section.cat { margin-top: 8px; }
     });
     out.sort((a, b) => (b.acc == null ? 0 : 1) - (a.acc == null ? 0 : 1) || (b.acc || 0) - (a.acc || 0) || b.pct - a.pct);
 
-    const weakest = lessons.map(l => { const x = T[l.id]; return { id: l.id, title: l.title, domain: l.domain, score: x.here + 0.5 * x.before + 0.5 * x.cpWrong, here: x.here, before: x.before, cpWrong: x.cpWrong }; })
+    // Only lessons in a domain the caller listed can be ranked: both callers (engine/app.js's
+    // STRENGTH_META and build.py's course table) pass the tested domains only, so a lesson in an
+    // untested domain is course content outside the exam and stays out of the weakest list.
+    const weakest = lessons.filter(l => !!D[String(l.domain)]).map(l => { const x = T[l.id]; return { id: l.id, title: l.title, domain: l.domain, score: x.here + 0.5 * x.before + 0.5 * x.cpWrong, here: x.here, before: x.before, cpWrong: x.cpWrong }; })
       .filter(x => x.score > 0)
       .sort((a, b) => b.score - a.score || (pctOf[String(b.domain)] || 0) - (pctOf[String(a.domain)] || 0) || order[a.id] - order[b.id])
       .slice(0, 5);
