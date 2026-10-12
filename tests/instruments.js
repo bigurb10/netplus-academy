@@ -30,7 +30,7 @@ check('dmm: amps only at the break point', near(I.compute.dmm(DMM, { fn: 'adc', 
 check('dmm: continuity beeps where the table says so and OL elsewhere', I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'B', power: false }).text === 'Continuity' && I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'C', power: false }).text === 'OL');
 check('dmm: continuity on a powered circuit is invalid', I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'B', power: true }).invalid === true);
 check('dmm: diode forward drop one way, OL the other', near(I.compute.dmm(DMM, { fn: 'diode', a: 'D', b: 'E', power: false }).value, 0.65, 0.011) && I.compute.dmm(DMM, { fn: 'diode', a: 'E', b: 'D', power: false }).text === 'OL');
-check('dmm: a seed jitters by at most one least-significant digit', (() => { const a = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); const b = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); return a.value === b.value && near(a.value, 9, 0.011); })());
+check('dmm: a seed jitters by at most one least-significant digit', (() => { const a = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); const b = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); return a.value === b.value && near(a.value, 9, 0.011) && I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'l1').value !== I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }).value; })());
 
 // ---------- safety ----------
 const SAFE = { standard: 'NFPA 99', ground: 0.12, chassis: { normal: 45, reverse: 60, 'normal-open': 180, 'reverse-open': 210 }, lead: { normal: 8, reverse: 9, 'normal-open': 40, 'reverse-open': 45 }, limits: { ground: 0.5, chassis: 500, lead: 100 } };
@@ -53,6 +53,7 @@ r = I.compute.infusion(INF, { rate: 100, minutes: 30 });
 check('infusion: delivered volume follows the true rate and reads to the graduation', near(r.exact, 51.5, 0.001) && r.volume === 52 && r.trueRate === 103 && near(r.rateFromVolume, 104, 0.001) && near(r.errPct, 4, 0.001), JSON.stringify(r));
 check('infusion: the cylinder caps the volume', I.compute.infusion(INF, { rate: 600, minutes: 60 }).volume === 100);
 check('infusion: zero minutes is empty', I.compute.infusion(INF, { rate: 100, minutes: 0 }).volume === 0);
+check('infusion: a half-millilitre graduation survives rounding', I.compute.infusion(Object.assign({}, INF, { graduation: 0.5 }), { rate: 100, minutes: 30 }).volume === 51.5);
 
 // ---------- defib ----------
 const DEF = { energies: [2, 50, 200, 360], deliveredErr: { '200': 0.02, '2': 0.1 }, tolerance: { pct: 15, floor: 4 } };
@@ -72,6 +73,8 @@ check('verdict: infusion within tolerance passes, beyond fails', I.truth.verdict
 check('verdict: defib within tolerance passes', I.truth.verdict(lab('defib', DEF, [])) === 'pass');
 check('verdict: defib outside the floor at low energy fails', I.truth.verdict(lab('defib', Object.assign({}, DEF, { deliveredErr: { '2': 3 } }), [])) === 'fail');
 check('verdict: dmm, figures and choices have no computed verdict', I.truth.verdict(lab('dmm', DMM, [])) === null && I.truth.verdict(lab('choices', { text: 'x' }, [])) === null);
+check('verdict: a safety scenario without limits has no computed verdict', I.truth.verdict(lab('safety', Object.assign({}, SAFE, { limits: null }), [])) === null);
+check('verdict: a defib scenario without energies has no computed verdict', I.truth.verdict(lab('defib', Object.assign({}, DEF, { energies: [] }), [])) === null);
 
 // ---------- measure ----------
 check('measure: a dmm task resolves through compute', (() => { const m = I.measure(lab('dmm', DMM, []), { id: 'v', kind: 'reading', measure: { fn: 'vdc', a: 'A', b: 'B' } }); return m && near(m.value, 9, 0.011) && m.lsd === 0.01; })());
@@ -97,6 +100,7 @@ check('validate: a task id with a colon is reported', I.validate(lab('choices', 
 check('validate: a missing why is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: {} })).some(p => /why/.test(p)));
 check('validate: a choice expect outside its options is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 2 }], { why: { a: 'w' } })).some(p => /expect/.test(p)));
 check('validate: no tasks is reported', I.validate(lab('choices', { text: 't' }, [])).some(p => /tasks/.test(p)));
+check('validate: an id that is also an Object.prototype key is handled', (() => { const p = I.validate(lab('choices', { text: 't' }, [{ id: 'constructor', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: {} })); return !p.some(x => /duplicate/.test(x)) && p.some(x => /why/.test(x)); })());
 
 // ---------- figures ----------
 let svg = I.figure({ kind: 'meter', min: 0, max: 10, value: 5, unit: 'V' });
@@ -124,6 +128,17 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('render: choices shows its text escaped in a pre', !!el.querySelector('pre.ins-text') && el.querySelector('pre').textContent === 'Reply from 10.0.0.1 <ok>');
   I.render(el, lab('figures', { figures: [{ kind: 'meter', min: 0, max: 10, value: 3, unit: 'V', caption: 'Meter one' }, { kind: 'cylinder', ml: 100, value: 20 }] }, []), {}, {});
   check('render: figures draws every figure with its caption', el.querySelectorAll('svg.fig').length === 2 && /Meter one/.test(el.textContent));
+
+  // Re-rendering on the same element must not stack handlers: one click runs the current panel's handler once.
+  let hits = 0;
+  I.PANEL.spy = () => '<button type="button" data-ins="x">x</button>';
+  I.HANDLE.spy = () => { hits++; return false; };
+  const spyLab = lab('spy', {}, []);
+  I.render(el, spyLab, {}, {}); I.render(el, spyLab, {}, {}); I.render(el, spyLab, {}, {});
+  el.querySelector('[data-ins="x"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+  check('render: three renders on one element wire one handler, which runs once per click', hits === 1, hits);
+  delete I.PANEL.spy; delete I.HANDLE.spy;
+
   I.render(el, lab('nope', {}, []), {}, {});
   check('render: an unknown instrument says so instead of throwing', /Unknown instrument/.test(el.textContent));
 }

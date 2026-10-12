@@ -20,7 +20,7 @@
   // test can assert exact values, while two different readings on one panel still differ.
   function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function jitter(seed, key) { return ((hash(String(seed) + '|' + String(key)) % 2001) / 1000) - 1; }
-  const decimals = lsd => lsd >= 1 ? 0 : Math.max(0, Math.round(-Math.log10(lsd)));
+  const decimals = lsd => lsd >= 1 ? 0 : Math.max(0, Math.ceil(-Math.log10(lsd)));
   const fix = (v, lsd) => Number(v.toFixed(decimals(lsd)));
   // A reading is the true value plus at most one least-significant digit of jitter when a seed is given.
   const reading = (value, lsd, seed, key) => fix(value + (seed == null ? 0 : jitter(seed, key) * lsd), lsd);
@@ -96,7 +96,11 @@
     const sc = obj(lab && lab.scenario);
     switch (lab && lab.instrument) {
       case 'safety': {
-        const lim = obj(sc.limits); const over = (table, limit) => limit != null && Object.keys(obj(table)).some(k => num(table[k]) > num(limit));
+        if (sc.limits == null || typeof sc.limits !== 'object') return null;
+        const lim = sc.limits;
+        const provides = v => v != null && (typeof v !== 'object' || Object.keys(v).length > 0);
+        if ((provides(sc.ground) && lim.ground == null) || (provides(sc.chassis) && lim.chassis == null) || (provides(sc.lead) && lim.lead == null)) return null;
+        const over = (table, limit) => limit != null && Object.keys(obj(table)).some(k => num(table[k]) > num(limit));
         if (lim.ground != null && num(sc.ground) > num(lim.ground)) return 'fail';
         return over(sc.chassis, lim.chassis) || over(sc.lead, lim.lead) ? 'fail' : 'pass';
       }
@@ -106,8 +110,9 @@
       }
       case 'infusion': return Math.abs(num(sc.rateErr) * 100) <= num(sc.tolerance) ? 'pass' : 'fail';
       case 'defib': {
+        if (!Array.isArray(sc.energies) || !sc.energies.length) return null;
         const t = obj(sc.tolerance);
-        return (sc.energies || []).every(e => { const d = compute.defib(sc, { energy: e }).delivered; return Math.abs(d - num(e)) <= Math.max(num(t.floor), num(t.pct) / 100 * num(e)); }) ? 'pass' : 'fail';
+        return sc.energies.every(e => { const d = compute.defib(sc, { energy: e }).delivered; return Math.abs(d - num(e)) <= Math.max(num(t.floor), num(t.pct) / 100 * num(e)); }) ? 'pass' : 'fail';
       }
       default: return null;
     }
@@ -135,13 +140,13 @@
     if (NAMES.indexOf(lab.instrument) < 0) p(`unknown instrument "${lab.instrument}"`);
     if (!lab.scenario || typeof lab.scenario !== 'object') p('scenario is missing');
     if (!Array.isArray(lab.tasks) || !lab.tasks.length) { p('no tasks'); return out; }
-    const why = obj(lab.why); const seen = {};
+    const why = obj(lab.why); const seen = Object.create(null);
     lab.tasks.forEach((t, i) => {
       const id = t && t.id; const tag = `task ${id || '#' + (i + 1)}`;
       if (!id || !/^[a-z0-9-]+$/.test(id)) p(`${tag}: id must match /^[a-z0-9-]+$/`);
       if (seen[id]) p(`${tag}: duplicate id`); seen[id] = true;
       if (!t.prompt) p(`${tag}: no prompt`);
-      if (!why[id]) p(`${tag}: no why`);
+      if (!Object.prototype.hasOwnProperty.call(why, id)) p(`${tag}: no why`);
       if (t.kind === 'reading') {
         if (!Array.isArray(t.expect) || t.expect.length !== 2 || !isFinite(t.expect[0]) || !isFinite(t.expect[1]) || t.expect[0] > t.expect[1]) p(`${tag}: expect must be [min, max]`);
         else if (t.measure && NAMES.indexOf(lab.instrument) >= 0) {
@@ -223,17 +228,24 @@
   function render(el, lab, ui, api) {
     const draw = lab && PANEL[lab.instrument];
     if (!draw) { el.innerHTML = '<p class="muted">Unknown instrument.</p>'; return; }
-    ui = ui || {}; api = api || {};
-    const paint = () => { el.innerHTML = draw(lab, ui); };
-    el.addEventListener('click', e => {
-      const b = e.target.closest && e.target.closest('[data-ins]'); if (!b || !el.contains(b)) return;
-      const h = HANDLE[lab.instrument]; if (h && h(lab, ui, b.dataset.ins, b.dataset.arg, api)) paint();
-    });
-    el.addEventListener('change', e => {
-      const f = e.target.closest && e.target.closest('[data-field]'); if (!f || !el.contains(f)) return;
-      ui[f.dataset.field] = f.type === 'checkbox' ? f.checked : f.type === 'number' ? Number(f.value) : f.value;
-      const h = HANDLE[lab.instrument]; if (h && h(lab, ui, 'field', f.dataset.field, api)) paint();
-    });
+    // One listener pair per element; the handlers read the latest lab/ui/api from the holder, so a
+    // re-render on the same element replaces the panel instead of stacking a second handler.
+    el.__fraIns = { lab, ui: ui || {}, api: api || {} };
+    const paint = () => { const h = el.__fraIns; el.innerHTML = PANEL[h.lab.instrument](h.lab, h.ui); };
+    if (!el.__fraInsWired) {
+      el.__fraInsWired = true;
+      el.addEventListener('click', e => {
+        const h = el.__fraIns; if (!h) return;
+        const b = e.target.closest && e.target.closest('[data-ins]'); if (!b || !el.contains(b)) return;
+        const fn = HANDLE[h.lab.instrument]; if (fn && fn(h.lab, h.ui, b.dataset.ins, b.dataset.arg, h.api)) paint();
+      });
+      el.addEventListener('change', e => {
+        const h = el.__fraIns; if (!h) return;
+        const f = e.target.closest && e.target.closest('[data-field]'); if (!f || !el.contains(f)) return;
+        h.ui[f.dataset.field] = f.type === 'checkbox' ? f.checked : f.type === 'number' ? Number(f.value) : f.value;
+        const fn = HANDLE[h.lab.instrument]; if (fn && fn(h.lab, h.ui, 'field', f.dataset.field, h.api)) paint();
+      });
+    }
     paint();
   }
 
