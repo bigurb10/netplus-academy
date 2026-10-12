@@ -677,6 +677,14 @@ if (box2) {
   check('mergeState labs is order-independent', JSON.stringify(out2.labs) === JSON.stringify(out.labs));
 }
 
+{
+  const base = { v: 3, course: 'mini', lessons: {}, topics: {}, qstats: {}, seen: {}, ratings: {}, exams: [], feedback: [], settings: {}, settingsAt: 0, touchedAt: 1, created: 1 };
+  const a = Object.assign({}, base, { certAt: 500 }), b = Object.assign({}, base, { certAt: 900 }), none = Object.assign({}, base);
+  check('certAt merges to the earliest positive value', M.mergeState(a, b, OPTS).certAt === 500 && M.mergeState(b, a, OPTS).certAt === 500);
+  check('certAt passes through when only one side has it', M.mergeState(a, none, OPTS).certAt === 500 && M.mergeState(none, a, OPTS).certAt === 500);
+  check('certAt is 0 when neither side has it', M.mergeState(none, none, OPTS).certAt === 0);
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
 // Explicit exit: the round-trip block boots the real engine, whose save() now schedules a

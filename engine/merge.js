@@ -54,6 +54,8 @@
   const STATUS_RANK = { new: 0, read: 1, passed: 2 };
   const rank = s => STATUS_RANK[s] || 0;
   const max = (x, y) => (x || 0) > (y || 0) ? (x || 0) : (y || 0);
+  // The earliest positive of two timestamps (the certificate's earned date), 0 when neither is set.
+  const earliest = (x, y) => (x || 0) && (y || 0) ? Math.min(x, y) : (x || y || 0);
   const keys = (a, b) => Object.keys(Object.assign({}, a || {}, b || {}));
 
   // Merge one keyed map with a per-entry rule. Entries present on one side only pass through.
@@ -179,6 +181,7 @@
       settings: pickSettings(a, b),
       settingsAt: max(a.settingsAt, b.settingsAt),
       touchedAt: max(a.touchedAt, b.touchedAt),
+      certAt: earliest(a.certAt, b.certAt),
       created: isFinite(born) ? born : 0
     };
   }

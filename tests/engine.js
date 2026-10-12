@@ -843,6 +843,46 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.close();
   }
 
+  // ----- Certificate of completion (manifest certificate: true) -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const cert = x => { x.FRA.course.certificate = true; };
+    let w = boot({ courseDir: mini, beforeApp: cert });
+    act(w, 'go', 'progress');
+    check('progress offers the certificate card when the manifest enables it', /Certificate of completion/.test(w.text()) && !!w.$('[data-act="go"][data-arg="certificate"]'));
+    act(w, 'go', 'certificate');
+    check('before the gate the certificate page lists what is left', /Not yet/.test(w.text()) && /8 lessons left/.test(w.text()) && /1 lab left/.test(w.text()) && /official-format test/i.test(w.text()), w.text().slice(0, 300));
+    check('the hash names the certificate view', w.location.hash === '#certificate', w.location.hash);
+    w.close();
+    w = boot({ courseDir: mini });
+    act(w, 'go', 'progress');
+    check('without the flag there is no certificate card', !/Certificate of completion/.test(w.text()));
+    w.close();
+    // Everything done, seeded straight into storage. Signed out, so the name is typed.
+    const passed = {}; ['u1l1', 'u1l2', 'u1l3', 'u2l1', 'u2l2', 'u2l3', 'u3l1', 'u3l2'].forEach(id => { passed[id] = { status: 'passed', best: 4, attempts: 1, passedAt: 5, lastScore: 4, lastAt: 5 }; });
+    const rec = (id, kind, date, extra) => Object.assign({ id, date, kind, score: 9, total: 10, pct: 90, byDomain: {}, review: [], seconds: 60, minutes: 0, setup: null, noConf: true }, extra || {});
+    const seeded = { v: 3, course: 'mini', view: { name: 'home' }, lessons: passed, qstats: {}, topics: {}, exams: [rec('s', 'starter', 1, { total: 6, score: 6, pct: 100, noConf: false }), rec('p1', 'practice', 2), rec('p2', 'practice', 3), rec('o', 'practice', 4, { minutes: 10, setup: { mode: 'standard', n: 10, minutes: 10 } })], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: { cheat: true }, labs: { 'mini-ping': { done: true, at: 5, values: {}, ok: {} } }, settingsAt: 0, touchedAt: 1, created: 1 };
+    const seed = x => { cert(x); x.localStorage.setItem('fra.mini.state.v3', JSON.stringify(seeded)); };
+    w = boot({ courseDir: mini, hash: '#certificate', beforeApp: seed });
+    const st = () => JSON.parse(w.localStorage.getItem('fra.mini.state.v3'));
+    check('the seeded state replays to an official pass', !!st().official);
+    check('with everything done the certificate is earned and asks for a name', /Earned/.test(w.text()) && !!w.$('#cert-name') && w.$('[data-act="print-cert"]').disabled);
+    const body = w.$('.certificate').textContent;
+    check('the certificate names the course, every lesson, every lab, and the official score', /Mini Course/.test(body) && /all 8 lessons/.test(body) && /all 1 lab\b/.test(body) && /90%/.test(body), body);
+    check('the earned date is recorded', st().certAt > 0);
+    w.$('#cert-name').value = 'Pat Learner'; act(w, 'cert-name');
+    check('saving the name puts it on the certificate and enables Print', /Pat Learner/.test(w.$('.cert-name').textContent) && !w.$('[data-act="print-cert"]').disabled && st().settings.certName === 'Pat Learner' && st().settingsAt > 0);
+    act(w, 'print-cert'); await new Promise(r => setTimeout(r, 200));   // print-cert prints after a 120 ms settle
+    check('Print calls window.print', w.printed === 1, w.printed);
+    act(w, 'go', 'home');
+    check('home offers the certificate once earned', !!w.$('[data-act="go"][data-arg="certificate"]'));
+    w.close();
+    // Signed in: the account name is used and no name field is shown.
+    w = boot({ courseDir: mini, hash: '#certificate', beforeApp: x => { seed(x); x.localStorage.setItem('fra.auth.v1', JSON.stringify({ access_token: 'tok', refresh_token: 'r', expires_at: Date.now() + 600000, sub: 'u1', email: 'pat@example.com', name: 'Sam Tech' })); }, beforeAppJs: x => { x.fetch = () => Promise.reject(new Error('offline')); } });
+    check('signed in, the account name is on the certificate and there is no name field', /Sam Tech/.test(w.$('.cert-name').textContent) && !w.$('#cert-name'));
+    w.close();
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

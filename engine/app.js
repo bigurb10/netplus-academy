@@ -47,6 +47,9 @@
   const WHERE_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': `${EXAM_N}-question test results`, 'practice-results': 'Practice test results', custom: 'Custom test', 'custom-results': 'Custom test results', callout: 'Lesson callout' };
   const STARTER_POOL = course.starterPool || {};
   const CORE = course.core || {};
+  // A course that issues a certificate of completion (manifest certificate: true). The gate: every
+  // lesson passed, every lab done, the official-format test passed.
+  const CERT = !!course.certificate;
 
   // ---------- data index ----------
   const units = (FRA.units || []).slice().sort((a, b) => a.n - b.n);
@@ -137,7 +140,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, certAt: 0, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   // The pass rule lives in one fold (engine/merge.js). Recomputing on load migrates blobs saved
   // under the old streak rule (passStreak goes; passes and official come from the exam log) and
@@ -465,6 +468,7 @@
     if (st === 'tutorial') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${OFFICIAL_PCT}% or better, the real exam's passing score, within the time limit and you are cleared to book.` };
+    if (st === 'ready' && CERT && certGate().ok) return { label: 'Print your certificate of completion', act: 'go', arg: 'certificate', sub: 'Every lesson passed, every lab done, and the official-format test passed.' };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
     if (testsLocked('practice')) return { label: 'Unlock the full course for practice tests', act: 'upgrade', arg: '' };
     return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `${S.passes} of your last ${PASS_WINDOW} tests passed. Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} to unlock the official-format test.` };
@@ -481,7 +485,7 @@
   // Shared between the topbar template (so the dot is correct on the render right after
   // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
   const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
-  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
+  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback', 'certificate'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function paintSyncBadge() {
@@ -495,7 +499,7 @@
   // ---------- browser history ----------
   // Every view change gets a history entry whose hash names the view (#lesson/u3l2), so Back and Forward move within
   // the course instead of leaving it, and a reload or a shared link opens the view named in the hash.
-  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback'];
+  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback', 'certificate'];
   const viewKey = v => v.name + (v.arg != null && v.arg !== '' ? '/' + v.arg : '');
   function viewFromHash(h) { const m = /^#([a-z]+)(?:\/([^\s#]+))?$/.exec(h || ''); if (!m || !HASH_VIEWS.includes(m[1])) return null; return m[2] != null ? { name: m[1], arg: decodeURIComponent(m[2]) } : { name: m[1] }; }
   let histKey = null;
@@ -528,6 +532,7 @@
       case 'ready': main = viewReady(); break;
       case 'cheatsheet': main = viewCheatsheet(); break;
       case 'feedback': main = viewFeedback(); break;
+      case 'certificate': main = viewCertificate(); break;
       default: main = viewHome();
     }
     const r = readiness();
@@ -1133,6 +1138,7 @@
     const mastered = lessons.filter(l => topicMastered(l.id)).length;
     return `<div class="wide stack" style="gap:18px">
       <div><div class="eyebrow">Progress</div><h1>${mastered} of ${lessons.length} topics mastered</h1></div>
+      ${CERT ? (g => `<div class="card stack"><div class="row spread"><div><h3>Certificate of completion</h3><p class="ink2">${g.ok ? 'Earned. Open it to add your name and print it.' : 'Unlocks when every lesson is passed, every lab is done, and the official-format test is passed.'}</p></div><button class="btn ${g.ok ? 'primary' : ''}" data-act="go" data-arg="certificate">${g.ok ? 'Open' : 'What is left'}</button></div></div>`)(certGate()) : ''}
       <div class="card stack"><h3>Accuracy by domain</h3>${domainBars()}</div>
       <div class="card"><h3 style="margin-bottom:10px">Every topic</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Unit</th><th>Lesson</th><th>Checkpoint</th><th>Answered</th><th>Priority</th><th>Status</th></tr></thead><tbody>
         ${lessons.map(l => { const ls = lstat(l.id); const t = S.topics[l.id] || { attempts: 0, correct: 0 }; const p = topicPriority(l.id); const m = topicMastered(l.id);
@@ -1157,6 +1163,48 @@
     </div>`;
   }
 
+  // ---------- certificate of completion ----------
+  function certGate() {
+    const lessonsLeft = lessons.filter(l => lstat(l.id).status !== 'passed').length;
+    const labsLeft = labIds.filter(id => !labDone(id)).length;
+    const officialLeft = S.official ? 0 : 1;
+    return { ok: !lessonsLeft && !labsLeft && !officialLeft, lessonsLeft, labsLeft, officialLeft };
+  }
+  // The signed-in account's name when it has one, else the name typed on the certificate page.
+  function certName() {
+    const u = window.FRAAuth && FRAAuth.isSignedIn() ? FRAAuth.user() : null;
+    return (u && u.name) || (S.settings.certName || '');
+  }
+  function viewCertificate() {
+    if (!CERT) return viewProgress();
+    const g = certGate();
+    if (!g.ok) {
+      return `<div class="content stack" style="gap:18px">
+        <div><div class="eyebrow">Certificate of completion</div><h1>Not yet.</h1></div>
+        <div class="card stack"><p>The certificate unlocks when every lesson is passed, every lab is done, and the official-format test is passed.</p>
+          <ul style="margin:0;padding-left:20px;line-height:1.7">
+            <li>${g.lessonsLeft ? `${plural(g.lessonsLeft, 'lesson')} left to pass` : 'Every lesson passed'}</li>
+            ${labIds.length ? `<li>${g.labsLeft ? `${plural(g.labsLeft, 'lab')} left to finish` : 'Every lab done'}</li>` : ''}
+            <li>${g.officialLeft ? 'The official-format test, not yet passed' : 'Official-format test passed'}</li>
+          </ul>
+          <div class="row"><button class="btn" data-act="go" data-arg="course">All lessons</button><button class="btn ghost" data-act="go" data-arg="progress">Progress</button></div></div>
+      </div>`;
+    }
+    if (!S.certAt) { S.certAt = Date.now(); save(); }
+    const name = certName(); const u = window.FRAAuth && FRAAuth.isSignedIn() ? FRAAuth.user() : null;
+    const exam = course.exam || {};
+    return `<div class="content stack" style="gap:18px">
+      <div class="no-print row spread" style="align-items:flex-start"><div><div class="eyebrow">Certificate of completion</div><h1>Earned.</h1></div><div class="row"><button class="btn primary" data-act="print-cert" ${name ? '' : 'disabled'}>Print or save as PDF</button></div></div>
+      ${u && u.name ? '' : `<div class="card no-print row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="field" style="flex:1;min-width:220px">Your name, as it should appear<input type="text" id="cert-name" value="${esc(S.settings.certName || '')}" maxlength="80"></label><button class="btn" data-act="cert-name">Save name</button></div>`}
+      <div class="certificate card">
+        <div class="cert-brand"><span class="mark">FR</span> ${esc(course.brand)}</div>
+        <div class="cert-title">Certificate of completion</div>
+        <div class="cert-name">${name ? esc(name) : '<span class="muted">Your name</span>'}</div>
+        <div class="cert-body">has completed <strong>${esc(course.name)}</strong>${exam.title ? `, preparation for the ${esc([exam.vendor, exam.title].filter(Boolean).join(' '))}${exam.code ? ` (${esc(exam.code)})` : ''}` : ''}: all ${lessons.length} lessons with their checkpoints${labIds.length ? `, all ${plural(labIds.length, 'lab')}` : ''}, and the official-format test at ${S.official.pct}%.</div>
+        <div class="cert-date">${fmtDate(S.certAt)}</div>
+      </div>
+    </div>`;
+  }
 
   // ---------- deeper explanations ----------
   function deepSection(id) {
@@ -1410,6 +1458,8 @@
       case 'lab-answer': { const i = String(arg).indexOf(':'); const tid = String(arg).slice(0, i), val = String(arg).slice(i + 1); const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === tid); if (!t) return;
         checkLab(lab, t, t.kind === 'verdict' ? val : parseInt(val, 10)); render(); return; }
       case 'lab-redo': { const lab = LABS[arg]; if (!lab) return; S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} }; save(); render(); return; }
+      case 'cert-name': { const el = $('#cert-name'); const v = el ? String(el.value).trim().slice(0, 80) : ''; S.settings.certName = v; markSettingsChanged(); save(); render(); if (v) toast('Name saved'); return; }
+      case 'print-cert': { if (S.view.name !== 'certificate') go('certificate'); setTimeout(() => window.print(), 120); return; }
       case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
       case 'sign-out': {
         // Sign-out clears the token, never the local blob. The learner keeps studying
