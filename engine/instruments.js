@@ -20,7 +20,8 @@
   // test can assert exact values, while two different readings on one panel still differ.
   function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function jitter(seed, key) { return ((hash(String(seed) + '|' + String(key)) % 2001) / 1000) - 1; }
-  const decimals = lsd => lsd >= 1 ? 0 : Math.max(0, Math.ceil(-Math.log10(lsd)));
+  // Decimal places implied by a least-significant digit: 0.25 -> 2, 0.5 -> 1, 0.001 -> 3, 1 -> 0, 0 -> 0.
+  const decimals = lsd => { if (!(lsd > 0)) return 0; const s = String(lsd); const i = s.indexOf('.'); return i < 0 ? 0 : s.length - i - 1; };
   const fix = (v, lsd) => Number(v.toFixed(decimals(lsd)));
   // A reading is the true value plus at most one least-significant digit of jitter when a seed is given.
   const reading = (value, lsd, seed, key) => fix(value + (seed == null ? 0 : jitter(seed, key) * lsd), lsd);
@@ -105,10 +106,14 @@
         return over(sc.chassis, lim.chassis) || over(sc.lead, lim.lead) ? 'fail' : 'pass';
       }
       case 'monitor': {
-        const t = obj(sc.tolerance);
-        return Math.abs(num(sc.hrErr)) <= num(t.hr) && Math.abs(num(sc.spo2Err)) <= num(t.spo2) && Math.abs(num(sc.sysErr)) <= num(t.nibp) && Math.abs(num(sc.diaErr)) <= num(t.nibp) ? 'pass' : 'fail';
+        const t = sc.tolerance; const isNum = v => typeof v === 'number' && isFinite(v);
+        if (!t || typeof t !== 'object' || !isNum(t.hr) || !isNum(t.spo2) || !isNum(t.nibp)) return null;
+        return Math.abs(num(sc.hrErr)) <= t.hr && Math.abs(num(sc.spo2Err)) <= t.spo2 && Math.abs(num(sc.sysErr)) <= t.nibp && Math.abs(num(sc.diaErr)) <= t.nibp ? 'pass' : 'fail';
       }
-      case 'infusion': return Math.abs(num(sc.rateErr) * 100) <= num(sc.tolerance) ? 'pass' : 'fail';
+      case 'infusion': {
+        if (typeof sc.tolerance !== 'number' || !isFinite(sc.tolerance)) return null;
+        return Math.abs(num(sc.rateErr) * 100) <= sc.tolerance ? 'pass' : 'fail';
+      }
       case 'defib': {
         if (!Array.isArray(sc.energies) || !sc.energies.length) return null;
         const t = obj(sc.tolerance);
@@ -146,7 +151,7 @@
       if (!id || !/^[a-z0-9-]+$/.test(id)) p(`${tag}: id must match /^[a-z0-9-]+$/`);
       if (seen[id]) p(`${tag}: duplicate id`); seen[id] = true;
       if (!t.prompt) p(`${tag}: no prompt`);
-      if (!Object.prototype.hasOwnProperty.call(why, id)) p(`${tag}: no why`);
+      if (!Object.prototype.hasOwnProperty.call(why, id) || !why[id]) p(`${tag}: no why`);
       if (t.kind === 'reading') {
         if (!Array.isArray(t.expect) || t.expect.length !== 2 || !isFinite(t.expect[0]) || !isFinite(t.expect[1]) || t.expect[0] > t.expect[1]) p(`${tag}: expect must be [min, max]`);
         else if (t.measure && NAMES.indexOf(lab.instrument) >= 0) {

@@ -30,7 +30,7 @@ check('dmm: amps only at the break point', near(I.compute.dmm(DMM, { fn: 'adc', 
 check('dmm: continuity beeps where the table says so and OL elsewhere', I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'B', power: false }).text === 'Continuity' && I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'C', power: false }).text === 'OL');
 check('dmm: continuity on a powered circuit is invalid', I.compute.dmm(DMM, { fn: 'cont', a: 'A', b: 'B', power: true }).invalid === true);
 check('dmm: diode forward drop one way, OL the other', near(I.compute.dmm(DMM, { fn: 'diode', a: 'D', b: 'E', power: false }).value, 0.65, 0.011) && I.compute.dmm(DMM, { fn: 'diode', a: 'E', b: 'D', power: false }).text === 'OL');
-check('dmm: a seed jitters by at most one least-significant digit', (() => { const a = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); const b = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); return a.value === b.value && near(a.value, 9, 0.011) && I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'l1').value !== I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }).value; })());
+check('dmm: a seed jitters by at most one least-significant digit', (() => { const a = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); const b = I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, 'lab-1'); return a.value === b.value && near(a.value, 9, 0.011) && ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'].some(s => I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }, s).value !== I.compute.dmm(DMM, { fn: 'vdc', a: 'A', b: 'B', power: true }).value); })());
 
 // ---------- safety ----------
 const SAFE = { standard: 'NFPA 99', ground: 0.12, chassis: { normal: 45, reverse: 60, 'normal-open': 180, 'reverse-open': 210 }, lead: { normal: 8, reverse: 9, 'normal-open': 40, 'reverse-open': 45 }, limits: { ground: 0.5, chassis: 500, lead: 100 } };
@@ -54,6 +54,8 @@ check('infusion: delivered volume follows the true rate and reads to the graduat
 check('infusion: the cylinder caps the volume', I.compute.infusion(INF, { rate: 600, minutes: 60 }).volume === 100);
 check('infusion: zero minutes is empty', I.compute.infusion(INF, { rate: 100, minutes: 0 }).volume === 0);
 check('infusion: a half-millilitre graduation survives rounding', I.compute.infusion(Object.assign({}, INF, { graduation: 0.5 }), { rate: 100, minutes: 30 }).volume === 51.5);
+check('infusion: a quarter-millilitre graduation survives rounding', I.compute.infusion(Object.assign({}, INF, { graduation: 0.25 }), { rate: 100, minutes: 30 }).volume === 51.5);
+check('infusion: a graduation of 0.25 lands on the grid', I.compute.infusion(Object.assign({}, INF, { rateErr: 0.025, graduation: 0.25 }), { rate: 100, minutes: 30 }).volume === 51.25);
 
 // ---------- defib ----------
 const DEF = { energies: [2, 50, 200, 360], deliveredErr: { '200': 0.02, '2': 0.1 }, tolerance: { pct: 15, floor: 4 } };
@@ -75,6 +77,8 @@ check('verdict: defib outside the floor at low energy fails', I.truth.verdict(la
 check('verdict: dmm, figures and choices have no computed verdict', I.truth.verdict(lab('dmm', DMM, [])) === null && I.truth.verdict(lab('choices', { text: 'x' }, [])) === null);
 check('verdict: a safety scenario without limits has no computed verdict', I.truth.verdict(lab('safety', Object.assign({}, SAFE, { limits: null }), [])) === null);
 check('verdict: a defib scenario without energies has no computed verdict', I.truth.verdict(lab('defib', Object.assign({}, DEF, { energies: [] }), [])) === null);
+check('verdict: a monitor scenario without tolerance has no computed verdict', I.truth.verdict(lab('monitor', Object.assign({}, MON, { tolerance: null }), [])) === null);
+check('verdict: an infusion scenario without tolerance has no computed verdict', I.truth.verdict(lab('infusion', Object.assign({}, INF, { tolerance: undefined }), [])) === null);
 
 // ---------- measure ----------
 check('measure: a dmm task resolves through compute', (() => { const m = I.measure(lab('dmm', DMM, []), { id: 'v', kind: 'reading', measure: { fn: 'vdc', a: 'A', b: 'B' } }); return m && near(m.value, 9, 0.011) && m.lsd === 0.01; })());
@@ -98,6 +102,7 @@ check('validate: a verdict that contradicts the scenario is reported', I.validat
 check('validate: an unknown instrument is reported', I.validate(lab('oscilloscope', {}, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { a: 'w' } })).some(p => /instrument/.test(p)));
 check('validate: a task id with a colon is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a:b', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { 'a:b': 'w' } })).some(p => /id/.test(p)));
 check('validate: a missing why is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: {} })).some(p => /why/.test(p)));
+check('validate: an empty why string is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { a: '' } })).some(p => /why/.test(p)));
 check('validate: a choice expect outside its options is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 2 }], { why: { a: 'w' } })).some(p => /expect/.test(p)));
 check('validate: no tasks is reported', I.validate(lab('choices', { text: 't' }, [])).some(p => /tasks/.test(p)));
 check('validate: an id that is also an Object.prototype key is handled', (() => { const p = I.validate(lab('choices', { text: 't' }, [{ id: 'constructor', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: {} })); return !p.some(x => /duplicate/.test(x)) && p.some(x => /why/.test(x)); })());
