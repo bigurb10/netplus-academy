@@ -51,6 +51,14 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 4. Create `<id>/index.html` from `netplus/index.html` with the new script list, keeping both `../engine/merge.js` and `../engine/app.js` (in that order, `merge.js` first) after the course scripts, and add a card to `index.html`.
 5. Run `npm test` and `python build.py <id>`.
 
+## Labs, virtual instruments, untested domains, and the certificate
+
+- **Labs.** A lesson with `lab: "<id>"` renders the lab in `FRA.labs[<id>]` (a `labs-*.js` file in the pack) between its Remember hook and its deeper explanation: intro, kit list, service-manual excerpt, an instrument panel, and a task sheet of readings, verdicts, and choices. Progress is `S.labs[id] = { done, at, values, ok }`, merged by the newer `at`, synced with the rest of the state. Home shows "Labs done". The self-test validates every lab against its instrument (`FRAInstruments.validate`): reading ranges must contain the computed reading, verdicts must match what the scenario's own limits imply.
+- **Instruments** live in `engine/instruments.js`: `dmm`, `safety`, `monitor`, `infusion`, `defib`, plus `figures` (meter, cylinder, ECG strip) and `choices` (preformatted text). Readings are deterministic per lab id. The engine carries no limit or tolerance of its own; every number is in the lab's `scenario`. The app reads the module at render time, so a pack without labs never depends on it.
+- **Untested domains.** A domain with `quota: 0` and `pct: 0` is course content outside the exam: in the rail and the course, with checkpoints, counted in lessons passed, never on the starter test, tests, bars, or the strength chart. Lessons in it show "Not on the exam".
+- **Certificate.** A manifest with `certificate: true` adds a Progress card and `#certificate`: unlocked when every lesson is passed, every lab is done, and the official-format test is passed; printable, with the account's name or a typed one.
+- **Catalog sections.** `index.html` groups courses under AAMI certifications, CompTIA certifications, and Tools for technicians; `tests/catalog.js` checks each card's section.
+
 ## Testing
 
 `npm test` runs `tests/selftest.js` (the engine's `#selftest` flow under jsdom for every course plus the `tests/fixtures/mini` three-domain course), `tests/gating.js`, and `tests/acronyms.js` (every glossary entry complete, every acronym in the text covered, no stale ignore entries). You can also open any `<id>/index.html` from disk with `#selftest` on the URL to see the same log in a browser.

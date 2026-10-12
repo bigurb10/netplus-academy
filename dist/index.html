@@ -23,9 +23,9 @@
     {"@type":"Organization","@id":"https://fieldreadyacademy.com/#org","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},
     {"@type":"WebSite","url":"https://fieldreadyacademy.com/","name":"FieldReady Academy","publisher":{"@id":"https://fieldreadyacademy.com/#org"}},
     {"@type":"ItemList","name":"Courses","itemListElement":[
-      {"@type":"ListItem","position":1,"name":"NetPlus Academy: CompTIA Network+ N10-009","url":"https://fieldreadyacademy.com/netplus/lessons/"},
-      {"@type":"ListItem","position":2,"name":"SecPlus Academy: CompTIA Security+ SY0-701","url":"https://fieldreadyacademy.com/secplus/lessons/"},
-      {"@type":"ListItem","position":3,"name":"CBET Academy: AAMI Certified Biomedical Equipment Technician","url":"https://fieldreadyacademy.com/cbet/lessons/"},
+      {"@type":"ListItem","position":1,"name":"CBET Academy: AAMI Certified Biomedical Equipment Technician","url":"https://fieldreadyacademy.com/cbet/lessons/"},
+      {"@type":"ListItem","position":2,"name":"NetPlus Academy: CompTIA Network+ N10-009","url":"https://fieldreadyacademy.com/netplus/lessons/"},
+      {"@type":"ListItem","position":3,"name":"SecPlus Academy: CompTIA Security+ SY0-701","url":"https://fieldreadyacademy.com/secplus/lessons/"},
       {"@type":"ListItem","position":4,"name":"APlus Academy Core 1: CompTIA A+ 220-1201","url":"https://fieldreadyacademy.com/aplus1/lessons/"},
       {"@type":"ListItem","position":5,"name":"APlus Academy Core 2: CompTIA A+ 220-1202","url":"https://fieldreadyacademy.com/aplus2/lessons/"}
     ]}
@@ -46,53 +46,65 @@
     </div>
   </header>
   <main class="wrap">
-    <h2>Courses</h2>
-    <div class="cards">
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="netplus/">NetPlus Academy</a></h3>
-        <p>CompTIA Network+ N10-009. 49 lessons, a 14-page cheat sheet, adaptive tutorials, and unlimited practice tests.</p>
-        <a class="go" href="netplus/">Start the course</a>
-        <span class="links"><a href="netplus/lessons/">Read free lessons</a> &middot; <a href="netplus/cheatsheet/">Cheat sheet</a></span>
+    <section class="cat" id="aami">
+      <h2>AAMI certifications</h2>
+      <p class="cat-lede">The credentials the Association for the Advancement of Medical Instrumentation issues to biomedical equipment technicians.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="cbet/">CBET Academy</a></h3>
+          <p>AAMI Certified Biomedical Equipment Technician. 60 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
+          <a class="go" href="cbet/">Start the course</a>
+          <span class="links"><a href="cbet/lessons/">Read free lessons</a> &middot; <a href="cbet/cheatsheet/">Cheat sheet</a></span>
+        </div>
       </div>
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="secplus/">SecPlus Academy</a></h3>
-        <p>CompTIA Security+ SY0-701. 54 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
-        <a class="go" href="secplus/">Start the course</a>
-        <span class="links"><a href="secplus/lessons/">Read free lessons</a> &middot; <a href="secplus/cheatsheet/">Cheat sheet</a></span>
+    </section>
+    <section class="cat" id="comptia">
+      <h2>CompTIA certifications</h2>
+      <p class="cat-lede">The IT fundamentals every technician gets asked for: networking, security, and hardware and software support.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="netplus/">NetPlus Academy</a></h3>
+          <p>CompTIA Network+ N10-009. 49 lessons, a 14-page cheat sheet, adaptive tutorials, and unlimited practice tests.</p>
+          <a class="go" href="netplus/">Start the course</a>
+          <span class="links"><a href="netplus/lessons/">Read free lessons</a> &middot; <a href="netplus/cheatsheet/">Cheat sheet</a></span>
+        </div>
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="secplus/">SecPlus Academy</a></h3>
+          <p>CompTIA Security+ SY0-701. 54 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
+          <a class="go" href="secplus/">Start the course</a>
+          <span class="links"><a href="secplus/lessons/">Read free lessons</a> &middot; <a href="secplus/cheatsheet/">Cheat sheet</a></span>
+        </div>
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="aplus1/">APlus Academy Core 1</a></h3>
+          <p>CompTIA A+ Core 1 220-1201. 41 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
+          <a class="go" href="aplus1/">Start the course</a>
+          <span class="links"><a href="aplus1/lessons/">Read free lessons</a> &middot; <a href="aplus1/cheatsheet/">Cheat sheet</a></span>
+        </div>
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="aplus2/">APlus Academy Core 2</a></h3>
+          <p>CompTIA A+ Core 2 220-1202. 41 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
+          <a class="go" href="aplus2/">Start the course</a>
+          <span class="links"><a href="aplus2/lessons/">Read free lessons</a> &middot; <a href="aplus2/cheatsheet/">Cheat sheet</a></span>
+        </div>
       </div>
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="cbet/">CBET Academy</a></h3>
-        <p>AAMI Certified Biomedical Equipment Technician. 60 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
-        <a class="go" href="cbet/">Start the course</a>
-        <span class="links"><a href="cbet/lessons/">Read free lessons</a> &middot; <a href="cbet/cheatsheet/">Cheat sheet</a></span>
+    </section>
+    <section class="cat" id="tools">
+      <h2>Tools for technicians</h2>
+      <p class="cat-lede">Working tools for the job itself, free to connect to the AI assistant you already use.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="pill">Free</div>
+          <h3><a href="serviceforge/">ServiceForge</a></h3>
+          <p>A troubleshooting knowledge base for biomed and HTM technicians. Connect it to Claude, ChatGPT or Copilot and ask about faults, error codes, part numbers and PM intervals in your own words.</p>
+          <a class="go" href="serviceforge/">Open ServiceForge</a>
+        </div>
       </div>
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="aplus1/">APlus Academy Core 1</a></h3>
-        <p>CompTIA A+ Core 1 220-1201. 41 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
-        <a class="go" href="aplus1/">Start the course</a>
-        <span class="links"><a href="aplus1/lessons/">Read free lessons</a> &middot; <a href="aplus1/cheatsheet/">Cheat sheet</a></span>
-      </div>
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="aplus2/">APlus Academy Core 2</a></h3>
-        <p>CompTIA A+ Core 2 220-1202. 41 lessons, a printable memorization sheet, adaptive tutorials, and unlimited practice tests.</p>
-        <a class="go" href="aplus2/">Start the course</a>
-        <span class="links"><a href="aplus2/lessons/">Read free lessons</a> &middot; <a href="aplus2/cheatsheet/">Cheat sheet</a></span>
-      </div>
-    </div>
-    <h2>Tools for technicians</h2>
-    <div class="cards">
-      <div class="card">
-        <div class="pill">Free</div>
-        <h3><a href="serviceforge/">ServiceForge</a></h3>
-        <p>A troubleshooting knowledge base for biomed and HTM technicians. Connect it to Claude, ChatGPT or Copilot and ask about faults, error codes, part numbers and PM intervals in your own words.</p>
-        <a class="go" href="serviceforge/">Open ServiceForge</a>
-      </div>
-    </div>
+    </section>
     <h2>How every course works</h2>
     <ol class="steps">
       <li><strong>Cheat sheet.</strong> Everything the exam expects you to recall cold, printable.</li>

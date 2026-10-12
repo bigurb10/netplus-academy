@@ -115,3 +115,5 @@ main section h3 { font-size: 1.05rem; margin: 22px 0 4px; }
   .course-hero h1 { font-size: 1.7rem; }
   .site-nav { gap: 10px; }
 }
+
+.lab-note { background: var(--accent-soft); color: var(--ink); border-radius: 8px; padding: 10px 14px; margin: 0 0 16px; font-weight: 600; }

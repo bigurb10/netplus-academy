@@ -391,6 +391,44 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .modes { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip.mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
+/* Labs (engine/app.js labCard) and virtual instruments (engine/instruments.js) */
+.lab .lab-kit ul { margin: 0; padding-left: 20px; }
+.lab-task { border-top: 1px solid var(--line); padding-top: 12px; }
+.lab-task.ok { opacity: 0.85; }
+.lab-task .lab-in { width: 150px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; background: var(--surface); color: var(--ink); }
+.lab-pill { margin-left: 6px; padding: 1px 7px; }
+.ins { display: grid; gap: 14px; }
+.ins-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.ins-panel { background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.ins-screen { background: #0e1a14; color: #d8ffe6; }
+.ins-screen .eyebrow, .ins-screen .muted { color: #8fd9a8; }
+.ins-readout { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 500; letter-spacing: 0.02em; background: #0e1a14; color: #d8ffe6; border-radius: 8px; padding: 10px 14px; min-height: 48px; }
+.ins-readout.bad { color: #ff9b8f; }
+.ins-dial { display: flex; gap: 6px; flex-wrap: wrap; }
+.ins-drawing { position: relative; display: inline-block; max-width: 100%; }
+.ins-drawing svg { display: block; max-width: 100%; height: auto; }
+.tp { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 0.7rem var(--font-display); cursor: pointer; padding: 0; }
+.tp.red { background: #C8322B; color: #fff; border-color: #C8322B; }
+.tp.black { background: #14212E; color: #fff; border-color: #14212E; }
+.ins-alarm { background: #C8322B; color: #fff; font-weight: 700; padding: 6px 10px; border-radius: 6px; letter-spacing: 0.08em; }
+.ins-numerics { display: flex; gap: 18px; flex-wrap: wrap; }
+.ins-numerics b { font-family: var(--font-display); font-size: 1.8rem; display: block; }
+.ins-limits td, .ins-limits th { padding: 4px 8px; }
+.ins-fig { margin: 0; }
+.ins-fig-n { font-size: 0.8rem; color: var(--muted); }
+.ins-text { background: #0e1a14; color: #d8ffe6; padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0; }
+.fig.strip { max-width: 100%; height: auto; background: #fff7f7; border-radius: 6px; }
+
+/* Certificate of completion (engine/app.js viewCertificate) */
+.certificate { text-align: center; padding: 48px 36px; border: 6px double var(--ink); display: grid; gap: 14px; }
+.cert-brand { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; }
+.cert-brand .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-size: 0.8rem; }
+.cert-title { font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+.cert-name { font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; }
+.cert-body { max-width: 560px; margin: 0 auto; font-size: 1.05rem; }
+.cert-date { color: var(--muted); }
+@media print { .certificate { border-color: #000; page-break-inside: avoid; } }
+
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
@@ -8699,6 +8737,8 @@ FRA.questions.push(
   const STATUS_RANK = { new: 0, read: 1, passed: 2 };
   const rank = s => STATUS_RANK[s] || 0;
   const max = (x, y) => (x || 0) > (y || 0) ? (x || 0) : (y || 0);
+  // The earliest positive of two timestamps (the certificate's earned date), 0 when neither is set.
+  const earliest = (x, y) => (x || 0) && (y || 0) ? Math.min(x, y) : (x || y || 0);
   const keys = (a, b) => Object.keys(Object.assign({}, a || {}, b || {}));
 
   // Merge one keyed map with a per-entry rule. Entries present on one side only pass through.
@@ -8741,7 +8781,10 @@ FRA.questions.push(
       topics: mergeBy(a.topics, b.topics, (x, y) => laterOf(x, y, 'last')),
       qstats: mergeBy(a.qstats, b.qstats, mergeQstat),
       seen: Object.assign({}, a.seen || {}, b.seen || {}),
-      ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts'))
+      ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts')),
+      // Lab progress: the newer entry per lab wins whole, so a Redo on one device (done: false,
+      // newer at) is not undone by an older done: true from the other.
+      labs: mergeBy(a.labs, b.labs, (x, y) => laterOf(x, y, 'at'))
     };
   }
 
@@ -8807,7 +8850,7 @@ FRA.questions.push(
       v: 3,
       course: a.course || b.course || null,
       lessons: maps.lessons, topics: maps.topics, qstats: maps.qstats,
-      seen: maps.seen, ratings: maps.ratings,
+      seen: maps.seen, ratings: maps.ratings, labs: maps.labs,
       exams: exams,
       feedback: feedback,
       passes: q.passes,
@@ -8821,6 +8864,7 @@ FRA.questions.push(
       settings: pickSettings(a, b),
       settingsAt: max(a.settingsAt, b.settingsAt),
       touchedAt: max(a.touchedAt, b.touchedAt),
+      certAt: earliest(a.certAt, b.certAt),
       created: isFinite(born) ? born : 0
     };
   }
@@ -9426,6 +9470,13 @@ FRA.questions.push(
     // burned a spurious PUT per pull until each row had been rewritten.
     if (!c.pathAt) delete c.pathAt;
     if (!c.settingsAt) delete c.settingsAt;   // same class: rows written before settingsAt existed
+    // Same class again: labs (Task 3) is an additive map. mergeMaps (engine/merge.js) always
+    // emits `labs`, even {} when neither side ever had one, so a server blob written before
+    // labs existed must hash the same as a fresh merge's empty map, not differ by one key.
+    if (c.labs && typeof c.labs === 'object' && !Object.keys(c.labs).length) delete c.labs;
+    // Same class again: certAt (Task 5) is an additive timestamp, 0 by default, that a server
+    // blob written before the certificate existed never carries at all.
+    if (!c.certAt) delete c.certAt;
     return hash(stableStringify(c));
   }
 
@@ -9765,6 +9816,369 @@ FRA.questions.push(
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 
+'use strict';
+// Virtual instruments for lab lessons (spec: docs/superpowers/specs/2026-10-12-bmet-academy-design.md,
+// sections 3 and 4). Pure math and SVG up front, then the panels. No safety limit, tolerance, or
+// reading lives here: every number comes from the lab's scenario. Loaded as a plain script (sets
+// window.FRAInstruments) and as a CommonJS module for tests, the same way engine/merge.js is.
+// engine/app.js reads window.FRAInstruments only when a lab card renders, never at boot.
+(function (root, factory) {
+  const api = factory();
+  root.FRAInstruments = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+}(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  const VERSION = 1;
+  const NAMES = ['dmm', 'safety', 'monitor', 'infusion', 'defib', 'figures', 'choices'];
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const num = v => (typeof v === 'number' && isFinite(v)) ? v : Number(v) || 0;
+  const obj = v => (v && typeof v === 'object') ? v : {};
+
+  // ---------- deterministic jitter ----------
+  // FNV-1a over seed|key, mapped to [-1, 1]. The same lab reads the same on every visit, and a
+  // test can assert exact values, while two different readings on one panel still differ.
+  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function jitter(seed, key) { return ((hash(String(seed) + '|' + String(key)) % 2001) / 1000) - 1; }
+  // Decimal places implied by a least-significant digit: 0.25 -> 2, 0.5 -> 1, 0.001 -> 3, 1 -> 0, 0 -> 0.
+  const decimals = lsd => { if (!(lsd > 0)) return 0; const s = String(lsd); const i = s.indexOf('.'); return i < 0 ? 0 : s.length - i - 1; };
+  const fix = (v, lsd) => Number(v.toFixed(decimals(lsd)));
+  // A reading is the true value plus at most one least-significant digit of jitter when a seed is given.
+  const reading = (value, lsd, seed, key) => fix(value + (seed == null ? 0 : jitter(seed, key) * lsd), lsd);
+  const lsdFor = v => { const a = Math.abs(v); return a < 10 ? 0.01 : a < 1000 ? 0.1 : 1; };
+
+  // ---------- compute ----------
+  const compute = {};
+  const pair = (a, b) => a + '-' + b;
+  function lookup(table, a, b) {
+    const t = obj(table);
+    if (t[pair(a, b)] != null) return { v: t[pair(a, b)], sign: 1 };
+    if (t[pair(b, a)] != null) return { v: t[pair(b, a)], sign: -1 };
+    return null;
+  }
+  const OL = (fn, unit) => ({ fn, value: null, unit, text: 'OL', invalid: false, lsd: 0 });
+  const INVALID = (fn, unit) => ({ fn, value: null, unit, text: 'INVALID: circuit powered', invalid: true, lsd: 0 });
+  // c: { fn: vdc|vac|ohm|adc|cont|diode, a: red point, b: black point, power: bool }
+  compute.dmm = function (scenario, c, seed) {
+    const sc = obj(scenario); const fn = c.fn || 'vdc'; const power = c.power !== false; const key = fn + ':' + c.a + ':' + c.b;
+    const signed = (table, unit, lsd) => {
+      if (!power) return { fn, value: 0, unit, text: (0).toFixed(decimals(lsd)) + ' ' + unit, invalid: false, lsd };
+      const hit = lookup(table, c.a, c.b); if (!hit) return OL(fn, unit);
+      const l = lsd || lsdFor(hit.v); const value = reading(hit.sign * hit.v, l, seed, key);
+      return { fn, value, unit, text: value.toFixed(decimals(l)) + ' ' + unit, invalid: false, lsd: l };
+    };
+    if (fn === 'vdc') return signed(sc.vdc, 'V', 0.01);
+    if (fn === 'vac') return signed(sc.vac, 'V', 0.1);
+    if (fn === 'adc') return signed(sc.adc, 'A', 0.001);
+    if (power) return INVALID(fn, fn === 'ohm' ? 'ohm' : 'V');
+    if (fn === 'ohm') { const hit = lookup(sc.ohm, c.a, c.b); if (!hit) return OL(fn, 'ohm'); const l = lsdFor(hit.v); const value = reading(hit.v, l, seed, key); return { fn, value, unit: 'ohm', text: value.toFixed(decimals(l)) + ' ohm', invalid: false, lsd: l }; }
+    if (fn === 'cont') { const hit = lookup(sc.cont, c.a, c.b); return hit && hit.v ? { fn, value: 1, unit: '', text: 'Continuity', invalid: false, lsd: 0 } : OL(fn, ''); }
+    if (fn === 'diode') { const t = obj(sc.diode); const v = t[pair(c.a, c.b)]; if (v == null) return OL(fn, 'V'); const value = reading(v, 0.01, seed, key); return { fn, value, unit: 'V', text: value.toFixed(2) + ' V', invalid: false, lsd: 0.01 }; }
+    return OL(fn, '');
+  };
+  const condKey = c => (c.polarity === 'reverse' ? 'reverse' : 'normal') + (c.ground === 'open' ? '-open' : '');
+  // c: { test: ground|chassis|lead, polarity: normal|reverse, ground: closed|open }
+  compute.safety = function (scenario, c, seed) {
+    const sc = obj(scenario); const limits = obj(sc.limits); const test = c.test || 'ground';
+    if (test === 'ground') { const value = reading(num(sc.ground), 0.01, seed, 'ground'); return { test, value, unit: 'ohm', text: value.toFixed(2) + ' ohm', lsd: 0.01, limit: limits.ground }; }
+    const table = obj(sc[test]); const k = condKey(c); const value = reading(num(table[k]), 1, seed, test + ':' + k);
+    return { test, value, unit: 'uA', text: value + ' uA', lsd: 1, limit: limits[test] };
+  };
+  // c: { hr, rhythm: nsr|asystole|vfib, spo2, sys, dia }
+  compute.monitor = function (scenario, c) {
+    const sc = obj(scenario); const rhythm = c.rhythm || 'nsr';
+    return {
+      hr: rhythm === 'asystole' ? 0 : rhythm === 'vfib' ? null : Math.round(num(c.hr) + num(sc.hrErr)),
+      spo2: Math.round(num(c.spo2) + num(sc.spo2Err)),
+      sys: Math.round(num(c.sys) + num(sc.sysErr)),
+      dia: Math.round(num(c.dia) + num(sc.diaErr)),
+      alarm: rhythm === 'asystole' ? 'ASYSTOLE' : rhythm === 'vfib' ? 'VFIB' : null
+    };
+  };
+  // c: { rate: mL/h set on the pump, minutes: collection time }
+  compute.infusion = function (scenario, c) {
+    const sc = obj(scenario); const cap = num(sc.cylinderMl) || 100; const g = num(sc.graduation) || 1;
+    const trueRate = fix(num(c.rate) * (1 + num(sc.rateErr)), 0.001);
+    const exact = Math.min(cap, trueRate * num(c.minutes) / 60);
+    const volume = fix(Math.round(exact / g) * g, g);
+    const rateFromVolume = num(c.minutes) > 0 ? volume / num(c.minutes) * 60 : 0;
+    const errPct = num(c.rate) > 0 && num(c.minutes) > 0 ? (rateFromVolume - num(c.rate)) / num(c.rate) * 100 : 0;
+    return { volume, exact, trueRate, rateFromVolume, errPct };
+  };
+  // c: { energy: joules selected }
+  compute.defib = function (scenario, c) {
+    const sc = obj(scenario); const e = num(c.energy); const err = num(obj(sc.deliveredErr)[String(e)]);
+    return { energy: e, delivered: fix(e * (1 + err), 0.1), chargeSeconds: fix(1 + e / 120, 0.1) };
+  };
+
+  // ---------- truth: the verdict a scenario implies, from its own limits ----------
+  const truth = {};
+  truth.verdict = function (lab) {
+    const sc = obj(lab && lab.scenario);
+    switch (lab && lab.instrument) {
+      case 'safety': {
+        if (sc.limits == null || typeof sc.limits !== 'object') return null;
+        const lim = sc.limits;
+        const provides = v => v != null && (typeof v !== 'object' || Object.keys(v).length > 0);
+        if ((provides(sc.ground) && lim.ground == null) || (provides(sc.chassis) && lim.chassis == null) || (provides(sc.lead) && lim.lead == null)) return null;
+        const over = (table, limit) => limit != null && Object.keys(obj(table)).some(k => num(table[k]) > num(limit));
+        if (lim.ground != null && num(sc.ground) > num(lim.ground)) return 'fail';
+        return over(sc.chassis, lim.chassis) || over(sc.lead, lim.lead) ? 'fail' : 'pass';
+      }
+      case 'monitor': {
+        const t = sc.tolerance; const isNum = v => typeof v === 'number' && isFinite(v);
+        if (!t || typeof t !== 'object' || !isNum(t.hr) || !isNum(t.spo2) || !isNum(t.nibp)) return null;
+        return Math.abs(num(sc.hrErr)) <= t.hr && Math.abs(num(sc.spo2Err)) <= t.spo2 && Math.abs(num(sc.sysErr)) <= t.nibp && Math.abs(num(sc.diaErr)) <= t.nibp ? 'pass' : 'fail';
+      }
+      case 'infusion': {
+        if (typeof sc.tolerance !== 'number' || !isFinite(sc.tolerance)) return null;
+        return Math.abs(num(sc.rateErr) * 100) <= sc.tolerance ? 'pass' : 'fail';
+      }
+      case 'defib': {
+        if (!Array.isArray(sc.energies) || !sc.energies.length) return null;
+        const t = obj(sc.tolerance);
+        return sc.energies.every(e => { const d = compute.defib(sc, { energy: e }).delivered; return Math.abs(d - num(e)) <= Math.max(num(t.floor), num(t.pct) / 100 * num(e)); }) ? 'pass' : 'fail';
+      }
+      default: return null;
+    }
+  };
+
+  // ---------- measure: what a reading task's `measure` resolves to ----------
+  function measure(lab, task) {
+    const m = task && task.measure; if (!lab || !m) return null;
+    const sc = lab.scenario;
+    switch (lab.instrument) {
+      case 'dmm': { const r = compute.dmm(sc, Object.assign({ power: m.power !== false }, m), lab.id); return r.value == null ? { value: null, lsd: 0, text: r.text } : { value: r.value, lsd: r.lsd }; }
+      case 'safety': { const r = compute.safety(sc, m, lab.id); return { value: r.value, lsd: r.lsd }; }
+      case 'monitor': { const r = compute.monitor(sc, obj(m.set)); const v = r[m.param]; return { value: v == null ? null : v, lsd: 0 }; }
+      case 'infusion': { const r = compute.infusion(sc, m); return { value: m.what === 'rate' ? r.rateFromVolume : m.what === 'error' ? r.errPct : r.volume, lsd: 0 }; }
+      case 'defib': return { value: compute.defib(sc, m).delivered, lsd: 0 };
+      case 'figures': { const f = (obj(sc).figures || [])[num(m.figure)]; return f ? { value: num(f.value), lsd: 0 } : null; }
+      default: return null;
+    }
+  }
+
+  // ---------- validate: every way a lab record can be wrong, as plain sentences ----------
+  function validate(lab) {
+    const out = []; const p = s => out.push(s);
+    if (!lab || typeof lab !== 'object') return ['lab is not an object'];
+    if (NAMES.indexOf(lab.instrument) < 0) p(`unknown instrument "${lab.instrument}"`);
+    if (!lab.scenario || typeof lab.scenario !== 'object') p('scenario is missing');
+    if (!Array.isArray(lab.tasks) || !lab.tasks.length) { p('no tasks'); return out; }
+    const why = obj(lab.why); const seen = Object.create(null);
+    lab.tasks.forEach((t, i) => {
+      const id = t && t.id; const tag = `task ${id || '#' + (i + 1)}`;
+      if (!id || !/^[a-z0-9-]+$/.test(id)) p(`${tag}: id must match /^[a-z0-9-]+$/`);
+      if (seen[id]) p(`${tag}: duplicate id`); seen[id] = true;
+      if (!t.prompt) p(`${tag}: no prompt`);
+      if (!Object.prototype.hasOwnProperty.call(why, id) || !why[id]) p(`${tag}: no why`);
+      if (t.kind === 'reading') {
+        if (!Array.isArray(t.expect) || t.expect.length !== 2 || !isFinite(t.expect[0]) || !isFinite(t.expect[1]) || t.expect[0] > t.expect[1]) p(`${tag}: expect must be [min, max]`);
+        else if (t.measure && NAMES.indexOf(lab.instrument) >= 0) {
+          const m = measure(lab, t);
+          if (!m || m.value == null) p(`${tag}: measure gives no reading (${m && m.text ? m.text : 'unknown point or parameter'})`);
+          else if (!(t.expect[0] <= m.value - m.lsd && t.expect[1] >= m.value + m.lsd)) p(`${tag}: expect [${t.expect[0]}, ${t.expect[1]}] does not contain the reading ${m.value} with jitter ${m.lsd}`);
+        }
+      } else if (t.kind === 'verdict') {
+        if (t.expect !== 'pass' && t.expect !== 'fail') p(`${tag}: verdict expect must be "pass" or "fail"`);
+        else { const v = truth.verdict(lab); if (v && v !== t.expect) p(`${tag}: verdict expect "${t.expect}" but the scenario's limits say "${v}"`); }
+      } else if (t.kind === 'choice') {
+        if (!Array.isArray(t.options) || t.options.length < 2) p(`${tag}: choice needs at least two options`);
+        else if (!Number.isInteger(t.expect) || t.expect < 0 || t.expect >= t.options.length) p(`${tag}: expect must index an option`);
+      } else p(`${tag}: kind must be reading, verdict, or choice`);
+    });
+    return out;
+  }
+
+  // ---------- current: the panel's displayed value for a task (the Record button) ----------
+  function current(lab, ui, task) {
+    const r = ui && ui.readout; const m = obj(task && task.measure); if (!r) return null;
+    switch (lab && lab.instrument) {
+      case 'dmm': case 'safety': return r.invalid || r.value == null ? null : r.value;
+      case 'monitor': return m.param && r[m.param] != null ? r[m.param] : null;
+      case 'infusion': return m.what === 'volume' && r.volume != null ? r.volume : null;
+      case 'defib': return r.delivered == null ? null : r.delivered;
+      default: return null;
+    }
+  }
+
+  // ---------- figures: SVG a reading can be taken from ----------
+  function figure(f) {
+    f = obj(f);
+    if (f.kind === 'meter') {
+      const min = num(f.min), max = num(f.max) || 1, v = num(f.value); const frac = Math.max(0, Math.min(1, (v - min) / (max - min)));
+      const ang = 180 - 180 * frac; const cx = 110, cy = 110, r = 90; const rad = ang * Math.PI / 180;
+      const nx = cx + r * Math.cos(rad), ny = cy - r * Math.sin(rad); let ticks = '';
+      for (let i = 0; i <= 10; i++) {
+        const a = (180 - 18 * i) * Math.PI / 180; const inner = i % 5 ? r - 6 : r - 10;
+        ticks += `<line x1="${(cx + inner * Math.cos(a)).toFixed(1)}" y1="${(cy - inner * Math.sin(a)).toFixed(1)}" x2="${(cx + r * Math.cos(a)).toFixed(1)}" y2="${(cy - r * Math.sin(a)).toFixed(1)}" stroke="currentColor" stroke-width="${i % 5 ? 1 : 2}"/>`;
+        if (i % 5 === 0) ticks += `<text x="${(cx + (r - 22) * Math.cos(a)).toFixed(1)}" y="${(cy - (r - 22) * Math.sin(a) + 4).toFixed(1)}" font-size="10" text-anchor="middle" fill="currentColor">${min + (max - min) * i / 10}</text>`;
+      }
+      return `<svg class="fig meter" viewBox="0 0 220 125" width="220" height="125" role="img" aria-label="${esc(f.label || 'analog meter')}" data-kind="meter" data-value="${v}" data-angle="${ang.toFixed(1)}"><path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="currentColor" stroke-width="2"/>${ticks}<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#C8322B" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="4" fill="currentColor"/><text x="${cx}" y="${cy + 13}" font-size="11" text-anchor="middle" fill="currentColor">${esc(f.unit || '')}</text></svg>`;
+    }
+    if (f.kind === 'cylinder') {
+      const ml = num(f.ml) || 100; const v = Math.max(0, Math.min(ml, num(f.value))); const level = 100 * v / ml;
+      const top = 20, bottom = 200, w = 70, x = 30; const h = bottom - top; const liquidTop = bottom - h * v / ml; let ticks = '';
+      for (let i = 0; i <= 10; i++) { const y = bottom - h * i / 10; ticks += `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}" stroke="currentColor" stroke-width="1.5"/><text x="${x + 18}" y="${y + 4}" font-size="9" fill="currentColor">${ml * i / 10}</text>`; }
+      return `<svg class="fig cylinder" viewBox="0 0 130 220" width="130" height="220" role="img" aria-label="${esc(f.label || 'graduated cylinder')}" data-kind="cylinder" data-value="${v}" data-level="${level.toFixed(1)}"><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="none" stroke="currentColor" stroke-width="2" rx="3"/><rect x="${x + 2}" y="${liquidTop.toFixed(1)}" width="${w - 4}" height="${(bottom - liquidTop).toFixed(1)}" fill="#7fb3ff" opacity="0.7"/>${ticks}</svg>`;
+    }
+    if (f.kind === 'strip') {
+      const rate = num(f.rate), seconds = num(f.seconds) || 6; const px = 100; const W = seconds * px, H = 120, base = 80; let grid = '';
+      for (let xg = 0; xg <= W; xg += 4) grid += `<line x1="${xg}" y1="0" x2="${xg}" y2="${H}" stroke="#f0a0a0" stroke-width="${xg % 20 ? 0.3 : 0.8}"/>`;
+      for (let yg = 0; yg <= H; yg += 4) grid += `<line x1="0" y1="${yg}" x2="${W}" y2="${yg}" stroke="#f0a0a0" stroke-width="${yg % 20 ? 0.3 : 0.8}"/>`;
+      let d = `M0 ${base}`; let beats = 0;
+      if (f.flat || rate <= 0 && !f.chaotic) d += ` L${W} ${base}`;
+      else if (f.chaotic) { for (let xg = 0; xg <= W; xg += 3) d += ` L${xg} ${(base + 25 * Math.sin(xg / 7) * Math.cos(xg / 11) + 10 * Math.sin(xg / 3)).toFixed(1)}`; }
+      else {
+        const period = 60 / rate * px;
+        for (let x0 = 20; x0 < W; x0 += period) { beats++; d += ` L${(x0 - 14).toFixed(1)} ${base} Q${(x0 - 10).toFixed(1)} ${base - 6} ${(x0 - 6).toFixed(1)} ${base} L${(x0 - 2).toFixed(1)} ${base + 4} L${x0.toFixed(1)} ${base - 50} L${(x0 + 2).toFixed(1)} ${base + 8} L${(x0 + 4).toFixed(1)} ${base} L${(x0 + 10).toFixed(1)} ${base} Q${(x0 + 16).toFixed(1)} ${base - 12} ${(x0 + 22).toFixed(1)} ${base}`; }
+        d += ` L${W} ${base}`;
+      }
+      return `<svg class="fig strip" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(f.label || 'ECG strip')}" data-kind="strip" data-rate="${rate}" data-beats="${beats}" data-seconds="${seconds}">${grid}<path d="${d}" fill="none" stroke="#14212E" stroke-width="1.5"/></svg>`;
+    }
+    return '';
+  }
+
+  // ---------- panels ----------
+  // render(el, lab, ui, api): draws the instrument into el and wires its controls. ui is a plain
+  // object the app keeps per lab for the page's lifetime, so control positions survive the app's
+  // re-renders; ui.readout is the last measurement shown, which the task sheet copies through
+  // current(). Buttons use data-ins (never data-act, which belongs to the app). api.toast is optional.
+  const PANEL = {}; const HANDLE = {};
+  PANEL.figures = lab => `<div class="ins figures">${(obj(lab.scenario).figures || []).map((f, i) => `<figure class="ins-fig"><div class="ins-fig-n">Figure ${i + 1}</div>${figure(f)}${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ''}</figure>`).join('')}</div>`;
+  HANDLE.figures = () => false;
+  PANEL.choices = lab => `<pre class="ins-text">${esc(obj(lab.scenario).text || '')}</pre>`;
+  HANDLE.choices = () => false;
+
+  const sel = (ui, field, opts) => `<select data-field="${field}">${opts.map(([v, l]) => `<option value="${v}" ${ui[field] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const numField = (ui, field, label, min, max, dis) => `<label class="field">${label}<input type="number" data-field="${field}" min="${min}" max="${max}" value="${ui[field]}" ${dis ? 'disabled' : ''}></label>`;
+
+  // The drawing's natural size in the units the scenario's points use: the root <svg> tag's viewBox
+  // first (points are user units), else its width/height attributes. Scoped to the root tag so an
+  // inner rect's width or a stroke-width never supplies the size. Hotspots are placed in percent of
+  // this size so they follow the SVG when CSS scales it to a narrow screen.
+  function drawingSize(svg) {
+    const tag = (/<svg\b[^>]*>/i.exec(String(svg || '')) || [''])[0];
+    const vb = /\bviewBox\s*=\s*["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(tag);
+    if (vb) return { w: Number(vb[1]), h: Number(vb[2]) };
+    const w = /(?:^|\s)width\s*=\s*["']([\d.]+)/i.exec(tag), h = /(?:^|\s)height\s*=\s*["']([\d.]+)/i.exec(tag);
+    return w && h ? { w: Number(w[1]), h: Number(h[1]) } : { w: 0, h: 0 };
+  }
+  // ---- dmm: a function dial, a circuit power switch, two probes placed on drawn test points ----
+  const DMM_FNS = [['vdc', 'V DC'], ['vac', 'V AC'], ['ohm', 'Ohms'], ['adc', 'A DC'], ['cont', 'Continuity'], ['diode', 'Diode']];
+  function dmmInit(lab, ui) { if (!ui.fn) { ui.fn = 'vdc'; ui.power = obj(lab.scenario).power !== false; ui.a = null; ui.b = null; ui.next = 'a'; ui.kit = false; ui.readout = null; } }
+  PANEL.dmm = (lab, ui) => {
+    dmmInit(lab, ui); const sc = obj(lab.scenario); const pts = obj(sc.points); const r = ui.readout;
+    const size = drawingSize(sc.svg);
+    const pct = (v, total) => total > 0 ? Number((100 * num(v) / total).toFixed(2)) : 0;
+    const hot = Object.keys(pts).map(p => { const xy = pts[p] || []; return `<button type="button" class="tp ${ui.a === p ? 'red' : ui.b === p ? 'black' : ''}" data-ins="tp" data-arg="${esc(p)}" style="left:${pct(xy[0], size.w)}%;top:${pct(xy[1], size.h)}%" title="Test point ${esc(p)}">${esc(p)}</button>`; }).join('');
+    return `<div class="ins dmm">
+      <div class="ins-drawing">${sc.svg || ''}${hot}</div>
+      <div class="ins-panel">
+        <div class="ins-readout ${r && r.invalid ? 'bad' : ''}" data-readout>${ui.kit ? 'Your own meter: type what it reads' : r ? esc(r.text) : '--'}</div>
+        <div class="ins-dial">${DMM_FNS.map(([k, l]) => `<button type="button" class="chip" data-ins="fn" data-arg="${k}" aria-pressed="${ui.fn === k}">${l}</button>`).join('')}</div>
+        <div class="row" style="gap:10px;flex-wrap:wrap"><button type="button" class="btn small ${ui.power ? 'primary' : ''}" data-ins="power">Circuit power: ${ui.power ? 'ON' : 'OFF'}</button><span class="muted">Red probe: <b>${esc(ui.a || '-')}</b> · Black probe: <b>${esc(ui.b || '-')}</b> · click a test point: first red, then black</span></div>
+        <label class="row" style="gap:8px"><input type="checkbox" data-field="kit" ${ui.kit ? 'checked' : ''}> I'm using my own kit and typing my readings</label>
+      </div></div>`;
+  };
+  HANDLE.dmm = (lab, ui, act, arg) => {
+    dmmInit(lab, ui);
+    if (act === 'fn') ui.fn = arg;
+    else if (act === 'power') ui.power = !ui.power;
+    else if (act === 'tp') { if (ui.next === 'a') { ui.a = arg; ui.next = 'b'; } else { ui.b = arg; ui.next = 'a'; } }
+    ui.readout = ui.kit || !ui.a || !ui.b ? null : compute.dmm(lab.scenario, { fn: ui.fn, a: ui.a, b: ui.b, power: ui.power }, lab.id);
+    return true;
+  };
+
+  // ---- safety analyzer: test, polarity, ground condition, Test, and the limits card ----
+  function safetyInit(ui) { if (!ui.test) { ui.test = 'ground'; ui.polarity = 'normal'; ui.ground = 'closed'; ui.readout = null; } }
+  PANEL.safety = (lab, ui) => {
+    safetyInit(ui); const sc = obj(lab.scenario); const lim = obj(sc.limits); const r = ui.readout;
+    const names = { ground: 'Ground wire resistance', chassis: 'Chassis (enclosure) leakage', lead: 'Patient lead leakage' };
+    return `<div class="ins safety"><div class="ins-panel">
+      <div class="ins-readout" data-readout>${r ? esc(r.text) : '--'}</div>
+      <div class="setup-grid"><label class="field">Test ${sel(ui, 'test', [['ground', names.ground], ['chassis', names.chassis], ['lead', names.lead]])}</label><label class="field">Mains polarity ${sel(ui, 'polarity', [['normal', 'Normal'], ['reverse', 'Reverse']])}</label><label class="field">Ground conductor ${sel(ui, 'ground', [['closed', 'Intact'], ['open', 'Open (lifted)']])}</label></div>
+      <div class="row"><button type="button" class="btn primary small" data-ins="test">Test</button></div>
+      <table class="plain ins-limits"><thead><tr><th>Limit${sc.standard ? ` (${esc(sc.standard)})` : ''}</th><th>Value</th></tr></thead><tbody>${['ground', 'chassis', 'lead'].filter(k => lim[k] != null).map(k => `<tr><td>${names[k]}</td><td>${esc(lim[k])} ${k === 'ground' ? 'ohm' : 'uA'}</td></tr>`).join('')}</tbody></table>
+    </div></div>`;
+  };
+  HANDLE.safety = (lab, ui, act) => { safetyInit(ui); if (act === 'test') ui.readout = compute.safety(lab.scenario, { test: ui.test, polarity: ui.polarity, ground: ui.ground }, lab.id); else if (act === 'field') ui.readout = null; return true; };
+
+  // ---- patient simulator and monitor ----
+  function monInit(ui) { if (ui.hr == null) { ui.hr = 80; ui.rhythm = 'nsr'; ui.spo2 = 98; ui.sys = 120; ui.dia = 80; ui.readout = null; } }
+  PANEL.monitor = (lab, ui) => {
+    monInit(ui); const r = ui.readout;
+    const screen = r ? `${r.alarm ? `<div class="ins-alarm">${esc(r.alarm)}</div>` : ''}<div class="ins-numerics"><div><span class="eyebrow">HR</span><b>${r.hr == null ? '---' : r.hr}</b></div><div><span class="eyebrow">SpO2</span><b>${r.spo2}</b></div><div><span class="eyebrow">NIBP</span><b>${r.sys}/${r.dia}</b></div></div>${figure({ kind: 'strip', rate: r.hr || 0, seconds: 6, flat: r.alarm === 'ASYSTOLE', chaotic: r.alarm === 'VFIB' })}` : '<p class="muted">Apply the simulator settings to see the monitor.</p>';
+    return `<div class="ins monitor"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Patient simulator</div><div class="setup-grid">${numField(ui, 'hr', 'ECG rate (bpm)', 30, 300)}<label class="field">Rhythm ${sel(ui, 'rhythm', [['nsr', 'Normal sinus'], ['asystole', 'Asystole'], ['vfib', 'Ventricular fibrillation']])}</label>${numField(ui, 'spo2', 'SpO2 (%)', 70, 100)}${numField(ui, 'sys', 'NIBP systolic (mmHg)', 60, 250)}${numField(ui, 'dia', 'NIBP diastolic (mmHg)', 30, 150)}</div><div class="row"><button type="button" class="btn primary small" data-ins="apply">Apply to simulator</button></div></div>
+      <div class="ins-panel ins-screen"><div class="eyebrow">Monitor</div>${screen}</div>
+    </div></div>`;
+  };
+  HANDLE.monitor = (lab, ui, act) => { monInit(ui); if (act === 'apply') { ui.readout = compute.monitor(lab.scenario, { hr: ui.hr, rhythm: ui.rhythm, spo2: ui.spo2, sys: ui.sys, dia: ui.dia }); return true; } return false; };
+
+  // ---- infusion pump flow check: set a rate, run, fast-forward, read the cylinder ----
+  function infInit(ui) { if (ui.rate == null) { ui.rate = 100; ui.vtbi = 100; ui.elapsed = 0; ui.running = false; ui.readout = null; } }
+  PANEL.infusion = (lab, ui) => {
+    infInit(ui); const sc = obj(lab.scenario); const r = compute.infusion(sc, { rate: ui.rate, minutes: ui.elapsed }); ui.readout = ui.elapsed > 0 ? r : null;
+    return `<div class="ins infusion"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Pump</div><div class="setup-grid">${numField(ui, 'rate', 'Rate (mL/h)', 1, 999, ui.running)}${numField(ui, 'vtbi', 'VTBI (mL)', 1, 9999, ui.running)}</div>
+        <div class="ins-readout" data-readout>${ui.running ? 'RUNNING' : 'STOPPED'} · ${ui.elapsed} min elapsed</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap">${ui.running ? `<button type="button" class="btn small" data-ins="ff" data-arg="1">+1 min</button><button type="button" class="btn small" data-ins="ff" data-arg="10">+10 min</button><button type="button" class="btn small ghost" data-ins="stop">Stop</button>` : `<button type="button" class="btn primary small" data-ins="start">Start (empties the cylinder)</button>`}</div></div>
+      <div class="ins-panel"><div class="eyebrow">Collection</div>${figure({ kind: 'cylinder', ml: num(sc.cylinderMl) || 100, value: r.volume })}<p class="muted">Read the meniscus to the nearest ${num(sc.graduation) || 1} mL.</p></div>
+    </div></div>`;
+  };
+  HANDLE.infusion = (lab, ui, act, arg) => {
+    infInit(ui);
+    if (act === 'start') { ui.running = true; ui.elapsed = 0; return true; }
+    if (act === 'stop') { ui.running = false; return true; }
+    if (act === 'ff') { if (!ui.running) return false; ui.elapsed += num(arg); const maxMin = ui.rate > 0 ? ui.vtbi / ui.rate * 60 : 0; if (ui.elapsed >= maxMin) { ui.elapsed = Math.round(maxMin); ui.running = false; } return true; }
+    return false;
+  };
+
+  // ---- defibrillator into the analyzer ----
+  function defInit(lab, ui) { if (ui.energy == null) { ui.energy = num((obj(lab.scenario).energies || [200])[0]); ui.charged = false; ui.readout = null; } }
+  PANEL.defib = (lab, ui) => {
+    defInit(lab, ui); const sc = obj(lab.scenario); const r = ui.readout;
+    return `<div class="ins defib"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Defibrillator</div><div class="row" style="gap:6px;flex-wrap:wrap">${(sc.energies || []).map(e => `<button type="button" class="chip" data-ins="energy" data-arg="${num(e)}" aria-pressed="${ui.energy === num(e)}">${num(e)} J</button>`).join('')}</div>
+        <div class="ins-readout" data-readout>${ui.charged ? `CHARGED ${ui.energy} J` : `Selected ${ui.energy} J`}</div>
+        <div class="row" style="gap:8px"><button type="button" class="btn small" data-ins="charge" ${ui.charged ? 'disabled' : ''}>Charge</button><button type="button" class="btn primary small" data-ins="discharge" ${ui.charged ? '' : 'disabled'}>Discharge into the analyzer</button></div></div>
+      <div class="ins-panel ins-screen"><div class="eyebrow">Defibrillator analyzer</div><div class="ins-readout" data-readout>${r ? `${r.delivered} J delivered` : '--'}</div><p class="muted">${r ? `Set ${r.energy} J, charge time ${r.chargeSeconds} s.` : 'Charge, then discharge into the analyzer.'}</p></div>
+    </div></div>`;
+  };
+  HANDLE.defib = (lab, ui, act, arg) => {
+    defInit(lab, ui);
+    if (act === 'energy') { ui.energy = num(arg); ui.charged = false; ui.readout = null; return true; }
+    if (act === 'charge') { ui.charged = true; return true; }
+    if (act === 'discharge') { if (!ui.charged) return false; ui.readout = compute.defib(lab.scenario, { energy: ui.energy }); ui.charged = false; return true; }
+    return false;
+  };
+
+  function render(el, lab, ui, api) {
+    const draw = lab && PANEL[lab.instrument];
+    if (!draw) { el.innerHTML = '<p class="muted">Unknown instrument.</p>'; return; }
+    // One listener pair per element; the handlers read the latest lab/ui/api from the holder, so a
+    // re-render on the same element replaces the panel instead of stacking a second handler.
+    el.__fraIns = { lab, ui: ui || {}, api: api || {} };
+    const paint = () => { const h = el.__fraIns; el.innerHTML = PANEL[h.lab.instrument](h.lab, h.ui); };
+    if (!el.__fraInsWired) {
+      el.__fraInsWired = true;
+      el.addEventListener('click', e => {
+        const h = el.__fraIns; if (!h) return;
+        const b = e.target.closest && e.target.closest('[data-ins]'); if (!b || !el.contains(b)) return;
+        const fn = HANDLE[h.lab.instrument]; if (fn && fn(h.lab, h.ui, b.dataset.ins, b.dataset.arg, h.api)) paint();
+      });
+      el.addEventListener('change', e => {
+        const h = el.__fraIns; if (!h) return;
+        const f = e.target.closest && e.target.closest('[data-field]'); if (!f || !el.contains(f)) return;
+        h.ui[f.dataset.field] = f.type === 'checkbox' ? f.checked : f.type === 'number' ? Number(f.value) : f.value;
+        const fn = HANDLE[h.lab.instrument]; if (fn && fn(h.lab, h.ui, 'field', f.dataset.field, h.api)) paint();
+      });
+    }
+    paint();
+  }
+
+  return { VERSION, NAMES, jitter, figure, compute, truth, measure, validate, current, render, PANEL, HANDLE };
+}));
+
 /* FieldReady Academy course engine. Reads FRA.course (a course pack manifest) and the pack's data.
    Flow: 10-question starter test (the only one that asks how sure you are) -> personalized tutorial ->
    50-question test -> retraining built from the misses -> practice tests until three of the
@@ -9784,13 +10198,20 @@ FRA.questions.push(
   if (!course || !Array.isArray(course.domains) || !course.test) throw new Error('FRA.course manifest missing or incomplete');
   const DOMAINS = {}; course.domains.forEach(d => { DOMAINS[d.id] = d; });
   const DOMAIN_IDS = course.domains.map(d => d.id);
+  // Tested domains carry a test quota. A domain with quota 0 (and pct 0) is untested: its lessons
+  // are course content with checkpoints, but never appear on the starter test, tests, the domain
+  // bars, the test setup, or the strength chart (units like "Welcome" and "Getting hired").
+  const TESTED_IDS = DOMAIN_IDS.filter(d => DOMAINS[d].quota > 0);
+  const UNTESTED = new Set(DOMAIN_IDS.filter(d => !(DOMAINS[d].quota > 0)));
+  course.domains.forEach(d => { if ((d.quota > 0) !== (d.pct > 0)) throw new Error(`domain ${d.id} must have pct and quota both above zero (tested) or both zero (untested)`); });
+  if (!TESTED_IDS.length) throw new Error('FRA.course needs at least one tested domain');
   const T = course.test;
   const PASS_PCT = T.passPct, PASSES_NEEDED = T.passesNeeded, PASS_WINDOW = T.passWindow, EXAM_N = T.questions, EXAM_MINUTES = T.minutes;
   // The official-format test is judged at the real exam's passing score, not the practice bar.
   const OFFICIAL_PCT = (course.exam && course.exam.passPct) || PASS_PCT;
   // The pass rule's parameters, for the one fold that computes passes/official (engine/merge.js).
   const RULE_OPTS = () => ({ passPct: PASS_PCT, passesNeeded: PASSES_NEEDED, passWindow: PASS_WINDOW, officialPct: OFFICIAL_PCT });
-  const STARTER_N = DOMAIN_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
+  const STARTER_N = TESTED_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
   const REBUILD_PTS = 3 * T.starterPerDomain; // every starter question in the domain wrong
   const ALL_WORD = T.starterPerDomain === 2 ? 'both' : 'all';
   const CONF = [[1, 'Guess'], [2, 'Unsure'], [3, 'Fairly sure'], [4, 'Sure'], [5, 'Certain']];
@@ -9807,6 +10228,9 @@ FRA.questions.push(
   const WHERE_LABEL = { starter: 'Starter test', full: `${EXAM_N}-question test`, practice: 'Practice test', checkpoint: 'Lesson checkpoint', train: 'Drills', 'starter-results': 'Starter test results', 'full-results': `${EXAM_N}-question test results`, 'practice-results': 'Practice test results', custom: 'Custom test', 'custom-results': 'Custom test results', callout: 'Lesson callout' };
   const STARTER_POOL = course.starterPool || {};
   const CORE = course.core || {};
+  // A course that issues a certificate of completion (manifest certificate: true). The gate: every
+  // lesson passed, every lab done, the official-format test passed.
+  const CERT = !!course.certificate;
 
   // ---------- data index ----------
   const units = (FRA.units || []).slice().sort((a, b) => a.n - b.n);
@@ -9817,10 +10241,26 @@ FRA.questions.push(
   const lessonsByDomain = {}; DOMAIN_IDS.forEach(d => { lessonsByDomain[d] = []; });
   lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
   const gens = FRA.generators || {};
+  // Labs (FRA.labs; spec section 3). A lesson names its lab with `lab: "<id>"` and the lab points
+  // back with `lesson`. Instruments are drawn by engine/instruments.js, read at render time only,
+  // so a missing file degrades to a note inside the lab card instead of a blank page.
+  const LABS = FRA.labs || {};
+  const labIds = lessons.filter(l => l.lab).map(l => l.lab);
+  lessons.forEach(l => {
+    if (!l.lab) return;
+    if (!LABS[l.lab]) throw new Error(`lesson ${l.id} names unknown lab ${l.lab}`);
+    if (LABS[l.lab].lesson !== l.id) throw new Error(`lab ${l.lab} belongs to ${LABS[l.lab].lesson}, not ${l.id}`);
+  });
+  Object.keys(LABS).forEach(id => {
+    const lab = LABS[id];
+    if (lab.id !== id) throw new Error(`lab ${id} carries id ${lab.id}`);
+    if (!L[lab.lesson] || L[lab.lesson].lab !== id) throw new Error(`lab ${id} is not referenced by its lesson ${lab.lesson}`);
+    if (!Array.isArray(lab.tasks) || !lab.tasks.length) throw new Error(`lab ${id} has no tasks`);
+  });
   document.title = course.name;
   // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
   const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
-  const STRENGTH_META = { domains: course.domains.map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
+  const STRENGTH_META = { domains: course.domains.filter(d => d.quota > 0).map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
 
   // ---------- access ----------
   // Free set: the cheat sheet, the starter test, and the lessons below. Everything else needs entitlement.
@@ -9881,7 +10321,7 @@ FRA.questions.push(
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, certAt: 0, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   // The pass rule lives in one fold (engine/merge.js). Recomputing on load migrates blobs saved
   // under the old streak rule (passStreak goes; passes and official come from the exam log) and
@@ -9939,6 +10379,21 @@ FRA.questions.push(
   // drilledAt: when a drill on the topic last reached three correct in a row (completes a retraining entry).
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0, drilledAt: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
+  // Lab progress: values typed or recorded per task, which are right so far, and done once all are.
+  const labStat = id => S.labs[id] || (S.labs[id] = { done: false, at: 0, values: {}, ok: {} });
+  const labDone = id => !!(S.labs[id] && S.labs[id].done);
+  const labsDoneCount = () => labIds.filter(labDone).length;
+  const labOfView = () => { const l = S.view.name === 'lesson' ? L[S.view.arg] : null; return l && l.lab ? LABS[l.lab] : null; };
+  function checkLab(lab, t, value) {
+    let ok;
+    if (t.kind === 'reading') { const n = Number(value); ok = Number.isFinite(n) && n >= t.expect[0] && n <= t.expect[1]; if (Number.isFinite(n)) value = n; }
+    else if (t.kind === 'verdict') ok = value === t.expect;
+    else ok = Number(value) === Number(t.expect);
+    const ls = labStat(lab.id); ls.values[t.id] = value; ls.ok[t.id] = ok; ls.at = Date.now();
+    if (!ls.done && lab.tasks.every(x => ls.ok[x.id] === true)) { ls.done = true; save(); if (window.FRASync) FRASync.pushNow(); toast('Lab done'); }
+    else save();
+    return ok;
+  }
   // Checkpoint credit: every correct answer counts. Checkpoints ask no sureness; only the starter test does.
   const cpScore = s => s.answers.filter(a => a.correct).length;
 
@@ -9986,7 +10441,7 @@ FRA.questions.push(
   }
   function buildExam(quotas) {
     const items = []; const used = new Set();
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       const quota = quotas ? (quotas[d] || 0) : DOMAINS[d].quota; const ls = shuffle(lessonsByDomain[d]); let i = 0, guard = 0; const target = items.length + quota;
       while (items.length < target && guard < 400 + quota * 8) {
         const l = ls[i % ls.length]; i++; guard++;
@@ -10001,7 +10456,7 @@ FRA.questions.push(
   }
   function buildStarter() {
     const items = []; const used = new Set();
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       const picks = shuffle(STARTER_POOL[d] || lessonsByDomain[d].map(l => l.id)).slice(0, T.starterPerDomain);
       for (const lid of picks) {
         let q = (gens[lid] && Math.random() < 0.5) ? FRA.generate(lid) : leastSeen(byLesson[lid] || [], used);
@@ -10016,27 +10471,27 @@ FRA.questions.push(
   const MAX_N = Math.max(50, bank.length);
   const clampN = n => Math.min(MAX_N, Math.max(5, parseInt(n, 10) || EXAM_N));
   const clampMin = m => { const v = parseInt(m, 10); return isNaN(v) ? EXAM_MINUTES : Math.min(600, Math.max(0, v)); };
-  function pctWeights() { const w = {}; DOMAIN_IDS.forEach(d => { w[d] = DOMAINS[d].pct; }); return w; }
+  function pctWeights() { const w = {}; TESTED_IDS.forEach(d => { w[d] = DOMAINS[d].pct; }); return w; }
   function defaultSetup() { return { n: EXAM_N, minutes: EXAM_MINUTES, weights: pctWeights() }; }
   function currentSetup() {
     const s = S.settings.testSetup; if (!s) return defaultSetup();
-    const weights = pctWeights(); DOMAIN_IDS.forEach(d => { if (s.weights && s.weights[d] != null) weights[d] = Math.max(0, Number(s.weights[d]) || 0); });
+    const weights = pctWeights(); TESTED_IDS.forEach(d => { if (s.weights && s.weights[d] != null) weights[d] = Math.max(0, Number(s.weights[d]) || 0); });
     return { n: clampN(s.n), minutes: clampMin(s.minutes), weights };
   }
   // Largest-remainder apportionment of n questions across domains by relative weight. Zero weight excludes a domain.
   function apportion(n, weights) {
-    let w = {}; let total = 0; DOMAIN_IDS.forEach(d => { w[d] = Math.max(0, Number(weights && weights[d]) || 0); total += w[d]; });
-    if (!total) { w = pctWeights(); total = DOMAIN_IDS.reduce((a, d) => a + w[d], 0); }
+    let w = {}; let total = 0; TESTED_IDS.forEach(d => { w[d] = Math.max(0, Number(weights && weights[d]) || 0); total += w[d]; });
+    if (!total) { w = pctWeights(); total = TESTED_IDS.reduce((a, d) => a + w[d], 0); }
     const q = {}; let assigned = 0; const rem = [];
-    DOMAIN_IDS.forEach(d => { const raw = n * w[d] / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
+    TESTED_IDS.forEach(d => { const raw = n * w[d] / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
     rem.sort((a, b) => b.r - a.r || DOMAINS[b.d].pct - DOMAINS[a.d].pct);
     for (let i = 0; assigned < n && i < rem.length; i++) if (w[rem[i].d] > 0) { q[rem[i].d]++; assigned++; }
-    let guard = 0; while (assigned < n && guard++ < 1000) for (const d of DOMAIN_IDS) { if (assigned >= n) break; if (w[d] > 0) { q[d]++; assigned++; } }
+    let guard = 0; while (assigned < n && guard++ < 1000) for (const d of TESTED_IDS) { if (assigned >= n) break; if (w[d] > 0) { q[d]++; assigned++; } }
     return q;
   }
   function setupPreview(s) {
-    const q = apportion(s.n, s.weights); const total = DOMAIN_IDS.reduce((a, d) => a + q[d], 0);
-    return `${total} questions: ${DOMAIN_IDS.filter(d => q[d]).map(d => `${q[d]} ${DOMAINS[d].short}`).join(', ')}. ${s.minutes ? `${s.minutes}-minute time limit.` : 'No time limit.'}`;
+    const q = apportion(s.n, s.weights); const total = TESTED_IDS.reduce((a, d) => a + q[d], 0);
+    return `${total} questions: ${TESTED_IDS.filter(d => q[d]).map(d => `${q[d]} ${DOMAINS[d].short}`).join(', ')}. ${s.minutes ? `${s.minutes}-minute time limit.` : 'No time limit.'}`;
   }
   function readSetupFromForm() {
     const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
@@ -10058,7 +10513,7 @@ FRA.questions.push(
 
   // ---------- plan (personalized tutorial) ----------
   function planFromStarter(rec, examIdx) {
-    const entries = {}; const domPts = {}; const domCount = {}; DOMAIN_IDS.forEach(d => { domPts[d] = 0; domCount[d] = 0; });
+    const entries = {}; const domPts = {}; const domCount = {}; TESTED_IDS.forEach(d => { domPts[d] = 0; domCount[d] = 0; });
     const add = (id, reason) => { if (!L[id]) return; (entries[id] = entries[id] || { id, reasons: [] }).reasons.push(reason); };
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const d = L[q.t].domain; const p = points(r.correct, r.conf); domPts[d] += p; domCount[d]++;
@@ -10066,7 +10521,7 @@ FRA.questions.push(
       if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, pick: r.pick, conf: r.conf, source: 'starter' });
     });
     const depth = {};
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       if (domPts[d] >= REBUILD_PTS) { depth[d] = 'rebuild'; lessonsByDomain[d].forEach(l => add(l.id, { kind: 'domain', level: 'rebuild', d, pts: domPts[d] })); }
       else if (domPts[d] >= 3) { depth[d] = 'core'; CORE[d].forEach(id => add(id, { kind: 'domain', level: 'core', d, pts: domPts[d] })); }
       else depth[d] = domPts[d] > 0 ? 'light' : 'solid';
@@ -10194,6 +10649,7 @@ FRA.questions.push(
     if (st === 'tutorial') { const rem = planRemaining(); const l = L[rem[0].id]; return { label: `${S.plan.scope === 'full' ? 'Continue the course' : 'Continue your tutorial'}: ${l.title}`, act: 'lesson', arg: l.id, sub: `${plural(rem.length, 'lesson')} left, about ${planMinutes(rem)} minutes.` }; }
     if (st === 'fulltest') return testsLocked('full') ? { label: `Unlock the full course to take the ${EXAM_N}-question test`, act: 'upgrade', arg: '' } : { label: `Take the ${EXAM_N}-question test`, act: 'start-exam', arg: 'full', sub: 'Weighted like the real exam. Your misses become the retraining tutorial.' };
     if (st === 'official') return testsLocked('full') ? { label: 'Unlock the full course for the official-format test', act: 'upgrade', arg: '' } : { label: `Take the official-format test: ${REAL_N} questions in ${REAL_MIN} minutes`, act: 'start-standard', arg: '', sub: `Timed like the real exam and weighted the same way. Score ${OFFICIAL_PCT}% or better, the real exam's passing score, within the time limit and you are cleared to book.` };
+    if (st === 'ready' && CERT && certGate().ok) return { label: 'Print your certificate of completion', act: 'go', arg: 'certificate', sub: 'Every lesson passed, every lab done, and the official-format test passed.' };
     if (st === 'ready') return { label: 'See your readiness report', act: 'go', arg: 'ready' };
     if (testsLocked('practice')) return { label: 'Unlock the full course for practice tests', act: 'upgrade', arg: '' };
     return { label: 'Take a practice test', act: 'start-exam', arg: 'practice', sub: `${S.passes} of your last ${PASS_WINDOW} tests passed. Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} to unlock the official-format test.` };
@@ -10210,7 +10666,7 @@ FRA.questions.push(
   // Shared between the topbar template (so the dot is correct on the render right after
   // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
   const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
-  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback'];
+  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback', 'certificate'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function paintSyncBadge() {
@@ -10224,7 +10680,7 @@ FRA.questions.push(
   // ---------- browser history ----------
   // Every view change gets a history entry whose hash names the view (#lesson/u3l2), so Back and Forward move within
   // the course instead of leaving it, and a reload or a shared link opens the view named in the hash.
-  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback'];
+  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback', 'certificate'];
   const viewKey = v => v.name + (v.arg != null && v.arg !== '' ? '/' + v.arg : '');
   function viewFromHash(h) { const m = /^#([a-z]+)(?:\/([^\s#]+))?$/.exec(h || ''); if (!m || !HASH_VIEWS.includes(m[1])) return null; return m[2] != null ? { name: m[1], arg: decodeURIComponent(m[2]) } : { name: m[1] }; }
   let histKey = null;
@@ -10257,6 +10713,7 @@ FRA.questions.push(
       case 'ready': main = viewReady(); break;
       case 'cheatsheet': main = viewCheatsheet(); break;
       case 'feedback': main = viewFeedback(); break;
+      case 'certificate': main = viewCertificate(); break;
       default: main = viewHome();
     }
     const r = readiness();
@@ -10282,6 +10739,7 @@ FRA.questions.push(
           ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
       </div>${fbModal()}${acrModal()}`;
+    mountInstrument();
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function acctHtml() {
@@ -10310,7 +10768,7 @@ FRA.questions.push(
           <span class="unit-title">${esc(u.title)}</span>
           <span class="unit-meta">${inPlan ? `<span class="pill accent" style="padding:1px 7px">${inPlan} to do</span>` : `${passed}/${u.lessons.length}`}</span>
         </button>
-        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}</span>${lessonLocked(l.id) ? '<span class="lock" title="Full course">&#9679;</span>' : rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
+        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}${l.lab ? `<span class="pill lab-pill ${labDone(l.lab) ? 'good' : ''}" title="${labDone(l.lab) ? 'Lab done' : 'Has a lab'}">lab</span>` : ''}</span>${lessonLocked(l.id) ? '<span class="lock" title="Full course">&#9679;</span>' : rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
       </div>`;
     }).join('');
   }
@@ -10321,7 +10779,7 @@ FRA.questions.push(
       <div class="stack" style="gap:10px">
         <div class="eyebrow">${esc(course.brand)} · ${esc(course.name)}</div>
         <h1>${STARTER_N} questions, then a course built for you.</h1>
-        <p class="ink2" style="font-size:1.1rem">The starter test asks ${T.starterPerDomain} questions from each of the ${DOMAIN_IDS.length} exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
+        <p class="ink2" style="font-size:1.1rem">The starter test asks ${T.starterPerDomain} questions from each of the ${TESTED_IDS.length} exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
       </div>
       <div class="card stack" style="gap:10px"><div class="row spread"><div><div class="eyebrow">Before you start</div><h3>The memorization sheet</h3><p class="ink2">Every port number, mask, standard, and step order the exam expects cold. Print it and keep it beside you while you study.</p></div><div class="row"><button class="btn" data-act="go" data-arg="cheatsheet">Open</button><button class="btn" data-act="print-cheat">Print</button></div></div></div>
       <div class="card lift stack" style="gap:14px">
@@ -10363,6 +10821,7 @@ FRA.questions.push(
       <div class="stats">
         <div class="stat"><div class="eyebrow">${S.plan && S.plan.source === 'test' ? 'Retraining' : 'Tutorial'}</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + (S.plan.source === 'test' ? ' topics</small>' : ' lessons</small>') : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
+        ${labIds.length ? `<div class="stat"><div class="eyebrow">Labs done</div><div class="big">${labsDoneCount()}<small> / ${labIds.length}</small></div></div>` : ''}
         <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> of your last ${PASS_WINDOW} at ${PASS_PCT}%+ · ${PASSES_NEEDED} needed</small></div></div>
       </div>
@@ -10391,7 +10850,7 @@ FRA.questions.push(
       <div class="row"><span class="pill ${p >= 6 ? 'bad' : p >= 3 ? 'warn' : ''}">${p} pts</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`;
   }
   function domainBars() {
-    return `<div class="bars">${DOMAIN_IDS.map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
+    return `<div class="bars">${TESTED_IDS.map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
       return `<div class="bar-row"><span class="label">${DOMAINS[d].short} <span class="muted">${DOMAINS[d].pct}%</span></span><div class="track"><i class="${a.t ? '' : 'dim'}" style="width:${a.t ? v : 100}%"></i></div><span class="value">${a.t ? v + '%' : '—'}</span></div>`; }).join('')}</div>`;
   }
 
@@ -10431,7 +10890,7 @@ FRA.questions.push(
         <h1>${rem.length ? `${plural(rem.length, unit)} to go, about ${planMinutes(rem)} minutes` : isTestPlan ? 'Retraining complete' : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
       ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
-      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${preset === 'suggested' ? 'suggested' : preset === 'custom' ? 'your own mix' : PRESET_LABEL[preset].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${TESTED_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${preset === 'suggested' ? 'suggested' : preset === 'custom' ? 'your own mix' : PRESET_LABEL[preset].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="${openAct}" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}${isTestPlan && modeOf(rem[0]) !== 'lesson' ? ` (${MODE_SHORT[modeOf(rem[0])].toLowerCase()})` : ''}</button></div>` : `<div class="ready-banner"><strong>${isTestPlan ? `All ${plural(S.plan.lessons.length, 'topic')} done.` : `All ${S.plan.lessons.length} lessons passed.`}</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="${openAct}" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span><span class="row" style="gap:6px">${planDone(e.id) ? '<span class="pill good">DONE</span>' : `${isTestPlan ? `<span class="pill accent">${MODE_SHORT[modeOf(e)]}</span>` : ''}${reasonPill(e)}`}</span></button>`).join('')}</div>`).join('')}
@@ -10445,7 +10904,7 @@ FRA.questions.push(
     if (u) {
       return `<div class="content stack" style="gap:18px">
         <div><div class="eyebrow">Unit ${u.n}</div><h1>${esc(u.title)}</h1><p class="ink2" style="margin-top:6px">${esc(u.blurb)}</p></div>
-        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${lessonLocked(l.id) ? '<span class="pill">Full course</span>' : planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
+        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${l.lab ? ' · lab' : ''}${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${lessonLocked(l.id) ? '<span class="pill">Full course</span>' : planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
         <div class="row"><button class="btn ghost" data-act="go" data-arg="course">All units</button></div>
       </div>`;
     }
@@ -10459,7 +10918,7 @@ FRA.questions.push(
   // Lesson view with personalization callouts and checkpoint quiz.
   function viewLesson(id) {
     const l = L[id]; if (!l) return viewCourse();
-    if (lessonLocked(id)) return `<div class="content stack" style="gap:20px"><div class="lesson-head"><div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span></div><h1>${esc(l.title)}</h1></div>${paywall('This lesson')}</div>`;
+    if (lessonLocked(id)) return `<div class="content stack" style="gap:20px"><div class="lesson-head"><div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span>${UNTESTED.has(l.domain) ? '<span class="pill">Not on the exam</span>' : ''}<span class="pill">Objective ${l.obj}</span></div><h1>${esc(l.title)}</h1></div>${paywall('This lesson')}</div>`;
     const ls = lstat(id); if (ls.status === 'new') { ls.status = 'read'; save(); }
     const entry = planEntry(id); const rem = planRemaining(); const posInPlan = entry ? rem.findIndex(e => e.id === id) : -1;
     const nextInPlan = entry ? rem.find(e => e.id !== id) : null;
@@ -10493,7 +10952,7 @@ FRA.questions.push(
     }
     return `<div class="content stack" style="gap:20px">
       <div class="lesson-head">
-        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· ${S.plan.source === 'test' ? 'retraining topic' : 'tutorial lesson'} ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
+        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span>${UNTESTED.has(l.domain) ? '<span class="pill">Not on the exam</span>' : ''}<span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· ${S.plan.source === 'test' ? 'retraining topic' : 'tutorial lesson'} ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
         <h1>${esc(l.title)}</h1>
         ${domainReason && !callouts ? `<p class="ink2">${esc(lessonWhy(domainReason))}</p>` : ''}
         ${extended && !planDone(id) ? `<p class="ink2">Extended lesson: read the lesson and the deeper explanation below, then take the checkpoint.</p>` : ''}
@@ -10501,6 +10960,7 @@ FRA.questions.push(
       ${callouts}
       <article class="lesson-body">${renderBody(l.body)}</article>
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
+      ${l.lab ? labCard(l) : ''}
       ${deepSection(id)}
       ${quiz}
       ${ratingRow(id)}
@@ -10517,6 +10977,41 @@ FRA.questions.push(
   function ratingRow(id) {
     const r = S.ratings && S.ratings[id];
     return `<div class="card soft stack rate-card" style="gap:8px"><div><div class="eyebrow">Rate this lesson</div><span class="ink2" style="font-size:.95rem">1 is confusing, 10 is great.${r ? ` You rated it ${r.r}/10.` : ' Your rating helps refine the course.'}</span></div>${ratingChips(id, r ? r.r : null)}</div>`;
+  }
+
+  // The lab card: intro, kit, manual excerpt, the instrument panel (mounted after paint), and
+  // the task sheet. Done when every task is right; a Redo clears it.
+  let instUiMap = {}; const instUi = id => instUiMap[id] || (instUiMap[id] = {});
+  function labCard(l) {
+    const lab = LABS[l.lab]; const ls = labStat(lab.id); const n = lab.tasks.length;
+    const okN = lab.tasks.filter(t => ls.ok[t.id] === true).length; const done = !!ls.done;
+    const kit = Array.isArray(lab.kit) && lab.kit.length ? `<div class="lab-kit"><div class="eyebrow">Kit</div><ul>${lab.kit.map(k => `<li>${inline(k)}</li>`).join('')}</ul></div>` : '';
+    const manual = lab.manual ? `<div class="callout accent lab-manual"><div class="eyebrow">From the service manual</div><div class="lesson-body">${renderBody(lab.manual)}</div></div>` : '';
+    return `<section class="card lift stack lab ${done ? 'done' : ''}" id="lab">
+      <div class="row spread"><div><div class="eyebrow">Lab · ${kit ? 'your kit or the virtual instrument' : 'virtual instrument'}</div><h3>${esc(lab.title)}</h3></div>${done ? '<span class="pill good">LAB DONE</span>' : `<span class="pill">${okN} of ${n} tasks</span>`}</div>
+      <div class="lesson-body">${renderBody(lab.intro || '')}</div>
+      ${kit}${manual}
+      <div class="instrument" id="instrument" data-lab="${esc(lab.id)}"></div>
+      <div class="lab-tasks stack">${lab.tasks.map((t, i) => labTask(lab, t, i, ls)).join('')}</div>
+      ${done ? `<div class="row"><button class="btn ghost small" data-act="lab-redo" data-arg="${esc(lab.id)}">Redo this lab</button></div>` : ''}
+    </section>`;
+  }
+  function labTask(lab, t, i, ls) {
+    const ok = ls.ok[t.id]; const v = ls.values[t.id]; const why = lab.why && lab.why[t.id];
+    const dis = ok === true ? 'disabled' : '';
+    const result = ok === true ? `<div class="feedback good"><div class="verdict">Correct</div></div>` : ok === false ? `<div class="feedback bad"><div class="verdict">Not right yet.</div><div>${esc(why || '')}</div></div>` : '';
+    let input;
+    if (t.kind === 'reading') input = `<div class="row" style="gap:8px;flex-wrap:wrap"><input type="number" step="any" class="lab-in" id="lab-${esc(t.id)}" data-task="${esc(t.id)}" value="${v != null ? esc(v) : ''}" ${dis}><span class="muted">${esc(t.unit || '')}</span>${t.measure ? `<button class="btn small ghost" data-act="lab-use" data-arg="${esc(t.id)}" ${dis}>Record the reading</button>` : ''}<button class="btn small primary" data-act="lab-check" data-arg="${esc(t.id)}" ${dis}>Check</button></div>`;
+    else if (t.kind === 'verdict') input = `<div class="row" style="gap:8px">${['pass', 'fail'].map(o => `<button class="chip" data-act="lab-answer" data-arg="${esc(t.id)}:${o}" aria-pressed="${v === o}" ${dis}>${o === 'pass' ? 'Pass' : 'Fail'}</button>`).join('')}</div>`;
+    else input = `<div class="options">${(t.options || []).map((o, k) => `<button class="option" data-act="lab-answer" data-arg="${esc(t.id)}:${k}" aria-pressed="${v === k}" ${dis}><span class="key">${letters[k] || k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+    return `<div class="lab-task ${ok === true ? 'ok' : ''}" data-task="${esc(t.id)}"><div class="q-stem"><span class="muted tnum">${i + 1}.</span> ${inline(t.prompt)}</div>${input}${result}</div>`;
+  }
+  // Mount the instrument panel into the lab card after each paint. The module is optional.
+  function mountInstrument() {
+    const el = $('#instrument'); if (!el) return;
+    const lab = LABS[el.dataset.lab]; const ins = window.FRAInstruments;
+    if (!lab || !ins || typeof ins.render !== 'function') { el.innerHTML = '<p class="muted">This lab is unavailable: the instrument module did not load. The tasks below still work with your own kit.</p>'; return; }
+    try { ins.render(el, lab, instUi(lab.id), { toast }); } catch (err) { el.innerHTML = '<p class="muted">This lab is unavailable.</p>'; }
   }
 
   // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
@@ -10580,7 +11075,7 @@ FRA.questions.push(
   function viewTestsHub() {
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
+      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${TESTED_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
       <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : st === 'official' ? 'Final step: the official-format test' : `Passes: ${S.passes} of ${PASSES_NEEDED} in your last ${PASS_WINDOW}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : st === 'official' ? `You have qualified. Pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}%, the real exam's passing score, and you are cleared to book the real thing.` : `Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} tests, then pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}% and you are cleared to book the real thing.`}</p></div>
         <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}${st === 'official' && !testsLocked('full') ? `<button class="btn primary" data-act="start-standard">Official-format test</button>` : ''}</div></div>
         <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests (the official-format test is always timed)</label></div>
@@ -10595,9 +11090,9 @@ FRA.questions.push(
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward qualifying.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${TESTED_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward qualifying.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
-      <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
+      <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${TESTED_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="start-custom">Start custom test</button><button class="btn ghost small" data-act="setup-reset">Reset to exam defaults</button><span class="muted" style="font-size:.9rem">Custom tests feed your weak topics and retraining but do not count toward qualifying.</span></div></div>`;
   }
@@ -10714,7 +11209,7 @@ FRA.questions.push(
         <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="tailored:${idx}">Switch to the tailored tutorial</button>` : ''}</div></div>`;
       } else {
         planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
-        <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
+        <div class="row" style="gap:8px">${TESTED_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
         <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="full:${idx}">Switch to the whole course</button>` : ''}</div></div>`
         : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button>${latest ? `<button class="btn small" data-act="path" data-arg="full:${idx}" style="margin-left:8px">Do the whole course instead</button>` : ''}</div>`;
@@ -10744,7 +11239,7 @@ FRA.questions.push(
         <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} Practice tests here pass at ${PASS_PCT}%; the official-format test uses the real exam's passing score, ${OFFICIAL_PCT}%.`}</div>
         <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted toward qualifying</span>' : `<span class="pill ${S.passes >= PASSES_NEEDED ? 'good' : ''}">${S.passes} of your last ${PASS_WINDOW} passed</span>`) : ''}</div>
         <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
-      ${isStarter ? `<div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>` : strengthCard(idx)}
+      ${isStarter ? `<div class="card stack"><h3>By domain</h3><div class="bars">${TESTED_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>` : strengthCard(idx)}
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
       ${guesses.length ? `<div class="card"><h3 style="margin-bottom:6px">Right, but you were not sure (${guesses.length})</h3><p class="muted" style="font-size:.9rem;margin-bottom:6px">These count as gaps. Read why the answer is right so it stops being a guess.</p>${guesses.map(r => reviewItem(r, false)).join('')}</div>` : ''}
@@ -10824,6 +11319,7 @@ FRA.questions.push(
     const mastered = lessons.filter(l => topicMastered(l.id)).length;
     return `<div class="wide stack" style="gap:18px">
       <div><div class="eyebrow">Progress</div><h1>${mastered} of ${lessons.length} topics mastered</h1></div>
+      ${CERT ? (g => `<div class="card stack"><div class="row spread"><div><h3>Certificate of completion</h3><p class="ink2">${g.ok ? 'Earned. Open it to add your name and print it.' : 'Unlocks when every lesson is passed, every lab is done, and the official-format test is passed.'}</p></div><button class="btn ${g.ok ? 'primary' : ''}" data-act="go" data-arg="certificate">${g.ok ? 'Open' : 'What is left'}</button></div></div>`)(certGate()) : ''}
       <div class="card stack"><h3>Accuracy by domain</h3>${domainBars()}</div>
       <div class="card"><h3 style="margin-bottom:10px">Every topic</h3><div class="table-wrap"><table class="plain"><thead><tr><th>Unit</th><th>Lesson</th><th>Checkpoint</th><th>Answered</th><th>Priority</th><th>Status</th></tr></thead><tbody>
         ${lessons.map(l => { const ls = lstat(l.id); const t = S.topics[l.id] || { attempts: 0, correct: 0 }; const p = topicPriority(l.id); const m = topicMastered(l.id);
@@ -10848,6 +11344,48 @@ FRA.questions.push(
     </div>`;
   }
 
+  // ---------- certificate of completion ----------
+  function certGate() {
+    const lessonsLeft = lessons.filter(l => lstat(l.id).status !== 'passed').length;
+    const labsLeft = labIds.filter(id => !labDone(id)).length;
+    const officialLeft = S.official ? 0 : 1;
+    return { ok: !lessonsLeft && !labsLeft && !officialLeft, lessonsLeft, labsLeft, officialLeft };
+  }
+  // The signed-in account's name when it has one, else the name typed on the certificate page.
+  function certName() {
+    const u = window.FRAAuth && FRAAuth.isSignedIn() ? FRAAuth.user() : null;
+    return (u && u.name) || (S.settings.certName || '');
+  }
+  function viewCertificate() {
+    if (!CERT) return viewProgress();
+    const g = certGate();
+    if (!g.ok) {
+      return `<div class="content stack" style="gap:18px">
+        <div><div class="eyebrow">Certificate of completion</div><h1>Not yet.</h1></div>
+        <div class="card stack"><p>The certificate unlocks when every lesson is passed, every lab is done, and the official-format test is passed.</p>
+          <ul style="margin:0;padding-left:20px;line-height:1.7">
+            <li>${g.lessonsLeft ? `${plural(g.lessonsLeft, 'lesson')} left to pass` : 'Every lesson passed'}</li>
+            ${labIds.length ? `<li>${g.labsLeft ? `${plural(g.labsLeft, 'lab')} left to finish` : 'Every lab done'}</li>` : ''}
+            <li>${g.officialLeft ? 'The official-format test, not yet passed' : 'Official-format test passed'}</li>
+          </ul>
+          <div class="row"><button class="btn" data-act="go" data-arg="course">All lessons</button><button class="btn ghost" data-act="go" data-arg="progress">Progress</button></div></div>
+      </div>`;
+    }
+    if (!S.certAt) { S.certAt = Date.now(); save(); }
+    const name = certName(); const u = window.FRAAuth && FRAAuth.isSignedIn() ? FRAAuth.user() : null;
+    const exam = course.exam || {};
+    return `<div class="content stack" style="gap:18px">
+      <div class="no-print row spread" style="align-items:flex-start"><div><div class="eyebrow">Certificate of completion</div><h1>Earned.</h1></div><div class="row"><button class="btn primary" data-act="print-cert" ${name ? '' : 'disabled'}>Print or save as PDF</button></div></div>
+      ${u && u.name ? '' : `<div class="card no-print row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="field" style="flex:1;min-width:220px">Your name, as it should appear<input type="text" id="cert-name" value="${esc(S.settings.certName || '')}" maxlength="80"></label><button class="btn" data-act="cert-name">Save name</button></div>`}
+      <div class="certificate card">
+        <div class="cert-brand"><span class="mark">FR</span> ${esc(course.brand)}</div>
+        <div class="cert-title">Certificate of completion</div>
+        <div class="cert-name">${name ? esc(name) : '<span class="muted">Your name</span>'}</div>
+        <div class="cert-body">has completed <strong>${esc(course.name)}</strong>${exam.title ? `, preparation for the ${esc([exam.vendor, exam.title].filter(Boolean).join(' '))}${exam.code ? ` (${esc(exam.code)})` : ''}` : ''}: all ${lessons.length} lessons with their checkpoints${labIds.length ? `, all ${plural(labIds.length, 'lab')}` : ''}, and the official-format test at ${S.official.pct}%.</div>
+        <div class="cert-date">${fmtDate(S.certAt)}</div>
+      </div>
+    </div>`;
+  }
 
   // ---------- deeper explanations ----------
   function deepSection(id) {
@@ -11092,6 +11630,17 @@ FRA.questions.push(
         if (S.plan && S.plan.source === 'starter' && planRemaining().length && !confirm('This replaces the tutorial you are on with retraining from this test. Continue?')) return;
         const plan = planFromTest(rec, i); if (!plan.lessons.length) { toast('Nothing to retrain from that test.'); return; }
         S.plan = plan; save(); render(); toast('Retraining now comes from this test.'); return; }
+      case 'lab-use': { const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === arg); const ins = window.FRAInstruments; if (!t || !ins) return;
+        const v = ins.current(lab, instUi(lab.id), t); if (v == null) { toast('Take the reading on the instrument first.'); return; }
+        const el = $(`#lab-${t.id}`); if (el) el.value = String(v); return; }
+      case 'lab-check': { const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === arg); if (!t) return;
+        const el = $(`#lab-${t.id}`); const raw = el ? String(el.value).trim() : ''; if (!raw) { toast('Type the reading first.'); return; }
+        checkLab(lab, t, raw); render(); return; }
+      case 'lab-answer': { const i = String(arg).indexOf(':'); const tid = String(arg).slice(0, i), val = String(arg).slice(i + 1); const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === tid); if (!t) return;
+        checkLab(lab, t, t.kind === 'verdict' ? val : parseInt(val, 10)); render(); return; }
+      case 'lab-redo': { const lab = LABS[arg]; if (!lab) return; S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} }; save(); render(); return; }
+      case 'cert-name': { const el = $('#cert-name'); const v = el ? String(el.value).trim().slice(0, 80) : ''; S.settings.certName = v; markSettingsChanged(); save(); render(); if (v) toast('Name saved'); return; }
+      case 'print-cert': { if (S.view.name !== 'certificate') go('certificate'); setTimeout(() => window.print(), 120); return; }
       case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
       case 'sign-out': {
         // Sign-out clears the token, never the local blob. The learner keeps studying
@@ -11170,6 +11719,7 @@ FRA.questions.push(
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
     if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
     if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = { key: e.target.dataset.arg, sense: e.target.dataset.sense === '1' ? 1 : 0 }; render(); return; }
+    if (e.key === 'Enter' && e.target && e.target.classList && e.target.classList.contains('lab-in')) { e.preventDefault(); const b = $(`[data-act="lab-check"][data-arg="${e.target.dataset.task}"]`); if (b && !b.disabled) b.click(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
@@ -11193,6 +11743,7 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); const wrong = (q.c + 1) % 4; ex.answers[k] = k < Math.round(STARTER_N * 0.6) ? { choice: wrong, conf: 5 } : k < Math.round(STARTER_N * 0.8) ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 5 }; });
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
+    if (S.exams[0].total !== STARTER_N || S.exams[0].review.some(r => UNTESTED.has(L[fat(r.q).t].domain))) throw new Error('starter test drew from an untested domain or the wrong count');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
     // Path choice: the results page offers tailored versus the whole course; "full" covers every lesson, "tailored" restores the list.
     go('results', 'results:0'); if (document.querySelectorAll('[data-act="path"]').length < 2) throw new Error('path choice not offered on starter results');
@@ -11212,6 +11763,7 @@ FRA.questions.push(
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    if (S.exams[1].review.some(r => UNTESTED.has(L[fat(r.q).t].domain))) throw new Error('a test drew from an untested domain');
     // Retraining paths: every entry carries a suggested mode and a score; the results page shows the
     // strength chart and the picker; a drill entry opens a plan-flagged drill session.
     if (S.plan) {
@@ -11223,8 +11775,8 @@ FRA.questions.push(
       log.push(`retrain entries=${S.plan.lessons.length} preset=${presetOf(S.plan)} modes=${S.plan.lessons.map(e => e.mode).join(',')} minutes=${planMinutes(S.plan.lessons)}`);
     }
     // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the passes alone.
-    const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
-    const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
+    const std = apportion(REAL_N, pctWeights()); if (TESTED_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
+    const passesBefore = S.passes, planBefore = S.plan; const cw = {}; TESTED_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
     S.active = null; startExam('custom', { mode: 'custom', n: 12, minutes: 0, weights: cw }); ex = S.active;
     if (ex.items.length !== 12) throw new Error('custom test built ' + ex.items.length + ' items, expected 12');
     if (ex.minutes !== 0) throw new Error('custom test time limit not honored');
@@ -11274,6 +11826,18 @@ FRA.questions.push(
       go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== senses) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${senses}`);
       log.push(`acronyms keys=${ACR_KEYS.length} senses=${senses} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
     } else log.push('acronyms: no glossary in this pack');
+    // Labs: every lab validates against its instrument (ranges contain the truth, verdicts match
+    // the scenario's limits), the card renders, and finishing every task marks the lab done.
+    if (labIds.length) {
+      const ins = window.FRAInstruments; if (!ins) throw new Error('this pack has labs but engine/instruments.js is not loaded');
+      const problems = labIds.reduce((all, id) => all.concat(ins.validate(LABS[id]).map(p => id + ': ' + p)), []);
+      if (problems.length) throw new Error('lab problems: ' + problems.join('; '));
+      const lab = LABS[labIds[0]]; go('lesson', lab.lesson); if (!$('#lab') || !$('#instrument')) throw new Error('lab card did not render');
+      lab.tasks.forEach(t => checkLab(lab, t, t.kind === 'reading' ? (t.expect[0] + t.expect[1]) / 2 : t.expect));
+      if (!labDone(lab.id) || labsDoneCount() < 1) throw new Error('completing every task did not mark the lab done');
+      S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} };
+      log.push(`labs ${labIds.length} validated; ${lab.id} completes and clears`);
+    } else log.push('labs: none in this pack');
     // The final gate: enough passes among the last few tests qualify the learner, then only a timed
     // official-format pass at the real exam's score clears them, permanently.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: null }; }); sess.i = sess.items.length; render(); };

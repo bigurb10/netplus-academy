@@ -81,6 +81,12 @@ const cld = [...course.matchAll(/<script type="application\/ld\+json">([\s\S]*?)
 check('course page JSON-LD is a Course with a provider', cld[0] && cld[0]['@type'] === 'Course' && cld[0].provider && cld[0].provider.name === 'FieldReady Academy');
 check('course page links every free lesson and names every unit', m.freeLessons.every(l => course.includes(`href="${m.urls.lesson(l)}"`)) && m.units.every(u => course.includes(esc(u.title))));
 check('course page lists non-free lessons as titles without links', nonFree.every(l => course.includes(esc(l.title)) && !course.includes(`href="${m.urls.lesson(l)}"`)));
+const labLesson = m.freeLessons.find(l => l.lab); const plainLesson = m.freeLessons.find(l => !l.lab);
+check('mini: the fixture has a free lab lesson and a free plain lesson', !!labLesson && !!plainLesson);
+const pLab = read(`mini/lessons/${site.slug(labLesson)}/index.html`); const pPlain = read(`mini/lessons/${site.slug(plainLesson)}/index.html`);
+check('a lab lesson page carries the lab note after the hook', pLab.includes('<p class="lab-note">This lesson includes an interactive lab in the course.</p>') && pLab.indexOf('class="hook"') < pLab.indexOf('class="lab-note"'));
+check('a lesson without a lab has no note', !pPlain.includes('lab-note'));
+check('the lessons index marks the lab lesson', course.includes(`${esc(labLesson.title)}</a> <span class="muted">${labLesson.minutes} min</span> <span class="muted">lab</span>`), course.slice(course.indexOf(esc(labLesson.title)), course.indexOf(esc(labLesson.title)) + 120));
 const cheat = read('mini/cheatsheet/index.html');
 check('cheat sheet page has every section and the PDF link', m.cheatsheet.sections.every(s => cheat.includes(`id="cs-${s.id}"`)) && cheat.includes('href="/mini/cheatsheet.pdf"'));
 const all = [course, cheat].concat(m.freeLessons.map(l => read(`mini/lessons/${site.slug(l)}/index.html`)));

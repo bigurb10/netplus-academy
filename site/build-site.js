@@ -200,6 +200,7 @@ function lessonPage(m, l, R, origin) {
   <p class="ink2 lede">${u ? `Unit ${u.n}: ${esc(u.title)}. ` : ''}Lesson ${l.index + 1} of ${m.lessons.length} in ${esc(m.c.name)}.</p>
   <div class="lesson-body">${R.renderBody(l.body)}</div>
   ${l.hook ? `<div class="hook"><span class="eyebrow">Remember</span><div>${R.inline(l.hook)}</div></div>` : ''}
+  ${l.lab ? '<p class="lab-note">This lesson includes an interactive lab in the course.</p>' : ''}
   ${deep ? `<section class="deep"><div class="eyebrow">Deeper explanation</div><h2>${esc(l.title)}, explained slowly</h2><div class="lesson-body deep-body">${R.renderBody(deep)}</div></section>` : ''}
 </article>
 ${ctaCard(m, l)}
@@ -274,7 +275,7 @@ function coursePage(m, R, origin) {
 <section id="lessons">
   <h2>Every lesson</h2>
   <p class="ink2">The first ${m.freeLessons.length} lessons are open to read here. Every lesson, with its checkpoint, is free inside the course.</p>
-  ${m.units.map(u => `<h3>Unit ${u.n}: ${esc(u.title)}</h3>${u.blurb ? `<p class="ink2 unit-blurb">${esc(u.blurb)}</p>` : ''}<ol class="lesson-list" start="${m.lessons.findIndex(l => l.unit === u) + 1}">${u.lessons.map(ul => { const l = m.lessons.find(x => x.id === ul.id); return m.free.has(l.id) ? `<li><a href="${m.urls.lesson(l)}">${esc(l.title)}</a>${l.minutes ? ` <span class="muted">${l.minutes} min</span>` : ''}</li>` : `<li><span>${esc(l.title)}</span> <span class="muted">in the course</span></li>`; }).join('')}</ol>`).join('')}
+  ${m.units.map(u => `<h3>Unit ${u.n}: ${esc(u.title)}</h3>${u.blurb ? `<p class="ink2 unit-blurb">${esc(u.blurb)}</p>` : ''}<ol class="lesson-list" start="${m.lessons.findIndex(l => l.unit === u) + 1}">${u.lessons.map(ul => { const l = m.lessons.find(x => x.id === ul.id); return m.free.has(l.id) ? `<li><a href="${m.urls.lesson(l)}">${esc(l.title)}</a>${l.minutes ? ` <span class="muted">${l.minutes} min</span>` : ''}${l.lab ? ' <span class="muted">lab</span>' : ''}</li>` : `<li><span>${esc(l.title)}</span> <span class="muted">in the course</span>${l.lab ? ' <span class="muted">lab</span>' : ''}</li>`; }).join('')}</ol>`).join('')}
 </section>
 ${(c.examDay || []).length ? `<section><h2>On exam day</h2><ul class="lesson-body">${c.examDay.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>` : ''}
 ${ctaCard(m, null)}`;
