@@ -33,7 +33,7 @@
   // merges, and never reads this device's local progress -- the course pages push within
   // seconds of a change, so a stale number here is a sync problem to fix at the source.
   var A = window.FRAAuth, SUM = window.FRASummary, ST = window.FRAStrength;
-  // Injected by build.py (window.FRA_COURSES): id, name, exam, lessons, passPct,
+  // Injected by build.py (window.FRA_COURSES): id, name, exam, lessons, labs, passPct,
   // passesNeeded, passWindow, examQuestions, checkpointN, domains, lessonList, in catalog order.
   var COURSES = Array.isArray(window.FRA_COURSES) ? window.FRA_COURSES : [];
   var $ = function (id) { return document.getElementById(id); };
@@ -92,6 +92,7 @@
       + '<div class="bar" title="' + pct + '% of lessons passed"><span style="width:' + pct + '%"></span></div>'
       + '<dl class="facts">'
       + fact('Lessons passed', s.lessonsPassed + ' of ' + s.lessonsTotal)
+      + (c.labs > 0 ? fact('Labs done', s.labsDone + ' of ' + s.labsTotal) : '')
       + fact('Best practice score', s.bestPct == null ? 'No test yet' : s.bestPct + '%')
       + fact('Passes', s.passes + ' of ' + s.passesNeeded + ' in last ' + s.passWindow)
       + fact('Official-format test', s.official && s.official.date ? 'Passed ' + dateOf(s.official.date) : 'Not yet')

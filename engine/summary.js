@@ -21,9 +21,10 @@
 
   const obj = v => (v && typeof v === 'object') ? v : null;
 
-  // meta: { lessons, passPct, passesNeeded, passWindow, examQuestions } from the course manifest and
-  // curriculum (build.py's course table). Returns { started, stage, stageLabel,
-  // lessonsPassed, lessonsTotal, bestPct, passes, passesNeeded, passWindow, official, lastStudied }.
+  // meta: { lessons, labs, passPct, passesNeeded, passWindow, examQuestions } from the course manifest
+  // and curriculum (build.py's course table). Returns { started, stage, stageLabel,
+  // lessonsPassed, lessonsTotal, labsDone, labsTotal, bestPct, passes, passesNeeded, passWindow,
+  // official, lastStudied }.
   function summarize(state, meta) {
     const s = obj(state) || {};
     const m = obj(meta) || {};
@@ -35,6 +36,8 @@
     const passes = Number(s.passes) > 0 ? Number(s.passes) : 0;
     const official = obj(s.official);
     const topics = obj(s.topics) || {};
+    const labs = obj(s.labs) || {};
+    const labsDone = Object.keys(labs).filter(id => obj(labs[id]) && labs[id].done === true).length;
     // Same rule as planDone() in app.js: a plan entry counts when its checkpoint was passed after
     // the plan was made, OR its topic was drilled to three in a row after the plan was made,
     // whatever the entry's mode (the mode only decides what opens). An old pass or drill cannot
@@ -64,6 +67,7 @@
     return {
       started, stage, stageLabel: stageLabel(stage, m),
       lessonsPassed, lessonsTotal: Number(m.lessons) > 0 ? Number(m.lessons) : 0,
+      labsDone, labsTotal: Number(m.labs) > 0 ? Number(m.labs) : 0,
       bestPct, passes, passesNeeded, passWindow,
       official: official ? { date: Number(official.date) || null, pct: typeof official.pct === 'number' ? official.pct : null } : null,
       lastStudied: Number(s.touchedAt) > 0 ? Number(s.touchedAt) : null

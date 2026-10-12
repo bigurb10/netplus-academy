@@ -56,6 +56,7 @@ def course_meta(course_id):
         raise SystemExit(f"{course_id}/course.js: could not read the exam/test fields for the account page")
     scripts = "\n".join(read(p) for p in course_files(course_dir))
     lessons = re.findall(r'id: "(u\d+l\d+)", title: "', scripts)
+    labs = sorted(set(re.findall(r'\blab: "([a-z0-9-]+)"', scripts)))
     # The strength chart (engine/strength.js) needs every lesson's domain and the domain list.
     lesson_rows = re.findall(r'id: "(u\d+l\d+)", title: "((?:[^"\\]|\\.)*)", domain: (\d+)', scripts)
     domains = re.findall(r'\{ id: (\d+), name: "((?:[^"\\]|\\.)*)", short: "((?:[^"\\]|\\.)*)", pct: (\d+)', src)
@@ -65,10 +66,10 @@ def course_meta(course_id):
     return {
         "id": m["id"], "name": m["name"],
         "exam": f"{exam.group(1)} {exam.group(2)}",
-        "lessons": len(lessons), "examQuestions": int(test.group(1)),
+        "lessons": len(lessons), "labs": len(labs), "examQuestions": int(test.group(1)),
         "passPct": int(test.group(2)), "passesNeeded": int(test.group(3)), "passWindow": int(test.group(4)),
         "checkpointN": int(cp.group(1)) if cp else 4,
-        "domains": [{"id": int(i), "name": n.replace('\\"', '"'), "short": s.replace('\\"', '"'), "pct": int(p)} for i, n, s, p in domains],
+        "domains": [{"id": int(i), "name": n.replace('\\"', '"'), "short": s.replace('\\"', '"'), "pct": int(p)} for i, n, s, p in domains if int(p) > 0],
         "lessonList": [{"id": i, "title": t.replace('\\"', '"'), "domain": int(d)} for i, t, d in lesson_rows],
     }
 

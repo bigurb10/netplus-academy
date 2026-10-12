@@ -18,7 +18,7 @@ const inline = (html.match(/<script>([\s\S]*?)<\/script>/g) || []).map(s => s.re
 if (!inline) throw new Error('could not find the account page script in account/index.html');
 
 const COURSES = [
-  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50, checkpointN: 4,
+  { id: 'netplus', name: 'NetPlus Academy', exam: 'CompTIA Network+ N10-009', lessons: 49, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50, checkpointN: 4, labs: 2,
     domains: [{ id: 1, name: 'Networking Concepts', short: 'Concepts', pct: 23 }, { id: 2, name: 'Network Implementation', short: 'Implementation', pct: 20 }],
     lessonList: [{ id: 'u1l1', title: 'Networks and Their Types', domain: 1 }, { id: 'u1l2', title: 'The OSI Model', domain: 1 }, { id: 'u2l1', title: 'Cables', domain: 2 }] },
   { id: 'secplus', name: 'SecPlus Academy', exam: 'CompTIA Security+ SY0-701', lessons: 54, passPct: 80, passesNeeded: 3, passWindow: 5, examQuestions: 50 },
@@ -77,7 +77,7 @@ const settle = () => new Promise(r => setTimeout(r, 30));
   // 2) Signed in with a name: two rows, one unreadable, one course not started.
   {
     const netplus = { v: 3, lessons: { a: { status: 'passed' }, b: { status: 'passed' }, c: { status: 'read' }, d: { status: 'passed' }, e: { status: 'passed' }, f: { status: 'passed' } },
-      exams: [exam('starter', 40), exam('practice', 80)], passes: 2, official: null, plan: null, touchedAt: Date.now() - 3 * HOUR };
+      exams: [exam('starter', 40), exam('practice', 80)], passes: 2, official: null, plan: null, labs: { x: { done: true, at: 1 } }, touchedAt: Date.now() - 3 * HOUR };
     const { w, calls } = run({
       token: { name: 'Pat Learner' },
       fetch: [
@@ -101,9 +101,11 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     check('netplus: official not yet', /Not yet/.test(np));
     check('netplus: last studied is relative', /3 hours ago/.test(np));
     check('netplus: last synced is relative', /2 hours ago/.test(np));
+    check('netplus: labs done when the course has labs', /Labs done/.test(np) && /1 of 2/.test(np), np);
     check('netplus: Continue link', !!cards[0].querySelector('a.go[href="/netplus/"]') && /Continue/.test(cards[0].querySelector('a.go').textContent));
     check('secplus: not started with a Start link', /Not started/.test(cards[1].textContent) && !!cards[1].querySelector('a.go[href="/secplus/"]'));
     check('cbet: an unreadable row does not break the page', /Couldn.t read this course/.test(cards[2].textContent));
+    check('a course without labs shows no labs fact', !/Labs done/.test(cards[1].textContent) && !/Labs done/.test(cards[2].textContent));
     w.click(w.$('[data-act="sign-out"]'));
     check('sign out drops the token and shows the signed-out view', w.localStorage.getItem('fra.auth.v1') === null && !!w.$('[data-act="sign-in"]') && w.$$('.card').length === 0);
   }

@@ -57,5 +57,8 @@ check('a checkpoint pass completes a drill-mode entry too',
   stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), lessons: { u1l1: { status: 'passed', passedAt: 12 } } }) === 'practice');
 check('garbage topics do not throw', (() => { try { return stageOf({ exams: [exam('starter', 40), exam('full', 60)], plan: retrainPlan('drill'), topics: 'x' }) === 'retrain'; } catch (e) { return false; } })());
 
+check('labs done counts done entries and takes the total from meta', (() => { const s = summarize(state({ labs: { a: { done: true, at: 1 }, b: { done: false, at: 2 }, c: 'x' } }), Object.assign({}, META, { labs: 3 })); return s.labsDone === 1 && s.labsTotal === 3; })());
+check('no labs in meta or state: both zero', (() => { const s = summarize(state(), META); return s.labsDone === 0 && s.labsTotal === 0; })());
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All summary tests passed.');
