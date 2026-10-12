@@ -24,6 +24,7 @@ function boot(opts) {
   w.eval(fs.readFileSync(path.join(o.engineDir, 'strength.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(o.engineDir, 'auth.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(o.engineDir, 'sync.js'), 'utf8'));
+  w.eval(fs.readFileSync(path.join(o.engineDir, 'instruments.js'), 'utf8'));
   // Runs after merge/auth/sync are loaded (window.FRAAuth/FRASync exist) but before app.js's
   // boot IIFE executes -- for seeding fra.auth.v1, scripting window.fetch, or wrapping a
   // FRASync method to spy on it, all of which must be in place before app.js's own boot-time
