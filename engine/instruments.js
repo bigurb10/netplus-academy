@@ -233,14 +233,16 @@
   const sel = (ui, field, opts) => `<select data-field="${field}">${opts.map(([v, l]) => `<option value="${v}" ${ui[field] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const numField = (ui, field, label, min, max, dis) => `<label class="field">${label}<input type="number" data-field="${field}" min="${min}" max="${max}" value="${ui[field]}" ${dis ? 'disabled' : ''}></label>`;
 
-  // The drawing's natural size, from its width/height attributes or its viewBox, so hotspots can be
-  // placed in percent and follow the SVG when CSS scales it to a narrow screen.
+  // The drawing's natural size in the units the scenario's points use: the root <svg> tag's viewBox
+  // first (points are user units), else its width/height attributes. Scoped to the root tag so an
+  // inner rect's width or a stroke-width never supplies the size. Hotspots are placed in percent of
+  // this size so they follow the SVG when CSS scales it to a narrow screen.
   function drawingSize(svg) {
-    const s = String(svg || '');
-    const w = /\bwidth="(\d+(?:\.\d+)?)"/.exec(s), h = /\bheight="(\d+(?:\.\d+)?)"/.exec(s);
-    if (w && h) return { w: Number(w[1]), h: Number(h[1]) };
-    const vb = /\bviewBox="\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*"/.exec(s);
-    return vb ? { w: Number(vb[1]), h: Number(vb[2]) } : { w: 0, h: 0 };
+    const tag = (/<svg\b[^>]*>/i.exec(String(svg || '')) || [''])[0];
+    const vb = /\bviewBox\s*=\s*["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(tag);
+    if (vb) return { w: Number(vb[1]), h: Number(vb[2]) };
+    const w = /(?:^|\s)width\s*=\s*["']([\d.]+)/i.exec(tag), h = /(?:^|\s)height\s*=\s*["']([\d.]+)/i.exec(tag);
+    return w && h ? { w: Number(w[1]), h: Number(h[1]) } : { w: 0, h: 0 };
   }
   // ---- dmm: a function dial, a circuit power switch, two probes placed on drawn test points ----
   const DMM_FNS = [['vdc', 'V DC'], ['vac', 'V AC'], ['ohm', 'Ohms'], ['adc', 'A DC'], ['cont', 'Continuity'], ['diode', 'Diode']];

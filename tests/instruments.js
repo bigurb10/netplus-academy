@@ -166,6 +166,14 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('dmm: hotspots are placed in percent of the drawing size', /left:5%;top:10%/.test(box.querySelector('[data-ins="tp"][data-arg="A"]').getAttribute('style')) && /left:45%;top:10%/.test(box.querySelector('[data-ins="tp"][data-arg="C"]').getAttribute('style')), box.querySelector('[data-ins="tp"][data-arg="A"]').getAttribute('style'));
   check('dmm: a viewBox-only drawing still places hotspots', (() => { const b = w.document.createElement('div'); I.render(b, lab('dmm', Object.assign({ svg: '<svg viewBox="0 0 400 200"></svg>', points: { A: [100, 50] } }, DMM), []), {}, {}); return /left:25%;top:25%/.test(b.querySelector('.tp').getAttribute('style')); })());
   check('dmm: a point with no coordinates renders at the origin instead of throwing', (() => { const b = w.document.createElement('div'); I.render(b, lab('dmm', Object.assign({ svg: '<svg width="200" height="100"></svg>', points: { A: null } }, DMM), []), {}, {}); return /left:0%;top:0%/.test(b.querySelector('.tp').getAttribute('style')); })());
+  const place = svg => { const b = w.document.createElement('div'); I.render(b, lab('dmm', Object.assign({ svg, points: { A: [100, 50] } }, DMM), []), {}, {}); return b.querySelector('.tp').getAttribute('style'); };
+  check('dmm: viewBox wins even with stroke-width and an inner rect', /left:25%;top:25%/.test(place('<svg viewBox="0 0 400 200" stroke-width="2"><rect width="30" height="12"/></svg>')), place('<svg viewBox="0 0 400 200" stroke-width="2"><rect width="30" height="12"/></svg>'));
+  check('dmm: an inner rect never supplies the size', /left:25%;top:25%/.test(place('<svg viewBox="0 0 400 200"><rect width="30" height="12"/></svg>')));
+  check('dmm: single-quoted width and height', /left:25%;top:25%/.test(place("<svg width='400' height='200'></svg>")));
+  check('dmm: comma-separated viewBox', /left:25%;top:25%/.test(place('<svg viewBox="0,0,400,200"></svg>')));
+  check('dmm: viewBox beats a smaller presentation size', /left:25%;top:25%/.test(place('<svg width="200" height="100" viewBox="0 0 400 200"></svg>')));
+  check('dmm: px units on width and height', /left:25%;top:25%/.test(place('<svg width="400px" height="200px"></svg>')));
+  check('dmm: a root stroke-width does not masquerade as width', /left:25%;top:25%/.test(place('<svg stroke-width="2" width="400" height="200"></svg>')));
   click('[data-ins="tp"][data-arg="A"]'); click('[data-ins="tp"][data-arg="B"]');
   check('dmm: two clicks place red then black and read DC volts', ui.a === 'A' && ui.b === 'B' && ui.readout && near(ui.readout.value, 9, 0.011) && /V$/.test(box.querySelector('[data-readout]').textContent), JSON.stringify(ui.readout));
   click('[data-ins="fn"][data-arg="ohm"]');
@@ -187,8 +195,8 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   fresh(); ui = {};
   I.render(box, lab('monitor', MON, []), ui, {});
   check('monitor: simulator controls and an empty screen before Apply', box.querySelectorAll('input[data-field]').length === 4 && !!box.querySelector('select[data-field="rhythm"]') && !box.querySelector('.fig.strip'));
-  set('[data-field="hr"]', '60');
-  check('monitor: a typed field is not repainted away', box.querySelector('[data-field="hr"]').value === '60' && ui.hr === 60);
+  const hrNode = box.querySelector('[data-field="hr"]'); set('[data-field="hr"]', '60');
+  check('monitor: a typed field is not repainted away', hrNode === box.querySelector('[data-field="hr"]') && ui.hr === 60);
   set('[data-field="spo2"]', '95'); click('[data-ins="apply"]');
   check('monitor: Apply shows the numerics with the scenario offsets and a strip at the shown rate', ui.readout && ui.readout.hr === 61 && ui.readout.spo2 === 94 && /61/.test(box.querySelector('.ins-numerics').textContent) && box.querySelector('.fig.strip').getAttribute('data-rate') === '61');
   set('[data-field="rhythm"]', 'asystole'); click('[data-ins="apply"]');
@@ -197,8 +205,8 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   fresh(); ui = {};
   I.render(box, lab('infusion', INF, []), ui, {});
   check('infusion: rate and VTBI fields, a Start button, an empty cylinder', !!box.querySelector('[data-field="rate"]') && !!box.querySelector('[data-ins="start"]') && box.querySelector('.fig.cylinder').getAttribute('data-value') === '0');
-  set('[data-field="rate"]', '100');
-  check('infusion: a typed rate is kept without a repaint', box.querySelector('[data-field="rate"]').value === '100' && ui.rate === 100);
+  const rateNode = box.querySelector('[data-field="rate"]'); set('[data-field="rate"]', '100');
+  check('infusion: a typed rate is kept without a repaint', rateNode === box.querySelector('[data-field="rate"]') && ui.rate === 100);
   click('[data-ins="start"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]');
   check('infusion: thirty minutes at 100 mL/h fills the cylinder to the true delivery, read to the graduation', ui.elapsed === 30 && ui.readout && ui.readout.volume === 52 && box.querySelector('.fig.cylinder').getAttribute('data-value') === '52' && /30 min/.test(box.textContent), JSON.stringify(ui.readout));
   click('[data-ins="stop"]');
