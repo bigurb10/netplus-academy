@@ -73,6 +73,18 @@ function run(token) {
     check('the ServiceForge page logo is a link to the main page', !!brand && brand.tagName === 'A' && brand.getAttribute('href') === '/', brand && brand.outerHTML);
     check('the ServiceForge page keeps its All courses link', !!d.querySelector('main a.back[href="../"]'));
   }
+  // ----- Catalog categories (Blake, 2026-10-12) -----
+  {
+    const w = run(null); const d = w.document;
+    const heads = [...d.querySelectorAll('main section.cat > h2')].map(h => h.textContent.trim());
+    check('the catalog has three category sections in order', heads.join('|') === 'AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
+    const under = id => [...d.querySelectorAll(`#${id} .card h3 a`)].map(a => a.getAttribute('href'));
+    check('CBET sits under AAMI certifications', under('aami').join(',') === 'cbet/', under('aami').join(','));
+    check('the four CompTIA courses sit under CompTIA certifications', under('comptia').join(',') === 'netplus/,secplus/,aplus1/,aplus2/', under('comptia').join(','));
+    check('ServiceForge sits under Tools for technicians', under('tools').join(',') === 'serviceforge/', under('tools').join(','));
+    check('every category has a one-line lede', [...d.querySelectorAll('main section.cat')].every(s => s.querySelector('p.cat-lede') && s.querySelector('p.cat-lede').textContent.trim().length > 20));
+    check('How every course works is still on the page', /How every course works/.test(d.querySelector('main').textContent));
+  }
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All catalog tests passed.');
   process.exit(0);
