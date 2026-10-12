@@ -5,7 +5,8 @@ FRA.course = {
   domains: [
     { id: 1, name: "Alpha", short: "Alpha", pct: 40, quota: 4 },
     { id: 2, name: "Beta", short: "Beta", pct: 30, quota: 3 },
-    { id: 3, name: "Gamma", short: "Gamma", pct: 30, quota: 3 }
+    { id: 3, name: "Gamma", short: "Gamma", pct: 30, quota: 3 },
+    { id: 4, name: "Extra", short: "Extra", pct: 0, quota: 0 }
   ],
   test: { questions: 10, minutes: 10, passPct: 80, passesNeeded: 2, passWindow: 3, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
   starterPool: { 1: ["u1l1", "u1l2"], 2: ["u1l3", "u2l1"], 3: ["u2l2", "u2l3"] },

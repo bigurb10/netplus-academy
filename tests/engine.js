@@ -742,6 +742,35 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('rated, Next saves the answer with its sureness', state(w33).active.i === 2 && a33.choice === 1 && a33.conf === 3 && a33.skipped === false, JSON.stringify(a33));
   }
 
+  // ----- Untested domains (mini fixture: domain 4 has quota 0, unit 3 is its content) -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const w = boot({ courseDir: mini }); const L = lessonsOf(w);
+    const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    w.click(w.$('[data-act="go"][data-arg="home"]'));
+    check('mini: the welcome page counts only tested domains', /each of the 3 exam domains/.test(w.text()));
+    w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const Q = {}; w.FRA.questions.forEach(q => { Q[q.id] = q; }); const fat = x => typeof x === 'string' ? Q[x] : x;
+    const items = st().active.items.map(fat);
+    check('mini: the starter test is 2 per tested domain, none from the untested one', items.length === 6 && items.every(q => L[q.t].domain !== 4), items.map(q => q.t).join(','));
+    items.forEach(q => { w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`)); w.click(w.$('[data-act="conf"][data-arg="5"]')); w.click(w.$('[data-act="submit"]')); });
+    act(w, 'go', 'home');
+    check('mini: domain bars show only tested domains', w.$$('.bars .bar-row').length === 3 && !/Extra/.test(w.$('.bars').textContent), w.$$('.bars .bar-row').length);
+    act(w, 'go', 'exam');
+    check('mini: the test setup lists only tested domains', w.$$('.su-w').length === 3 && !w.$('.su-w[data-d="4"]'), w.$$('.su-w').length);
+    act(w, 'lesson', 'u3l1');
+    check('mini: an untested lesson says so', w.$$('.lesson-head .pill').some(p => p.textContent === 'Not on the exam'));
+    act(w, 'lesson', 'u1l1');
+    check('mini: a tested lesson does not', !w.$$('.lesson-head .pill').some(p => p.textContent === 'Not on the exam'));
+    act(w, 'lesson', 'u3l1');
+    w.click(w.$('[data-act="start-checkpoint"]'));
+    for (let k = 0; k < 4; k++) { const s = st().active; const q = fat(s.items[s.i]); w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`)); w.click(w.$('[data-act="submit"]')); w.click(w.$('[data-act="next"]')); }
+    check('mini: an untested lesson passes its checkpoint', st().lessons.u3l1.status === 'passed');
+    act(w, 'go', 'home');
+    check('mini: lessons passed counts the untested lesson out of all 8', /1\s*\/ 8/.test(w.$$('.stat').map(e => e.textContent).join(' ')), w.$$('.stat').map(e => e.textContent).join(' | '));
+    w.close();
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

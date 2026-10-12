@@ -17,13 +17,20 @@
   if (!course || !Array.isArray(course.domains) || !course.test) throw new Error('FRA.course manifest missing or incomplete');
   const DOMAINS = {}; course.domains.forEach(d => { DOMAINS[d.id] = d; });
   const DOMAIN_IDS = course.domains.map(d => d.id);
+  // Tested domains carry a test quota. A domain with quota 0 (and pct 0) is untested: its lessons
+  // are course content with checkpoints, but never appear on the starter test, tests, the domain
+  // bars, the test setup, or the strength chart (units like "Welcome" and "Getting hired").
+  const TESTED_IDS = DOMAIN_IDS.filter(d => DOMAINS[d].quota > 0);
+  const UNTESTED = new Set(DOMAIN_IDS.filter(d => !(DOMAINS[d].quota > 0)));
+  course.domains.forEach(d => { if ((d.quota > 0) !== (d.pct > 0)) throw new Error(`domain ${d.id} must have pct and quota both above zero (tested) or both zero (untested)`); });
+  if (!TESTED_IDS.length) throw new Error('FRA.course needs at least one tested domain');
   const T = course.test;
   const PASS_PCT = T.passPct, PASSES_NEEDED = T.passesNeeded, PASS_WINDOW = T.passWindow, EXAM_N = T.questions, EXAM_MINUTES = T.minutes;
   // The official-format test is judged at the real exam's passing score, not the practice bar.
   const OFFICIAL_PCT = (course.exam && course.exam.passPct) || PASS_PCT;
   // The pass rule's parameters, for the one fold that computes passes/official (engine/merge.js).
   const RULE_OPTS = () => ({ passPct: PASS_PCT, passesNeeded: PASSES_NEEDED, passWindow: PASS_WINDOW, officialPct: OFFICIAL_PCT });
-  const STARTER_N = DOMAIN_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
+  const STARTER_N = TESTED_IDS.length * T.starterPerDomain, CHECKPOINT_N = T.checkpointN, CHECKPOINT_PASS = T.checkpointPass;
   const REBUILD_PTS = 3 * T.starterPerDomain; // every starter question in the domain wrong
   const ALL_WORD = T.starterPerDomain === 2 ? 'both' : 'all';
   const CONF = [[1, 'Guess'], [2, 'Unsure'], [3, 'Fairly sure'], [4, 'Sure'], [5, 'Certain']];
@@ -53,7 +60,7 @@
   document.title = course.name;
   // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
   const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
-  const STRENGTH_META = { domains: course.domains.map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
+  const STRENGTH_META = { domains: course.domains.filter(d => d.quota > 0).map(d => ({ id: d.id, short: d.short, name: d.name, pct: d.pct })), lessons: lessons.map(l => ({ id: l.id, title: l.title, domain: l.domain })), checkpointN: course.test.checkpointN, questions: QLESSON };
 
   // ---------- access ----------
   // Free set: the cheat sheet, the starter test, and the lessons below. Everything else needs entitlement.
@@ -219,7 +226,7 @@
   }
   function buildExam(quotas) {
     const items = []; const used = new Set();
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       const quota = quotas ? (quotas[d] || 0) : DOMAINS[d].quota; const ls = shuffle(lessonsByDomain[d]); let i = 0, guard = 0; const target = items.length + quota;
       while (items.length < target && guard < 400 + quota * 8) {
         const l = ls[i % ls.length]; i++; guard++;
@@ -234,7 +241,7 @@
   }
   function buildStarter() {
     const items = []; const used = new Set();
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       const picks = shuffle(STARTER_POOL[d] || lessonsByDomain[d].map(l => l.id)).slice(0, T.starterPerDomain);
       for (const lid of picks) {
         let q = (gens[lid] && Math.random() < 0.5) ? FRA.generate(lid) : leastSeen(byLesson[lid] || [], used);
@@ -249,27 +256,27 @@
   const MAX_N = Math.max(50, bank.length);
   const clampN = n => Math.min(MAX_N, Math.max(5, parseInt(n, 10) || EXAM_N));
   const clampMin = m => { const v = parseInt(m, 10); return isNaN(v) ? EXAM_MINUTES : Math.min(600, Math.max(0, v)); };
-  function pctWeights() { const w = {}; DOMAIN_IDS.forEach(d => { w[d] = DOMAINS[d].pct; }); return w; }
+  function pctWeights() { const w = {}; TESTED_IDS.forEach(d => { w[d] = DOMAINS[d].pct; }); return w; }
   function defaultSetup() { return { n: EXAM_N, minutes: EXAM_MINUTES, weights: pctWeights() }; }
   function currentSetup() {
     const s = S.settings.testSetup; if (!s) return defaultSetup();
-    const weights = pctWeights(); DOMAIN_IDS.forEach(d => { if (s.weights && s.weights[d] != null) weights[d] = Math.max(0, Number(s.weights[d]) || 0); });
+    const weights = pctWeights(); TESTED_IDS.forEach(d => { if (s.weights && s.weights[d] != null) weights[d] = Math.max(0, Number(s.weights[d]) || 0); });
     return { n: clampN(s.n), minutes: clampMin(s.minutes), weights };
   }
   // Largest-remainder apportionment of n questions across domains by relative weight. Zero weight excludes a domain.
   function apportion(n, weights) {
-    let w = {}; let total = 0; DOMAIN_IDS.forEach(d => { w[d] = Math.max(0, Number(weights && weights[d]) || 0); total += w[d]; });
-    if (!total) { w = pctWeights(); total = DOMAIN_IDS.reduce((a, d) => a + w[d], 0); }
+    let w = {}; let total = 0; TESTED_IDS.forEach(d => { w[d] = Math.max(0, Number(weights && weights[d]) || 0); total += w[d]; });
+    if (!total) { w = pctWeights(); total = TESTED_IDS.reduce((a, d) => a + w[d], 0); }
     const q = {}; let assigned = 0; const rem = [];
-    DOMAIN_IDS.forEach(d => { const raw = n * w[d] / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
+    TESTED_IDS.forEach(d => { const raw = n * w[d] / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
     rem.sort((a, b) => b.r - a.r || DOMAINS[b.d].pct - DOMAINS[a.d].pct);
     for (let i = 0; assigned < n && i < rem.length; i++) if (w[rem[i].d] > 0) { q[rem[i].d]++; assigned++; }
-    let guard = 0; while (assigned < n && guard++ < 1000) for (const d of DOMAIN_IDS) { if (assigned >= n) break; if (w[d] > 0) { q[d]++; assigned++; } }
+    let guard = 0; while (assigned < n && guard++ < 1000) for (const d of TESTED_IDS) { if (assigned >= n) break; if (w[d] > 0) { q[d]++; assigned++; } }
     return q;
   }
   function setupPreview(s) {
-    const q = apportion(s.n, s.weights); const total = DOMAIN_IDS.reduce((a, d) => a + q[d], 0);
-    return `${total} questions: ${DOMAIN_IDS.filter(d => q[d]).map(d => `${q[d]} ${DOMAINS[d].short}`).join(', ')}. ${s.minutes ? `${s.minutes}-minute time limit.` : 'No time limit.'}`;
+    const q = apportion(s.n, s.weights); const total = TESTED_IDS.reduce((a, d) => a + q[d], 0);
+    return `${total} questions: ${TESTED_IDS.filter(d => q[d]).map(d => `${q[d]} ${DOMAINS[d].short}`).join(', ')}. ${s.minutes ? `${s.minutes}-minute time limit.` : 'No time limit.'}`;
   }
   function readSetupFromForm() {
     const nEl = $('#su-n'), mEl = $('#su-min'); if (!nEl || !mEl) return null;
@@ -291,7 +298,7 @@
 
   // ---------- plan (personalized tutorial) ----------
   function planFromStarter(rec, examIdx) {
-    const entries = {}; const domPts = {}; const domCount = {}; DOMAIN_IDS.forEach(d => { domPts[d] = 0; domCount[d] = 0; });
+    const entries = {}; const domPts = {}; const domCount = {}; TESTED_IDS.forEach(d => { domPts[d] = 0; domCount[d] = 0; });
     const add = (id, reason) => { if (!L[id]) return; (entries[id] = entries[id] || { id, reasons: [] }).reasons.push(reason); };
     rec.review.forEach(r => {
       const q = fat(r.q); if (!q) return; const d = L[q.t].domain; const p = points(r.correct, r.conf); domPts[d] += p; domCount[d]++;
@@ -299,7 +306,7 @@
       if (p >= 2) add(q.t, { kind: k, q: r.q, choice: r.choice, pick: r.pick, conf: r.conf, source: 'starter' });
     });
     const depth = {};
-    for (const d of DOMAIN_IDS) {
+    for (const d of TESTED_IDS) {
       if (domPts[d] >= REBUILD_PTS) { depth[d] = 'rebuild'; lessonsByDomain[d].forEach(l => add(l.id, { kind: 'domain', level: 'rebuild', d, pts: domPts[d] })); }
       else if (domPts[d] >= 3) { depth[d] = 'core'; CORE[d].forEach(id => add(id, { kind: 'domain', level: 'core', d, pts: domPts[d] })); }
       else depth[d] = domPts[d] > 0 ? 'light' : 'solid';
@@ -554,7 +561,7 @@
       <div class="stack" style="gap:10px">
         <div class="eyebrow">${esc(course.brand)} · ${esc(course.name)}</div>
         <h1>${STARTER_N} questions, then a course built for you.</h1>
-        <p class="ink2" style="font-size:1.1rem">The starter test asks ${T.starterPerDomain} questions from each of the ${DOMAIN_IDS.length} exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
+        <p class="ink2" style="font-size:1.1rem">The starter test asks ${T.starterPerDomain} questions from each of the ${TESTED_IDS.length} exam domains. Every answer also asks how confident you were. A wrong answer you were sure about, and a right answer you guessed, both count against you, because both cost points on exam day.</p>
       </div>
       <div class="card stack" style="gap:10px"><div class="row spread"><div><div class="eyebrow">Before you start</div><h3>The memorization sheet</h3><p class="ink2">Every port number, mask, standard, and step order the exam expects cold. Print it and keep it beside you while you study.</p></div><div class="row"><button class="btn" data-act="go" data-arg="cheatsheet">Open</button><button class="btn" data-act="print-cheat">Print</button></div></div></div>
       <div class="card lift stack" style="gap:14px">
@@ -624,7 +631,7 @@
       <div class="row"><span class="pill ${p >= 6 ? 'bad' : p >= 3 ? 'warn' : ''}">${p} pts</span><button class="btn small ghost" data-act="lesson" data-arg="${id}">Lesson</button></div></div>`;
   }
   function domainBars() {
-    return `<div class="bars">${DOMAIN_IDS.map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
+    return `<div class="bars">${TESTED_IDS.map(d => { const a = domainAccuracy(d); const v = a.t ? pct(a.c, a.t) : 0;
       return `<div class="bar-row"><span class="label">${DOMAINS[d].short} <span class="muted">${DOMAINS[d].pct}%</span></span><div class="track"><i class="${a.t ? '' : 'dim'}" style="width:${a.t ? v : 100}%"></i></div><span class="value">${a.t ? v + '%' : '—'}</span></div>`; }).join('')}</div>`;
   }
 
@@ -664,7 +671,7 @@
         <h1>${rem.length ? `${plural(rem.length, unit)} to go, about ${planMinutes(rem)} minutes` : isTestPlan ? 'Retraining complete' : full ? 'Course complete' : 'Tutorial complete'}</h1>
         <div class="row" style="margin-top:10px"><div class="meter ${rem.length ? '' : 'good'}"><i style="width:${pct(done, S.plan.lessons.length)}%"></i></div><span class="tnum muted">${done}/${S.plan.lessons.length}</span></div></div>
       ${S.plan.source === 'starter' && full ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path</div><p class="ink2" style="font-size:.95rem">You chose the whole course: all ${lessons.length} lessons in order. Lessons tied to a question you missed or guessed on the starter test still open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="tailored:${S.plan.examIdx}">Switch to the tailored tutorial${tailoredN ? ` (${plural(tailoredN, 'lesson')})` : ''}</button></div></div>`
-      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${preset === 'suggested' ? 'suggested' : preset === 'custom' ? 'your own mix' : PRESET_LABEL[preset].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
+      : S.plan.source === 'starter' ? `<div class="card soft stack" style="gap:8px"><div class="eyebrow">How your starter test shaped this</div><div class="row" style="gap:8px">${TESTED_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div><p class="ink2" style="font-size:.95rem">Lessons run in course order so each one builds on the last. Lessons tied to a question you missed or guessed open with your answer and the correct one.</p><div class="row"><button class="btn small" data-act="path" data-arg="full:${S.plan.examIdx}">Switch to the whole course (${plural(lessons.length, 'lesson')})</button></div></div>` : `<div class="card soft stack" style="gap:8px"><div class="eyebrow">Your path: ${preset === 'suggested' ? 'suggested' : preset === 'custom' ? 'your own mix' : PRESET_LABEL[preset].toLowerCase()}</div><p class="ink2" style="font-size:.95rem">Worst first. Each topic is a drill, the lesson, or the extended lesson (the lesson with its deeper explanation). A lesson opens with the exact question you missed. You can take the next test at any time.</p><div class="row"><button class="btn small" data-act="go" data-arg="results:${S.plan.examIdx}">Change your path</button></div></div>`}
       ${rem.length ? `<div class="row"><button class="btn primary lg" data-act="${openAct}" data-arg="${rem[0].id}">${done ? 'Continue' : 'Start'}: ${esc(L[rem[0].id].title)}${isTestPlan && modeOf(rem[0]) !== 'lesson' ? ` (${MODE_SHORT[modeOf(rem[0])].toLowerCase()})` : ''}</button></div>` : `<div class="ready-banner"><strong>${isTestPlan ? `All ${plural(S.plan.lessons.length, 'topic')} done.` : `All ${S.plan.lessons.length} lessons passed.`}</strong> ${stage() === 'fulltest' ? `Next: the ${EXAM_N}-question test.` : stage() === 'ready' ? 'You are cleared to book the exam.' : stage() === 'official' ? 'Next: the official-format test.' : 'Next: a practice test.'} <button class="btn primary small" data-act="${stage() === 'official' ? 'start-standard' : 'start-exam'}" data-arg="${stage() === 'fulltest' ? 'full' : 'practice'}" style="margin-left:8px">Start it</button></div>`}
       ${groups.map(g => `<div class="card stack" style="gap:8px"><div class="row spread"><h3><span class="muted" style="font-family:var(--font-mono);font-size:.85rem;margin-right:8px">${String(g.u.n).padStart(2, '0')}</span>${esc(g.u.title)}</h3></div>
         ${g.list.map(e => `<button class="option" data-act="${openAct}" data-arg="${e.id}" style="align-items:center"><span class="led lg ${planDone(e.id) ? 'green' : ledClass(e.id)}"></span><span style="flex:1"><strong>${esc(L[e.id].title)}</strong><br><span class="muted" style="font-size:.88rem">${esc(reasonLabel(e.reasons[0]))}${e.reasons.length > 1 ? ` · +${e.reasons.length - 1} more` : ''}</span></span><span class="row" style="gap:6px">${planDone(e.id) ? '<span class="pill good">DONE</span>' : `${isTestPlan ? `<span class="pill accent">${MODE_SHORT[modeOf(e)]}</span>` : ''}${reasonPill(e)}`}</span></button>`).join('')}</div>`).join('')}
@@ -692,7 +699,7 @@
   // Lesson view with personalization callouts and checkpoint quiz.
   function viewLesson(id) {
     const l = L[id]; if (!l) return viewCourse();
-    if (lessonLocked(id)) return `<div class="content stack" style="gap:20px"><div class="lesson-head"><div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span></div><h1>${esc(l.title)}</h1></div>${paywall('This lesson')}</div>`;
+    if (lessonLocked(id)) return `<div class="content stack" style="gap:20px"><div class="lesson-head"><div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span>${UNTESTED.has(l.domain) ? '<span class="pill">Not on the exam</span>' : ''}<span class="pill">Objective ${l.obj}</span></div><h1>${esc(l.title)}</h1></div>${paywall('This lesson')}</div>`;
     const ls = lstat(id); if (ls.status === 'new') { ls.status = 'read'; save(); }
     const entry = planEntry(id); const rem = planRemaining(); const posInPlan = entry ? rem.findIndex(e => e.id === id) : -1;
     const nextInPlan = entry ? rem.find(e => e.id !== id) : null;
@@ -726,7 +733,7 @@
     }
     return `<div class="content stack" style="gap:20px">
       <div class="lesson-head">
-        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span><span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· ${S.plan.source === 'test' ? 'retraining topic' : 'tutorial lesson'} ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
+        <div class="row" style="gap:8px"><span class="pill accent">Unit ${l.unit.n}</span><span class="pill">${DOMAINS[l.domain].short}</span>${UNTESTED.has(l.domain) ? '<span class="pill">Not on the exam</span>' : ''}<span class="pill">Objective ${l.obj}</span>${extended ? '<span class="pill accent">Extended</span>' : ''}<span class="muted" style="font-size:.9rem">${l.minutes} min read</span>${entry && posInPlan >= 0 ? `<span class="muted" style="font-size:.9rem">· ${S.plan.source === 'test' ? 'retraining topic' : 'tutorial lesson'} ${S.plan.lessons.length - rem.length + posInPlan + 1} of ${S.plan.lessons.length}</span>` : ''}<span style="flex:1"></span><button class="btn small ghost fb-btn" data-act="fb-open" data-kind="lesson" data-arg="${id}" title="Send feedback on this lesson">&#9873; Feedback</button></div>
         <h1>${esc(l.title)}</h1>
         ${domainReason && !callouts ? `<p class="ink2">${esc(lessonWhy(domainReason))}</p>` : ''}
         ${extended && !planDone(id) ? `<p class="ink2">Extended lesson: read the lesson and the deeper explanation below, then take the checkpoint.</p>` : ''}
@@ -813,7 +820,7 @@
   function viewTestsHub() {
     const exams = S.exams.slice().reverse(); const st = stage();
     return `<div class="content stack" style="gap:18px">
-      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${DOMAIN_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
+      <div><div class="eyebrow">Tests</div><h1>Starter, full, and practice tests</h1><p class="ink2" style="margin-top:6px">The starter test is ${STARTER_N} questions, ${T.starterPerDomain} per domain. Full and practice tests are ${EXAM_N} questions weighted like the real exam: ${TESTED_IDS.map(d => `${DOMAINS[d].quota} ${DOMAINS[d].short}`).join(', ')}. Unseen questions are chosen first. The setup card below runs the real exam's format or a test of your own design.${course.generatedNote ? ' ' + esc(course.generatedNote) : ''}</p></div>
       <div class="card lift stack"><div class="row spread"><div><h3>${st === 'ready' ? 'Cleared to book the exam' : st === 'official' ? 'Final step: the official-format test' : `Passes: ${S.passes} of ${PASSES_NEEDED} in your last ${PASS_WINDOW}`}</h3><p class="ink2">${st === 'starter' ? 'Start with the starter test; it builds your tutorial.' : st === 'tutorial' || st === 'retrain' ? `Finish your ${st === 'tutorial' ? 'tutorial' : 'retraining'} first, then the next test unlocks here. You can still take a test early.` : st === 'official' ? `You have qualified. Pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}%, the real exam's passing score, and you are cleared to book the real thing.` : `Score ${PASS_PCT}% or better on ${PASSES_NEEDED} of your last ${PASS_WINDOW} tests, then pass the official-format test (${REAL_N} questions in ${REAL_MIN} minutes, timed) at ${OFFICIAL_PCT}% and you are cleared to book the real thing.`}</p></div>
         <div class="row">${st === 'starter' ? `<button class="btn primary" data-act="start-exam" data-arg="starter">Starter test</button>` : `<button class="btn" data-act="start-exam" data-arg="starter">Retake starter</button>`}${st !== 'starter' ? (testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the ${EXAM_N}-question test</button>` : `<button class="btn ${st === 'fulltest' || st === 'practice' ? 'primary' : ''}" data-act="start-exam" data-arg="${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full'}">${S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'Practice test' : `${EXAM_N}-question test`}</button>`) : ''}${st === 'official' && !testsLocked('full') ? `<button class="btn primary" data-act="start-standard">Official-format test</button>` : ''}</div></div>
         <label class="row" style="font-size:.92rem;gap:8px"><input type="checkbox" data-act="toggle-timer" ${S.settings.timer ? 'checked' : ''}> Show the countdown timer on timed tests (the official-format test is always timed)</label></div>
@@ -828,9 +835,9 @@
     if (testsLocked('full')) return '';
     const s = currentSetup(); const std = apportion(REAL_N, pctWeights());
     return `<div class="card lift stack" id="setup"><div><h3>Set up a test</h3><p class="ink2">Take the real exam's format, or choose your own question count, time limit, and domain mix.</p></div>
-      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${DOMAIN_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward qualifying.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
+      <div class="row spread" style="align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><strong>Standard: the real exam's format.</strong> <span class="ink2">${REAL_N} questions in ${REAL_MIN} minutes, weighted like the real exam: ${TESTED_IDS.filter(d => std[d]).map(d => `${std[d]} ${DOMAINS[d].short}`).join(', ')}. No confidence question, just answers, like the real thing. Counts toward qualifying.</span></div><button class="btn primary" data-act="start-standard">Start standard test</button></div>
       <div class="setup-grid"><label class="field">Questions (5 to ${MAX_N})<input type="number" id="su-n" min="5" max="${MAX_N}" value="${s.n}"></label><label class="field">Time limit in minutes (0 for none)<input type="number" id="su-min" min="0" max="600" value="${s.minutes}"></label></div>
-      <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${DOMAIN_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
+      <div class="field">Domain mix as relative weights (the exam's percentages are the defaults; 0 leaves a domain out)<div class="setup-grid">${TESTED_IDS.map(d => `<label class="field"><span>${esc(DOMAINS[d].short)} <span class="muted">(exam ${DOMAINS[d].pct}%)</span></span><input type="number" class="su-w" data-d="${d}" min="0" max="100" value="${s.weights[d]}"></label>`).join('')}</div></div>
       <p class="ink2" id="su-preview" style="font-size:.95rem">${setupPreview(s)}</p>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="start-custom">Start custom test</button><button class="btn ghost small" data-act="setup-reset">Reset to exam defaults</button><span class="muted" style="font-size:.9rem">Custom tests feed your weak topics and retraining but do not count toward qualifying.</span></div></div>`;
   }
@@ -947,7 +954,7 @@
         <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="tailored:${idx}">Switch to the tailored tutorial</button>` : ''}</div></div>`;
       } else {
         planCard = planIsFromThis ? `<div class="card lift stack"><div class="row spread"><div><div class="eyebrow">Your tutorial</div><h3>${plural(S.plan.lessons.length, 'lesson')}, about ${planMinutes(S.plan.lessons)} minutes</h3></div><button class="btn primary" data-act="lesson" data-arg="${rem.length ? rem[0].id : S.plan.lessons[0].id}">Start the tutorial</button></div>
-        <div class="row" style="gap:8px">${DOMAIN_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
+        <div class="row" style="gap:8px">${TESTED_IDS.map(d => `<span class="pill ${S.plan.depth[d] === 'rebuild' ? 'bad' : S.plan.depth[d] === 'core' ? 'warn' : S.plan.depth[d] === 'light' ? '' : 'good'}">${DOMAINS[d].short}: ${S.plan.depth[d] === 'rebuild' ? 'all lessons' : S.plan.depth[d] === 'core' ? 'core lessons' : S.plan.depth[d] === 'light' ? 'light review' : 'solid'}</span>`).join('')}</div>
         <p class="ink2" style="font-size:.95rem">Missed ${ALL_WORD} questions in a domain: you get every lesson in that domain. Missed one, or guessed: you get that domain's core lessons plus the exact topic. Confident and correct on ${ALL_WORD}: nothing from that domain.</p>
         <div class="row"><button class="btn ghost small" data-act="go" data-arg="tutorial">See the full plan</button>${latest ? `<button class="btn ghost small" data-act="path" data-arg="full:${idx}">Switch to the whole course</button>` : ''}</div></div>`
         : `<div class="ready-banner"><strong>Every answer right and confident.</strong> There is nothing to teach yet, so the ${EXAM_N}-question test is next. <button class="btn primary small" data-act="start-exam" data-arg="full" style="margin-left:8px">Start it</button>${latest ? `<button class="btn small" data-act="path" data-arg="full:${idx}" style="margin-left:8px">Do the whole course instead</button>` : ''}</div>`;
@@ -977,7 +984,7 @@
         <div class="stack" style="gap:8px"><div><strong>${e.score} of ${e.total} correct</strong>${e.noConf ? '' : ` (${e.score - guesses.length} sure, ${guesses.length} guessed)`}, ${misses.length} wrong. ${isStarter ? 'The starter test measures where to begin, not whether you would pass.' : `${esc(course.realExamNote)} Practice tests here pass at ${PASS_PCT}%; the official-format test uses the real exam's passing score, ${OFFICIAL_PCT}%.`}</div>
         <div class="row" style="gap:8px">${e.noConf ? '' : `<span class="pill ${confident ? 'bad' : 'good'}">${confident} confident miss${confident === 1 ? '' : 'es'}</span><span class="pill ${guesses.length ? 'warn' : 'good'}">${guesses.length} guess${guesses.length === 1 ? '' : 'es'}</span>`}${!isStarter ? (e.kind === 'custom' ? '<span class="pill">not counted toward qualifying</span>' : `<span class="pill ${S.passes >= PASSES_NEEDED ? 'good' : ''}">${S.passes} of your last ${PASS_WINDOW} passed</span>`) : ''}</div>
         <div class="muted" style="font-size:.9rem">${e.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained below and goes into your retraining.' : 'A confident miss is wrong at confidence 4 or 5. A guess is right at confidence 1 or 2. Both go into your tutorial.'}</div></div></div></div>
-      ${isStarter ? `<div class="card stack"><h3>By domain</h3><div class="bars">${DOMAIN_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>` : strengthCard(idx)}
+      ${isStarter ? `<div class="card stack"><h3>By domain</h3><div class="bars">${TESTED_IDS.map(d => `<div class="bar-row"><span class="label">${DOMAINS[d].short}</span><div class="track"><i style="width:${pct(e.byDomain[d].c, e.byDomain[d].t)}%"></i></div><span class="value">${e.byDomain[d].c}/${e.byDomain[d].t}</span></div>`).join('')}</div></div>` : strengthCard(idx)}
       ${planCard}
       ${misses.length ? `<div class="card"><h3 style="margin-bottom:6px">Wrong answers explained (${misses.length})</h3>${misses.map(r => reviewItem(r, true)).join('')}</div>` : ''}
       ${guesses.length ? `<div class="card"><h3 style="margin-bottom:6px">Right, but you were not sure (${guesses.length})</h3><p class="muted" style="font-size:.9rem;margin-bottom:6px">These count as gaps. Read why the answer is right so it stops being a guess.</p>${guesses.map(r => reviewItem(r, false)).join('')}</div>` : ''}
@@ -1426,6 +1433,7 @@
     ex.items.forEach((it, k) => { const q = fat(it); const wrong = (q.c + 1) % 4; ex.answers[k] = k < Math.round(STARTER_N * 0.6) ? { choice: wrong, conf: 5 } : k < Math.round(STARTER_N * 0.8) ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 5 }; });
     ex.i = ex.items.length; render();
     if (!S.exams[0] || S.exams[0].kind !== 'starter') throw new Error('starter not recorded');
+    if (S.exams[0].total !== STARTER_N || S.exams[0].review.some(r => UNTESTED.has(L[fat(r.q).t].domain))) throw new Error('starter test drew from an untested domain or the wrong count');
     log.push(`starter ${S.exams[0].pct}% plan=${S.plan ? S.plan.lessons.length : 0} depth=${JSON.stringify(S.plan && S.plan.depth)} stage=${stage()}`);
     // Path choice: the results page offers tailored versus the whole course; "full" covers every lesson, "tailored" restores the list.
     go('results', 'results:0'); if (document.querySelectorAll('[data-act="path"]').length < 2) throw new Error('path choice not offered on starter results');
@@ -1445,6 +1453,7 @@
     ex.items.forEach((it, k) => { const q = fat(it); ex.answers[k] = k % 10 === 0 ? { choice: (q.c + 1) % 4, conf: 2 } : k % 7 === 0 ? { choice: q.c, conf: 1 } : { choice: q.c, conf: 4 }; });
     ex.i = ex.items.length; render();
     log.push(`full ${S.exams[1].pct}% passes=${S.passes} retrain=${S.plan ? S.plan.lessons.length + ' ' + S.plan.source : 'none'} stage=${stage()}`);
+    if (S.exams[1].review.some(r => UNTESTED.has(L[fat(r.q).t].domain))) throw new Error('a test drew from an untested domain');
     // Retraining paths: every entry carries a suggested mode and a score; the results page shows the
     // strength chart and the picker; a drill entry opens a plan-flagged drill session.
     if (S.plan) {
@@ -1456,8 +1465,8 @@
       log.push(`retrain entries=${S.plan.lessons.length} preset=${presetOf(S.plan)} modes=${S.plan.lessons.map(e => e.mode).join(',')} minutes=${planMinutes(S.plan.lessons)}`);
     }
     // Test setup: the standard apportionment must sum to the real exam's count; a custom test must honor its size and leave the passes alone.
-    const std = apportion(REAL_N, pctWeights()); if (DOMAIN_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
-    const passesBefore = S.passes, planBefore = S.plan; const cw = {}; DOMAIN_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
+    const std = apportion(REAL_N, pctWeights()); if (TESTED_IDS.reduce((a, d) => a + std[d], 0) !== REAL_N) throw new Error('standard apportionment does not sum to ' + REAL_N);
+    const passesBefore = S.passes, planBefore = S.plan; const cw = {}; TESTED_IDS.forEach((d, i) => { cw[d] = i === 0 ? 3 : 1; });
     S.active = null; startExam('custom', { mode: 'custom', n: 12, minutes: 0, weights: cw }); ex = S.active;
     if (ex.items.length !== 12) throw new Error('custom test built ' + ex.items.length + ' items, expected 12');
     if (ex.minutes !== 0) throw new Error('custom test time limit not honored');
