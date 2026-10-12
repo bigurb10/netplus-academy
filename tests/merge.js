@@ -142,6 +142,11 @@ m = M.mergeMaps(st({ ratings: { a: { r: 9, ts: 10 } } }), st({ ratings: { a: { r
 check('ratings recency-based: later ts with lower r wins', m.ratings.a.r === 2 && m.ratings.a.ts === 99,
   JSON.stringify(m.ratings.a));
 
+m = M.mergeMaps(st({ labs: { 'l1': { done: true, at: 10, values: { a: 1 }, ok: { a: true } } } }), st({ labs: { 'l1': { done: false, at: 99, values: {}, ok: {} }, 'l2': { done: true, at: 5, values: {}, ok: {} } } }));
+check('labs take the entry with the later at, and pass through one-sided entries', m.labs.l1.done === false && m.labs.l1.at === 99 && m.labs.l2.done === true, JSON.stringify(m.labs));
+m = M.mergeMaps(st({}), st({}));
+check('labs merge to an empty map when neither side has any', JSON.stringify(m.labs) === '{}');
+
 m = M.mergeMaps(st({ seen: { a: true } }), st({ seen: { b: true } }));
 check('seen unions', m.seen.a === true && m.seen.b === true);
 
@@ -661,6 +666,15 @@ if (box2) {
   const scoreTexts = [real, real2].map(e => `${e.exams[0].score} of ${e.exams[0].total}`);
   check('the imported two-exam state renders one of the merged exams\' score on the home page',
     scoreTexts.some(t => w4.text().includes(t)), w4.text().slice(0, 200));
+}
+
+{
+  const A = { v: 3, course: 'mini', lessons: {}, topics: {}, qstats: {}, seen: {}, ratings: {}, exams: [], feedback: [], labs: { x: { done: true, at: 7, values: {}, ok: {} } }, settings: {}, settingsAt: 0, touchedAt: 1, created: 1 };
+  const B = { v: 3, course: 'mini', lessons: {}, topics: {}, qstats: {}, seen: {}, ratings: {}, exams: [], feedback: [], settings: {}, settingsAt: 0, touchedAt: 2, created: 1 };
+  const out = M.mergeState(A, B, OPTS);
+  check('mergeState carries labs through', out.labs && out.labs.x && out.labs.x.done === true, JSON.stringify(out.labs));
+  const out2 = M.mergeState(B, A, OPTS);
+  check('mergeState labs is order-independent', JSON.stringify(out2.labs) === JSON.stringify(out.labs));
 }
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }

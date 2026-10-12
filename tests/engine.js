@@ -771,6 +771,53 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.close();
   }
 
+  // ----- Labs (mini fixture: u1l2 carries the "mini-ping" lab on the choices instrument) -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const w = boot({ courseDir: mini }); const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    // Home shows the welcome page until the starter test is taken, so take it first (all right).
+    w.click(w.$('[data-act="go"][data-arg="home"]')); w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const Q = {}; w.FRA.questions.forEach(q => { Q[q.id] = q; }); const fat = x => typeof x === 'string' ? Q[x] : x;
+    st().active.items.map(fat).forEach(q => { w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`)); w.click(w.$('[data-act="conf"][data-arg="5"]')); w.click(w.$('[data-act="submit"]')); });
+    act(w, 'lesson', 'u1l2');
+    const card = w.$('#lab');
+    check('lab card renders on its lesson, after the hook and before the deeper explanation', !!card && !!w.$('.hook') && (w.$('.hook').compareDocumentPosition(card) & w.Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && (card.compareDocumentPosition(w.$('.deep-cta')) & w.Node.DOCUMENT_POSITION_FOLLOWING) !== 0);
+    check('lab card shows the title, the intro, three tasks, and the task count', /Read a ping/.test(card.textContent) && /Read the output below/.test(card.textContent) && w.$$('.lab-task').length === 3 && /0 of 3 tasks/.test(card.textContent), card.textContent.slice(0, 120));
+    check('the choices panel shows the scenario text', !!w.$('#instrument pre') && /10\.0\.0\.1/.test(w.$('#instrument pre').textContent));
+    check('rail marks the lab lesson', !!w.$('.rail .lab-pill'));
+    act(w, 'lesson', 'u1l1');
+    check('a lesson without a lab has no lab card', !w.$('#lab'));
+    act(w, 'lesson', 'u1l2');
+    w.click(w.$('[data-act="lab-answer"][data-arg="who:1"]'));
+    check('a wrong choice shows the why and stays open', !!w.$('.lab-task[data-task="who"] .feedback.bad') && /names 10\.0\.0\.1/.test(w.$('.lab-task[data-task="who"]').textContent) && st().labs['mini-ping'].ok.who === false);
+    w.click(w.$('[data-act="lab-answer"][data-arg="who:0"]'));
+    check('a right choice is marked correct', !!w.$('.lab-task[data-task="who"] .feedback.good') && st().labs['mini-ping'].ok.who === true && w.$('[data-act="lab-answer"][data-arg="who:0"]').disabled);
+    w.$('#lab-loss').value = '40'; w.click(w.$('[data-act="lab-check"][data-arg="loss"]'));
+    check('a reading outside the range is wrong, with its why', !!w.$('.lab-task[data-task="loss"] .feedback.bad') && /50%/.test(w.$('.lab-task[data-task="loss"]').textContent));
+    w.$('#lab-loss').value = '50'; w.click(w.$('[data-act="lab-check"][data-arg="loss"]'));
+    check('a reading inside the range is right and stored as a number', !!w.$('.lab-task[data-task="loss"] .feedback.good') && st().labs['mini-ping'].values.loss === 50);
+    check('the task count updates', /2 of 3 tasks/.test(w.$('#lab').textContent));
+    w.click(w.$('[data-act="lab-answer"][data-arg="ok:pass"]'));
+    check('a wrong verdict is wrong', !!w.$('.lab-task[data-task="ok"] .feedback.bad'));
+    w.click(w.$('[data-act="lab-answer"][data-arg="ok:fail"]'));
+    const lab = st().labs['mini-ping'];
+    check('the last right answer marks the lab done with a timestamp', lab.done === true && lab.at > 0 && /LAB DONE/.test(w.$('#lab').textContent));
+    check('a Redo button appears once done', !!w.$('[data-act="lab-redo"]'));
+    act(w, 'go', 'home');
+    check('home shows Labs done 1 of 1', /Labs done/.test(w.text()) && /1\s*\/ 1/.test(w.$$('.stat').map(e => e.textContent).join(' ')), w.$$('.stat').map(e => e.textContent).join(' | '));
+    act(w, 'lesson', 'u1l2'); w.click(w.$('[data-act="lab-redo"]'));
+    check('Redo clears the lab', st().labs['mini-ping'].done === false && /0 of 3 tasks/.test(w.$('#lab').textContent));
+    w.close();
+  }
+  // ----- A missing instruments module degrades to a note, never a blank page -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const w = boot({ courseDir: mini, beforeAppJs: x => { delete x.FRAInstruments; } });
+    act(w, 'lesson', 'u1l2');
+    check('without the module the lab card says the lab is unavailable', !!w.$('#lab') && /This lab is unavailable/.test(w.$('#instrument').textContent) && w.$$('.lab-task').length === 3);
+    w.close();
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

@@ -57,6 +57,22 @@
   const lessonsByDomain = {}; DOMAIN_IDS.forEach(d => { lessonsByDomain[d] = []; });
   lessons.forEach(l => { if (!lessonsByDomain[l.domain]) throw new Error(`lesson ${l.id} uses unknown domain ${l.domain}`); lessonsByDomain[l.domain].push(l); });
   const gens = FRA.generators || {};
+  // Labs (FRA.labs; spec section 3). A lesson names its lab with `lab: "<id>"` and the lab points
+  // back with `lesson`. Instruments are drawn by engine/instruments.js, read at render time only,
+  // so a missing file degrades to a note inside the lab card instead of a blank page.
+  const LABS = FRA.labs || {};
+  const labIds = lessons.filter(l => l.lab).map(l => l.lab);
+  lessons.forEach(l => {
+    if (!l.lab) return;
+    if (!LABS[l.lab]) throw new Error(`lesson ${l.id} names unknown lab ${l.lab}`);
+    if (LABS[l.lab].lesson !== l.id) throw new Error(`lab ${l.lab} belongs to ${LABS[l.lab].lesson}, not ${l.id}`);
+  });
+  Object.keys(LABS).forEach(id => {
+    const lab = LABS[id];
+    if (lab.id !== id) throw new Error(`lab ${id} carries id ${lab.id}`);
+    if (!L[lab.lesson] || L[lab.lesson].lab !== id) throw new Error(`lab ${id} is not referenced by its lesson ${lab.lesson}`);
+    if (!Array.isArray(lab.tasks) || !lab.tasks.length) throw new Error(`lab ${id} has no tasks`);
+  });
   document.title = course.name;
   // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
   const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
@@ -121,7 +137,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   // The pass rule lives in one fold (engine/merge.js). Recomputing on load migrates blobs saved
   // under the old streak rule (passStreak goes; passes and official come from the exam log) and
@@ -179,6 +195,21 @@
   // drilledAt: when a drill on the topic last reached three correct in a row (completes a retraining entry).
   const tstat = id => S.topics[id] || (S.topics[id] = { hist: [], attempts: 0, correct: 0, streak: 0, last: 0, drilledAt: 0 });
   const qstat = id => S.qstats[id] || (S.qstats[id] = { seen: 0, correct: 0, wrong: 0, last: 0 });
+  // Lab progress: values typed or recorded per task, which are right so far, and done once all are.
+  const labStat = id => S.labs[id] || (S.labs[id] = { done: false, at: 0, values: {}, ok: {} });
+  const labDone = id => !!(S.labs[id] && S.labs[id].done);
+  const labsDoneCount = () => labIds.filter(labDone).length;
+  const labOfView = () => { const l = S.view.name === 'lesson' ? L[S.view.arg] : null; return l && l.lab ? LABS[l.lab] : null; };
+  function checkLab(lab, t, value) {
+    let ok;
+    if (t.kind === 'reading') { const n = Number(value); ok = Number.isFinite(n) && n >= t.expect[0] && n <= t.expect[1]; if (Number.isFinite(n)) value = n; }
+    else if (t.kind === 'verdict') ok = value === t.expect;
+    else ok = Number(value) === Number(t.expect);
+    const ls = labStat(lab.id); ls.values[t.id] = value; ls.ok[t.id] = ok; ls.at = Date.now();
+    if (!ls.done && lab.tasks.every(x => ls.ok[x.id] === true)) { ls.done = true; save(); if (window.FRASync) FRASync.pushNow(); toast('Lab done'); }
+    else save();
+    return ok;
+  }
   // Checkpoint credit: every correct answer counts. Checkpoints ask no sureness; only the starter test does.
   const cpScore = s => s.answers.filter(a => a.correct).length;
 
@@ -522,6 +553,7 @@
           ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
       </div>${fbModal()}${acrModal()}`;
+    mountInstrument();
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function acctHtml() {
@@ -550,7 +582,7 @@
           <span class="unit-title">${esc(u.title)}</span>
           <span class="unit-meta">${inPlan ? `<span class="pill accent" style="padding:1px 7px">${inPlan} to do</span>` : `${passed}/${u.lessons.length}`}</span>
         </button>
-        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}</span>${lessonLocked(l.id) ? '<span class="lock" title="Full course">&#9679;</span>' : rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
+        ${open ? `<ul class="lesson-list">${u.lessons.map(l => `<li><button class="lesson-link" data-act="lesson" data-arg="${l.id}" ${l.id === curLesson ? 'aria-current="page"' : ''}><span class="led ${ledClass(l.id)}"></span><span style="flex:1">${esc(l.title)}${l.lab ? `<span class="pill lab-pill ${labDone(l.lab) ? 'good' : ''}" title="${labDone(l.lab) ? 'Lab done' : 'Has a lab'}">lab</span>` : ''}</span>${lessonLocked(l.id) ? '<span class="lock" title="Full course">&#9679;</span>' : rem.has(l.id) ? '<span class="inplan" title="In your tutorial"></span>' : ''}</button></li>`).join('')}</ul>` : ''}
       </div>`;
     }).join('');
   }
@@ -603,6 +635,7 @@
       <div class="stats">
         <div class="stat"><div class="eyebrow">${S.plan && S.plan.source === 'test' ? 'Retraining' : 'Tutorial'}</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + (S.plan.source === 'test' ? ' topics</small>' : ' lessons</small>') : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
+        ${labIds.length ? `<div class="stat"><div class="eyebrow">Labs done</div><div class="big">${labsDoneCount()}<small> / ${labIds.length}</small></div></div>` : ''}
         <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> of your last ${PASS_WINDOW} at ${PASS_PCT}%+ · ${PASSES_NEEDED} needed</small></div></div>
       </div>
@@ -685,7 +718,7 @@
     if (u) {
       return `<div class="content stack" style="gap:18px">
         <div><div class="eyebrow">Unit ${u.n}</div><h1>${esc(u.title)}</h1><p class="ink2" style="margin-top:6px">${esc(u.blurb)}</p></div>
-        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${lessonLocked(l.id) ? '<span class="pill">Full course</span>' : planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
+        <div class="stack" style="gap:8px">${u.lessons.map((l, i) => `<button class="option" data-act="lesson" data-arg="${l.id}" style="align-items:center"><span class="led lg ${ledClass(l.id)}"></span><span style="flex:1"><strong>${i + 1}. ${esc(l.title)}</strong><br><span class="muted" style="font-size:.9rem">Objective ${l.obj} · ${l.minutes} min read${l.lab ? ' · lab' : ''}${lstat(l.id).best ? ` · best checkpoint ${lstat(l.id).best}/${CHECKPOINT_N}` : ''}</span></span>${lessonLocked(l.id) ? '<span class="pill">Full course</span>' : planEntry(l.id) && !planDone(l.id) ? '<span class="pill accent">in tutorial</span>' : ''}</button>`).join('')}</div>
         <div class="row"><button class="btn ghost" data-act="go" data-arg="course">All units</button></div>
       </div>`;
     }
@@ -741,6 +774,7 @@
       ${callouts}
       <article class="lesson-body">${renderBody(l.body)}</article>
       <div class="hook"><span class="eyebrow">Remember</span><div>${inline(l.hook)}</div></div>
+      ${l.lab ? labCard(l) : ''}
       ${deepSection(id)}
       ${quiz}
       ${ratingRow(id)}
@@ -757,6 +791,41 @@
   function ratingRow(id) {
     const r = S.ratings && S.ratings[id];
     return `<div class="card soft stack rate-card" style="gap:8px"><div><div class="eyebrow">Rate this lesson</div><span class="ink2" style="font-size:.95rem">1 is confusing, 10 is great.${r ? ` You rated it ${r.r}/10.` : ' Your rating helps refine the course.'}</span></div>${ratingChips(id, r ? r.r : null)}</div>`;
+  }
+
+  // The lab card: intro, kit, manual excerpt, the instrument panel (mounted after paint), and
+  // the task sheet. Done when every task is right; a Redo clears it.
+  let instUiMap = {}; const instUi = id => instUiMap[id] || (instUiMap[id] = {});
+  function labCard(l) {
+    const lab = LABS[l.lab]; const ls = labStat(lab.id); const n = lab.tasks.length;
+    const okN = lab.tasks.filter(t => ls.ok[t.id] === true).length; const done = !!ls.done;
+    const kit = Array.isArray(lab.kit) && lab.kit.length ? `<div class="lab-kit"><div class="eyebrow">Kit</div><ul>${lab.kit.map(k => `<li>${inline(k)}</li>`).join('')}</ul></div>` : '';
+    const manual = lab.manual ? `<div class="callout accent lab-manual"><div class="eyebrow">From the service manual</div><div class="lesson-body">${renderBody(lab.manual)}</div></div>` : '';
+    return `<section class="card lift stack lab ${done ? 'done' : ''}" id="lab">
+      <div class="row spread"><div><div class="eyebrow">Lab · ${kit ? 'your kit or the virtual instrument' : 'virtual instrument'}</div><h3>${esc(lab.title)}</h3></div>${done ? '<span class="pill good">LAB DONE</span>' : `<span class="pill">${okN} of ${n} tasks</span>`}</div>
+      <div class="lesson-body">${renderBody(lab.intro || '')}</div>
+      ${kit}${manual}
+      <div class="instrument" id="instrument" data-lab="${esc(lab.id)}"></div>
+      <div class="lab-tasks stack">${lab.tasks.map((t, i) => labTask(lab, t, i, ls)).join('')}</div>
+      ${done ? `<div class="row"><button class="btn ghost small" data-act="lab-redo" data-arg="${esc(lab.id)}">Redo this lab</button></div>` : ''}
+    </section>`;
+  }
+  function labTask(lab, t, i, ls) {
+    const ok = ls.ok[t.id]; const v = ls.values[t.id]; const why = lab.why && lab.why[t.id];
+    const dis = ok === true ? 'disabled' : '';
+    const result = ok === true ? `<div class="feedback good"><div class="verdict">Correct</div></div>` : ok === false ? `<div class="feedback bad"><div class="verdict">Not right yet.</div><div>${esc(why || '')}</div></div>` : '';
+    let input;
+    if (t.kind === 'reading') input = `<div class="row" style="gap:8px;flex-wrap:wrap"><input type="number" step="any" class="lab-in" id="lab-${esc(t.id)}" data-task="${esc(t.id)}" value="${v != null ? esc(v) : ''}" ${dis}><span class="muted">${esc(t.unit || '')}</span>${t.measure ? `<button class="btn small ghost" data-act="lab-use" data-arg="${esc(t.id)}" ${dis}>Record the reading</button>` : ''}<button class="btn small primary" data-act="lab-check" data-arg="${esc(t.id)}" ${dis}>Check</button></div>`;
+    else if (t.kind === 'verdict') input = `<div class="row" style="gap:8px">${['pass', 'fail'].map(o => `<button class="chip" data-act="lab-answer" data-arg="${esc(t.id)}:${o}" aria-pressed="${v === o}" ${dis}>${o === 'pass' ? 'Pass' : 'Fail'}</button>`).join('')}</div>`;
+    else input = `<div class="options">${(t.options || []).map((o, k) => `<button class="option" data-act="lab-answer" data-arg="${esc(t.id)}:${k}" aria-pressed="${v === k}" ${dis}><span class="key">${letters[k] || k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+    return `<div class="lab-task ${ok === true ? 'ok' : ''}" data-task="${esc(t.id)}"><div class="q-stem"><span class="muted tnum">${i + 1}.</span> ${inline(t.prompt)}</div>${input}${result}</div>`;
+  }
+  // Mount the instrument panel into the lab card after each paint. The module is optional.
+  function mountInstrument() {
+    const el = $('#instrument'); if (!el) return;
+    const lab = LABS[el.dataset.lab]; const ins = window.FRAInstruments;
+    if (!lab || !ins || typeof ins.render !== 'function') { el.innerHTML = '<p class="muted">This lab is unavailable: the instrument module did not load. The tasks below still work with your own kit.</p>'; return; }
+    try { ins.render(el, lab, instUi(lab.id), { toast }); } catch (err) { el.innerHTML = '<p class="muted">This lab is unavailable.</p>'; }
   }
 
   // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
@@ -1332,6 +1401,15 @@
         if (S.plan && S.plan.source === 'starter' && planRemaining().length && !confirm('This replaces the tutorial you are on with retraining from this test. Continue?')) return;
         const plan = planFromTest(rec, i); if (!plan.lessons.length) { toast('Nothing to retrain from that test.'); return; }
         S.plan = plan; save(); render(); toast('Retraining now comes from this test.'); return; }
+      case 'lab-use': { const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === arg); const ins = window.FRAInstruments; if (!t || !ins) return;
+        const v = ins.current(lab, instUi(lab.id), t); if (v == null) { toast('Take the reading on the instrument first.'); return; }
+        const el = $(`#lab-${t.id}`); if (el) el.value = String(v); return; }
+      case 'lab-check': { const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === arg); if (!t) return;
+        const el = $(`#lab-${t.id}`); const raw = el ? String(el.value).trim() : ''; if (!raw) { toast('Type the reading first.'); return; }
+        checkLab(lab, t, raw); render(); return; }
+      case 'lab-answer': { const i = String(arg).indexOf(':'); const tid = String(arg).slice(0, i), val = String(arg).slice(i + 1); const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === tid); if (!t) return;
+        checkLab(lab, t, t.kind === 'verdict' ? val : parseInt(val, 10)); render(); return; }
+      case 'lab-redo': { const lab = LABS[arg]; if (!lab) return; S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} }; save(); render(); return; }
       case 'sign-in': { FRAAuth.beginSignIn(location.pathname + location.hash); return; }
       case 'sign-out': {
         // Sign-out clears the token, never the local blob. The learner keeps studying
@@ -1410,6 +1488,7 @@
     if (fb) { if (e.key === 'Escape') { fb = null; render(); } return; }
     if (acrOpen) { if (e.key === 'Escape') { acrOpen = null; render(); } return; }
     if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('acr')) { e.preventDefault(); acrOpen = { key: e.target.dataset.arg, sense: e.target.dataset.sense === '1' ? 1 : 0 }; render(); return; }
+    if (e.key === 'Enter' && e.target && e.target.classList && e.target.classList.contains('lab-in')) { e.preventDefault(); const b = $(`[data-act="lab-check"][data-arg="${e.target.dataset.task}"]`); if (b && !b.disabled) b.click(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
     const k = e.key.toUpperCase();
@@ -1516,6 +1595,18 @@
       go('cheatsheet'); const rows = document.querySelectorAll('#cs-acronyms tbody tr').length; if (rows !== senses) throw new Error(`cheat sheet acronyms section has ${rows} rows, expected ${senses}`);
       log.push(`acronyms keys=${ACR_KEYS.length} senses=${senses} links in 5 lessons=${links} modal ok sheet rows=${rows}`);
     } else log.push('acronyms: no glossary in this pack');
+    // Labs: every lab validates against its instrument (ranges contain the truth, verdicts match
+    // the scenario's limits), the card renders, and finishing every task marks the lab done.
+    if (labIds.length) {
+      const ins = window.FRAInstruments; if (!ins) throw new Error('this pack has labs but engine/instruments.js is not loaded');
+      const problems = labIds.reduce((all, id) => all.concat(ins.validate(LABS[id]).map(p => id + ': ' + p)), []);
+      if (problems.length) throw new Error('lab problems: ' + problems.join('; '));
+      const lab = LABS[labIds[0]]; go('lesson', lab.lesson); if (!$('#lab') || !$('#instrument')) throw new Error('lab card did not render');
+      lab.tasks.forEach(t => checkLab(lab, t, t.kind === 'reading' ? (t.expect[0] + t.expect[1]) / 2 : t.expect));
+      if (!labDone(lab.id) || labsDoneCount() < 1) throw new Error('completing every task did not mark the lab done');
+      S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} };
+      log.push(`labs ${labIds.length} validated; ${lab.id} completes and clears`);
+    } else log.push('labs: none in this pack');
     // The final gate: enough passes among the last few tests qualify the learner, then only a timed
     // official-format pass at the real exam's score clears them, permanently.
     const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: null }; }); sess.i = sess.items.length; render(); };

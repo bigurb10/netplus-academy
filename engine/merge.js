@@ -96,7 +96,10 @@
       topics: mergeBy(a.topics, b.topics, (x, y) => laterOf(x, y, 'last')),
       qstats: mergeBy(a.qstats, b.qstats, mergeQstat),
       seen: Object.assign({}, a.seen || {}, b.seen || {}),
-      ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts'))
+      ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts')),
+      // Lab progress: the newer entry per lab wins whole, so a Redo on one device (done: false,
+      // newer at) is not undone by an older done: true from the other.
+      labs: mergeBy(a.labs, b.labs, (x, y) => laterOf(x, y, 'at'))
     };
   }
 
@@ -162,7 +165,7 @@
       v: 3,
       course: a.course || b.course || null,
       lessons: maps.lessons, topics: maps.topics, qstats: maps.qstats,
-      seen: maps.seen, ratings: maps.ratings,
+      seen: maps.seen, ratings: maps.ratings, labs: maps.labs,
       exams: exams,
       feedback: feedback,
       passes: q.passes,

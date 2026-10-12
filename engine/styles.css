@@ -372,3 +372,31 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .retrain-row .t-sub { font-size: 0.85rem; color: var(--muted); }
 .modes { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip.mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Labs (engine/app.js labCard) and virtual instruments (engine/instruments.js) */
+.lab .lab-kit ul { margin: 0; padding-left: 20px; }
+.lab-task { border-top: 1px solid var(--line); padding-top: 12px; }
+.lab-task.ok { opacity: 0.85; }
+.lab-task .lab-in { width: 150px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; background: var(--surface); color: var(--ink); }
+.lab-pill { margin-left: 6px; padding: 1px 7px; }
+.ins { display: grid; gap: 14px; }
+.ins-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.ins-panel { background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.ins-screen { background: #0e1a14; color: #d8ffe6; }
+.ins-screen .eyebrow, .ins-screen .muted { color: #8fd9a8; }
+.ins-readout { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 500; letter-spacing: 0.02em; background: #0e1a14; color: #d8ffe6; border-radius: 8px; padding: 10px 14px; min-height: 48px; }
+.ins-readout.bad { color: #ff9b8f; }
+.ins-dial { display: flex; gap: 6px; flex-wrap: wrap; }
+.ins-drawing { position: relative; display: inline-block; max-width: 100%; }
+.ins-drawing svg { display: block; max-width: 100%; height: auto; }
+.tp { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 0.7rem var(--font-display); cursor: pointer; padding: 0; }
+.tp.red { background: #C8322B; color: #fff; border-color: #C8322B; }
+.tp.black { background: #14212E; color: #fff; border-color: #14212E; }
+.ins-alarm { background: #C8322B; color: #fff; font-weight: 700; padding: 6px 10px; border-radius: 6px; letter-spacing: 0.08em; }
+.ins-numerics { display: flex; gap: 18px; flex-wrap: wrap; }
+.ins-numerics b { font-family: var(--font-display); font-size: 1.8rem; display: block; }
+.ins-limits td, .ins-limits th { padding: 4px 8px; }
+.ins-fig { margin: 0; }
+.ins-fig-n { font-size: 0.8rem; color: var(--muted); }
+.ins-text { background: #0e1a14; color: #d8ffe6; padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0; }
+.fig.strip { max-width: 100%; height: auto; background: #fff7f7; border-radius: 6px; }

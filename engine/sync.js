@@ -215,6 +215,10 @@
     // burned a spurious PUT per pull until each row had been rewritten.
     if (!c.pathAt) delete c.pathAt;
     if (!c.settingsAt) delete c.settingsAt;   // same class: rows written before settingsAt existed
+    // Same class again: labs (Task 3) is an additive map. mergeMaps (engine/merge.js) always
+    // emits `labs`, even {} when neither side ever had one, so a server blob written before
+    // labs existed must hash the same as a fresh merge's empty map, not differ by one key.
+    if (c.labs && typeof c.labs === 'object' && !Object.keys(c.labs).length) delete c.labs;
     return hash(stableStringify(c));
   }
 
