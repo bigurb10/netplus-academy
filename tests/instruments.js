@@ -148,6 +148,64 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('render: an unknown instrument says so instead of throwing', /Unknown instrument/.test(el.textContent));
 }
 
+// ---------- the five interactive panels (jsdom) ----------
+{
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!doctype html><div id="x"></div>'); const w = dom.window;
+  // `box` is the panel's container; fresh() swaps in a new one so each panel starts clean, and the
+  // helpers read `box` at call time so they always address the current container.
+  let box = w.document.getElementById('x');
+  const click = sel => { const b = box.querySelector(sel); if (!b) throw new Error('no element ' + sel); b.dispatchEvent(new w.MouseEvent('click', { bubbles: true })); };
+  const set = (sel, value) => { const f = box.querySelector(sel); if (!f) throw new Error('no field ' + sel); if (f.type === 'checkbox') f.checked = value; else f.value = value; f.dispatchEvent(new w.Event('change', { bubbles: true })); };
+  const fresh = () => { const n = w.document.createElement('div'); box.replaceWith(n); box = n; return n; };
+  // dmm
+  fresh(); let ui = {};
+  const dmmLab = lab('dmm', Object.assign({ svg: '<svg width="200" height="100"></svg>', points: { A: [10, 10], B: [50, 10], C: [90, 10] } }, DMM), []);
+  I.render(box, dmmLab, ui, {});
+  check('dmm: draws the circuit, a hotspot per test point, the dial, power, and the kit toggle', box.querySelectorAll('.tp').length === 3 && box.querySelectorAll('[data-ins="fn"]').length === 6 && !!box.querySelector('[data-ins="power"]') && !!box.querySelector('[data-field="kit"]') && box.querySelector('[data-readout]').textContent === '--');
+  click('[data-ins="tp"][data-arg="A"]'); click('[data-ins="tp"][data-arg="B"]');
+  check('dmm: two clicks place red then black and read DC volts', ui.a === 'A' && ui.b === 'B' && ui.readout && near(ui.readout.value, 9, 0.011) && /V$/.test(box.querySelector('[data-readout]').textContent), JSON.stringify(ui.readout));
+  click('[data-ins="fn"][data-arg="ohm"]');
+  check('dmm: ohms with power on shows INVALID in the bad style', ui.readout.invalid === true && box.querySelector('[data-readout]').classList.contains('bad'));
+  click('[data-ins="power"]');
+  check('dmm: power off clears the invalid reading (A-B has no resistance entry, so OL)', ui.power === false && ui.readout.text === 'OL');
+  set('[data-field="kit"]', true);
+  check('dmm: the kit toggle hides the readout', ui.kit === true && ui.readout === null && /own meter/.test(box.querySelector('[data-readout]').textContent));
+  // safety
+  fresh(); ui = {};
+  I.render(box, lab('safety', SAFE, []), ui, {});
+  check('safety: three selects, a Test button, and the limits card', box.querySelectorAll('select[data-field]').length === 3 && !!box.querySelector('[data-ins="test"]') && /500 uA/.test(box.textContent) && /0\.5 ohm/.test(box.textContent));
+  set('[data-field="test"]', 'chassis'); set('[data-field="polarity"]', 'reverse'); set('[data-field="ground"]', 'open');
+  click('[data-ins="test"]');
+  check('safety: Test reads the worst case', ui.readout && near(ui.readout.value, 210, 1.01) && /uA/.test(box.querySelector('[data-readout]').textContent), JSON.stringify(ui.readout));
+  set('[data-field="test"]', 'ground');
+  check('safety: changing a control clears the readout until Test is pressed again', ui.readout === null && box.querySelector('[data-readout]').textContent === '--');
+  // monitor
+  fresh(); ui = {};
+  I.render(box, lab('monitor', MON, []), ui, {});
+  check('monitor: simulator controls and an empty screen before Apply', box.querySelectorAll('input[data-field]').length === 4 && !!box.querySelector('select[data-field="rhythm"]') && !box.querySelector('.fig.strip'));
+  set('[data-field="hr"]', '60'); set('[data-field="spo2"]', '95'); click('[data-ins="apply"]');
+  check('monitor: Apply shows the numerics with the scenario offsets and a strip at the shown rate', ui.readout && ui.readout.hr === 61 && ui.readout.spo2 === 94 && /61/.test(box.querySelector('.ins-numerics').textContent) && box.querySelector('.fig.strip').getAttribute('data-rate') === '61');
+  set('[data-field="rhythm"]', 'asystole'); click('[data-ins="apply"]');
+  check('monitor: asystole shows the alarm and a flat strip', /ASYSTOLE/.test(box.querySelector('.ins-alarm').textContent) && box.querySelector('.fig.strip').getAttribute('data-beats') === '0');
+  // infusion
+  fresh(); ui = {};
+  I.render(box, lab('infusion', INF, []), ui, {});
+  check('infusion: rate and VTBI fields, a Start button, an empty cylinder', !!box.querySelector('[data-field="rate"]') && !!box.querySelector('[data-ins="start"]') && box.querySelector('.fig.cylinder').getAttribute('data-value') === '0');
+  set('[data-field="rate"]', '100'); click('[data-ins="start"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]'); click('[data-ins="ff"][data-arg="10"]');
+  check('infusion: thirty minutes at 100 mL/h fills the cylinder to the true delivery, read to the graduation', ui.elapsed === 30 && ui.readout && ui.readout.volume === 52 && box.querySelector('.fig.cylinder').getAttribute('data-value') === '52' && /30 min/.test(box.textContent), JSON.stringify(ui.readout));
+  click('[data-ins="stop"]');
+  check('infusion: Stop keeps the volume and offers Start again', ui.running === false && !!box.querySelector('[data-ins="start"]') && ui.readout.volume === 52);
+  // defib
+  fresh(); ui = {};
+  I.render(box, lab('defib', DEF, []), ui, {});
+  check('defib: one chip per energy, Charge enabled, Discharge disabled', box.querySelectorAll('[data-ins="energy"]').length === 4 && !box.querySelector('[data-ins="charge"]').disabled && box.querySelector('[data-ins="discharge"]').disabled);
+  click('[data-ins="energy"][data-arg="200"]'); click('[data-ins="charge"]');
+  check('defib: Charge arms the selected energy', ui.energy === 200 && ui.charged === true && /CHARGED 200 J/.test(box.textContent));
+  click('[data-ins="discharge"]');
+  check('defib: Discharge reads the delivered energy on the analyzer and disarms', ui.readout && ui.readout.delivered === 204 && /204 J delivered/.test(box.textContent) && ui.charged === false);
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All instrument tests passed.');
 process.exit(0);

@@ -230,6 +230,97 @@
   PANEL.choices = lab => `<pre class="ins-text">${esc(obj(lab.scenario).text || '')}</pre>`;
   HANDLE.choices = () => false;
 
+  const sel = (ui, field, opts) => `<select data-field="${field}">${opts.map(([v, l]) => `<option value="${v}" ${ui[field] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const numField = (ui, field, label, min, max, dis) => `<label class="field">${label}<input type="number" data-field="${field}" min="${min}" max="${max}" value="${ui[field]}" ${dis ? 'disabled' : ''}></label>`;
+
+  // ---- dmm: a function dial, a circuit power switch, two probes placed on drawn test points ----
+  const DMM_FNS = [['vdc', 'V DC'], ['vac', 'V AC'], ['ohm', 'Ohms'], ['adc', 'A DC'], ['cont', 'Continuity'], ['diode', 'Diode']];
+  function dmmInit(lab, ui) { if (!ui.fn) { ui.fn = 'vdc'; ui.power = obj(lab.scenario).power !== false; ui.a = null; ui.b = null; ui.next = 'a'; ui.kit = false; ui.readout = null; } }
+  PANEL.dmm = (lab, ui) => {
+    dmmInit(lab, ui); const sc = obj(lab.scenario); const pts = obj(sc.points); const r = ui.readout;
+    const hot = Object.keys(pts).map(p => `<button type="button" class="tp ${ui.a === p ? 'red' : ui.b === p ? 'black' : ''}" data-ins="tp" data-arg="${esc(p)}" style="left:${num(pts[p][0])}px;top:${num(pts[p][1])}px" title="Test point ${esc(p)}">${esc(p)}</button>`).join('');
+    return `<div class="ins dmm">
+      <div class="ins-drawing">${sc.svg || ''}${hot}</div>
+      <div class="ins-panel">
+        <div class="ins-readout ${r && r.invalid ? 'bad' : ''}" data-readout>${ui.kit ? 'Your own meter: type what it reads' : r ? esc(r.text) : '--'}</div>
+        <div class="ins-dial">${DMM_FNS.map(([k, l]) => `<button type="button" class="chip" data-ins="fn" data-arg="${k}" aria-pressed="${ui.fn === k}">${l}</button>`).join('')}</div>
+        <div class="row" style="gap:10px;flex-wrap:wrap"><button type="button" class="btn small ${ui.power ? 'primary' : ''}" data-ins="power">Circuit power: ${ui.power ? 'ON' : 'OFF'}</button><span class="muted">Red probe: <b>${esc(ui.a || '-')}</b> · Black probe: <b>${esc(ui.b || '-')}</b> · click a test point: first red, then black</span></div>
+        <label class="row" style="gap:8px"><input type="checkbox" data-field="kit" ${ui.kit ? 'checked' : ''}> I'm using my own kit and typing my readings</label>
+      </div></div>`;
+  };
+  HANDLE.dmm = (lab, ui, act, arg) => {
+    dmmInit(lab, ui);
+    if (act === 'fn') ui.fn = arg;
+    else if (act === 'power') ui.power = !ui.power;
+    else if (act === 'tp') { if (ui.next === 'a') { ui.a = arg; ui.next = 'b'; } else { ui.b = arg; ui.next = 'a'; } }
+    ui.readout = ui.kit || !ui.a || !ui.b ? null : compute.dmm(lab.scenario, { fn: ui.fn, a: ui.a, b: ui.b, power: ui.power }, lab.id);
+    return true;
+  };
+
+  // ---- safety analyzer: test, polarity, ground condition, Test, and the limits card ----
+  function safetyInit(ui) { if (!ui.test) { ui.test = 'ground'; ui.polarity = 'normal'; ui.ground = 'closed'; ui.readout = null; } }
+  PANEL.safety = (lab, ui) => {
+    safetyInit(ui); const sc = obj(lab.scenario); const lim = obj(sc.limits); const r = ui.readout;
+    const names = { ground: 'Ground wire resistance', chassis: 'Chassis (enclosure) leakage', lead: 'Patient lead leakage' };
+    return `<div class="ins safety"><div class="ins-panel">
+      <div class="ins-readout" data-readout>${r ? esc(r.text) : '--'}</div>
+      <div class="setup-grid"><label class="field">Test ${sel(ui, 'test', [['ground', names.ground], ['chassis', names.chassis], ['lead', names.lead]])}</label><label class="field">Mains polarity ${sel(ui, 'polarity', [['normal', 'Normal'], ['reverse', 'Reverse']])}</label><label class="field">Ground conductor ${sel(ui, 'ground', [['closed', 'Intact'], ['open', 'Open (lifted)']])}</label></div>
+      <div class="row"><button type="button" class="btn primary small" data-ins="test">Test</button></div>
+      <table class="plain ins-limits"><thead><tr><th>Limit${sc.standard ? ` (${esc(sc.standard)})` : ''}</th><th>Value</th></tr></thead><tbody>${['ground', 'chassis', 'lead'].filter(k => lim[k] != null).map(k => `<tr><td>${names[k]}</td><td>${esc(lim[k])} ${k === 'ground' ? 'ohm' : 'uA'}</td></tr>`).join('')}</tbody></table>
+    </div></div>`;
+  };
+  HANDLE.safety = (lab, ui, act) => { safetyInit(ui); if (act === 'test') ui.readout = compute.safety(lab.scenario, { test: ui.test, polarity: ui.polarity, ground: ui.ground }, lab.id); else if (act === 'field') ui.readout = null; return true; };
+
+  // ---- patient simulator and monitor ----
+  function monInit(ui) { if (ui.hr == null) { ui.hr = 80; ui.rhythm = 'nsr'; ui.spo2 = 98; ui.sys = 120; ui.dia = 80; ui.readout = null; } }
+  PANEL.monitor = (lab, ui) => {
+    monInit(ui); const r = ui.readout;
+    const screen = r ? `${r.alarm ? `<div class="ins-alarm">${esc(r.alarm)}</div>` : ''}<div class="ins-numerics"><div><span class="eyebrow">HR</span><b>${r.hr == null ? '---' : r.hr}</b></div><div><span class="eyebrow">SpO2</span><b>${r.spo2}</b></div><div><span class="eyebrow">NIBP</span><b>${r.sys}/${r.dia}</b></div></div>${figure({ kind: 'strip', rate: r.hr || 0, seconds: 6, flat: r.alarm === 'ASYSTOLE', chaotic: r.alarm === 'VFIB' })}` : '<p class="muted">Apply the simulator settings to see the monitor.</p>';
+    return `<div class="ins monitor"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Patient simulator</div><div class="setup-grid">${numField(ui, 'hr', 'ECG rate (bpm)', 30, 300)}<label class="field">Rhythm ${sel(ui, 'rhythm', [['nsr', 'Normal sinus'], ['asystole', 'Asystole'], ['vfib', 'Ventricular fibrillation']])}</label>${numField(ui, 'spo2', 'SpO2 (%)', 70, 100)}${numField(ui, 'sys', 'NIBP systolic (mmHg)', 60, 250)}${numField(ui, 'dia', 'NIBP diastolic (mmHg)', 30, 150)}</div><div class="row"><button type="button" class="btn primary small" data-ins="apply">Apply to simulator</button></div></div>
+      <div class="ins-panel ins-screen"><div class="eyebrow">Monitor</div>${screen}</div>
+    </div></div>`;
+  };
+  HANDLE.monitor = (lab, ui, act) => { monInit(ui); if (act === 'apply') { ui.readout = compute.monitor(lab.scenario, { hr: ui.hr, rhythm: ui.rhythm, spo2: ui.spo2, sys: ui.sys, dia: ui.dia }); return true; } return false; };
+
+  // ---- infusion pump flow check: set a rate, run, fast-forward, read the cylinder ----
+  function infInit(ui) { if (ui.rate == null) { ui.rate = 100; ui.vtbi = 100; ui.elapsed = 0; ui.running = false; ui.readout = null; } }
+  PANEL.infusion = (lab, ui) => {
+    infInit(ui); const sc = obj(lab.scenario); const r = compute.infusion(sc, { rate: ui.rate, minutes: ui.elapsed }); ui.readout = ui.elapsed > 0 ? r : null;
+    return `<div class="ins infusion"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Pump</div><div class="setup-grid">${numField(ui, 'rate', 'Rate (mL/h)', 1, 999, ui.running)}${numField(ui, 'vtbi', 'VTBI (mL)', 1, 9999, ui.running)}</div>
+        <div class="ins-readout" data-readout>${ui.running ? 'RUNNING' : 'STOPPED'} · ${ui.elapsed} min elapsed</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap">${ui.running ? `<button type="button" class="btn small" data-ins="ff" data-arg="1">+1 min</button><button type="button" class="btn small" data-ins="ff" data-arg="10">+10 min</button><button type="button" class="btn small ghost" data-ins="stop">Stop</button>` : `<button type="button" class="btn primary small" data-ins="start">Start (empties the cylinder)</button>`}</div></div>
+      <div class="ins-panel"><div class="eyebrow">Collection</div>${figure({ kind: 'cylinder', ml: num(sc.cylinderMl) || 100, value: r.volume })}<p class="muted">Read the meniscus to the nearest ${num(sc.graduation) || 1} mL.</p></div>
+    </div></div>`;
+  };
+  HANDLE.infusion = (lab, ui, act, arg) => {
+    infInit(ui);
+    if (act === 'start') { ui.running = true; ui.elapsed = 0; return true; }
+    if (act === 'stop') { ui.running = false; return true; }
+    if (act === 'ff') { if (!ui.running) return false; ui.elapsed += num(arg); const maxMin = ui.rate > 0 ? ui.vtbi / ui.rate * 60 : 0; if (ui.elapsed >= maxMin) { ui.elapsed = Math.round(maxMin); ui.running = false; } return true; }
+    return false;
+  };
+
+  // ---- defibrillator into the analyzer ----
+  function defInit(lab, ui) { if (ui.energy == null) { ui.energy = num((obj(lab.scenario).energies || [200])[0]); ui.charged = false; ui.readout = null; } }
+  PANEL.defib = (lab, ui) => {
+    defInit(lab, ui); const sc = obj(lab.scenario); const r = ui.readout;
+    return `<div class="ins defib"><div class="ins-two">
+      <div class="ins-panel"><div class="eyebrow">Defibrillator</div><div class="row" style="gap:6px;flex-wrap:wrap">${(sc.energies || []).map(e => `<button type="button" class="chip" data-ins="energy" data-arg="${num(e)}" aria-pressed="${ui.energy === num(e)}">${num(e)} J</button>`).join('')}</div>
+        <div class="ins-readout" data-readout>${ui.charged ? `CHARGED ${ui.energy} J` : `Selected ${ui.energy} J`}</div>
+        <div class="row" style="gap:8px"><button type="button" class="btn small" data-ins="charge" ${ui.charged ? 'disabled' : ''}>Charge</button><button type="button" class="btn primary small" data-ins="discharge" ${ui.charged ? '' : 'disabled'}>Discharge into the analyzer</button></div></div>
+      <div class="ins-panel ins-screen"><div class="eyebrow">Defibrillator analyzer</div><div class="ins-readout" data-readout>${r ? `${r.delivered} J delivered` : '--'}</div><p class="muted">${r ? `Set ${r.energy} J, charge time ${r.chargeSeconds} s.` : 'Charge, then discharge into the analyzer.'}</p></div>
+    </div></div>`;
+  };
+  HANDLE.defib = (lab, ui, act, arg) => {
+    defInit(lab, ui);
+    if (act === 'energy') { ui.energy = num(arg); ui.charged = false; return true; }
+    if (act === 'charge') { ui.charged = true; return true; }
+    if (act === 'discharge') { if (!ui.charged) return false; ui.readout = compute.defib(lab.scenario, { energy: ui.energy }); ui.charged = false; return true; }
+    return false;
+  };
+
   function render(el, lab, ui, api) {
     const draw = lab && PANEL[lab.instrument];
     if (!draw) { el.innerHTML = '<p class="muted">Unknown instrument.</p>'; return; }

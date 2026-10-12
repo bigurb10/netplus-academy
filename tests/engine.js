@@ -818,6 +818,31 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.close();
   }
 
+  // ----- Record the reading: a measured task copies the panel's value into its input -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const w = boot({ courseDir: mini, beforeApp: x => {
+      // Swap the fixture lab for a safety-analyzer lab on the same lesson, in this window only.
+      x.FRA.labs['mini-ping'] = { id: 'mini-ping', lesson: 'u1l2', title: 'Safety check', instrument: 'safety', intro: 'Test the device.',
+        scenario: { standard: 'NFPA 99', ground: 0.12, chassis: { normal: 45, reverse: 60, 'normal-open': 180, 'reverse-open': 210 }, lead: { normal: 8, reverse: 9, 'normal-open': 40, 'reverse-open': 45 }, limits: { ground: 0.5, chassis: 500, lead: 100 } },
+        tasks: [{ id: 'gnd', kind: 'reading', prompt: 'Ground wire resistance', unit: 'ohm', expect: [0.08, 0.16], measure: { test: 'ground', polarity: 'normal', ground: 'closed' } }, { id: 'v', kind: 'verdict', prompt: 'Pass?', expect: 'pass' }],
+        why: { gnd: 'Read the ground test.', v: 'Everything is under its limit.' } };
+    } });
+    const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    act(w, 'lesson', 'u1l2');
+    check('a measured reading task offers Record the reading', !!w.$('[data-act="lab-use"][data-arg="gnd"]'));
+    w.click(w.$('[data-act="lab-use"][data-arg="gnd"]'));
+    check('Record before a measurement leaves the input empty', w.$('#lab-gnd').value === '');
+    w.$('#instrument [data-ins="test"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    w.click(w.$('[data-act="lab-use"][data-arg="gnd"]'));
+    const typed = Number(w.$('#lab-gnd').value);
+    check('Record copies the analyzer reading into the input', typed >= 0.11 && typed <= 0.13, w.$('#lab-gnd').value);
+    w.click(w.$('[data-act="lab-check"][data-arg="gnd"]'));
+    check('the recorded reading checks as correct', st().labs['mini-ping'].ok.gnd === true);
+    check('the panel keeps its reading across the re-render', /ohm/.test(w.$('#instrument [data-readout]').textContent));
+    w.close();
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced
