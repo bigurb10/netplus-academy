@@ -203,7 +203,7 @@ Arteries leave the heart under pressure and have muscular walls; veins return bl
 Three everyday devices read this one system, and knowing which signal each one uses explains their failure modes. **ECG** reads electricity from skin electrodes, so it fails on bad skin contact. **NIBP** inflates a cuff to stop flow and watches the pressure where flow returns, so it fails on cuff size, placement, and movement. **Pulse oximetry** shines red light at about 650 to 660 nm and infrared at about 805 to 940 nm through tissue and compares how much of each is absorbed, so it fails when there is no pulsing blood at the site: cold fingers, poor circulation, or motion.`,
 
 u2l3: `## The tree and the sacs
-The airway is a branching tree that gets smaller and more numerous at every split: trachea, two bronchi, bronchioles, and finally the **alveoli**, hundreds of millions of sacs with a combined surface area larger than a tennis court. Each sac is wrapped in capillaries, and the barrier between air and blood is thin enough that oxygen and carbon dioxide simply diffuse across it, each from where it is plentiful to where it is scarce. Nothing pumps the gas across; concentration does the work.
+The airway is a branching tree that gets smaller and more numerous at every split: trachea, two bronchi, bronchioles, and finally the **alveoli**, hundreds of millions of sacs with a combined surface area about the size of a tennis court, roughly 70 square meters. Each sac is wrapped in capillaries, and the barrier between air and blood is thin enough that oxygen and carbon dioxide simply diffuse across it, each from where it is plentiful to where it is scarce. Nothing pumps the gas across; concentration does the work.
 
 Breathing moves fresh air to those sacs. The **diaphragm** flattens, the chest cavity enlarges, pressure inside drops below the air outside, and air flows in. That is **negative pressure** breathing. A ventilator cannot do that, so it pushes gas in instead, under **positive pressure**, which is why ventilated patients need their airway pressures watched and why too much pressure can injure a lung.
 
@@ -237,7 +237,7 @@ Tidal volume          about 500 mL per breath  ventilator display, spirometer
 - **Spirometer**: measures how much and how fast a patient can move air. It is a measuring instrument, so it needs a calibration syringe and a documented verification, not just a function check.`,
 
 u2l4: `## Two systems in one
-The **central nervous system** is the brain and spinal cord; the **peripheral nervous system** is every nerve leaving them. Signals travel as brief electrical pulses, created by charged particles moving across a nerve cell's membrane. Those pulses are tiny: a nerve or brain signal at the skin is measured in **microvolts**, which is a thousand times smaller than the millivolt-scale signal an ECG picks up from the heart.
+The **central nervous system** is the brain and spinal cord; the **peripheral nervous system** is every nerve leaving them. Signals travel as brief electrical pulses, created by charged particles moving across a nerve cell's membrane. Those pulses are tiny: a nerve or brain signal at the skin is measured in **microvolts**, tens of microvolts against about a millivolt from the heart, so roughly 10 to 100 times smaller than the signal an ECG picks up from the heart.
 
 That single fact explains most of the equipment in this lesson. The smaller the signal, the more the amplifier has to magnify, and the more everything else in the room gets magnified with it: the 60 Hz hum from the wiring, the movement of a cable, a poorly prepped electrode, a nearby motor. An EEG technologist fussing for twenty minutes over electrode impedance is not being precious; below a certain contact quality the signal is simply buried.
 
@@ -560,7 +560,7 @@ The fix follows from the diagnosis, and the order matters: remove the short, **t
 \`\`\`
 Property           What it means                         Rule
 current rating     the amps it will carry indefinitely   replace with the same value, never larger
-voltage rating     the voltage it can safely interrupt   replace with the same or higher rating
+voltage rating     the voltage it can safely interrupt   same rating as the original (a higher voltage rating is also safe, but match the original unless the manual says otherwise)
 fast-acting        opens almost at once                  protects semiconductors
 slow-blow          tolerates a brief inrush              motors, transformers, heaters
 physical size      the body dimensions, as in 5 x 20 mm  it must fit the holder properly
@@ -619,7 +619,7 @@ mains AC -> transformer (step down) -> rectifier diodes (one direction only)
          -> filter capacitor (smooth the bumps) -> regulator (hold it exact) -> DC out
 \`\`\`
 
-Each stage has a signature failure. A failed rectifier diode gives half the expected output and a loud hum. A dried-out filter capacitor leaves **ripple** on the rail, and ripple shows up as noise on a trace, erratic readings, or random resets under load. A failed regulator gives a rail that is too high, too low, or that collapses the moment the device does any work.
+Each stage has a signature failure. An open rectifier diode turns full-wave into half-wave rectification: the ripple drops to 60 Hz, which you hear as a hum, and the supply sags under load. A dried-out filter capacitor leaves **ripple** on the rail, and ripple shows up as noise on a trace, erratic readings, or random resets under load. A failed regulator gives a rail that is too high, too low, or that collapses the moment the device does any work.
 
 ## The outlet
 Three contacts: the narrow slot is **hot**, the wide slot is **neutral**, the round hole is **ground**. Hot carries the supply, neutral is the working return, and ground carries nothing at all until something has gone wrong. A **hospital-grade** receptacle or plug is marked with a **green dot**, built for blade retention and a reliable ground path, and receptacle testing checks exactly those two things plus correct polarity.`,

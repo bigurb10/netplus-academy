@@ -93,6 +93,8 @@ The stages run in order, and each one unlocks the next.
 - **A slide switch**: makes and breaks a path.
 - **A fuse holder with a 1 A fuse**: the sacrificial part that opens before something expensive does.
 
+Resistors carry their value as color bands; the memorization sheet's band table decodes them (brown, black, red, gold is 1,000 ohm at 5 percent), and the lab asks you to read one.
+
 ## The meter, one control at a time
 - The **dial** picks what the meter measures: V DC for steady voltage, V AC for wall voltage, Ohms for resistance, continuity for "is this one piece of wire", A DC for current, and on many meters a diode test.
 - The **jacks**: the black lead always goes in **COM**, the common jack. The red lead goes in the **V/ohm** jack for voltage, resistance, continuity, and the diode test, and moves to the **amps** jack only when you measure current. Moving that one lead is the step people forget.
@@ -666,7 +668,7 @@ The important point for your job: **voltage looks normal long after capacity is 
 
 ## Stacking cells
 - **In series**, voltages add and capacity stays the same. Six 2 V lead-acid cells make a 12 V block with the capacity of one cell.
-- **In parallel**, voltage stays the same and capacities add. Two 2,000 mAh cells side by side give 2,000 mAh at twice the current capability, or 4,000 mAh of total charge.
+- **In parallel**, voltage stays the same and capacities add. Two 2,000 mAh cells side by side give 4,000 mAh at the same voltage, and can also supply twice the current.
 
 Mixing old and new cells, or two chemistries, in one series string is a reliable way to ruin both.
 
