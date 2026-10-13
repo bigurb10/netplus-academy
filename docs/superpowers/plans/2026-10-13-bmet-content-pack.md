@@ -1582,7 +1582,7 @@ Lesson: append to the paragraph that begins `The best fix for a recurring compla
 ` The scheduled version is **in-service training**: formal instruction for a unit's staff on a device's use, care, cleaning, and alarm response, with attendance recorded.`
 
 Deep dive: inside the fenced table under `## Training that works`, after the `partnered` row, add the row:
-`in-service    the scheduled, formal version for a whole unit: use, care, cleaning, alarm response; attendance recorded for the survey file`
+`in-service    the scheduled, formal version for a whole unit: use, care, cleaning, alarms; attendance recorded`
 
 - [ ] **Step 4: HHS cybersecurity performance goals (u9l5)**
 
@@ -1590,14 +1590,14 @@ Lesson: after the bullet that begins `- **Alerts and recalls** for cybersecurity
 `- **Performance goals**: the **HHS cybersecurity performance goals** list the essential practices a hospital is expected to have (multi-factor authentication, patching, tested backups, network segmentation, staff training) and a set of enhanced ones; frameworks such as HITRUST organize the same controls for certification.`
 
 Deep dive: inside the fenced table under `## Defenses and the biomed's share`, after the `alerts` row, add the row:
-`performance goals    HHS cybersecurity performance goals: essential practices (MFA, patching, backups, segmentation, training) plus enhanced ones; the checklist surveyors and insurers now ask about`
+`performance goals    HHS cybersecurity performance goals: essential (MFA, patching, backups, segmentation, training) and enhanced practices`
 
 - [ ] **Step 5: Unix (u9l6)**
 
 Lesson: change the bullet `- **Windows**, **Linux**, and embedded real-time systems on devices.` to `- **Windows**, **Linux**, **Unix**, and embedded real-time systems on devices.` (keep the rest of the bullet).
 
 Deep dive: inside the fenced table under `## Operating system essentials`, after the `registry (Windows)` row, add the row:
-`Unix and Linux             the command-line family behind many servers, imaging consoles, and device controllers; the same ideas (accounts, services, logs), different tools`
+`Unix and Linux             the command-line family on servers, imaging consoles, and device controllers; same ideas, different tools`
 
 - [ ] **Step 6: Verify, rebuild, commit**
 
