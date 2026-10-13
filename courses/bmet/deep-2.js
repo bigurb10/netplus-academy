@@ -63,7 +63,7 @@ Step   What you do                                   On the lab's voltmeter (pri
 1      note the range the instrument is on           0 to 10 V
 2      count the divisions between two numbers       five divisions between 5 and 10
 3      divide to get the value of one division       5 V / 5 = 1 V per division
-4      find the last division passed, estimate     a little past 6, four tenths of the way to 7: 6.4 V
+4      find the last division passed, estimate       a little past 6, four tenths of the way to 7: 6.4 V
 5      write the reading with its unit               6.4 V
 \`\`\`
 
