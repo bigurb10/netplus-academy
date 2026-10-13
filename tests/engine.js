@@ -902,6 +902,33 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.close();
   }
 
+  // ----- Home kit card: shown until the kit lab is done (BMET spec section 2; Plan B Task 2) -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const withKit = x => { x.FRA.course.kit = ['Digital multimeter', 'Breadboard and jumpers']; x.FRA.course.kitLab = 'mini-ping'; };
+    let w = boot({ courseDir: mini, beforeApp: withKit });
+    const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    // Home shows the welcome page until the starter test is taken, so take it first (all right).
+    w.click(w.$('[data-act="go"][data-arg="home"]')); w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const Q = {}; w.FRA.questions.forEach(q => { Q[q.id] = q; }); const fat = x => typeof x === 'string' ? Q[x] : x;
+    st().active.items.map(fat).forEach(q => { w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`)); w.click(w.$('[data-act="conf"][data-arg="5"]')); w.click(w.$('[data-act="submit"]')); });
+    act(w, 'go', 'home');
+    const card = w.$('.kit-card');
+    check('home shows the kit card with every item and a link to the kit lab', !!card && /Digital multimeter/.test(card.textContent) && /Breadboard and jumpers/.test(card.textContent) && !!card.querySelector('[data-act="lesson"][data-arg="u1l2"]'), card && card.textContent.slice(0, 120));
+    // Finish the fixture lab: one choice, one reading, one verdict (the same actions the lab card's buttons send).
+    act(w, 'lesson', 'u1l2');
+    act(w, 'lab-answer', 'who:0');
+    w.$('#lab-loss').value = '50'; act(w, 'lab-check', 'loss');
+    act(w, 'lab-answer', 'ok:fail');
+    check('the fixture lab is done', /LAB DONE/.test(w.$('#lab').textContent));
+    act(w, 'go', 'home');
+    check('home hides the kit card once the kit lab is done', !w.$('.kit-card'));
+    w = boot({ courseDir: mini });
+    act(w, 'go', 'home');
+    check('a manifest without a kit shows no kit card', !w.$('.kit-card'));
+    w.close();
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced
