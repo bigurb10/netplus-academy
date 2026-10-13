@@ -1015,7 +1015,7 @@ backups              scheduled, off-network copies, restore tests
 change control       every configuration change recorded and tested
 incident response    isolate, preserve, notify IT security; do not wipe evidence; a plan practiced in advance
 alerts               cybersecurity advisories and recalls tracked like any recall
-performance goals    HHS cybersecurity performance goals: essential (MFA, patching, backups, segmentation, training) and enhanced practices
+performance goals    HHS performance goals: essential practices (MFA, patching, backups, segmentation, training) and enhanced ones
 \`\`\`
 
 ## Two scenarios
@@ -1071,7 +1071,7 @@ event logs                 errors with times; the first thing to read after a cr
 updates                    validated by the medical device vendor before they touch a device computer
 file shares and printers   SMB shares, print spooler
 registry (Windows)         configuration database; changed only by the application or with guidance
-Unix and Linux             the command-line family on servers, imaging consoles, and device controllers; same ideas, different tools
+Unix and Linux             the command-line family on servers, imaging consoles, and controllers; same ideas, different tools
 \`\`\`
 
 ## Storage, RAID, and backups

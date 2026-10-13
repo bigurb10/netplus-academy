@@ -1590,14 +1590,14 @@ Lesson: after the bullet that begins `- **Alerts and recalls** for cybersecurity
 `- **Performance goals**: the **HHS cybersecurity performance goals** list the essential practices a hospital is expected to have (multi-factor authentication, patching, tested backups, network segmentation, staff training) and a set of enhanced ones; frameworks such as HITRUST organize the same controls for certification.`
 
 Deep dive: inside the fenced table under `## Defenses and the biomed's share`, after the `alerts` row, add the row:
-`performance goals    HHS cybersecurity performance goals: essential (MFA, patching, backups, segmentation, training) and enhanced practices`
+`performance goals    HHS performance goals: essential practices (MFA, patching, backups, segmentation, training) and enhanced ones`
 
 - [ ] **Step 5: Unix (u9l6)**
 
 Lesson: change the bullet `- **Windows**, **Linux**, and embedded real-time systems on devices.` to `- **Windows**, **Linux**, **Unix**, and embedded real-time systems on devices.` (keep the rest of the bullet).
 
 Deep dive: inside the fenced table under `## Operating system essentials`, after the `registry (Windows)` row, add the row:
-`Unix and Linux             the command-line family on servers, imaging consoles, and device controllers; same ideas, different tools`
+`Unix and Linux             the command-line family on servers, imaging consoles, and controllers; same ideas, different tools`
 
 - [ ] **Step 6: Verify, rebuild, commit**
 
