@@ -46,7 +46,7 @@ for (const dir of courseDirs()) {
 // ----- 2. Generator output on the mini fixture -----
 const out = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-'));
 const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
-const res = site.buildAll({ courseDirs: [mini], out, origin: 'https://example.test/', guidesDir: path.join(ROOT, 'tests', 'fixtures', 'guides') });
+const res = site.buildAll({ courseDirs: [mini], allCourseDirs: [mini], out, origin: 'https://example.test/', guidesDir: path.join(ROOT, 'tests', 'fixtures', 'guides') });
 const FRA = site.loadPack(mini); const m = site.model(FRA); const R = makeRenderer(FRA.acronyms);
 const read = p => fs.readFileSync(path.join(out, p), 'utf8');
 const exists = p => fs.existsSync(path.join(out, p));
@@ -98,6 +98,15 @@ const expected = ['https://example.test/', 'https://example.test/mini/', 'https:
 check('sitemap lists home, the app, the landing page, the cheat sheet and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 check('sitemap entries carry a lastmod date', /<url><loc>[^<]+<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/.test(sm) && (sm.match(/<lastmod>/g) || []).length === locs.length);
+{
+  // A partial build with no allCourseDirs still names every repo course in the shared files.
+  const o = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-partial-'));
+  site.buildAll({ courseDirs: [mini], out: o, origin: 'https://example.test/', guidesDir: path.join(ROOT, 'tests', 'fixtures', 'guides') });
+  const psm = fs.readFileSync(path.join(o, 'sitemap.xml'), 'utf8'); const p404 = fs.readFileSync(path.join(o, '404.html'), 'utf8');
+  const allIds = site.courseDirs().map(d => path.basename(d));
+  check('a partial build without allCourseDirs keeps every repo course in the sitemap and the 404 page, plus the rendered course', allIds.every(id => psm.includes(`<loc>https://example.test/${id}/</loc>`) && p404.includes(`href="/${id}/"`)) && psm.includes('<loc>https://example.test/mini/</loc>') && !fs.existsSync(path.join(o, allIds[0], 'index.html')), allIds.join(','));
+  fs.rmSync(o, { recursive: true, force: true });
+}
 check('the social image and the 404 page are written at the root', exists('og-image.png') && exists('404.html') && read('404.html').includes('<meta name="robots" content="noindex">') && read('404.html').includes('href="/bmet/"') === false);
 
 const l0 = m.freeLessons[0]; const p0 = read(`mini/lessons/${site.slug(l0)}/index.html`);
@@ -159,7 +168,7 @@ check('a description with quotes is attribute-safe', fp.includes('content="One &
 // ----- 3. Analytics snippet -----
 {
   const dirs = [];
-  const build = (analytics) => { const o = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-ga-')); dirs.push(o); site.buildAll({ courseDirs: [mini], out: o, origin: 'https://example.test/', analytics }); return fs.readFileSync(path.join(o, 'mini', 'lessons', 'index.html'), 'utf8'); };
+  const build = (analytics) => { const o = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-ga-')); dirs.push(o); site.buildAll({ courseDirs: [mini], allCourseDirs: [mini], out: o, origin: 'https://example.test/', analytics }); return fs.readFileSync(path.join(o, 'mini', 'lessons', 'index.html'), 'utf8'); };
   const withId = build('G-TEST1234');
   const n = (withId.match(/googletagmanager\.com\/gtag\/js\?id=G-TEST1234/g) || []).length;
   check('with an ID, a static page carries the gtag snippet once, inside <head>', n === 1 && withId.indexOf('gtag/js?id=G-TEST1234') < withId.indexOf('</head>') && withId.includes("gtag('config','G-TEST1234')"), n);

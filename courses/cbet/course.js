@@ -11,7 +11,7 @@ FRA.course = {
   seo: {
     title: "CBET Study Guide and Practice Tests | CBET Academy",
     h1: "CBET Study Guide and Practice Tests",
-    intro: "CBET Academy is a free CBET study guide and practice-test course for the AAMI/ACI Certified Biomedical Equipment Technician exam: sixty lessons organised by the exam's six domains, a printable memorization sheet, adaptive tutorials built from your misses, and unlimited CBET practice tests. The CBET cheat sheet and the CBET exam questions behind it are organized the same way, domain by domain.",
+    intro: "CBET Academy is a free study guide and practice-test course for the AAMI/ACI Certified Biomedical Equipment Technician exam. Sixty lessons follow the exam's six domains, a printable CBET cheat sheet collects the numbers and limits worth memorizing, adaptive tutorials rebuild from your misses, and unlimited CBET practice tests draw on a bank of original CBET exam questions, so you can rehearse the real format as often as you like.",
     phrases: ["CBET study guide", "CBET practice tests", "CBET exam questions", "CBET cheat sheet"],
     faq: [
       { q: "How many questions are on the CBET exam?", a: "165 multiple-choice questions in 3 hours, closed book, with a simple on-screen calculator. About 116 correct, roughly 70%, passes; ACI sets the exact cut score with a criterion-referenced method." },

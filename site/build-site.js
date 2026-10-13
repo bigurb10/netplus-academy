@@ -603,12 +603,12 @@ function buildAll(opts) {
   // re-rendered): shared files -- the sitemap's course URLs, the 404 page's course list,
   // and guides' related-course links -- must still name every course, not just the ones
   // this run re-rendered, or they would be truncated to the partial set.
-  const allDirs = opts.allCourseDirs || dirs;
+  // Default: every course in the repo, plus any rendered dir outside it (test fixtures).
+  const allDirs = Array.from(new Set((opts.allCourseDirs || courseDirs()).concat(dirs)));
   fs.mkdirSync(out, { recursive: true });
-  // Load each pack at most once even though dirs and allDirs can overlap.
+  // Load each pack at most once even though dirs and allDirs overlap.
   const packs = {};
   const packFor = dir => packs[dir] || (packs[dir] = loadPack(dir));
-  allDirs.forEach(packFor); dirs.forEach(packFor);
   const models = allDirs.map(dir => model(packFor(dir)));
   const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
   const results = dirs.map(dir => buildCourse(packFor(dir), { out, origin, analytics: opts.analytics, guides }));
