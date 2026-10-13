@@ -86,6 +86,8 @@ const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
 const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
 check('sitemap lists home, the app, the landing page, the cheat sheet and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
+check('sitemap entries carry a lastmod date', /<url><loc>[^<]+<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/.test(sm) && (sm.match(/<lastmod>/g) || []).length === locs.length);
+check('the social image and the 404 page are written at the root', exists('og-image.png') && exists('404.html') && read('404.html').includes('<meta name="robots" content="noindex">') && read('404.html').includes('href="/bmet/"') === false);
 
 const l0 = m.freeLessons[0]; const p0 = read(`mini/lessons/${site.slug(l0)}/index.html`);
 check('lesson title tag: lesson | exam | brand', p0.includes(`<title>${esc(l0.title)} | Mini Exam MC-1 | FieldReady Academy</title>`));

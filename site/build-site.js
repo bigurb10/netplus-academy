@@ -2,13 +2,20 @@
 'use strict';
 // Public SEO pages, generated from the course packs into dist/site/:
 //
-//   /<id>/lessons/                 the course landing page (Course JSON-LD)
+//   /<id>/                         the landing page (Course + FAQPage JSON-LD); forwards
+//                                   #hash routes to the app before anything else loads
+//   /<id>/app/                     the course app bundle (noindex; built by build.py, not here)
+//   /<id>/practice-test/           twenty free bank questions with answers (Quiz JSON-LD)
+//   /<id>/lessons/                 the full lessons index (Course JSON-LD)
 //   /<id>/lessons/<id>-<slug>/     one page per FREE lesson (Article + BreadcrumbList)
 //   /<id>/cheatsheet/              the memorization sheet as HTML
+//   /guides/  /guides/<slug>/      standalone articles not tied to one lesson
+//   /404.html                      noindex, links the catalog, the guides, and every course
+//   /og-image.png                  the shared social-card image (1200x630)
 //   /sitemap.xml  /robots.txt  /site.css
 //
-// The course app itself stays at /<id>/ and is never written here. Design:
-// docs/superpowers/specs/2026-09-15-public-seo-pages-design.md
+// Every URL above (except /<id>/app/, built by build.py) carries a <lastmod> in sitemap.xml.
+// Design: docs/superpowers/specs/2026-09-15-public-seo-pages-design.md
 //
 //   node site/build-site.js            every course under courses/
 //   node site/build-site.js netplus    one course (the root files are still written)
@@ -529,6 +536,22 @@ function guidesIndex(guides, origin) {
   return shell({ origin, path: '/guides/', type: 'website', title: `Guides | ${BRAND}`, ogTitle: 'Guides', description: 'Plain answers about the CBET, the CABT, the CompTIA exams, biomed jobs, and the virtual labs.', nav: `<a href="/" class="btn primary small">All courses</a>`, jsonld: [breadcrumbLd(origin, crumbList)], body });
 }
 
+function notFoundPage(models, origin) {
+  const body = `<h1>That page is not here</h1>
+<p class="lede ink2">The link is out of date, or the page moved. Here is where everything lives now.</p>
+<ul class="lesson-body">
+  <li><a href="/">All courses</a></li>
+  <li><a href="/guides/">Guides</a></li>
+  ${models.map(m => `<li><a href="${m.urls.landing}">${esc(m.c.name)}</a></li>`).join('\n  ')}
+</ul>`;
+  return shell({
+    origin, path: '/404.html', type: 'website', noindex: true,
+    title: `Page not found | ${BRAND}`,
+    description: 'That page is not here. Browse every free certification course at FieldReady Academy.',
+    body
+  });
+}
+
 // ---------- writing ----------
 function writePage(out, urlPath, html) {
   const dir = path.join(out, ...urlPath.split('/').filter(Boolean));
@@ -551,9 +574,10 @@ function buildCourse(FRA, opts) {
   return { course: m.c.id, pages };
 }
 
-function sitemap(origin, urls) {
+function sitemap(origin, urls, lastmod) {
+  const day = lastmod || new Date().toISOString().slice(0, 10);
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + urls.map(u => `  <url><loc>${esc(origin + u)}</loc></url>`).join('\n') + '\n</urlset>\n';
+    + urls.map(u => `  <url><loc>${esc(origin + u)}</loc><lastmod>${day}</lastmod></url>`).join('\n') + '\n</urlset>\n';
 }
 
 function robots(origin) {
@@ -576,7 +600,9 @@ function buildAll(opts) {
   const urls = ['/'].concat(...results.map(r => r.pages.map(p => p.url))).concat(guideUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
+  fs.writeFileSync(path.join(out, '404.html'), notFoundPage(models, origin), 'utf8');
   fs.copyFileSync(path.join(__dirname, 'site.css'), path.join(out, 'site.css'));
+  fs.copyFileSync(path.join(__dirname, 'og-image.png'), path.join(out, 'og-image.png'));
   return { out, urls, courses: results };
 }
 
@@ -588,4 +614,4 @@ if (require.main === module) {
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
 
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, gaSnippet, loadGuides, guidePage, guidesIndex, ORIGIN, BRAND };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, ORIGIN, BRAND };
