@@ -132,10 +132,10 @@ Four levels, smallest to largest:
 - **Organs** are structures built of several tissues with a purpose: heart, lungs, brain, kidney, skin.
 - **Systems** are groups of organs that work together.
 
-The systems this course names are the **circulatory** system (heart, vessels, blood), the **respiratory** system (airway and lungs), the **nervous** system (brain, spinal cord, nerves), the **digestive** system (the tube from mouth to the other end, plus liver and pancreas), the **urinary** system (kidneys and bladder), the **endocrine** system (glands and hormones), the **musculoskeletal** system (bones, joints, muscle), and the **skin**.
+The systems this course names are the **circulatory** system (heart, vessels, blood), the **respiratory** system (airway and lungs), the **nervous** system (brain, spinal cord, nerves), the **digestive** system (the tube from mouth to the other end, plus liver and pancreas), the **urinary** system (kidneys and bladder), the **endocrine** system (glands and hormones), the **musculoskeletal** system (the skeletal system of bones and joints plus the muscular system that moves them), the **lymphatic system** and the **immune system** it carries (lymph vessels, lymph nodes, spleen, white cells), and the **skin**, which a textbook calls the **integumentary system**.
 
 ## Systems do not work alone
-A patient's oxygen number depends on all of them at once. The lungs load oxygen onto the blood, the heart pushes that blood to the tissues, the brainstem sets the breathing and the heart rate, the kidneys keep the fluid balance that gives the heart something to pump, and the skin is the surface your sensor sticks to. When a monitor shows a bad number, the cause can sit in any of those links, which is also why one patient is wired to several of your devices at once.
+A patient's oxygen number depends on all of them at once. The lungs load oxygen onto the blood, the heart pushes that blood to the tissues, the brainstem sets the breathing and the heart rate, the kidneys keep the fluid balance that gives the heart something to pump, and the skin is the surface your sensor sticks to. When a monitor shows a bad number, the cause can sit in any of those links, which is also why one patient is wired to several of your devices at once. Holding temperature, pressure, fluid, and chemistry inside a narrow band has a name, **homeostasis**, and most alarms announce either that the body has lost that balance or that the device helping it hold the balance has stopped.
 
 ## Directions: the words on every label and report
 \`\`\`
@@ -181,6 +181,8 @@ Every beat starts as a tiny electrical signal.
 An **ECG** records this from electrodes on the skin. It reads the heart's electricity, nothing else, which is why a loose electrode looks like a rhythm problem.
 
 ## The numbers
+One **cardiac cycle** is the whole round trip: atrial contraction, then ventricular contraction, then the refill before the next beat. Every number below is a measurement of that cycle.
+
 - **Systole** is the squeeze and **diastole** is the refill. Blood pressure quotes both: about **120/80 mmHg** in an adult, the systolic over the diastolic.
 - **MAP**, the mean arterial pressure, is the average pressure over a whole beat: diastolic plus one third of the gap between the two numbers. For 120/80 that is 80 + 40/3, about 93 mmHg. An automatic cuff measures this value most directly and calculates the other two from it.
 - **Heart rate** at rest is **60 to 100** beats per minute. Below 60 is **bradycardia**; above 100 is **tachycardia**.
@@ -242,6 +244,8 @@ Tidal volume         about 500 mL per breath at rest
 - The **central nervous system** is the brain and the spinal cord: the processor and the main cable.
 - The **peripheral nervous system** is every nerve that branches off, out to muscle, skin, and organs.
 
+The wire in both halves is the **neuron**, one nerve cell that passes a signal along as a travelling change in charge and hands it to the next cell at a junction. **Sensory receptors** in the skin, the muscles, and the organs start those signals, and muscles and glands are where they end. A nerve is a bundle of neurons, which is why a device that stimulates a nerve reaches many cells at once.
+
 ## Parts of the brain worth knowing
 - The **cerebrum** is the big wrinkled top: thinking, speech, decisions, and voluntary movement.
 - The **cerebellum** sits underneath at the back and handles balance and smooth coordination.
@@ -275,18 +279,18 @@ At the level of recognizing what they are for:
       body: `Four more systems, each with equipment attached. None of them need depth; they need the one idea per system that explains the devices.
 
 ## Kidneys and the urinary system
-Two kidneys filter the entire blood supply over and over, pulling out waste and extra water and sending it on as urine through the ureters to the bladder. They also hold the body's water, salt, and acid balance steady. When kidneys fail, a **dialysis** machine does the filtering instead: blood out of the patient, through a filter, and back. That machine is a water treatment plant, a pump, a heater, and a set of alarms, and it is one of the most heavily maintained devices in a hospital. A **bladder scanner** uses ultrasound to measure how much urine is left behind without a catheter.
+Two kidneys filter the entire blood supply over and over, pulling out **urea** and the rest of the body's waste along with extra water and sending it on as urine through the ureters to the bladder. Each kidney does that with about a million microscopic filters called **nephrons**, which is why kidney disease usually shows up as a gradual loss of filtering rather than an on-or-off failure. They also hold the body's water, salt, and acid balance steady. When kidneys fail, a **dialysis** machine does the filtering instead: blood out of the patient, through a filter, and back. That machine is a water treatment plant, a pump, a heater, and a set of alarms, and it is one of the most heavily maintained devices in a hospital. A **bladder scanner** uses ultrasound to measure how much urine is left behind without a catheter.
 
 ## Blood
 An adult carries roughly five liters of blood. Lose enough of it and pressure falls no matter how well the heart works. Blood comes in types, **A, B, AB, and O**, each either positive or negative, and the type must match before a transfusion. Type O negative is the one most often given when there is no time to check. For you, blood matters two ways: the devices that warm it, pump it, and spin it in the laboratory, and the fact that every patient's blood is treated as infectious.
 
 ## Skin
-Three layers: the **epidermis** on the outside, the **dermis** underneath with the blood vessels and nerves, and the **subcutaneous** fat below that. Skin is a barrier against infection, a thermostat that sweats and flushes to shed heat, and a sense organ.
+Three layers: the **epidermis** on the outside, the **dermis** underneath with the blood vessels and nerves, and the **subcutaneous** fat below that. Skin is a barrier against infection, a thermostat whose **sweat glands** and flushing shed heat as part of the body's **thermoregulation**, a sense organ, and the place the body makes **vitamin D** in sunlight.
 
 Skin is also an electrical component. Dry, intact skin is a good insulator, roughly **100,000 ohm** between two points on the body. Wet it with sweat, water, or electrode gel and that can fall toward **1,000 ohm**. The same 120 V is a hundred times more dangerous against wet skin, which is the single most useful safety fact in this course. It also explains your devices: an **electrode** deliberately lowers skin resistance with gel so a tiny signal can get out, an electrosurgical return pad or a warming blanket can **burn** skin if the heat or current concentrates, and a cuff, a probe, or a mattress left in one place too long causes a **pressure injury**.
 
 ## Digestion
-A long tube: mouth, esophagus, stomach, small intestine, large intestine, with the liver and pancreas adding chemicals. Food is broken down and absorbed, and what is left is waste. The devices are **feeding pumps** that deliver formula into the stomach or intestine, **suction** to remove fluid, and **endoscopes**, flexible cameras that let a clinician look inside the tube and work through it.
+A long tube: mouth, esophagus, stomach, small intestine, large intestine, with the liver adding **bile** to break up fat and the pancreas adding digestive enzymes. Food is broken down and absorbed, and what is left is waste. The devices are **feeding pumps** that deliver formula into the stomach or intestine, **suction** to remove fluid, and **endoscopes**, flexible cameras that let a clinician look inside the tube and work through it.
 
 ## Hormones
 The **endocrine** system is a set of glands (pancreas, thyroid, adrenals, pituitary) that release **hormones** into the blood as chemical messages. Slower than nerves, but they reach everywhere. The one you will meet constantly is **insulin** from the pancreas, which lets cells take up **glucose** from the blood. Too little insulin and blood sugar climbs. Hence **glucometers**, the handheld meters that read a drop of blood, and **insulin pumps**, which deliver tiny continuous doses.
@@ -317,7 +321,7 @@ Pain is on the list of things measured at the bedside and it is the one with no 
 ## Where the sensors go
 - **ECG electrodes**: on prepped skin over bone or firm tissue, not over a moving muscle, and in the arrangement the monitor expects for three or five leads.
 - **NIBP cuff**: upper arm, snug, with the bladder centered over the artery and the arm supported at heart level.
-- **SpO2 probe**: a finger, toe, or ear, with the light source and the detector facing each other through the tissue.
+- **SpO2 probe**: a finger, toe, or ear, with the two **LEDs** on one side and the **photodiode** that detects their light facing them through the tissue.
 - **Temperature probe**: the site the probe type is made for, oral, axillary, or rectal, with the right cover.
 - **Capnography sampling line**: in the breathing circuit for an intubated patient, or a nasal cannula for a patient breathing on their own.
 
@@ -348,14 +352,16 @@ FRA.units.push({
       body: `Three quantities explain almost every electrical fault you will ever chase. Learn what each one is, what it is measured in, and how a meter gets at it, and the rest of this unit is arithmetic.
 
 ## What is actually moving
-Everything is made of atoms, and atoms have **electrons** on the outside. In some materials those outer electrons are loosely held and can drift from atom to atom. Those materials are **conductors**: copper and silver are the best common ones, which is why wire is copper and the best contacts are silver plated. In other materials the electrons are locked in place, so nothing drifts. Those are **insulators**: rubber, glass, plastic, air, and dry skin.
+Everything is made of atoms, and every atom has **protons** in its core and **electrons** around the outside. Equal numbers of each make an atom electrically neutral, and electricity is what happens when electrons leave that balance. In some materials those outer electrons are loosely held and can drift from atom to atom. Those materials are **conductors**: copper and silver are the best common ones, which is why wire is copper and the best contacts are silver plated. In other materials the electrons are locked in place, so nothing drifts. Those are **insulators**: rubber, glass, plastic, air, and dry skin.
 
 Nothing useful happens until something pushes the electrons along.
 
 ## The three quantities
-- **Current** is the flow: how many charges pass a point each second. It is measured in **amps** (A) and the symbol in formulas is **I**. Small currents are written in **mA** (thousandths of an amp) and **microamps** (millionths).
+- **Current**, written out as **electric current**, is the flow: how many charges pass a point each second. It is measured in **amps** (A) and the symbol in formulas is **I**. One amp is one **coulomb** of charge, a fixed and very large number of electrons, passing each second. Small currents are written in **mA** (thousandths of an amp) and **microamps** (millionths).
 - **Voltage** is the push: the difference in electrical pressure between two points. It is measured in **volts** (V) and the symbol is **V**. Voltage always exists **between** two places, never at one, which is why a meter reading needs two probes.
 - **Resistance** is the opposition: how hard the material makes it for current to flow. It is measured in **ohms** and the symbol is **R**. Large resistances are written in **kohm** (thousands) and **Mohm** (millions).
+
+The part that supplies resistance on purpose is a **resistor**. **Fixed resistors** carry a printed value, with one band or marking for the **resistor tolerance**, meaning how far from that value the part is allowed to be. **Variable resistors** are adjustable: a **potentiometer** has three legs and works as an adjustable divider, which is what a volume knob and a calibration trimmer are, and a **rheostat** has two and is wired to set a current.
 
 ## The water picture
 Think of a hose fed by a tank.
@@ -433,14 +439,14 @@ In the lab you measure the voltage and the current on that exact circuit, then c
     },
     {
       id: "u3l3", title: "Series and Parallel Circuits", domain: 4, obj: "E&E-E", minutes: 10, lab: "series-parallel",
-      body: `There are only two ways to connect two parts: one after the other, or side by side. Every circuit you meet is a mix of those two, and each one has its own set of rules.
+      body: `There are only two ways to connect two parts: one after the other, or side by side. Every circuit you meet is a mix of those two, called a **combination circuit**, and each of the two has its own set of rules.
 
 ## Series: one path
 Parts in **series** sit in a single loop, so the current has nowhere else to go.
 
 - **Current** is the same everywhere in the loop.
 - **Voltage** divides between the parts, and the drops add up to the source.
-- **Resistance** adds: R total = R1 + R2 + R3.
+- **Resistance** adds: R total = R1 + R2 + R3. That total is the **equivalent resistance**, the single resistor that would behave the same way.
 - **One part opening stops everything.**
 
 Example: 9 V with 220 ohm and 470 ohm in series. Total resistance is 690 ohm, so the current is 9 / 690 = 0.013 A. Across the 220 ohm that is 0.013 x 220 = 2.87 V; across the 470 ohm, 0.013 x 470 = 6.13 V. The two drops add to 9.0 V, the source. The bigger resistor always takes the bigger share.
@@ -452,7 +458,7 @@ Parts in **parallel** are connected across the same two points, so each one sees
 
 - **Voltage** is the same across every branch.
 - **Current** divides, and the branch currents add up to the total.
-- **Resistance total is less than the smallest branch.** For exactly two, use product over sum: (R1 x R2) / (R1 + R2).
+- **Resistance total is less than the smallest branch.** For exactly two **parallel resistors**, use product over sum: (R1 x R2) / (R1 + R2).
 - **One branch opening leaves the others working.**
 
 Example: 9 V across 220 ohm and 470 ohm in parallel. The 220 ohm branch draws 9 / 220 = 0.041 A and the 470 ohm branch draws 9 / 470 = 0.019 A, so the feed carries 0.060 A. Total resistance is 9 / 0.060 = 150 ohm, which is indeed below 220. Product over sum agrees: (220 x 470) / 690 = 150 ohm.
@@ -478,6 +484,8 @@ In the lab you build both circuits, measure the two series drops and add them, t
 3. A **load**: the lamp, motor, heater, speaker, or board that does the work and uses the power.
 
 Add the wires that join them and you have a circuit. If current is not flowing, exactly one of those four things is at fault, and the meter tells you which.
+
+Switches are the control you meet most, and they are described two ways at once. By feel: a **toggle switch** flips, a **rocker switch** tips one end in, a **pushbutton switch** springs back when you let go, and a membrane keypad is a printed version of the same contact. By what the contacts do: a **single-pole switch** breaks one conductor while a **double-pole switch** breaks two at once, which is how a mains switch opens hot and neutral together, and a **single-throw switch** has one on position while a **double-throw switch** moves its common contact between two outputs.
 
 ## Symbols to recognize on sight
 \`\`\`
@@ -582,7 +590,7 @@ In the lab you meet a dead loop with one open part and one shorted part, and the
 - The **120 V** on the label is an **RMS** value, the effective value: the steady DC voltage that would deliver the same heating power. The waveform itself swings higher, peaking near **170 V** in each direction. Your meter shows the effective value; an oscilloscope shows the peaks.
 
 ## Why the grid uses AC at all
-Because of the **transformer**. Two coils wound on a shared iron core: current changing in one coil creates a changing magnetic field, and that changing field induces a voltage in the other. The ratio of turns sets the ratio of voltages. More turns on the output side **steps up** the voltage; fewer turns **steps down**. A 10-to-1 step-down transformer fed 120 V delivers 12 V.
+Because of the **transformer**. Two coils wound on a shared iron core: current changing in one coil creates a changing magnetic field, and that changing field induces a voltage in the other. That is **electromagnetic induction**, and it is the same effect that makes a motor turn and a generator produce power. The ratio of turns sets the ratio of voltages. More turns on the output side **steps up** the voltage; fewer turns **steps down**. A 10-to-1 **step-down transformer** fed 120 V delivers 12 V, and a **step-up transformer** does the reverse, which is how the grid carries power at high voltage and low current.
 
 The catch is in the word changing. A transformer only works on AC. Feed it steady DC and you get a brief pulse as you connect it and then nothing but a hot coil. That is why power is generated and distributed as AC and stepped down near the building.
 
@@ -592,9 +600,11 @@ An **isolation transformer** has equal turns, so the voltage comes out the same 
 A device that plugs into the wall but runs on DC has to convert, in this order:
 
 1. A **transformer** or a switching stage brings the voltage down.
-2. A **rectifier**, a set of diodes, flips the negative halves of the wave upward so everything flows one way. The output is bumpy DC.
+2. A **rectifier**, usually four diodes arranged as a **bridge rectifier**, flips the negative halves of the wave upward so everything flows one way. That is **full-wave rectification**, and the output is bumpy DC.
 3. A **filter capacitor** stores charge on the peaks and releases it in the dips, smoothing the bumps into something steady. What is left of the bumps is called **ripple**, and too much of it is a classic cause of a device behaving strangely under load.
-4. A **regulator** holds the output at an exact value as the load changes.
+4. A **regulator** holds the output at an exact value as the load changes. A supply built with one is a **regulated power supply**, and its rail should read the printed value whether the device is idle or working hard.
+
+When that whole chain lives in a block on the cord instead of inside the device, it is an **AC adapter**, also called an **AC-to-DC adapter**, or a **wall transformer** if it is one of the old heavy ones. Adapters wander between devices, so match the label and not the plug: the voltage, the polarity, and at least the current rating of the original, because a barrel plug that fits perfectly can still be carrying the wrong voltage.
 
 ## The outlet
 A standard receptacle has three contacts: the narrow slot is **hot**, the wider slot is **neutral**, and the round hole is **ground**. Hot carries the voltage, neutral is the normal return, and ground is the protective path that only carries current during a fault. A **hospital-grade** receptacle or plug is marked with a **green dot**: it is built to grip the blades harder and to keep its ground connection reliable, and that retention is one of the things an inspection checks.
@@ -606,18 +616,21 @@ A standard receptacle has three contacts: the narrow slot is **hot**, the wider 
       id: "u3l7", title: "Capacitors, Inductors, Diodes, LEDs, and Transistors", domain: 4, obj: "E&E-B", minutes: 9,
       body: `You do not have to design with these parts. You do have to recognize them on a board and on a drawing, know what each one is for, and know which one can still hurt you after the power is off.
 
+## Passive and active
+Two words sort the whole parts list. **Passive components** only store, release, or use up what they are handed: resistors, capacitors, inductors, transformers. **Active components** need a supply of their own and can then control or enlarge a signal: diodes, transistors, and the chips built out of them. The distinction is worth having because a board's passive parts usually fail visibly, by burning or leaking, and its active parts usually fail silently.
+
 ## Capacitor: stores charge
 Two conducting plates separated by an insulator. Apply a voltage and charge piles up on the plates; remove the supply and the charge stays. Capacitance is measured in **farads**, which is a huge unit, so real parts are marked in **microfarads** (millionths) or picofarads. Capacitors smooth a power supply's output, pass signals while blocking steady voltages, and set timing.
 
 The safety point is the one to carry out of this lesson. **A capacitor can hold a dangerous charge long after the device is unplugged.** A defibrillator's capacitor is built to store hundreds of joules and dump them in milliseconds, which is exactly as lethal as it sounds. Before you open anything with a large capacitor, follow the manual's discharge procedure, let the unit dump its charge into an analyzer, and verify with a meter that the charge is gone. A dark display is not proof of anything.
 
-Larger electrolytic capacitors are **polarized**: the can is marked with a stripe and the board with a plus sign, and fitting one backwards makes it vent or burst.
+A larger electrolytic capacitor is a **polarized capacitor**: the can is marked with a stripe and the board with a plus sign, and fitting one backwards makes it vent or burst. Every capacitor also carries a **working voltage**, the highest it may ever see; a replacement rated below the rail it sits on fails early even when the capacitance is right.
 
 ## Inductor: stores energy in a magnetic field
 A coil of wire, sometimes on an iron core. Current through it builds a magnetic field; the field resists any sudden change in that current. Inductance is measured in **henries**. You meet coils as filter chokes, as the windings of a **transformer**, as the coil in a **relay** (a switch moved by a magnet, so a small signal can control a big load), and as the windings of every **motor**. Because a coil fights change, switching one off produces a voltage spike, which is why relay and motor circuits carry a protective diode across the coil.
 
 ## Diode: a one-way valve
-Current passes in the direction the symbol's triangle points and is blocked the other way. A silicon diode needs about **0.6 to 0.7 V** across it before it conducts, and it holds roughly that drop while it does. Diodes rectify AC into DC, protect against a battery fitted backwards, and clamp those switching spikes.
+Current passes in the direction the symbol's triangle points, which is called **forward bias**, and is blocked the other way, **reverse bias**. A silicon diode needs about **0.6 to 0.7 V** across it before it conducts, and it holds roughly that drop while it does. Diodes rectify AC into DC, protect against a battery fitted backwards, and clamp those switching spikes.
 
 The meter's **diode test** pushes a small current and displays that forward drop, red probe on the **anode** (the triangle side), black on the **cathode** (the bar side, usually marked with a stripe on the part). Reversed, a good diode reads OL. Reading OL both ways means it is open; near 0 both ways means it is shorted.
 
@@ -630,7 +643,9 @@ An **LED** is a diode built to emit light, and it needs more forward voltage tha
 ## Transistor: switch and amplifier
 Three legs. A small current or voltage on the control leg governs a much larger current through the other two. Used as a **switch**, it is either fully on or fully off, which is how a controller turns a pump motor, a heater, or a solenoid on and off thousands of times with no moving contacts. Used as an **amplifier**, it reproduces a small signal at a larger size, which is how a microvolt ECG signal becomes something a display can draw.
 
-**Integrated circuits** pack thousands or millions of transistors into one package with numbered pins: the processors, memory, amplifiers, and regulators that make up a modern board. They are also the parts a static discharge destroys silently.
+**Integrated circuits** pack thousands or millions of transistors into one package with numbered pins: the processors, memory, amplifiers, and regulators that make up a modern board. They are also the parts a static discharge destroys silently. The chip in charge is usually a **microcontroller**, a whole small computer on one piece of silicon (processor, memory, and input and output pins), and the program inside it is what a manual calls the firmware or the software version.
+
+Two more parts live on the same boards and come up on your bench. A **piezoelectric buzzer** works by the **piezoelectric effect**: a ceramic disc flexes when a voltage is applied across it, and that is what makes the alarm tone in most devices, so a silent alarm can be a dead buzzer rather than a logic fault. A **thermistor** is a resistor whose value changes with temperature, which makes it the sensing element in temperature probes and inside battery packs; most are **negative temperature coefficient** types, so the resistance falls as the part gets hotter, while **positive temperature coefficient** parts rise instead and are used as self-resetting fuses. A **thermocouple** does the same sensing job with two dissimilar metals joined at a tip, where the junction itself produces a tiny voltage that grows with temperature, and it is what survives the heat inside a sterilizer or an oven.
 
 ## The symbols for these five
 \`\`\`
@@ -660,6 +675,8 @@ Sealed lead-acid       2 V per cell       so a 12 V block is six cells; carts, p
 \`\`\`
 
 Those per-cell numbers are how you check a pack without a manual. A 7.2 V lithium-ion pack is two cells; a 9.6 V nickel pack is eight.
+
+Every cell is one of two kinds. A **non-rechargeable battery** is a primary cell, used once and replaced: the **alkaline battery** in a handheld instrument and the lithium coin cell on a board. A **rechargeable battery** is a secondary cell that goes back on a charger, which is every pack in a pump, a monitor, or a defibrillator. Never put a primary cell on a charger.
 
 ## Capacity and runtime
 Capacity is measured in **amp-hours** (Ah) or **milliamp-hours** (mAh): how much current for how long. A 2,000 mAh pack supplying 200 mA lasts roughly ten hours, less in practice because the discharge is not perfectly efficient.
@@ -722,8 +739,12 @@ A device made overseas and sold here often has brown, blue, and green-yellow ins
 
 **Stranded** wire is many fine strands twisted together: flexible, happy to be bent thousands of times, and therefore what every power cord, patient cable, and lead wire uses. **Solid** wire is one conductor: stiffer, easier to push into a screw terminal or a breadboard, and used for fixed building wiring. Put solid wire where something flexes and it work-hardens and breaks, usually just inside the strain relief where you cannot see it.
 
+Inside a device those conductors have to land somewhere: a **terminal block** where a screw clamps each wire, a plug-in connector, or a flat **ribbon cable** carrying a whole bank of signals between boards. The board itself is a **printed circuit board**, copper traces bonded to an insulating sheet, and on a modern one most parts are **surface mount**, soldered to pads on the surface rather than through holes. That is why board-level repair belongs to a depot: your job is to identify the failed board, not the failed chip.
+
 ## What ground actually does
 Two jobs, as in the first lesson of this unit. It is the **zero reference** that every other voltage is measured against, and it is the **protective path**: the green wire bonds the metal case back to the outlet's ground pin, so a loose internal wire touching the case sends current back through the ground conductor and trips the breaker rather than waiting for a person to complete the circuit. That is why a cracked plug, a missing ground pin, or a three-prong to two-prong adapter is an immediate failure on a patient-care device, and why ground continuity is the first electrical measurement in a safety test.
+
+On a drawing, the word ground can mean three different things. **Earth ground** is the connection back to the building and the plug's third pin. **Chassis ground** is the metal case itself. **Signal ground** is the **common ground** a board measures its own voltages against, usually the negative side of its supply. They are normally tied together at one point, and knowing which one a schematic means saves you from chasing a voltage that was never supposed to be there.
 
 ## Continuity and the diode test
 **Continuity** answers one question: is this one unbroken piece of conductor? The meter pushes a tiny current and beeps if it gets through, showing a fraction of an ohm. Open, it shows OL.
@@ -735,7 +756,7 @@ Two jobs, as in the first lesson of this unit. It is the **zero reference** that
 The **diode test** is continuity's cousin: it pushes a known small current and shows the forward voltage, about 0.6 to 0.7 V for a plain diode and about 1.8 to 2.0 V for a red LED, with the red probe on the anode. Reversed, a healthy part reads OL.
 
 ## ESD: the damage you never see
-Walking across a carpet can charge you to thousands of volts. A spark you can feel is roughly **3,000 V**, but as little as **100 V** can destroy a chip with no spark, no noise, and no visible mark. The board then works, or half works, or fails next week, and nobody connects it to the moment you picked it up.
+Walking across a carpet charges you with **static electricity**, to thousands of volts. A spark you can feel is roughly **3,000 V**, but as little as **100 V** can destroy a chip with no spark, no noise, and no visible mark. The board then works, or half works, or fails next week, and nobody connects it to the moment you picked it up.
 
 The habits are simple and not optional:
 

@@ -61,7 +61,7 @@ A number with no unit is not a measurement, it is a guess waiting to be misread.
     },
     {
       id: "u4l2", title: "Reading Scales, Meters, and Cylinders; Tolerance and Percent Error", domain: 5, obj: "RPS-A", minutes: 10, lab: "reading-scales",
-      body: `Two technicians read the same analog gauge and write down two different numbers. Only one of them is doing the job. Reading an instrument is a skill with rules, and the pass or fail you write in the record is only as good as the reading it came from.
+      body: `Two technicians read the same analog gauge and write down two different numbers. Only one of them is doing the job. Reading an instrument is a skill with rules, and the pass or fail you write in the record is only as good as the reading it came from. The exam calls this **visual measurement**: taking a number off a scale, a dial, a cylinder, or a ruler with your own eyes, and knowing how many of its digits you have actually earned.
 
 ## Analog scales and the needle
 A needle instrument gives you a printed number, a set of ticks between the printed numbers, and a pointer.
@@ -132,6 +132,8 @@ A beat every 0.8 s is 1 / 0.8 = 1.25 Hz, which is 1.25 x 60 = 75 beats per minut
 
 ## Amplitude and baseline
 **Amplitude** is height, measured from the **baseline**, the flat level the trace rests on between events. At normal gain, 10 mm of height is 1 mV, so a complex 12 mm tall is 1.2 mV. Two habits follow: measure height from the baseline rather than from the bottom of the paper, and check the gain marker before you trust any millivolt number, because half gain halves every amplitude on the strip.
+
+A wave that swings both ways is quoted two ways. The **peak voltage** is measured from the baseline out to one extreme; the **peak-to-peak voltage** runs from the bottom of the trough to the top of the peak, so it is twice the peak on a symmetrical wave. Wall power is the example to remember: 120 V effective is about 170 V peak and therefore about 340 V peak to peak, which is why an oscilloscope trace of an outlet looks so much bigger than the meter reading.
 
 ## Three shapes worth recognizing
 - A **sine wave** is a smooth, symmetrical swing with no corners: mains power, a test tone, and the interference mains power leaves behind.
@@ -491,6 +493,8 @@ Ask two questions in this order: how is the device protected from the mains, and
 
 When the device and the standard disagree, the tighter number wins, and the manufacturer's service manual can be tighter than the standard.
 
+One more name sits behind the paperwork. **The Joint Commission** and the other bodies that accredit hospitals do not set leakage limits themselves; they survey the hospital and ask to see the records proving the limits were met and the schedule was kept. That is why a test you ran but did not document counts for nothing, and why a missing record is treated as seriously as a failed reading.
+
 ## What you do when a reading fails
 1. **Stop.** Do not continue the test hoping for a better number, and never average a failing reading with passing ones.
 2. **Remove it from service and tag it.** A clear tag that says out of service, the date, your name, and why. Physically separate it from equipment that is ready for use so nobody grabs it.
@@ -513,7 +517,7 @@ You test a Class I vital-signs monitor with a type BF sensor and run the whole s
       body: `An autoclave with the panel off, a surgical table raised on its column, a defibrillator with the cover removed, a drum of floor cleaner that got decanted into an unlabeled bottle. Every one of those is somebody about to be hurt by energy or a chemical they thought was handled. The controls for both are procedures, and both are written down before you need them.
 
 ## Lockout tagout, in order
-**LOTO** is the procedure that makes equipment safe to work on by making it impossible to energize while you are inside it.
+**Lockout tagout**, written **lock out tag out (LOTO)** on many hospital forms, is the procedure that makes equipment safe to work on by making it impossible to energize while you are inside it.
 
 1. **Notify** everyone affected: the department, the users, and anyone else who might come looking for the device.
 2. **Shut it down** by its normal controls, in the normal order.
@@ -573,7 +577,7 @@ So: know where the **eyewash station** is and how long to use it (keep the eye i
     },
     {
       id: "u5l5", title: "Medical Gas Color Codes, Signage, and Symbols", domain: 3, obj: "SAF-A", minutes: 9,
-      body: `A gas cylinder is a few hundred pounds of pressure with a valve on top, and the wrong gas plumbed into the right fitting is a patient event. Hospitals prevent that with colors, with fittings that only mate one way, and with signs. Your job is to read all three without hesitating.
+      body: `A gas cylinder is a few hundred pounds of pressure with a valve on top, and the wrong gas plumbed into the right fitting is a patient event. Hospitals prevent that three ways: **color coding** for the gases, fittings that only mate one way, and signage. Your job is to read all three without hesitating.
 
 ## The colors, in the United States
 \`\`\`

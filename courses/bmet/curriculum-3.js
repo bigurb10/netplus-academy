@@ -16,8 +16,10 @@ FRA.units.push({
 
 **Ophthalmoscope.** Lights the inside of the eye and lets a clinician focus on the retina. A **lens dial** on the head clicks through correction powers, and that dial is what fails: feel every detent and watch the view change as it moves. The check: lamp output, dial detents, and optics cleaned with lens tissue only, never a disinfectant wipe.
 
+**Audiometer.** Plays tones of known frequency and loudness through headphones so a clinician can map what a patient is able to hear. It belongs in a quiet room or a booth, because background noise alone will fail a healthy ear. The check: headphone cords and cushions, the response of every button and tone, and the calibration record, since an output that has drifted turns into a hearing loss the patient does not have.
+
 ## Temperature and weight
-**Thermometers.** An electronic unit reads temperature through a **thermistor**, a resistor whose resistance changes with heat, in a probe used **oral**, axillary, or **rectal**. The probes are color coded by site and are never swapped between sites. A **tympanic** unit reads infrared energy from the ear canal and a **temporal** unit scans the forehead. Every one of them uses a single-use **probe cover**, and a missing box of covers takes a thermometer out of service as surely as a dead battery. The check: compare against a reference thermometer, confirm the probe type matches the device, and verify the cover supply.
+**Thermometers.** An electronic unit reads temperature through a **thermistor**, a resistor whose resistance changes with heat, in a probe used **oral**, axillary, or **rectal**. The probes are color coded by site and are never swapped between sites. A **tympanic thermometer** is an **infrared temperature sensor**: it reads the heat radiating from the ear canal instead of touching anything, and a **temporal** unit scans the forehead the same way. Every one of them uses a single-use **probe cover**, and a missing box of covers takes a thermometer out of service as surely as a dead battery. The check: compare against a reference thermometer, confirm the probe type matches the device, and verify the cover supply.
 
 **Scales.** A **floor** scale weighs a standing patient, a **chair** scale weighs someone who cannot stand, a **bed** scale weighs through load cells under the frame, and an **infant** scale weighs in grams on a tray. The check never changes: **zero** the scale empty, then load certified **calibration weights** at a low, a middle, and a high value and compare. A scale that was not zeroed is wrong by the same amount on every patient, and the weights carry their own due date.
 
@@ -48,6 +50,8 @@ The monitor counts rate from the QRS, so anything that spoils the signal spoils 
 
 ## Non-invasive blood pressure
 **NIBP** inflates a cuff to stop flow, then bleeds it down while watching the small pressure oscillations the artery makes under the cuff. That is the **oscillometric** method, and it reports systolic, diastolic, and a calculated mean. **Cuff size** is the single biggest error source: a cuff too small reads high, a cuff too large reads low, and the bladder should wrap roughly 80% of the arm. The **cycle interval** sets how often it repeats, the **hose** must be unkinked and leak-free, and a moving arm produces a failed or wild reading rather than a quiet wrong one.
+
+The manual version of the same measurement is a **sphygmomanometer**: a cuff, a bulb, and a gauge, with a stethoscope listening for the sounds that appear and disappear as the cuff deflates. Departments keep them as the backup for when a module fails, and they are still your work: a leak check on the cuff and bulb, and a gauge that sits on zero with the cuff open.
 
 ## Pulse oximetry
 A **SpO2** probe shines two wavelengths through a finger, toe, earlobe, or an infant's foot: **red light at about 650 to 660 nm** and **infrared at about 805 to 940 nm**. Oxygenated and deoxygenated blood absorb those two colors differently, so the ratio of what gets through gives the saturation, normally 95 to 100%. The measurement needs a pulse to work from, so poor **perfusion**, a cold hand, or a blood pressure cuff inflating on the same arm will stall it. **Motion** is the other enemy, and dark **nail polish** or an artificial nail blocks the light path. Move the probe, warm the site, or switch to an ear sensor before you blame the monitor.
@@ -226,7 +230,7 @@ You discharge into the analyzer at the 2, 50, 200, and 360 J settings and record
       body: `These are the devices that fill the rest of the cart and the rest of your week. None of them is complicated, and all of them deliver something to a patient: negative pressure, heat, cold, squeeze, or electrical pulses. For each one, say what it delivers and the basic check.
 
 ## Suction
-Suction removes fluid, secretions, and blood. There are two sources.
+Suction removes fluid, secretions, and blood. A suction pump is also called an **aspirator**, and the two words mean the same device on a work order. There are two sources.
 
 A **wall regulator** plugs into the vacuum outlet in the headwall. It has a gauge reading **mmHg** of vacuum, a knob to set the level, and a selector for continuous or intermittent. A **portable suction pump** carries its own motor and battery for transport, the ambulance, or a room with no piped vacuum. Both run through a **canister** that collects the fluid and a **filter** that protects the pump or the wall line from overflow; a clogged filter is the usual reason a unit will not pull.
 
@@ -413,7 +417,9 @@ mini-USB     small trapezoid, taller                 older cameras and legacy fi
 
 **USB** carries data and power on the same cable, which is why it charges things. Speed has climbed through several generations, and the practical point is that a cable and both ends have to support a speed for you to get it: plugging a fast drive into an old port gives you the old speed, not an error. Blue or teal insert colors often mean a faster generation, though colors are a hint and not a standard.
 
-## Video
+## Video output
+A computer's **video output** is the port the display plugs into, and four shapes are still in service:
+
 - **HDMI**: current digital video and audio in one flat connector with slightly tapered corners. The default on displays and carts.
 - **DisplayPort**: digital video, a rectangle with one corner cut, often with a latch you must press to release. Common on workstations with multiple monitors.
 - **VGA**: the old analog standard, a blue fifteen-pin shell with two thumbscrews. Analog means a long or poor cable gives a soft, ghosted picture instead of failing cleanly.
@@ -423,6 +429,8 @@ mini-USB     small trapezoid, taller                 older cameras and legacy fi
 - **RJ45** is the eight-pin clip-in network jack, on **Cat5e** or **Cat6** twisted-pair cable. Cat6 is built to tighter tolerances for higher speeds over the same distance. Both terminate in a wall jack or a patch panel.
 - **Fiber** carries light down glass strands. It goes long distances, carries enormous bandwidth, and, because it is glass, it also provides complete **electrical isolation** between buildings, which is why it is used between a hospital and a detached clinic.
 - **RS-232 serial**, usually on a **DB9** shell, is a nine-pin two-row connector that looks ancient and is still everywhere on medical devices. It is how you reach the service menu on an older monitor, pull a log from an analyzer, or feed data to a strip printer. Keep a serial-to-USB adapter in your bag, and know that the adapter needs a driver.
+
+A **cable tester** settles any argument about a network cable: plug both ends into it and it checks each of the eight conductors end to end and in the right order, then reports an open, a short, or a crossed pair. A **cable tracer**, a tone generator on one end and a probe in your hand, tells you which jack or which end of a bundle a cable belongs to. Both beat guessing, and both are cheap enough that your shop should own them.
 
 ## Power and audio
 **Power connectors** on medical devices are usually a three-prong hospital-grade plug at the wall and a **detachable cord** that ends in the common rectangular appliance connector at the device. That means the cord is a replaceable part, and the cord is also the single most common safety-test failure. Low-voltage power comes from external supply bricks with barrel plugs that vary in diameter (outside and inside), voltage, and polarity, so confirm all three before plugging in: a correctly sized plug carrying the wrong voltage destroys a device.
@@ -446,7 +454,7 @@ Cable care is a safety issue in this job. Support the weight so a connector neve
 ## The shape of a network
 A **LAN** is one building or campus: the hospital's own wiring. A **WAN** links separate sites across distance over circuits a carrier provides, so a clinic across town reaches the data center over the WAN.
 
-Inside the LAN, a **switch** connects wired devices and forwards each packet only to the port that needs it. A **router** joins different networks together, and the router's address on your network is the **default gateway**, meaning the address a device sends traffic to whenever the destination is somewhere else.
+Inside the LAN, a **switch** connects wired devices and forwards each packet only to the port that needs it. The part it replaced, an **Ethernet hub**, copied every packet to every port, which wasted the wire and let anything on it see everything; if you meet one still in service, it is a finding, not a spare. A **router** joins different networks together, and the router's address on your network is the **default gateway**, meaning the address a device sends traffic to whenever the destination is somewhere else.
 
 Each device has an **IP** address and a **subnet mask**. The mask says which part of the address is the network. With the common mask **255.255.255.0**, the first three numbers are the network: **10.20.4.57 and 10.20.4.90 are on the same subnet and can talk directly, while 10.20.9.20 is not and every packet to it goes through the gateway.** That single rule answers a large share of network questions on the exam and on the floor.
 
@@ -465,7 +473,7 @@ A **VPN** is an encrypted tunnel across an untrusted network. When a vendor need
 **Telemetry** is the exception to all of this: patient telemetry runs on **WMTS**, radio bands reserved by regulation for medical telemetry, with its own antennas and receivers, so it is not competing with phones and office wireless for airtime.
 
 ## The data closet
-The jack in the wall runs back to a **patch panel** in a closet, where a short cable connects it to a port on a **switch** in a **server rack**. The floor closet is an **IDF**, an intermediate distribution frame; the building's core room, where the IDFs come together with the servers and the circuits that leave the building, is the **MDF**, the main distribution frame. When you report a dead jack, report the room and the jack number printed on the faceplate: that label is how the network technician finds the right port.
+The jack in the wall runs back to a **patch panel** in a closet, where a short cable connects it to a port on a **switch** in a **server rack**. The floor closet is an **IDF**, an intermediate distribution frame, which the IT department may call the telecommunications room; the building's core room, where the IDFs come together with the servers and the circuits that leave the building, is the **MDF**, the main distribution frame. When you report a dead jack, report the room and the jack number printed on the faceplate: that label is how the network technician finds the right port.
 
 ## Two commands that answer most questions
 **ipconfig** prints the machine's own address, subnet mask, and default gateway. Start there, because everything else depends on those three numbers.
