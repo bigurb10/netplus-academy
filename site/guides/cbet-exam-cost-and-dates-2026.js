@@ -2,12 +2,12 @@ window.FRA = window.FRA || {};
 FRA.guides = FRA.guides || [];
 FRA.guides.push({
   slug: "cbet-exam-cost-and-dates-2026", title: "CBET Exam Cost, Dates, and Retake Rules in 2026", description: "The 2026 CBET fee, the May and November testing windows, application lead time, candidate status, and what to budget beyond the exam.", updated: "2026-10-13",
-  related: { courses: ["cbet", "bmet"], lessons: ["cbet:u2l1", "cbet:u3l2"] },
+  related: { courses: ["cbet", "bmet"], lessons: ["cbet:u2l1", "cbet:u3l2", "bmet:u8l5"] },
   faq: [
-    { q: "How much does the CBET cost in 2026?", a: "The 2026 exam fee is $410 for AAMI members and $460 for non-members. Membership is optional, and the $50 gap is small enough that it only pays for itself if you also want the other member benefits." },
+    { q: "How much does the CBET cost in 2026?", a: "The 2026 exam fee is $410 for AAMI members and $460 for non-members. Membership is optional, and the $50 gap rarely decides it on its own, so choose membership for its other benefits rather than for the exam discount." },
     { q: "When can I take the CBET?", a: "There are two windows a year, one in May and one in November, at computer-based test centers. Applications generally open about three months before a window, so the realistic planning milestones are February and August." },
     { q: "What is the difference between candidate and full status?", a: "Full certification needs a degree plus two years of BMET work, the military biomedical program plus two years, or four years of work alone. Candidate status needs only one of those pieces, and a candidate who passes has five years to finish the rest and upgrade." },
-    { q: "What score do I need to pass?", a: "Roughly 116 correct out of 165, about 70 percent. The issuing body sets the cut score with a criterion-referenced method, so treat 70 percent as the planning target and build a margin above it." },
+    { q: "What score do I need to pass?", a: "Roughly 116 correct out of 165, about 70 percent. ACI sets the cut score with a criterion-referenced method, so treat 70 percent as the planning target and build a margin above it." },
     { q: "How often do I have to recertify?", a: "Every three years, with continuing education. Start logging your training hours the month you pass rather than scrambling in year three." }
   ],
   body: `The CBET is not an exam you can book on a Tuesday for the following Monday. It runs on windows, the application closes well before the window opens, and the fee is the smallest part of the budget. Here is the whole picture for 2026 so you can put real dates on a plan.
@@ -42,7 +42,7 @@ Candidate status requires only one piece of that: the degree alone, the military
 
 ## What the exam day looks like
 
-165 questions in 3 hours, closed book, with an on-screen calculator. That is about 65 seconds per question, which is why timed practice matters more than re-reading notes. Passing is around 116 correct, roughly 70 percent, with the cut score set by the issuing body using a criterion-referenced method rather than a fixed pass rate.
+165 questions in 3 hours, closed book, with an on-screen calculator. That is about 65 seconds per question, which is why timed practice matters more than re-reading notes. You leave the test center with a preliminary result, and the official one arrives within 45 days of the window. Passing is around 116 correct, roughly 70 percent, with the cut score set by ACI using a criterion-referenced method rather than a fixed pass rate.
 
 ## Retakes
 

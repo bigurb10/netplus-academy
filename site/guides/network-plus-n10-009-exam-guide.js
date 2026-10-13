@@ -32,7 +32,7 @@ Troubleshooting is the domain people underprepare because it feels like somethin
 
 These are the ones that make people nervous. They are not programming tasks. Expect to drag items into the right place, fill in a configuration, read a set of outputs and pick what is wrong, or complete a table. Two habits help:
 
-1. **Do not start with them.** If the first item is performance-based and it is not obvious in twenty seconds, flag it and move on. Answer the 80 multiple-choice questions you can bank, then come back with whatever time is left.
+1. **Do not start with them.** If the first item is performance-based and it is not obvious in twenty seconds, flag it and move on. Answer the multiple-choice questions you can bank, then come back with whatever time is left.
 2. **Read the whole prompt before touching anything.** These items usually tell you the constraint in the last sentence, and candidates who start clicking from the first sentence end up redoing the work.
 
 ## What to know cold

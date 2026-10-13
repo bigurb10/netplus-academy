@@ -10,7 +10,7 @@ FRA.guides.push({
     { q: "What happens if I pass the CBET as a candidate and never finish the requirements?", a: "The five-year window closes and the pass does not convert to full certification. Treat the candidate route as a commitment to finish, not a shortcut around the experience." },
     { q: "Which exam is harder?", a: "The CBET: 165 questions in three hours across a wider body of knowledge, and it assumes you have worked on real equipment. The CABT is 100 questions in two hours and is written for someone who has studied rather than served time in a shop." }
   ],
-  body: `These two credentials get confused constantly, and the confusion costs people money. They come from the same body, they cover overlapping material, and only one of them is open to you if you have never worked in a hospital. Here is the split.
+  body: `These two credentials get confused constantly, and the confusion costs people money. They come from the same body, AAMI/ACI, they cover overlapping material, and only one of them is open to you if you have never worked in a hospital. Here is the split.
 
 The CABT, the Certified Associate in Biomedical Technology, is an entry credential. It exists so that a student or a career changer can prove they learned the material before any employer has paid them to. The CBET, the Certified Biomedical Equipment Technician, is the career credential. It assumes you have been in a shop, and it is the one that shows up in job postings for BMET II and above.
 
@@ -37,7 +37,7 @@ Time                 2 hours                       3 hours
 Book                 closed                        closed
 Calculator           on-screen, four function      on-screen
 Where                remote proctor, year round    test centers, May and November
-Result               pass or fail at once          cut score set by the issuer
+Result               pass or fail at once          preliminary at once, official in 45 days
 2026 fee, member     $220                          $410
 2026 fee, non-member $270                          $460
 Retake               $190 / $240 after 60 days     the next May or November window

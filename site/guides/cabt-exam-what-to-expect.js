@@ -7,7 +7,7 @@ FRA.guides.push({
     { q: "How long is the CABT and how many questions?", a: "100 questions in 2 hours, closed book, with an on-screen four-function calculator. That is 72 seconds per question, so practice at the real pace rather than untimed." },
     { q: "Can I take the CABT from home?", a: "Yes. It is live remote proctored year round, which means a laptop or desktop with a movable webcam, an enclosed quiet room, a clear desk, and nobody else present." },
     { q: "When do I find out whether I passed?", a: "Immediately. The result is a pass or fail shown when you finish, with confirmation by email within 24 hours." },
-    { q: "What if I fail?", a: "You wait 60 days and retake at the reduced retake fee, $190 for members and $240 for non-members. Use the wait: 60 days of focused work on your weak domains is more than enough to change the outcome." },
+    { q: "What if I fail?", a: "You wait 60 days and retake at the lower retake fee, $190 for AAMI members and $240 for non-members, against $220 and $270 for the first attempt. Use the wait: 60 days of focused work on your weak domains is more than enough to change the outcome." },
     { q: "Is the exam fee refundable?", a: "No. It is non-refundable, and you must take the exam within six months of purchase, so buy it only once you have a date and a plan." }
   ],
   body: `The CABT is a short exam with a long list of rules around it. Most people who struggle do not fail on the content; they lose time to a proctoring problem they could have solved the night before. This is what the two hours actually look like and how to arrive ready.
@@ -37,7 +37,7 @@ The practical consequence: do not spend six weeks memorizing anatomy and one wee
 
 This is where the exam gets strict. You need:
 
-- A laptop or desktop with a **movable webcam**. The proctor will ask you to pan the room with it before the exam starts. A fixed camera that cannot be aimed is a problem.
+- A laptop or desktop with a **movable webcam**. Expect to be asked to pan the room with it before the exam starts. A fixed camera that cannot be aimed is a problem.
 - An **enclosed, quiet room** with a door. Not a kitchen table in a shared apartment, not a library common area.
 - A **clear desk**. No notes, no phone, no second monitor, no cup with writing on it. Clear it completely and let the proctor see it.
 - **Nobody else present** for the whole two hours. Not a partner stepping in, not a child asking a question.
@@ -48,7 +48,7 @@ During the exam the behaviors that trigger a warning and then termination are: l
 
 The result is a **pass or fail you see as soon as you finish**, with email confirmation within 24 hours. There is no multi-week wait and no scaled score to interpret.
 
-If you fail, the retake wait is **60 days**, and the retake fee is $190 for members or $240 for non-members. Remember also that the original fee is non-refundable and the exam must be taken within six months of purchase, so do not buy the seat until you know when you are sitting.
+The 2026 fee is $220 for AAMI members or $270 for non-members. If you fail, the retake wait is **60 days**, and the retake fee drops to $190 for members or $240 for non-members. Remember also that the original fee is non-refundable and the exam must be taken within six months of purchase, so do not buy the seat until you know when you are sitting.
 
 The credential is valid for **five years and does not renew**. That shapes how you use it: pass it, then put it to work on a job search right away rather than letting two of the five years go by.
 

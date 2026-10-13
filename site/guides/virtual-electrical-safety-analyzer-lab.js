@@ -7,7 +7,7 @@ FRA.guides.push({
     { q: "Do I need a real analyzer to do these labs?", a: "No. The analyzer is drawn in the browser and the readings come from the scenario, so the lab runs on a phone with no equipment at all. If you do have a real analyzer at work, the same task sheet works with your own readings typed in." },
     { q: "Why test with the ground open if that never happens on a good outlet?", a: "Because the test is asking what happens when something breaks. A cord gets yanked, a ground pin snaps off, a receptacle loses its ground screw. Leakage that the ground wire normally carries away then has nowhere to go but through whoever touches the case, so the limits are written for that fault condition, not for the good day." },
     { q: "What is the difference between NFPA 99 and IEC 60601-1 limits?", a: "NFPA 99 is the facility standard a hospital tests to: 0.5 ohm of ground wire resistance and 500 microamps of chassis leakage for cord-connected patient-care equipment. IEC 60601-1 is the design standard the manufacturer builds to, and it splits every limit into a normal condition and a single fault condition. They overlap, and where they differ you test to the tighter number your department wrote into its procedure." },
-    { q: "How often is a device safety-tested?", a: "At incoming inspection before it ever reaches a patient, at every scheduled maintenance interval, after any repair that touched the cord, the ground path, or the power supply, and any time a user reports a shock or a tingle. The interval itself comes from the department's equipment management plan, commonly annually and more often for higher-risk devices." }
+    { q: "How often is a device safety-tested?", a: "At incoming inspection before it ever reaches a patient, at every scheduled maintenance interval, after any repair that touched the cord, the ground path, or the power supply, and any time a user reports a shock or a tingle. The interval itself comes from the department's equipment management plan rather than from one universal number, and higher-risk devices come round more often." }
   ],
   body: `An electrical safety analyzer decides whether a piece of patient-care equipment goes back to the floor, and it is the most-used instrument in a biomed shop. BMET Academy builds one into the browser: set up the test, press a button, read the meter, judge the reading against the limits.
 
@@ -43,12 +43,12 @@ Those limits come from what current does to a body at 60 Hz.
 
 \`\`\`
 Current through the body    Effect
+10 microamps                Microshock: straight to the heart, fibrillation
 1 mA                        Threshold of perception
 5 mA                        Accepted maximum harmless current
 10 to 20 mA                 Let-go threshold: the muscles clamp and cannot release
 50 mA                       Pain, possible fainting, respiratory arrest
 100 to 300 mA               Ventricular fibrillation likely
-10 microamps                Microshock: delivered directly to the heart, fibrillation
 \`\`\`
 
 Current reaching the heart skips the skin, most of the body's resistance, so applied parts are held to microamps.
@@ -83,11 +83,11 @@ Patient lead leakage, worst case    100 uA     61 uA       pass
 Verdict: FAIL. Tagged out of service.
 \`\`\`
 
-One reading over its limit fails the device, and a failing device never goes back to a patient. Tag it out of service, document every reading rather than only the bad one, repair it (usually a leaky filter capacitor or a damaged cord), and retest before release.
+The lab judges patient lead leakage against the tighter 100 microamp normal-condition figure, which is what a department procedure usually specifies. One reading over its limit fails the device, and a failing device never goes back to a patient. Tag it out of service, document every reading rather than only the bad one, repair it (usually a leaky filter capacitor or a damaged cord), and retest before release.
 
 > Record every condition, not just the worst one: the next technician needs your numbers to spot drift.
 
-The virtual analyzer is a teaching model of what a real analyzer does, not an emulation of any brand. The controls, measurements, and limits are the ones you will meet; the menus on the box in your shop will look different. Every kit lab in the course also runs on the virtual instruments, so nothing waits on a parts order.
+The virtual analyzer is a teaching model of what a real analyzer does, not an emulation of any brand. The controls, measurements, and limits are the ones you will meet; the menus on the box in your shop will look different. Every kit lab in the course also runs on the virtual instruments, so nothing waits on a parts order, and the labs that do use real parts run on a $60 to $100 home kit.
 
 The analyzer labs live in **BMET Academy**, our free course for people starting out in healthcare technology management: 13 hands-on labs, a printable memorization sheet, and practice exams built toward the CABT. If the limits above are old news because you already work in a shop, the CBET course covers them at exam depth.`
 });

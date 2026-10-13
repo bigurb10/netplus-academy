@@ -10,7 +10,7 @@ FRA.guides.push({
     { q: "Is it mostly memorization?", a: "It is mostly vocabulary used correctly. Knowing a definition is not enough; the exam gives you a scenario and asks which named thing applies. Study by sorting and comparing terms rather than reciting them." },
     { q: "How long should I study?", a: "Eight to twelve weeks is typical for someone with general IT experience. The limiting factor is almost always the volume of terminology, not the difficulty of any single idea." }
   ],
-  body: `Security+ SY0-701 is a vocabulary exam with a judgment problem attached. The individual ideas are not hard. What is hard is that the exam names roughly a thousand things and then asks you to pick the right name for a situation you have never seen. Study accordingly, and the exam becomes manageable.
+  body: `Security+ SY0-701 is a vocabulary exam with a judgment problem attached. The individual ideas are not hard. What is hard is the number of named things the exam expects you to tell apart, and that it asks you to pick the right name for a situation you have never seen. Study accordingly, and the exam becomes manageable.
 
 ## The format
 
@@ -30,13 +30,13 @@ That last domain surprises people who came to the exam expecting hacking. A mean
 
 ## What the current version emphasizes
 
-Compared with the older Security+, this version leans further away from product trivia and further toward how security is practiced day to day. In plain words:
+This version leans away from product trivia and toward how security is practiced day to day. In plain words:
 
-- **Operations is bigger.** Monitoring, alert triage, vulnerability management, and incident response get more room than they used to, and the questions are framed as "you are looking at this output, what next".
-- **Governance and risk are explicit.** Risk assessment language, vendor and supply chain risk, and compliance now have their own domain rather than being scattered through others.
+- **Operations carries a lot of the exam.** Monitoring, alert triage, vulnerability management, and incident response get real room, and the questions are framed as "you are looking at this output, what next".
+- **Governance and risk are explicit.** Risk assessment language, vendor and supply chain risk, and compliance have their own domain, security program management and oversight.
 - **Automation is treated as normal.** Scripting and orchestration appear as the expected way to do repetitive security work, not as an advanced topic.
 - **Zero trust is assumed vocabulary.** Control plane and data plane, policy engines, and implicit trust zones are terms you are expected to use correctly rather than merely recognize.
-- **Cloud and hybrid are the default picture.** Architecture questions rarely assume a single datacenter anymore.
+- **Cloud and hybrid are the default picture.** Architecture questions rarely assume a single datacenter.
 
 ## How to study terminology-heavy material
 

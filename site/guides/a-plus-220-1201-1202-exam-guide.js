@@ -7,7 +7,7 @@ FRA.guides.push({
     { q: "Do I need both exams to be A+ certified?", a: "Yes. Core 1 (220-1201) and Core 2 (220-1202) are two separate exams and the certification requires passing both. Passing one gives you no partial credential." },
     { q: "What are the passing scores?", a: "Core 1 passes at 675 out of 900 and Core 2 at 700 out of 900. Both are up to 90 questions in 90 minutes." },
     { q: "Which one should I take first?", a: "Core 1. It is the hardware and networking half, it has the lower passing score, and it gives you the physical vocabulary that Core 2's software and troubleshooting questions lean on." },
-    { q: "How much do the exams cost?", a: "See CompTIA's current voucher price, and note that it is per exam. Two-exam bundles are usually priced below two separate vouchers, so compare before buying the first one." },
+    { q: "How much do the exams cost?", a: "See CompTIA's current voucher price, and note that it is per exam. Check whether a two-exam bundle is offered before you buy the first voucher." },
     { q: "How long between the two exams?", a: "Most people do well with two to six weeks. Long enough to study Core 2 properly, short enough that the first pass still feels recent and your test-taking rhythm is intact." }
   ],
   body: `A+ is two exams, not one. You need both **220-1201 (Core 1)** and **220-1202 (Core 2)** to hold the certification, and passing only one earns you nothing you can put on a resume. Plan both from the start, because the biggest mistake candidates make is treating Core 2 as an afterthought and then letting it sit unwritten for a year.
@@ -22,7 +22,7 @@ Passing score        675 of 900             700 of 900
 Scale starts at      100                    100
 \`\`\`
 
-Both exams mix multiple choice with performance-based items, and both give you roughly a minute per question. Core 2 has the higher bar, which is one more reason not to leave it for last-minute cramming.
+Both exams give you roughly a minute per question. Core 2 has the higher bar, which is one more reason not to leave it for last-minute cramming.
 
 ## Core 1 domains: the hardware half
 
