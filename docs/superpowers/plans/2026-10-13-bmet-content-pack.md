@@ -118,10 +118,10 @@ check('shape: figures need a non-empty figures array of known kinds', shapeProbl
 check('shape: a strip figure needs a value equal to its rate', shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, seconds: 6 }] }).some(p => /value/.test(p)) && shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, value: 80, seconds: 6 }] }).some(p => /value/.test(p)) && shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, value: 100, seconds: 6 }] }).length === 0);
 check('shape: choices need text', shapeProblems('choices', {}).some(p => /text/.test(p)));
 check('shape: the sound fixtures report nothing', ['safety', 'monitor', 'infusion', 'defib'].every(n => shapeProblems(n, { safety: SAFE, monitor: MON, infusion: INF, defib: DEF }[n]).length === 0) && shapeProblems('dmm', Object.assign({ svg: '<svg viewBox="0 0 200 100"></svg>', points: { A: [1, 1], B: [2, 2], C: [3, 3], P: [4, 4], N: [5, 5], X: [6, 6], Y: [7, 7], D: [8, 8], E: [9, 9] } }, DMM)).length === 0);
-check('figure: meter tick labels carry no float noise', !/0\.30000000000000004|0\.6000000000000001/.test(I.figure({ kind: 'meter', min: 0, max: 1, value: 0.5, unit: 'A' })) && /0\.3</.test(I.figure({ kind: 'meter', min: 0, max: 1, value: 0.5, unit: 'A' })) === false);
+check('figure: meter tick labels carry no float noise', (() => { const s = I.figure({ kind: 'meter', min: 0, max: 0.3, value: 0.1, unit: 'A' }); return !/\d\.\d{7,}/.test(s) && />0\.15</.test(s) && />0\.3</.test(s); })());
 ```
 
-The last check's second clause is deliberately weak (tick labels print only at i = 0, 5, 10, so `0.3` never appears); the first clause is the real assertion. Keep it as written.
+(Tick labels print at i = 0, 5, and 10, so a 0 to 0.3 meter labels 0, 0.15, and 0.3; the raw arithmetic for 0.15 is `0.3 * 5 / 10`, which prints as `0.15000000000000002` before the fix.)
 
 - [ ] **Step 2: Run the suite to see the new checks fail**
 
