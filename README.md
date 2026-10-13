@@ -65,7 +65,7 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 
 ## Guides
 
-Guides are standalone articles not tied to a lesson or a course: exam-prep explainers, "how to become" pieces, lab walkthroughs. `site/guides/<slug>.js` is a browser script, loaded the same way a course pack is, that pushes one entry onto `FRA.guides`: `slug`, `title`, `body` (the same lesson markup a course uses), `updated`, and optionally `faq` and `related: { courses: ['netplus', ...], lessons: ['netplus:n1-...', ...] }`. `site/build-site.js` writes `/guides/` (an index of every guide) and `/guides/<slug>/` for each one, with Article and (when it has an `faq`) FAQPage JSON-LD, and links whatever courses and lessons `related` names.
+Guides are standalone articles not tied to a lesson or a course: exam-prep explainers, "how to become" pieces, lab walkthroughs. `site/guides/<slug>.js` is a browser script, loaded the same way a course pack is, that pushes one entry onto `FRA.guides`: `slug`, `title`, `body` (the same lesson markup a course uses), `updated`, and optionally `faq` and `related: { courses: ['netplus', ...], lessons: ['netplus:n1-...', ...] }`. `site/build-site.js` writes `/guides/` (an index of every guide) and `/guides/<slug>/` for each one, with Article and (when it has a `faq`) FAQPage JSON-LD, and links whatever courses and lessons `related` names.
 
 ## After a deploy that adds pages (Search Console)
 
