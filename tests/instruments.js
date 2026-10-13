@@ -228,6 +228,28 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('defib: changing the energy clears the analyzer reading', ui.readout === null && /--/.test(box.querySelector('.ins-screen [data-readout]').textContent));
 }
 
+// ---------- validate: scenario shape per instrument, and the lab header (Plan B, Task 1) ----------
+const shapeProblems = (instrument, scenario) => I.validate(lab(instrument, scenario, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { a: 'w' } }));
+check('shape: a lab without id, lesson, or title is reported', (() => { const p = I.validate({ instrument: 'choices', scenario: { text: 't' }, tasks: [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], why: { a: 'w' } }); return p.some(x => /lab id/.test(x)) && p.some(x => /lesson/.test(x)) && p.some(x => /title/.test(x)); })());
+check('shape: a safety table missing a condition key is reported', shapeProblems('safety', Object.assign({}, SAFE, { chassis: { normal: 45, reverse: 60 } })).some(p => /chassis/.test(p) && /normal-open/.test(p)));
+check('shape: a safety scenario without limits is reported', shapeProblems('safety', Object.assign({}, SAFE, { limits: null })).some(p => /limits/.test(p)));
+check('shape: a safety reading with no matching limit is reported', shapeProblems('safety', Object.assign({}, SAFE, { limits: { ground: 0.5 } })).some(p => /limits\.chassis/.test(p)));
+check('shape: a monitor scenario with a partial tolerance is reported', shapeProblems('monitor', Object.assign({}, MON, { tolerance: { hr: 2 } })).some(p => /tolerance/.test(p)));
+check('shape: a monitor scenario missing an offset is reported', shapeProblems('monitor', { hrErr: 1, tolerance: { hr: 2, spo2: 2, nibp: 3 } }).some(p => /spo2Err/.test(p)));
+check('shape: an infusion scenario without a numeric tolerance is reported', shapeProblems('infusion', Object.assign({}, INF, { tolerance: '5' })).some(p => /tolerance/.test(p)));
+check('shape: an infusion scenario without rateErr is reported', shapeProblems('infusion', { cylinderMl: 100, graduation: 1, tolerance: 5 }).some(p => /rateErr/.test(p)));
+check('shape: a defib scenario with no energies is reported', shapeProblems('defib', Object.assign({}, DEF, { energies: [] })).some(p => /energies/.test(p)));
+check('shape: a defib scenario without a tolerance is reported', shapeProblems('defib', Object.assign({}, DEF, { tolerance: {} })).some(p => /tolerance/.test(p)));
+check('shape: a dmm scenario needs an svg and points', shapeProblems('dmm', { vdc: { 'A-B': 9 } }).some(p => /svg/.test(p)) && shapeProblems('dmm', { svg: '<svg viewBox="0 0 10 10"></svg>', vdc: { 'A-B': 9 } }).some(p => /points/.test(p)));
+check('shape: a dmm table pair must name drawn points', shapeProblems('dmm', { svg: '<svg viewBox="0 0 10 10"></svg>', points: { A: [1, 1] }, vdc: { 'A-B': 9 } }).some(p => /not drawn: B/.test(p)));
+check('shape: a dmm point name with a dash is reported', shapeProblems('dmm', { svg: '<svg viewBox="0 0 10 10"></svg>', points: { 'B-': [1, 1] }, vdc: {} }).some(p => /point name/.test(p)));
+check('shape: a dmm scenario with no readings table is reported', shapeProblems('dmm', { svg: '<svg viewBox="0 0 10 10"></svg>', points: { A: [1, 1] } }).some(p => /readings table/.test(p)));
+check('shape: figures need a non-empty figures array of known kinds', shapeProblems('figures', { figures: [] }).some(p => /figures/.test(p)) && shapeProblems('figures', { figures: [{ kind: 'gauge', value: 1 }] }).some(p => /kind/.test(p)));
+check('shape: a strip figure needs a value equal to its rate', shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, seconds: 6 }] }).some(p => /value/.test(p)) && shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, value: 80, seconds: 6 }] }).some(p => /value/.test(p)) && shapeProblems('figures', { figures: [{ kind: 'strip', rate: 100, value: 100, seconds: 6 }] }).length === 0);
+check('shape: choices need text', shapeProblems('choices', {}).some(p => /text/.test(p)));
+check('shape: the sound fixtures report nothing', ['safety', 'monitor', 'infusion', 'defib'].every(n => shapeProblems(n, { safety: SAFE, monitor: MON, infusion: INF, defib: DEF }[n]).length === 0) && shapeProblems('dmm', Object.assign({ svg: '<svg viewBox="0 0 200 100"></svg>', points: { A: [1, 1], B: [2, 2], C: [3, 3], P: [4, 4], N: [5, 5], X: [6, 6], Y: [7, 7], D: [8, 8], E: [9, 9] } }, DMM)).length === 0);
+check('figure: meter tick labels carry no float noise', (() => { const s = I.figure({ kind: 'meter', min: 0, max: 0.3, value: 0.1, unit: 'A' }); return !/\d\.\d{7,}/.test(s) && />0\.15</.test(s) && />0\.3</.test(s); })());
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All instrument tests passed.');
 process.exit(0);
