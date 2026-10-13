@@ -18,15 +18,15 @@ FRA.cheatsheet = {
           ["Window to test", "Six months from purchase to the test date"],
           ["Results", "Pass or fail on screen immediately, confirmed by email within 24 hours"],
           ["Cut score", "Not published. This course scores the official-format test at 70% so you train above the line"],
-          ["Fee", "$220 member, $270 non-member; fees are non-refundable"],
+          ["Fee", "2026 fee: $220 member, $270 non-member; retake $190 / $240"],
           ["Retake", "$190 member, $240 non-member, after a 60-day wait"],
           ["Validity", "5 years, non-renewable; by then you qualify for the technician-level exam"],
           ["Anatomy and Physiology", "10%"],
-          ["Medical Devices and Test Equipment", "23%"],
+          ["Medical Devices as Related to Patient Care (the course calls it Medical Devices and Test Equipment)", "23%"],
           ["Safety in Healthcare", "16%"],
-          ["Electricity and Electronics", "14%"],
+          ["Fundamentals of Electricity and Electronics", "14%"],
           ["Reasoning and Problem Solving", "24%"],
-          ["Healthcare IT", "13%"]
+          ["Healthcare Information Technology (Healthcare IT)", "13%"]
         ] },
         { type: "note", text: "Reasoning and Problem Solving plus Medical Devices and Test Equipment are 47% of the exam, nearly half the questions. For every device on this sheet be ready to say three things: what it does, what it measures or delivers, and which tool checks it." }
       ]
@@ -104,7 +104,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["DC and AC", "What to remember"], rows: [
           ["DC", "Steady, one direction: batteries, power supply outputs, most circuit boards. Red lead is positive, black is negative"],
           ["AC", "Reverses direction many times a second: wall power. The United States uses 120 V at 60 Hz; much of the world uses 230 V at 50 Hz"],
-          ["RMS", "The 120 V on the label is an RMS value, the working average; the waveform actually peaks near 170 V"],
+          ["RMS", "The 120 V on the label is an RMS value, the effective value (the DC voltage that would deliver the same power); the waveform actually peaks near 170 V"],
           ["Transformers", "Work on AC only. More turns on the output side raises voltage, fewer turns lowers it; an isolation transformer has equal turns and just separates the two sides"],
           ["Rectifier", "Diodes inside a power supply turn AC into DC, and a capacitor then smooths the leftover ripple. AC at 60 Hz is also the frequency the heart is most vulnerable to, which is why the safety limits on this sheet are written for it"]
         ] },
@@ -216,7 +216,7 @@ FRA.cheatsheet = {
           ["10 to 20 mA", "Let-go threshold: muscles clamp and the person cannot release the conductor"],
           ["50 mA", "Pain, possible fainting, respiratory arrest"],
           ["100 to 300 mA", "Ventricular fibrillation likely"],
-          ["6 A and above", "Sustained heart contraction, burns, respiratory paralysis"],
+          ["6 A and above", "Sustained contraction and burns"],
           ["Microshock", "As little as 10 microamps delivered directly to the heart can cause fibrillation"]
         ] },
         { type: "table", cols: ["IEC 60601-1 limit", "Normal condition", "Single fault condition"], rows: [
@@ -303,7 +303,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Diagnostic device", "What it does", "A key check"], rows: [
           ["Otoscope", "Lights and magnifies the ear canal", "Lamp output, battery or charger contacts, clean specula"],
           ["Ophthalmoscope", "Lights and focuses on the back of the eye", "Lamp, lens wheel detents, clean optics with lens tissue only"],
-          ["Thermometer", "Reads temperature by thermistor probe, infrared ear or forehead, or disposable probe cover", "Compare against a reference thermometer; probe type must match the device"],
+          ["Thermometer", "Reads temperature by thermistor probe, infrared ear or forehead, or electronic probe (oral, axillary, rectal)", "Compare against a reference thermometer; probe type must match the device"],
           ["Scale", "Weighs a patient standing, sitting, or in a bed", "Zero empty, then check with certified test weights at low, middle, and high load"],
           ["Bladder scanner", "Ultrasound measurement of urine volume left in the bladder", "Probe surface condition, battery, and the stored reference check"],
           ["EKG cart", "Records the twelve-lead diagnostic tracing on paper or to the chart", "Lead wires and cable continuity, paper and print quality, simulator tracing on every lead"],
@@ -464,7 +464,7 @@ FRA.cheatsheet = {
       blocks: [
         { type: "table", cols: ["Credential", "What it is for", "When you qualify"], rows: [
           ["CABT", "Proof you know the fundamentals and can be trusted on a hospital floor; the credential this course targets", "Now: high school junior or above, no experience required. 100 questions in 2 hours, valid 5 years and non-renewable"],
-          ["CBET", "The working technician's credential, and the one most job postings name", "After about two years of full-time biomed work, or an associate degree in electronics plus experience. 165 questions in 3 hours, offered in May and November, $410 member and $460 non-member, recertified every 3 years"],
+          ["CBET", "The working technician's credential, and the one most job postings name", "Candidate status opens at an associate degree or higher in electronics, technology, or science, a United States military biomedical equipment technology program, or two years of full-time BMET work, any one of those alone, with five years to finish. Full certification needs one of: that degree plus two years of BMET work, the military program plus two years, or four years of full-time BMET work alone. 165 questions in 3 hours, offered in May and November, $410 member and $460 non-member, recertified every 3 years"],
           ["CRES", "The imaging specialist: radiography, fluoroscopy, and the high-voltage side of the shop", "After experience in imaging service. Also 165 questions in 3 hours"],
           ["CHTM", "The management credential: budgets, staff, regulations, and program strategy", "After experience leading a healthcare technology management program"]
         ] },
