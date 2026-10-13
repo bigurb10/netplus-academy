@@ -631,7 +631,7 @@ FRA.cheatsheet = {
           ["Fee", "2026 fee: $220 member, $270 non-member; non-refundable"],
           ["Retake", "$190 member, $240 non-member, after a 60-day wait"],
           ["Validity", "5 years, non-renewable; by then you qualify for the technician-level exam"],
-          ["Domain weights", "Anatomy and Physiology 10%; Medical Devices and Test Equipment 23%; Safety in Healthcare 16%; Fundamentals of Electricity and Electronics 14%; Reasoning and Problem Solving 24%; Healthcare IT 13%"]
+          ["Domain weights", "Anatomy and Physiology 10%; Medical Devices as Related to Patient Care 23%; Safety in Healthcare 16%; Fundamentals of Electricity and Electronics 14%; Reasoning and Problem Solving 24%; Healthcare Information Technology 13%"]
         ] },
         { type: "note", text: "Reasoning and Problem Solving plus Medical Devices and Test Equipment are 47% of the exam, nearly half the questions. For every device on this sheet be ready to say three things: what it does, what it measures or delivers, and which tool checks it." }
       ]
@@ -645,7 +645,7 @@ FRA.cheatsheet = {
           ["Blood pressure", "About 120/80 mmHg; MAP = diastolic + (systolic minus diastolic) / 3", "NIBP cuff, arterial line and transducer; verified with an NIBP analyzer and a cuff leak test"],
           ["Oxygen saturation (SpO2)", "95 to 100%", "Pulse oximeter, red light about 650 to 660 nm and infrared about 805 to 940 nm; verified with an SpO2 simulator or finger phantom"],
           ["End-tidal carbon dioxide (EtCO2)", "35 to 45 mmHg", "Capnograph; verified with a known calibration gas and a gas analyzer"],
-          ["Temperature", "37 C; fever above about 38 C", "Electronic thermometer, monitor temperature probe, infrared; verified with a resistance box or reference thermometer at two points"],
+          ["Temperature", "37 C (98.6 F); fever above about 38 C", "Electronic thermometer, monitor temperature probe, infrared; verified with a resistance box or reference thermometer at two points"],
           ["Tidal volume", "About 500 mL per breath at rest", "Ventilator display, spirometer, gas flow analyzer"]
         ] },
         { type: "table", cols: ["Body system", "Key organs", "What it does", "What your devices do with it"], rows: [
@@ -717,7 +717,7 @@ FRA.cheatsheet = {
           "Diode: passes current one way, forward drop about 0.6 to 0.7 V, blocks backwards; symbol is a triangle into a bar, current flows the way it points; rays added make it an LED",
           "LED: needs about 1.8 to 3.3 V, always a series resistor, longer leg is the anode (positive)",
           "Transistor: switch or amplifier, a small signal on one leg controlling a larger current through the other two",
-          "Fuse: one-time, replace with the same current/voltage rating; symbol is a loop or an S between two terminals. Lamp symbol is a circle with an X or a loop inside",
+          "Fuse: one-time (a breaker resets instead), replace with the same current/voltage rating; symbol is a loop or an S between two terminals. Lamp symbol is a circle with an X or a loop inside",
           "Switch and relay: a switch makes or breaks a path, a relay is a switch moved by a coil for a small signal to control a big load; switch symbol is a line lifted from a contact",
           "Ground: three shrinking horizontal lines. Chassis ground: a small rake or hatched bracket. Signals flow left to right"
         ] },
@@ -817,7 +817,7 @@ FRA.cheatsheet = {
           ["GFCI trip (NFPA 99 wet locations)", "4 to 6 mA of imbalance between hot and neutral"],
           ["Hospital-grade receptacle", "Marked with a green dot; checked for retention force and polarity"],
           ["Extension cords and cheater adapters", "Never used with patient-care equipment; a three-prong to two-prong adapter defeats the ground"],
-          ["Relocatable power taps", "Only the rated, approved type, secured, never daisy-chained"],
+          ["Relocatable power taps", "Only where allowed, rated, and secured; never daisy-chained"],
           ["Damaged cords and plugs", "Remove from service: a cracked plug, missing ground pin, or pinched cord fails inspection on sight"]
         ] },
         { type: "table", cols: ["Protection class or applied-part type", "What it means"], rows: [
@@ -880,14 +880,14 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Diagnostic device", "What it does", "A key check"], rows: [
           ["Otoscope", "Lights and magnifies the ear canal", "Lamp, battery or charger contacts, clean specula"],
           ["Ophthalmoscope", "Lights and focuses on the back of the eye", "Lamp, lens detents, optics cleaned with lens tissue only"],
-          ["Thermometer", "Thermistor probe, oral/axillary/rectal, or infrared ear/forehead; disposable single-use strip", "Compare against a reference thermometer; probe type must match device"],
+          ["Thermometer", "Reads temperature by thermistor probe, oral/axillary/rectal, or infrared ear/forehead; disposable single-use strip", "Compare against a reference thermometer; probe type must match device"],
           ["Scale", "Weighs a patient standing, sitting, or in a bed", "Zero empty; check with certified weights at low, middle, high load"],
           ["Bladder scanner", "Ultrasound measurement of urine volume left in the bladder", "Probe surface, battery, stored reference check"],
           ["EKG cart", "Records the twelve-lead diagnostic tracing on paper or to the chart", "Lead wires and cable continuity, paper and print quality, simulator tracing on every lead"],
           ["Microscope", "Magnifies specimens for the laboratory", "Illumination, stage movement, clean objectives, no fingerprints"],
           ["Centrifuge", "Spins samples to separate them by density", "Speed with a tachometer, timer accuracy, lid interlock, rotor condition"]
         ] },
-        { type: "note", text: "Normal values, the clinical device, and the verification tool for ECG, NIBP, SpO2, EtCO2, and temperature are on the anatomy vital-sign table above. Telemetry: verify with a simulator through the transmitter after checking signal strength and battery; a dropout is usually a dead battery or a coverage hole." },
+        { type: "note", text: "Normal values, the clinical device, and the verification tool for ECG, NIBP, SpO2, EtCO2, and temperature are on the anatomy vital-sign table above. Telemetry: verify with a simulator through the transmitter after checking signal strength and battery; a dropout is usually a dead battery or a coverage hole. Common false alarms: a loose or dried electrode reads as asystole or lead-off; a small cuff or a moving arm reads high; motion, poor perfusion, cold fingers, or nail polish upset SpO2; water in the EtCO2 sample line; a temperature probe off the patient reads room air." },
         { type: "table", cols: ["Therapeutic device", "What it delivers", "Settings", "The maintenance check"], rows: [
           ["Large-volume infusion pump", "Fluid or medication into a vein", "Rate in mL/h, volume to be infused", "Flow accuracy, occlusion pressure, alarms, battery runtime"],
           ["Syringe pump", "Very small, precise volumes from a syringe", "Rate, syringe brand and size", "Correct syringe profile, plunger grip, low-rate flow accuracy"],
@@ -1020,9 +1020,12 @@ FRA.cheatsheet = {
       blocks: [
         { type: "table", cols: ["Credential", "What it is for", "When you qualify"], rows: [
           ["CABT", "Entry-level proof of fundamentals; the credential this course targets (exam facts above)", "Now: high school junior or above, no experience required"],
-          ["CBET", "The working technician's credential, named in most job postings; manufacturer field service work on it means OEM parts, tools, and training", "Candidate: an associate degree in electronics/technology/science, a United States military BMET program, or two years of full-time BMET work (five years to finish). Full certification: that degree plus two years of BMET work, the military program plus two years, or four years of BMET work alone. 165 questions, 3 hours, May and November, $410 member/$460 non-member, recertified every 3 years"],
+          ["CBET", "The working technician's credential, named in most job postings", "Candidate: an associate degree in electronics/technology/science, a United States military BMET program, or two years of full-time BMET work (five years to finish). Full certification: that degree plus two years of BMET work, the military program plus two years, or four years of BMET work alone. 165 questions, 3 hours, May and November, $410 member/$460 non-member, recertified every 3 years"],
           ["CRES", "The imaging specialist: radiography, fluoroscopy, and the high-voltage side of the shop", "After experience in imaging service. Also 165 questions in 3 hours"],
           ["CHTM", "The management credential: budgets, staff, regulations, and program strategy", "After experience leading a healthcare technology management program"]
+        ] },
+        { type: "list", title: "Where the jobs are", cols: 2, items: [
+          "Where the jobs are: hospital in-house HTM, a mixed bench and the most common first job; independent service organization (ISO), contract service across facilities with more travel; manufacturer field service (OEM), one product line with factory parts, tools, and training; military and government; clinics, surgery centers, and dialysis, small fleets where you are often the only technician."
         ] },
         { type: "list", title: "Your first ninety days", cols: 2, items: [
           "Shadow everyone you can and write down what you see; the hospital's own habits are not in any manual",
@@ -1684,7 +1687,7 @@ Three legs. A small current or voltage on the control leg governs a much larger 
 
 **Integrated circuits** pack thousands or millions of transistors into one package with numbered pins: the processors, memory, amplifiers, and regulators that make up a modern board. They are also the parts a static discharge destroys silently. The chip in charge is usually a **microcontroller**, a whole small computer on one piece of silicon (processor, memory, and input and output pins), and the program inside it is what a manual calls the firmware or the software version.
 
-Two more parts live on the same boards and come up on your bench. A **piezoelectric buzzer** works by the **piezoelectric effect** run backwards: voltage makes the crystal flex, and that is what makes the alarm tone in most devices, so a silent alarm can be a dead buzzer rather than a logic fault. A **thermistor** is a resistor whose value changes with temperature, which makes it the sensing element in temperature probes and inside battery packs; most are **negative temperature coefficient** types, so the resistance falls as the part gets hotter, while **positive temperature coefficient** parts rise instead and are used as self-resetting fuses. A **thermocouple** does the same sensing job with two dissimilar metals joined at a tip, where the junction itself produces a tiny voltage that grows with temperature, and it is what survives the heat inside a sterilizer or an oven.
+Two more parts live on the same boards and come up on your bench. A **piezoelectric buzzer** works by the **piezoelectric effect** run backwards: voltage makes its ceramic disc flex, and that is what makes the alarm tone in most devices, so a silent alarm can be a dead buzzer rather than a logic fault. A **thermistor** is a resistor whose value changes with temperature, which makes it the sensing element in temperature probes and inside battery packs; most are **negative temperature coefficient** types, so the resistance falls as the part gets hotter, while **positive temperature coefficient** parts rise instead and are used as self-resetting fuses. A **thermocouple** does the same sensing job with two dissimilar metals joined at a tip, where the junction itself produces a tiny voltage that grows with temperature, and it is what survives the heat inside a sterilizer or an oven.
 
 ## The symbols for these five
 \`\`\`
