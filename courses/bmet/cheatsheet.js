@@ -97,7 +97,7 @@ FRA.cheatsheet = {
           ["AC", "Reverses direction many times a second: wall power. The United States uses 120 V at 60 Hz; much of the world uses 230 V at 50 Hz"],
           ["RMS", "The 120 V on the label is RMS, the effective value (DC voltage giving the same power); the waveform peaks near 170 V"],
           ["Transformers", "Change AC voltage (more turns on the output raises it, fewer lowers it) and can isolate a circuit; an isolation transformer has equal turns; does nothing on DC"],
-          ["Rectifier", "Diodes turn AC into DC inside a power supply; a capacitor smooths the ripple. The heart is most vulnerable at 60 Hz, the frequency this sheet's safety limits use"]
+          ["Rectifier", "Diodes turn AC into DC inside a power supply; a capacitor smooths the ripple"]
         ] },
         { type: "list", title: "Components, symbols, and what they do", cols: 2, items: [
           "Battery: provides DC power; symbol is alternating long/short lines, long line positive",

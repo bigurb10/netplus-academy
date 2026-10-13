@@ -25,7 +25,7 @@ Expected volume in the 30-minute collection: 40 mL. Acceptable: within plus or m
   ],
   why: {
     meter: "The needle sits just past the 6 V tick, about four tenths of the way to 7: 6.4 V. Read straight on to avoid parallax.",
-    cyl: "The bottom of the meniscus sits a little under the 40 mark, about three tenths of a division below it: 37 mL.",
+    cyl: "The liquid level sits a little under the 40 mark, about three tenths of a division below it: 37 mL.",
     rate: "Ten complexes in six seconds; 10 x 10 = 100 bpm. Six-second strip times ten gives beats per minute.",
     pct: "(37 - 40) / 40 x 100 = -7.5%. The minus sign says the pump delivered less than expected.",
     v: "Plus or minus 5% of 40 mL is 38 to 42 mL. 37 mL is outside that band, so the check fails and the pump needs service."
@@ -68,7 +68,7 @@ FRA.labs["safety-fail"] = {
   manual: `## Electrical safety limits (NFPA 99 and IEC 60601-1)
 - Ground wire resistance: 0.5 ohm maximum (NFPA 99)
 - Chassis (touch) leakage: 500 microamps maximum in every condition (NFPA 99)
-- Patient applied-part leakage, type BF: 100 microamps maximum (IEC 60601-1, normal condition); type CF applied parts allow only 10 microamps
+- Patient applied-part leakage, type BF: 100 microamps maximum in every condition this facility tests (IEC 60601-1 allows 500 under a single fault); type CF applied parts allow only 10 microamps
 - A device that fails any reading is tagged out of service until repaired and retested`,
   scenario: { standard: "NFPA 99 / IEC 60601-1", ground: 0.14, chassis: { normal: 95, reverse: 140, "normal-open": 480, "reverse-open": 640 }, lead: { normal: 12, reverse: 15, "normal-open": 48, "reverse-open": 61 }, limits: { ground: 0.5, chassis: 500, lead: 100 } },
   tasks: [

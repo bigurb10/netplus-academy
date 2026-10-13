@@ -314,7 +314,7 @@ AAMI "Core Competencies for the HTM Entry-level Technician" PDF joins check 3 if
 Generators (`courses/bmet/generators.js`): unit conversions, Ohm's law and
 series/parallel, tolerance and percent error, meter and strip reading, infusion rate
 error, delivered-energy error, leakage pass/fail against a stated limit. `acronyms.js`
-with the coverage test. A 12-page cheat sheet organised by the six tested domains.
+with the coverage test. A 12-page cheat sheet organised by the six tested domains. (Shipped at 15 pages, the shortest sheet in the catalog; see the plan's Status.)
 
 CBET touch-up. Four outline terms appear only on the cheat sheet, not in any lesson or
 deep dive, so each gets one sentence in the lesson body and its deep dive: HHS
