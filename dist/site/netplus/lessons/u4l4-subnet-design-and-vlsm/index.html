@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subnet Design and VLSM | CompTIA Network+ N10-009 | FieldReady Academy</title>
+<meta name="description" content="Real designs work backward: you know how many hosts you need and must pick a mask.">
+<link rel="canonical" href="https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Subnet Design and VLSM">
+<meta property="og:description" content="Real designs work backward: you know how many hosts you need and must pick a mask.">
+<meta property="og:url" content="https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Subnet Design and VLSM","description":"Real designs work backward: you know how many hosts you need and must pick a mask.","url":"https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/","mainEntityOfPage":"https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/","articleSection":"Unit 4: IP Addressing and Subnetting","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"NetPlus Academy","url":"https://fieldreadyacademy.com/netplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Network+ N10-009","item":"https://fieldreadyacademy.com/netplus/lessons/"},{"@type":"ListItem","position":3,"name":"Subnet Design and VLSM","item":"https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/"}]}</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/netplus/lessons/" aria-current="page">Lessons</a><a href="/netplus/cheatsheet/">Cheat sheet</a><a href="/netplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/netplus/lessons/">CompTIA Network+ N10-009</a><span class="sep">/</span><span>Subnet Design and VLSM</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 4</span><span class="pill">Concepts</span><span class="pill">Objective 1.7</span><span class="muted">9 min read</span></div>
+  <h1>Subnet Design and VLSM</h1>
+  <p class="ink2 lede">Unit 4: IP Addressing and Subnetting. Lesson 14 of 49 in NetPlus Academy.</p>
+  <div class="lesson-body"><p>Real designs work backward: you know how many hosts you need and must pick a mask.</p><h3>Choosing a mask for a host count</h3><p>Find the smallest power of two that is at least the host count plus 2. 50 hosts need 52 addresses; 64 is the next power of two, so 6 host bits, mask /26. 200 hosts need 202, next power is 256, 8 host bits, /24. 12 hosts need 14, next power 16, /28. 2 hosts on a router link: /30.</p><h3><abbr title="Variable-length subnet masking. Using different subnet sizes inside one network so addresses are not wasted.">VLSM</abbr></h3><p><strong>Variable length subnet masking</strong> means using different mask lengths in the same network so each subnet fits its purpose. Take <code>192.168.10.0/24</code>: a 100-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> gets <code>192.168.10.0/25</code> (126 hosts), a 50-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> gets <code>192.168.10.128/26</code> (62), a 20-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> gets <code>192.168.10.192/27</code> (30), and router links get /30s starting at <code>192.168.10.224/30</code>. Allocate largest first so blocks line up on their boundaries.</p><h3><abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> and supernetting</h3><p><strong>Classless inter-domain routing</strong> ignores the old classes entirely; any prefix length is valid. Going the other direction, combining several networks into one bigger advertised route is <strong>supernetting</strong> or <strong>route summarization</strong>. <code>10.1.0.0/24</code> through <code>10.1.3.0/24</code> summarize to <code>10.1.0.0/22</code>. Summaries keep routing tables small.</p><h3>Alignment rule</h3><p>A subnet must start on a multiple of its own block size. <code>192.168.10.64/26</code> is valid; <code>192.168.10.96/26</code> is not, because 96 is not a multiple of 64.</p><h3>Design sanity checks</h3><ul><li>Every host and its gateway share the same network address when you apply the mask.</li><li>No two subnets overlap.</li><li>Leave room to grow; do not size a 50-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> as a /26 if it will hit 70 next year.</li></ul><div class="tip">Exam tip: &quot;the most efficient mask for 30 hosts&quot; is /27 (30 usable). For 31 hosts you need /26. Read the count carefully; off-by-one is how these questions catch people.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Hosts plus 2, round up to a power of two, that is your host bits. Largest subnets first. Start blocks on their own multiples.</div></div>
+  
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Subnet Design and VLSM, explained slowly</h2><div class="lesson-body deep-body"><h3>Working backward from a host count</h3><p>Real design starts with &quot;I need room for 50 hosts,&quot; not with a mask. The recipe:</p><ol><li>Add 2 to the host count (for the network and broadcast addresses).</li><li>Round up to the next power of two.</li><li>The exponent is the number of host bits. Subtract it from 32 for the prefix.</li></ol><pre>Hosts needed   +2    Next power of two   Host bits   Prefix   Usable
+2              4     4                   2           /30      2
+12             14    16                  4           /28      14
+30             32    32                  5           /27      30
+31             33    64                  6           /26      62
+50             52    64                  6           /26      62
+100            102   128                 7           /25      126
+200            202   256                 8           /24      254</pre><p>Look at 30 versus 31. Thirty hosts fit a /27 exactly. Thirty-one hosts need 33 addresses, which does not fit in 32, so you must go up to a /26. Questions are built around this off-by-one.</p><h3><abbr title="Variable-length subnet masking. Using different subnet sizes inside one network so addresses are not wasted.">VLSM</abbr>: different masks in the same network</h3><p>Old-style subnetting cut a network into equal pieces. <strong>Variable length subnet masking</strong> cuts pieces of different sizes so nothing is wasted. Given <code>192.168.10.0/24</code> and these needs: a 100-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr>, a 50-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr>, a 20-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr>, and two router links.</p><p>Allocate the <strong>largest first</strong>, so each block starts on a clean boundary:</p><pre>Need        Prefix   Assignment              Usable
+100 hosts   /25      192.168.10.0/25         126   (.0 to .127)
+50 hosts    /26      192.168.10.128/26       62    (.128 to .191)
+20 hosts    /27      192.168.10.192/27       30    (.192 to .223)
+link 1      /30      192.168.10.224/30       2     (.224 to .227)
+link 2      /30      192.168.10.228/30       2     (.228 to .231)
+left over            192.168.10.232 to .255</pre><h3>The alignment rule</h3><p>A subnet must start on a multiple of its own block size. A /26 has block size 64, so it may start at .0, .64, .128, or .192. <code>192.168.10.96/26</code> is invalid: 96 is not a multiple of 64. Allocating largest first is what keeps everything aligned automatically.</p><h3><abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> and supernetting</h3><p><abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> simply means the prefix can be any length; the old classes are ignored. Going the other way, combining several networks into one bigger advertised route is <strong>supernetting</strong> or <strong>route summarization</strong>. The four networks <code>10.1.0.0/24</code>, <code>10.1.1.0/24</code>, <code>10.1.2.0/24</code>, and <code>10.1.3.0/24</code> share their first 22 bits, so one route, <code>10.1.0.0/22</code>, covers all four. Fewer routes means smaller routing tables and faster routers.</p><h3>Sanity checks for any design</h3><ul><li>Apply the mask to a host and to its gateway: they must produce the same network address.</li><li>No two subnets may overlap.</li><li>Leave room to grow. A 50-host <abbr title="Local area network. One site&#39;s network: a building, floor, or campus that one organization owns and runs.">LAN</abbr> that will be 70 next year should get a /25 now.</li></ul><h3>How the exam asks it</h3><ul><li>&quot;Most efficient mask for 30 hosts&quot;: /27. For 31 hosts: /26.</li><li>&quot;Which of these subnets is invalid&quot;: the one that does not start on its block boundary.</li><li>&quot;Summarize 172.16.4.0/24 through 172.16.7.0/24&quot;: 172.16.4.0/22.</li></ul><h3>What to memorize</h3><ul><li>Hosts plus 2, round up to a power of two, that is the host bits.</li><li>Largest subnets first. Blocks start on their own multiples.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/netplus/#lesson/u4l4">Open this lesson in the course</a> <a class="btn" href="/netplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/netplus/lessons/u4l3-subnetting-with-block-sizes/" rel="prev">&larr; Subnetting with Block Sizes</a>
+  <a href="/netplus/lessons/">All lessons</a>
+  <a href="/netplus/lessons/u4l5-ipv6-addressing/" rel="next">IPv6 Addressing &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

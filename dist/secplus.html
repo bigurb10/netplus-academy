@@ -445,9 +445,22 @@ FRA.course = {
   name: "SecPlus Academy",
   short: "S+",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "CompTIA", title: "CompTIA Security+", code: "SY0-701", questions: 90, minutes: 90, passPct: 83 },
   description: "Self-paced CompTIA Security+ SY0-701 course with adaptive training and practice exams.",
+  seo: {
+    title: "CompTIA Security+ SY0-701 Practice Questions and Study Guide | SecPlus Academy",
+    h1: "Security+ SY0-701 Practice Questions and Study Guide",
+    intro: "SecPlus Academy is a free Security+ SY0-701 practice question and study guide course: fifty-four lessons across the five exam domains, a printable memorization sheet of controls, attacks, and protocols, tutorials built from your misses, and unlimited practice tests.",
+    phrases: ["Security+ SY0-701 practice questions", "Security+ study guide", "SY0-701 practice test"],
+    faq: [
+      { q: "How many questions are on the Security+ SY0-701 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 750 on a scale of 100 to 900." },
+      { q: "What are the SY0-701 domains?", a: "General security concepts, threats, vulnerabilities and mitigations, security architecture, security operations, and security program management and oversight." },
+      { q: "How much does Security+ cost?", a: "See CompTIA's current voucher price; the course is free." },
+      { q: "How does the course decide I am ready?", a: "Three of your last five fifty-question practice tests at 80% or better, then one ninety-question test at the real passing score of 750 of 900." },
+      { q: "Is Security+ harder than Network+?", a: "Most candidates find it broader rather than harder: more terminology, fewer calculations. The cheat sheet carries every term the objectives name." }
+    ]
+  },
   domains: [
     { id: 1, name: "General Security Concepts", short: "Concepts", pct: 12, quota: 6 },
     { id: 2, name: "Threats, Vulnerabilities, and Mitigations", short: "Threats", pct: 22, quota: 11 },
@@ -472,7 +485,7 @@ FRA.course = {
     5: ["u14l1", "u14l3", "u15l1", "u15l3"]
   },
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam passes at 750 on a 100 to 900 scale. This course's official-format test uses 83%, that score divided by 900.",

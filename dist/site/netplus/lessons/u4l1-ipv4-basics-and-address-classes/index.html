@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPv4 Basics and Address Classes | CompTIA Network+ N10-009 | FieldReady Academy</title>
+<meta name="description" content="An IPv4 address is 32 bits, written as four decimal octets from 0 to 255, such as 172.16.40.9. Part of it identifies the network, the rest identifies...">
+<link rel="canonical" href="https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="IPv4 Basics and Address Classes">
+<meta property="og:description" content="An IPv4 address is 32 bits, written as four decimal octets from 0 to 255, such as 172.16.40.9. Part of it identifies the network, the rest identifies...">
+<meta property="og:url" content="https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"IPv4 Basics and Address Classes","description":"An IPv4 address is 32 bits, written as four decimal octets from 0 to 255, such as 172.16.40.9. Part of it identifies the network, the rest identifies...","url":"https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/","mainEntityOfPage":"https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/","articleSection":"Unit 4: IP Addressing and Subnetting","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"NetPlus Academy","url":"https://fieldreadyacademy.com/netplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CompTIA Network+ N10-009","item":"https://fieldreadyacademy.com/netplus/lessons/"},{"@type":"ListItem","position":3,"name":"IPv4 Basics and Address Classes","item":"https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/"}]}</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/netplus/lessons/" aria-current="page">Lessons</a><a href="/netplus/cheatsheet/">Cheat sheet</a><a href="/netplus/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/netplus/lessons/">CompTIA Network+ N10-009</a><span class="sep">/</span><span>IPv4 Basics and Address Classes</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 4</span><span class="pill">Concepts</span><span class="pill">Objective 1.7</span><span class="muted">8 min read</span></div>
+  <h1>IPv4 Basics and Address Classes</h1>
+  <p class="ink2 lede">Unit 4: IP Addressing and Subnetting. Lesson 11 of 49 in NetPlus Academy.</p>
+  <div class="lesson-body"><p>An <abbr title="Internet Protocol version 4. 32-bit addresses written as four decimal octets, such as 192.168.1.10.">IPv4</abbr> address is 32 bits, written as four decimal octets from 0 to 255, such as <code>172.16.40.9</code>. Part of it identifies the <strong>network</strong>, the rest identifies the <strong>host</strong> on that network. The <strong>subnet mask</strong> says where the split is: a 1 bit in the mask means network, a 0 bit means host.</p><h3>Reading a mask</h3><p><code>255.255.255.0</code> is 24 ones followed by 8 zeros, written as <strong>/24</strong> in <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> notation. Octet values you must recognize as masks: 128, 192, 224, 240, 248, 252, 254, 255, which correspond to 1 through 8 network bits in that octet. So <code>255.255.255.224</code> is /27 and <code>255.255.240.0</code> is /20.</p><h3>Binary in one minute</h3><p>Each octet&#39;s bits are worth 128, 64, 32, 16, 8, 4, 2, 1. Add the bits that are on. <code>192</code> is 128 plus 64, so its binary is 11000000. You only need this for masks and for spotting which half of a subnet a host falls into.</p><h3>The historical classes</h3><p>Classful addressing is retired in favor of <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr>, but the exam still expects you to recognize the ranges by first octet:</p><ul><li><strong>Class A</strong>: 1 to 126, default mask /8. Huge networks.</li><li><strong>Class B</strong>: 128 to 191, default mask /16.</li><li><strong>Class C</strong>: 192 to 223, default mask /24. Small networks.</li><li><strong>Class D</strong>: 224 to 239, multicast, not assigned to hosts.</li><li><strong>Class E</strong>: 240 to 255, experimental.</li></ul><p>127 is skipped because <code>127.0.0.0/8</code> is reserved for <strong>loopback</strong>; <code>127.0.0.1</code> always means &quot;this host.&quot;</p><h3>Two addresses you never assign</h3><p>In every subnet the all-zeros host address is the <strong>network address</strong> and the all-ones host address is the <strong>broadcast address</strong>. Everything between them is usable.</p><div class="tip">Exam tip: &quot;how many bits&quot; questions are just mask arithmetic. /27 leaves 5 host bits. A first octet of 172 is Class B; 10 is Class A; 200 is Class C.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Mask octets: 128 192 224 240 248 252 254 255. Class A 1-126 /8, B 128-191 /16, C 192-223 /24, 127 loopback.</div></div>
+  
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>IPv4 Basics and Address Classes, explained slowly</h2><div class="lesson-body deep-body"><h3>Stop seeing four numbers</h3><p>The easiest way to understand <abbr title="Internet Protocol version 4. 32-bit addresses written as four decimal octets, such as 192.168.1.10.">IPv4</abbr> is to stop thinking of it as four numbers and think of it as two parts glued together:</p><pre>IP address = NETWORK part + HOST part</pre><p>The <strong>subnet mask</strong> is the only thing that tells you where the network part ends and the host part begins.</p><h3>1. A street address</h3><p>Take <code>172.16.40.9</code>. Read it like a mailing address: <code>172.16.40</code> is the neighborhood, <code>9</code> is the house. That is not always literally how it splits, but it is the right mental picture.</p><p>With a mask of /24 it really is that split:</p><pre>172 . 16 . 40 . 9
+|------------|  |
+   NETWORK     HOST
+   24 bits     8 bits</pre><h3>2. Why 32 bits and why 0 to 255</h3><p>An <abbr title="Internet Protocol version 4. 32-bit addresses written as four decimal octets, such as 192.168.1.10.">IPv4</abbr> address is four <strong>octets</strong>. An octet is 8 bits, so 8 + 8 + 8 + 8 = 32 bits. Each bit in an octet is worth a fixed amount:</p><pre>128   64   32   16   8   4   2   1</pre><p>Turn every bit on and add them up: 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 = <strong>255</strong>. Turn them all off: 0. That is where the 0 to 255 range comes from. And 192 is 128 + 64, so 192 in binary is <code>11000000</code>. You will only ever need this for masks.</p><h3>3. The mask is the important part</h3><p>Put the address and the mask on top of each other:</p><pre>IP:    172 . 16  . 40  . 9
+Mask:  255 . 255 . 255 . 0
+       -----------------  ---
+            NETWORK       HOST</pre><p>Read 255 as &quot;this whole octet is network&quot; and 0 as &quot;this whole octet is host.&quot; So the network is <code>172.16.40</code> and the host is <code>9</code>.</p><h3>4. What /24 means</h3><p>Writing <code>255.255.255.0</code> every time is tedious, so we count the network bits instead. Three octets of 255 is three octets of ones: 8 + 8 + 8 = 24 ones. That is <strong>/24</strong>, called <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> notation.</p><pre>CIDR   Mask                  In binary
+/8     255.0.0.0             11111111.00000000.00000000.00000000
+/16    255.255.0.0           11111111.11111111.00000000.00000000
+/24    255.255.255.0         11111111.11111111.11111111.00000000
+/32    255.255.255.255       all ones: one single host</pre><h3>5. Where it gets interesting: /27</h3><p>Now you see <code>255.255.255.224</code>. The first three octets are 8 + 8 + 8 = 24 bits. The last octet, 224, is not all ones and not all zeros. In binary 224 is <code>11100000</code>: three ones, five zeros. So 24 + 3 = <strong>/27</strong>.</p><p>You do not need to do binary each time. Memorize the eight values a mask octet can be, and how many ones each one holds:</p><pre>Mask octet   Binary       Network bits in that octet
+128          10000000     1
+192          11000000     2
+224          11100000     3
+240          11110000     4
+248          11111000     5
+252          11111100     6
+254          11111110     7
+255          11111111     8</pre><p>Try <code>255.255.240.0</code>: 8 + 8 + 4 + 0 = <strong>/20</strong>. Try /29: 8 + 8 + 8 = 24, three left over, three ones is 224... no, five ones is 248. So /29 is <code>255.255.255.248</code>.</p><h3>6. The part that usually confuses people: which network is a host on?</h3><p>Take <code>192.168.10.70/27</code>. The mask is <code>255.255.255.224</code>. The <strong>interesting octet</strong> is the one that is not 255 or 0: the last one, 224. The <strong>block size</strong> is 256 minus 224 = <strong>32</strong>. That means networks start every 32 addresses:</p><pre>.0   .32   .64   .96   .128   .160   .192   .224</pre><p>Where does 70 fall? Between 64 and 96. So the network is <code>192.168.10.64</code>, the next network starts at .96, and the last address in ours is .95.</p><pre>192.168.10.64    network address (first address, never assigned)
+192.168.10.65    first usable host
+...
+192.168.10.94    last usable host
+192.168.10.95    broadcast address (last address, never assigned)</pre><p>That is 30 usable hosts: 32 addresses in the block minus the two you cannot use.</p><h3>7. Why you cannot use the first and last address</h3><p>The first address of every subnet, with all host bits zero, is the <strong>network address</strong>. It names the whole subnet in routing tables. The last address, with all host bits one, is the <strong>broadcast address</strong>. Sending to it reaches every host in the subnet. Everything in between is yours to assign.</p><h3>8. The historical classes</h3><p>Before masks were flexible, the first octet decided the mask. The exam still expects you to recognize the ranges. Look only at the first number:</p><pre>Class   First octet   Default mask        Example
+A       1 to 126      /8   255.0.0.0      10.50.20.7      (10 = network, 50.20.7 = host)
+B       128 to 191    /16  255.255.0.0    172.16.40.9     (172.16 = network, 40.9 = host)
+C       192 to 223    /24  255.255.255.0  192.168.1.50    (192.168.1 = network, 50 = host)
+D       224 to 239    multicast, never assigned to a host
+E       240 to 255    experimental</pre><p>Why is 127 missing? Because <code>127.0.0.0/8</code> is reserved for <strong>loopback</strong>. <code>127.0.0.1</code> always means &quot;this computer.&quot; Pinging it tests your own <abbr title="Transmission Control Protocol. Reliable, ordered, connection-based transport: three-way handshake, acknowledgments, retransmission.">TCP</abbr>/<abbr title="Internet Protocol. The Layer 3 protocol that addresses and routes packets between networks.">IP</abbr> stack and nothing else.</p><h3>9. Class versus <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr>: the thing to get straight</h3><p>Classful addressing is obsolete. Modern networks use <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr>, which means any prefix length is allowed on any address. So <code>192.168.1.50/26</code> is perfectly valid even though 192 is &quot;Class C.&quot; The class tells you the historical default. The <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> prefix tells you what the network actually uses. When a question gives you a prefix or mask, use it. When it only gives you an address and asks for the class or the default mask, use the first octet.</p><h3>10. The big picture, in order</h3><ol><li>Every <abbr title="Internet Protocol version 4. 32-bit addresses written as four decimal octets, such as 192.168.1.10.">IPv4</abbr> address is 32 bits: four octets of 8 bits, each 0 to 255.</li><li>The mask splits those bits into network and host. 1 means network, 0 means host.</li><li><abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> counts the network bits: /24 is 24 ones.</li><li>A partial mask octet is one of 128, 192, 224, 240, 248, 252, 254, 255, holding 1 to 8 ones.</li><li>Block size is 256 minus the interesting mask octet; networks start at multiples of it.</li><li>First address is the network, last is the broadcast, everything between is usable.</li><li>Class A 1 to 126, B 128 to 191, C 192 to 223, D multicast, E experimental, 127 loopback.</li></ol><div class="tip">The lesson after next teaches the block-size method in full. Once you can look at 192.168.50.137/26 and say the network, broadcast, and usable range in ten seconds, <abbr title="Internet Protocol version 4. 32-bit addresses written as four decimal octets, such as 192.168.1.10.">IPv4</abbr> stops being confusing.</div></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/netplus/#lesson/u4l1">Open this lesson in the course</a> <a class="btn" href="/netplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/netplus/lessons/u3l4-traffic-types-and-wireless-media/" rel="prev">&larr; Traffic Types and Wireless Media</a>
+  <a href="/netplus/lessons/">All lessons</a>
+  <a href="/netplus/lessons/u4l2-public-private-and-special-addresses/" rel="next">Public, Private, and Special Addresses &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

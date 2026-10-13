@@ -429,9 +429,23 @@ FRA.course = {
   name: "BMET Academy",
   short: "BM",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "AAMI / ACI", title: "Certified Associate in Biomedical Technology", code: "CABT", questions: 100, minutes: 120, passPct: 70 },
   description: "Biomed basic training for the AAMI/ACI CABT: 53 lessons, 13 hands-on labs on virtual instruments, a printable memorization sheet, adaptive tutorials, and practice exams.",
+  seo: {
+    title: "BMET Training Course for the AAMI CABT | BMET Academy",
+    h1: "BMET Training Course for the AAMI CABT (Biomed Training Course)",
+    intro: "BMET Academy is a free biomed training course for people starting out in healthcare technology management. Fifty-three lessons and thirteen hands-on labs on virtual instruments double as a CABT study guide, and the practice tests lead up to the AAMI/ACI Certified Associate in Biomedical Technology exam.",
+    phrases: ["BMET training course", "biomed training course", "CABT study guide", "CABT practice tests"],
+    faq: [
+      { q: "What is the CABT?", a: "The Certified Associate in Biomedical Technology is the entry-level AAMI/ACI credential for biomedical equipment technicians: 100 questions in 2 hours, closed book, taken by live remote proctoring any time of year, valid five years." },
+      { q: "Who can take the CABT exam?", a: "Anyone who is at least a high school junior. No work experience is required, which is what makes it the first credential for a new technician." },
+      { q: "How much does the CABT cost?", a: "In 2026 the exam is $220 for AAMI members and $270 for non-members; a retake is $190 or $240 after a 60-day wait. The fee is non-refundable and the exam must be taken within six months of purchase." },
+      { q: "Do I need a lab kit?", a: "No. Every kit lab also runs on the virtual multimeter in the browser. A kit of a multimeter, breadboard, resistors, a 9 V battery, LEDs, a switch, and a fuse holder costs about $60 to $100 if you want the hands-on version." },
+      { q: "Is BMET Academy free?", a: "Yes. Every lesson, lab, practice test, and the printable memorization sheet are free while the site launches." },
+      { q: "What comes after the CABT?", a: "The CBET, the working technician's credential, after two years of full-time work with an associate degree or a military biomed program, or four years of work alone; then the CRES for imaging or the CHTM for managers." }
+    ]
+  },
   domains: [
     { id: 1, name: "Anatomy and Physiology", short: "A&P", pct: 10, quota: 5 },
     { id: 2, name: "Medical Devices and Test Equipment", short: "Devices", pct: 23, quota: 12 },
@@ -460,7 +474,7 @@ FRA.course = {
     6: ["u7l3", "u7l5"]
   },
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   certificate: true,
   kit: ["Digital multimeter with test leads", "Solderless breadboard and jumper wires", "Resistor assortment (at least 100, 220, 470, 1k, 2.2k, and 10k ohm)", "A few capacitors", "9 V battery and battery clip", "LEDs (red and green)", "A slide switch", "A fuse holder with a 1 A fuse"],
   kitLab: "kit-setup",

@@ -15,12 +15,19 @@ w.click(w.$('[data-act="course"][data-arg="u3"]'));           // unit 3 is insid
 check('unit 3 shows no Full course pills', pills(w) === 0, pills(w));
 w.click(w.$('[data-act="lesson"][data-arg="u3l4"]'));         // 10th lesson in course order
 check('10th lesson opens when locked', /Wireless Media/.test(w.text()) && !!w.$('[data-act="start-checkpoint"]'));
-w.click(w.$('[data-act="lesson"][data-arg="u4l1"]'));         // 11th lesson
-check('11th lesson shows the paywall', !!w.$('.paywall') && !w.$('[data-act="start-checkpoint"]') && /first 10 lessons are free/.test(w.text()));
-check('rail marks the 6 locked lessons of the open unit', w.$$('.rail .lock').length === 6, w.$$('.rail .lock').length);
+w.click(w.$('[data-act="lesson"][data-arg="u4l1"]'));         // 11th lesson, still inside the free set
+check('11th lesson opens when locked', /IPv4 Basics/.test(w.text()) && !!w.$('[data-act="start-checkpoint"]'));
+w.click(w.$('[data-act="lesson"][data-arg="u4l2"]'));
+w.click(w.$('[data-act="lesson"][data-arg="u4l3"]'));
+w.click(w.$('[data-act="lesson"][data-arg="u4l4"]'));
+w.click(w.$('[data-act="lesson"][data-arg="u4l5"]'));         // 15th lesson in course order
+check('15th lesson opens when locked', /IPv6 Addressing/.test(w.text()) && !!w.$('[data-act="start-checkpoint"]'));
+w.click(w.$('[data-act="lesson"][data-arg="u4l6"]'));         // 16th lesson
+check('16th lesson shows the paywall', !!w.$('.paywall') && !w.$('[data-act="start-checkpoint"]') && /first 15 lessons are free/.test(w.text()));
+check('rail marks the 1 locked lesson of unit 4', w.$$('.rail .lock').length === 1, w.$$('.rail .lock').length);
 w.click(w.$('.paywall [data-act="go"][data-arg="course"]'));
-w.click(w.$('[data-act="course"][data-arg="u4"]'));
-check('unit 4 shows 6 Full course pills', pills(w) === 6, pills(w));
+w.click(w.$('[data-act="course"][data-arg="u5"]'));
+check('unit 5 shows 5 Full course pills', pills(w) === 5, pills(w));
 // Starter test still runs
 w.click(w.$('[data-act="go"][data-arg="home"]'));
 w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));

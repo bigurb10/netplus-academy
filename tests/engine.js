@@ -378,9 +378,9 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   {
     const w = boot({ courseDir: dir }); gotoExempt(w, 'cheatsheet');
     const site = w.$('.topbar a.brand.site');
-    check('the topbar has the FieldReady mark linking to the catalog', !!site && site.getAttribute('href') === '../' && site.textContent.trim() === 'FR', site && site.outerHTML);
+    check('the topbar has the FieldReady mark linking to the catalog', !!site && site.getAttribute('href') === '/' && site.textContent.trim() === 'FR', site && site.outerHTML);
     const links = [...w.document.querySelectorAll('.topbar .nav a')].map(a => [a.textContent.trim(), a.getAttribute('href')]);
-    check('the nav ends with All courses then ServiceForge', JSON.stringify(links.slice(-2)) === JSON.stringify([['All courses', '../'], ['ServiceForge', '../serviceforge/']]), JSON.stringify(links));
+    check('the nav ends with All courses then ServiceForge', JSON.stringify(links.slice(-2)) === JSON.stringify([['All courses', '/'], ['ServiceForge', '/serviceforge/']]), JSON.stringify(links));
     check('the course brand still goes to course Home', !!w.$('.topbar button.brand[data-act="go"][data-arg="home"]'));
   }
 

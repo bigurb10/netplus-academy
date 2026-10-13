@@ -14,6 +14,11 @@
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u2l4-network-hardware-routers-switches-access-points-patch-panels-firewalls-poe-modems-onts-and-nics/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u2l5-services-of-networked-hosts-server-roles-internet-appliances-scada-and-iot/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l1-ipv4-addressing-private-and-public-ranges-masks-gateways-apipa-and-static-versus-dynamic/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l2-ipv6-essentials-address-format-link-local-global-loopback-and-dual-stack/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l3-dns-records-and-email-authentication-a-aaaa-cname-mx-txt-spf-dkim-and-dmarc/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l4-dhcp-vlans-and-vpns/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l5-soho-network-setup-internet-connection-types-and-network-types/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l6-networking-tools-crimper-stripper-punchdown-tester-toner-probe-loopback-plug-wi-fi-analyzer-and-tap/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/cheatsheet/</loc></url>
@@ -27,6 +32,11 @@
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u2l4-control-panel-applets-file-explorer-options-and-power-options/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u2l5-the-settings-app/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u2l6-windows-networking-on-the-client/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u3l1-macos-features-and-tools/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u3l2-linux-commands-configuration-files-and-components/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u4l1-physical-security-and-physical-access-controls/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u4l2-logical-security-least-privilege-zero-trust-acls-mfa-saml-sso-jit-pam-mdm-dlp-iam-and-directory-services/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u4l3-wireless-security-protocols-and-authentication-methods/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/cheatsheet/</loc></url>
@@ -40,6 +50,11 @@
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u2l5-kidneys-blood-skin-digestion-and-hormones/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u2l6-vital-signs-and-the-device-that-measures-each/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l1-charge-current-voltage-and-resistance/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l2-ohm-s-law-and-power/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l3-series-and-parallel-circuits/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l4-power-supply-switch-load-reading-a-simple-circuit/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l5-opens-shorts-fuses-and-circuit-breakers/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l6-dc-versus-ac-transformers-and-wall-power/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/cheatsheet/</loc></url>
@@ -53,6 +68,11 @@
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l1-voltage-current-resistance-and-power/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l2-ac-transformers-hospital-power-distribution-and-isolation/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l3-passive-components-filters-and-reading-schematics/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l4-active-devices-power-supplies-and-amplifiers/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l5-batteries-ups-and-power-conditioning/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l6-circuit-analysis-energy-dividers-kirchhoff-s-laws-bridges-and-op-amp-gain/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l7-ac-power-impedance-transducers-batteries-by-the-numbers-and-regulators/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/lessons/u3l1-electrical-safety-shock-leakage-grounding-and-gfci/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/cheatsheet/</loc></url>
@@ -66,6 +86,11 @@
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u3l2-fiber-optics/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u3l3-transceivers-and-ethernet-standards/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u3l4-traffic-types-and-wireless-media/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l1-ipv4-basics-and-address-classes/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l2-public-private-and-special-addresses/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l5-ipv6-addressing/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/cheatsheet/</loc></url>
@@ -79,4 +104,9 @@
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/u2l4-pki-and-certificates/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/u2l5-encryption-levels-hardware-tools-and-obfuscation/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/u3l1-threat-actors-and-motivations/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/lessons/u3l2-threat-vectors-and-attack-surfaces/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/lessons/u3l3-social-engineering/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/lessons/u4l1-application-and-operating-system-vulnerabilities/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/lessons/u4l2-web-hardware-virtualization-and-cloud-vulnerabilities/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/lessons/u4l3-supply-chain-cryptographic-misconfiguration-mobile-and-zero-day/</loc></url>
 </urlset>

@@ -445,9 +445,21 @@ FRA.course = {
   name: "APlus Academy Core 1",
   short: "A1",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "CompTIA", title: "CompTIA A+ Core 1", code: "220-1201", questions: 90, minutes: 90, passPct: 75 },
   description: "Self-paced CompTIA A+ Core 1 (220-1201) course with adaptive training and practice exams.",
+  seo: {
+    title: "CompTIA A+ Core 1 220-1201 Practice Test and Study Guide | APlus Academy Core 1",
+    h1: "A+ Core 1 220-1201 Practice Test and Study Guide",
+    intro: "APlus Academy Core 1 is a free A+ Core 1 220-1201 practice test and study guide course: forty-one lessons on mobile devices, networking, hardware, virtualization, cloud, and troubleshooting, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests.",
+    phrases: ["A+ Core 1 220-1201 practice test", "A+ 220-1201 study guide", "CompTIA A+ practice questions"],
+    faq: [
+      { q: "How many questions are on the A+ Core 1 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 675 on a scale of 100 to 900." },
+      { q: "Do I need both A+ exams?", a: "Yes. The A+ certification needs Core 1 (220-1201) and Core 2 (220-1202); this course covers Core 1 and its sister course covers Core 2." },
+      { q: "How much does A+ cost?", a: "See CompTIA's current voucher price for each exam; the course is free." },
+      { q: "How does the course decide I am ready?", a: "Three of your last five fifty-question practice tests at 80% or better, then one ninety-question test at the real passing score of 675 of 900." }
+    ]
+  },
   domains: [
     { id: 1, name: "Mobile Devices", short: "Mobile", pct: 13, quota: 6 },
     { id: 2, name: "Networking", short: "Networking", pct: 23, quota: 12 },
@@ -472,7 +484,7 @@ FRA.course = {
     5: ["u8l2", "u8l3", "u9l1", "u9l2"]
   },
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam passes at 675 on a 100 to 900 scale. This course's official-format test uses 75%, that score divided by 900.",

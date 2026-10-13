@@ -445,9 +445,21 @@ FRA.course = {
   name: "APlus Academy Core 2",
   short: "A2",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "CompTIA", title: "CompTIA A+ Core 2", code: "220-1202", questions: 90, minutes: 90, passPct: 78 },
   description: "Self-paced CompTIA A+ Core 2 (220-1202) course with adaptive training and practice exams.",
+  seo: {
+    title: "CompTIA A+ Core 2 220-1202 Practice Test and Study Guide | APlus Academy Core 2",
+    h1: "A+ Core 2 220-1202 Practice Test and Study Guide",
+    intro: "APlus Academy Core 2 is a free A+ Core 2 220-1202 practice test and study guide course: forty-one lessons on operating systems, security, software troubleshooting, and operational procedures, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests.",
+    phrases: ["A+ Core 2 220-1202 practice test", "A+ 220-1202 study guide", "CompTIA A+ Core 2 practice questions"],
+    faq: [
+      { q: "How many questions are on the A+ Core 2 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 700 on a scale of 100 to 900." },
+      { q: "What does Core 2 cover?", a: "Operating systems, security, software troubleshooting, and operational procedures, including scripting, remote access, and backups." },
+      { q: "How much does A+ cost?", a: "See CompTIA's current voucher price for each exam; the course is free." },
+      { q: "How does the course decide I am ready?", a: "Three of your last five fifty-question practice tests at 80% or better, then one ninety-question test at the real passing score of 700 of 900." }
+    ]
+  },
   domains: [
     { id: 1, name: "Operating Systems", short: "OS", pct: 28, quota: 14 },
     { id: 2, name: "Security", short: "Security", pct: 28, quota: 14 },
@@ -469,7 +481,7 @@ FRA.course = {
     4: ["u7l3", "u8l3", "u9l2"]
   },
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam passes at 700 on a 100 to 900 scale. This course's official-format test uses 78%, that score divided by 900.",
