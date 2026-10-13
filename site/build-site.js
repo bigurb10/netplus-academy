@@ -384,6 +384,68 @@ ${ctaCard(m, null)}`;
   });
 }
 
+// Largest-remainder apportionment of n items across weights {id: pct}; ties go to the larger weight.
+function apportionN(n, weights) {
+  const ids = Object.keys(weights).filter(d => Number(weights[d]) > 0);
+  const total = ids.reduce((a, d) => a + Number(weights[d]), 0);
+  const q = {}; let assigned = 0; const rem = [];
+  ids.forEach(d => { const raw = n * Number(weights[d]) / total; q[d] = Math.floor(raw); assigned += q[d]; rem.push({ d, r: raw - q[d] }); });
+  rem.sort((a, b) => b.r - a.r || Number(weights[b.d]) - Number(weights[a.d]) || (a.d < b.d ? -1 : 1));
+  for (let i = 0; assigned < n && i < rem.length; i++) { q[rem[i].d]++; assigned++; }
+  return q;
+}
+
+// Twenty bank questions for the public practice page: the domain quota from the exam weights, then
+// per domain the -1 question of each lesson in rail order, then -2, and so on. Generated items never appear.
+function pickPractice(m, n) {
+  const weights = {}; (m.c.domains || []).forEach(d => { if (Number(d.pct) > 0) weights[d.id] = d.pct; });
+  const quota = apportionN(n || 20, weights);
+  const byId = {}; (m.questions || []).forEach(q => { byId[q.id] = q; });
+  const out = [];
+  Object.keys(quota).forEach(d => {
+    const lessons = m.lessons.filter(l => String(l.domain) === String(d)); let k = 0;
+    for (let i = 1; k < quota[d] && i <= 10; i++) {
+      for (const l of lessons) { if (k >= quota[d]) break; const q = byId[`${l.id}-${i}`]; if (q) { out.push(Object.assign({}, q, { lesson: l })); k++; } }
+    }
+  });
+  return out;
+}
+
+function practicePage(m, R, origin) {
+  const c = m.c; const items = pickPractice(m, 20); const letters = 'ABCD';
+  const h1 = `${c.name} Practice Test: ${items.length} Free ${c.exam && c.exam.code ? c.exam.code + ' ' : ''}Questions with Answers`;
+  const description = shorten(`${items.length} free ${examName(c) || c.name} practice questions with answers and explanations, drawn from the ${m.questions.length}-question bank behind ${c.name}. Try them, then start the free course.`, DESC_MAX);
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Practice test', href: m.urls.practice }];
+  const body = `${crumbs(crumbList)}
+<article class="lesson quiz-page">
+  <div class="eyebrow">${esc(examName(c) || c.name)}</div>
+  <h1>${esc(h1)}</h1>
+  <p class="lede ink2">Twenty questions in the exam's domain weights, each with its answer and the reason. The full course has ${m.questions.length} explained questions plus generated math items, scored tests in the real exam's format, and lessons built from what you miss.</p>
+  <ol class="quiz">${items.map(q => `<li class="q"><p class="stem">${R.inline(q.q)}</p><ol class="opts" type="A">${q.a.map(o => `<li class="opt">${R.inline(o)}</li>`).join('')}</ol><details><summary>Show the answer</summary><p><strong>Answer: ${letters[q.c]}.</strong> ${R.inline(q.e)}</p><p class="muted">From the lesson <a href="${m.free.has(q.lesson.id) ? m.urls.lesson(q.lesson) : m.urls.inApp(q.lesson)}">${esc(q.lesson.title)}</a>.</p></details></li>`).join('')}</ol>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">That was ${items.length} of ${m.questions.length}</div>
+  <h2>Every question in the course is explained like this</h2>
+  <p class="ink2">Start with the short starter test and the course builds your tutorial from what you miss. Free while we launch.</p>
+  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a> <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+</aside>`;
+  return shell({
+    origin, path: m.urls.practice, type: 'article',
+    title: `${h1} | ${BRAND}`, ogTitle: h1, description,
+    nav: nav(m, m.urls.practice),
+    jsonld: [
+      {
+        '@context': 'https://schema.org', '@type': 'Quiz',
+        name: h1, description, url: origin + m.urls.practice, inLanguage: 'en', isAccessibleForFree: true,
+        about: examName(c) || c.name, educationalLevel: 'Beginner', provider: org(),
+        hasPart: items.map(q => ({ '@type': 'Question', name: R.plain(q.q), eduQuestionType: 'Multiple choice', text: R.plain(q.q), suggestedAnswer: q.a.map(o => ({ '@type': 'Answer', text: R.plain(o) })), acceptedAnswer: { '@type': 'Answer', text: R.plain(q.a[q.c]) } }))
+      },
+      breadcrumbLd(origin, crumbList)
+    ],
+    body
+  });
+}
+
 function cheatPage(m, R, origin) {
   const cs = m.cheatsheet; const c = m.c;
   const keys = R.keys.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
@@ -436,6 +498,7 @@ function buildCourse(FRA, opts) {
   const R = makeRenderer(m.acronyms);
   const pages = [];
   pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin)) });
+  pages.push({ url: m.urls.practice, title: 'Practice test', file: writePage(opts.out, m.urls.practice, practicePage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
   if (m.cheatsheet) pages.push({ url: m.urls.cheat, title: m.cheatsheet.title, file: writePage(opts.out, m.urls.cheat, cheatPage(m, R, origin)) });
   for (const l of m.freeLessons) pages.push({ url: m.urls.lesson(l), title: l.title, file: writePage(opts.out, m.urls.lesson(l), lessonPage(m, l, R, origin)) });
@@ -472,4 +535,4 @@ if (require.main === module) {
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
 
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, buildCourse, buildAll, sitemap, robots, gaSnippet, ORIGIN, BRAND };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, gaSnippet, ORIGIN, BRAND };

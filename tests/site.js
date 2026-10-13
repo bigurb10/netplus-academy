@@ -65,11 +65,25 @@ const lld = [...landing.matchAll(/<script type="application\/ld\+json">([\s\S]*?
 check('landing JSON-LD: Course, FAQPage, BreadcrumbList', lld.map(x => x['@type']).join(',') === 'Course,FAQPage,BreadcrumbList', lld.map(x => x['@type']).join(','));
 check('landing FAQ falls back to exam facts when the manifest has none', lld[1].mainEntity.length >= 3);
 check('landing carries og:image and is indexable', landing.includes('property="og:image" content="https://example.test/og-image.png"') && !landing.includes('name="robots"'));
+
+check('apportion: twenty across 40/30/30 is 8/6/6', JSON.stringify(site.apportionN(20, { 1: 40, 2: 30, 3: 30 })) === JSON.stringify({ 1: 8, 2: 6, 3: 6 }));
+check('apportion: remainders go to the largest fractions, ties to the larger weight', JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 3, 3: 2 }) || JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 2, 3: 3 }));
+const picked = site.pickPractice(m, 20);
+check('practice picks twenty bank questions, none from the untested domain, none duplicated', picked.length === 20 && new Set(picked.map(q => q.id)).size === 20 && picked.every(q => (m.domains[q.lesson.domain] || {}).pct > 0), picked.length);
+check('practice is deterministic', JSON.stringify(site.pickPractice(m, 20).map(q => q.id)) === JSON.stringify(picked.map(q => q.id)));
+check('practice-test page written', exists('mini/practice-test/index.html'));
+const pt = read('mini/practice-test/index.html');
+check('practice page has twenty items with four options and a details answer each', (pt.match(/<li class="q">/g) || []).length === 20 && (pt.match(/<details>/g) || []).length === 20 && (pt.match(/<li class="opt">/g) || []).length === 80);
+check('every shown answer letter matches the bank', picked.every(q => pt.includes(`<strong>Answer: ${'ABCD'[q.c]}.</strong>`)));
+const qld = [...pt.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
+check('practice JSON-LD: a Quiz with twenty Questions, then a BreadcrumbList', qld[0]['@type'] === 'Quiz' && qld[0].hasPart.length === 20 && qld[0].hasPart.every(p => p['@type'] === 'Question' && p.acceptedAnswer && p.acceptedAnswer.text) && qld[1]['@type'] === 'BreadcrumbList');
+check('practice page links the app and the landing page', pt.includes('href="/mini/app/"') && pt.includes('href="/mini/"'));
+
 check('site.css, robots.txt and sitemap.xml written at the root', exists('site.css') && exists('robots.txt') && exists('sitemap.xml'));
 
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
-const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
+const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
 check('sitemap lists home, the app, the landing page, the cheat sheet and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 
