@@ -23,7 +23,7 @@ Electronic thermometer
   what it does        reads body temperature through a thermistor probe, or infrared at ear or forehead
   settings            site mode (oral, axillary, rectal) matched to the probe
   first check         compare against a reference, confirm the probe matches the site, check cover stock
-  common false alarm  a wrong reading from a cold probe, the wrong site mode, or a missing or doubled probe cover shifting it either way
+  common false alarm  a wrong reading from a cold probe, the wrong site mode, or a missing or doubled cover
 
 Patient scale
   what it does        weighs a patient standing, seated, in bed, or on an infant tray
