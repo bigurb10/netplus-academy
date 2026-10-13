@@ -18,7 +18,7 @@ FRA.cheatsheet = {
           ["Window to test", "Six months from purchase to the test date"],
           ["Results", "Pass or fail on screen immediately, confirmed by email within 24 hours"],
           ["Cut score", "Not published. This course scores the official-format test at 70% so you train above the line"],
-          ["Fee", "2026 fee: $220 member, $270 non-member; retake $190 / $240"],
+          ["Fee", "2026 fee: $220 member, $270 non-member; non-refundable"],
           ["Retake", "$190 member, $240 non-member, after a 60-day wait"],
           ["Validity", "5 years, non-renewable; by then you qualify for the technician-level exam"],
           ["Anatomy and Physiology", "10%"],
@@ -303,7 +303,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Diagnostic device", "What it does", "A key check"], rows: [
           ["Otoscope", "Lights and magnifies the ear canal", "Lamp output, battery or charger contacts, clean specula"],
           ["Ophthalmoscope", "Lights and focuses on the back of the eye", "Lamp, lens wheel detents, clean optics with lens tissue only"],
-          ["Thermometer", "Reads temperature by thermistor probe, infrared ear or forehead, or electronic probe (oral, axillary, rectal)", "Compare against a reference thermometer; probe type must match the device"],
+          ["Thermometer", "Reads temperature by thermistor probe used oral, axillary, or rectal; infrared ear or forehead; disposable single-use strip", "Compare against a reference thermometer; probe type must match the device"],
           ["Scale", "Weighs a patient standing, sitting, or in a bed", "Zero empty, then check with certified test weights at low, middle, and high load"],
           ["Bladder scanner", "Ultrasound measurement of urine volume left in the bladder", "Probe surface condition, battery, and the stored reference check"],
           ["EKG cart", "Records the twelve-lead diagnostic tracing on paper or to the chart", "Lead wires and cable continuity, paper and print quality, simulator tracing on every lead"],
