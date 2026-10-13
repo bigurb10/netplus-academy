@@ -44,7 +44,7 @@ for (const dir of courseDirs()) {
 // ----- 2. Generator output on the mini fixture -----
 const out = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-site-'));
 const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
-const res = site.buildAll({ courseDirs: [mini], out, origin: 'https://example.test/' });
+const res = site.buildAll({ courseDirs: [mini], out, origin: 'https://example.test/', guidesDir: path.join(ROOT, 'tests', 'fixtures', 'guides') });
 const FRA = site.loadPack(mini); const m = site.model(FRA); const R = makeRenderer(FRA.acronyms);
 const read = p => fs.readFileSync(path.join(out, p), 'utf8');
 const exists = p => fs.existsSync(path.join(out, p));
@@ -83,7 +83,7 @@ check('site.css, robots.txt and sitemap.xml written at the root', exists('site.c
 
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
-const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
+const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
 check('sitemap lists home, the app, the landing page, the cheat sheet and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 
@@ -115,6 +115,14 @@ check('cheat sheet page has every section and the PDF link', m.cheatsheet.sectio
 const all = [course, cheat].concat(m.freeLessons.map(l => read(`mini/lessons/${site.slug(l)}/index.html`)));
 check('no undefined or [object leaks into any page', !all.some(h => /undefined|\[object /.test(h)));
 check('every page carries og:title, og:url and a canonical', all.every(h => /property="og:title"/.test(h) && /property="og:url"/.test(h) && /rel="canonical"/.test(h)));
+
+check('guides index written', exists('guides/index.html') && read('guides/index.html').includes('href="/guides/sample-guide/"'));
+check('guide page written with its title escaped', exists('guides/sample-guide/index.html') && read('guides/sample-guide/index.html').includes('<h1>A Sample Guide &amp; More</h1>'));
+const gp = read('guides/sample-guide/index.html');
+check('guide renders the mini-markup body', gp.includes('<h3>A heading</h3>') && gp.includes('<strong>bold</strong>') && gp.includes('<code>code</code>'));
+check('guide links its related course landing page and lesson', gp.includes('href="/mini/"') && gp.includes(`href="${m.urls.lesson(m.lessons[0])}"`));
+const gld = [...gp.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
+check('guide JSON-LD: Article, FAQPage, BreadcrumbList', gld.map(x => x['@type']).join(',') === 'Article,FAQPage,BreadcrumbList' && gld[0].dateModified === '2026-10-13');
 
 // ----- 3. Escaping and slugs -----
 const fake = {

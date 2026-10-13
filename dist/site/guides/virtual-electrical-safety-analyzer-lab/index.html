@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the Virtual Electrical Safety Analyzer Lab Works | FieldReady Academy</title>
+<meta name="description" content="What an electrical safety analyzer measures, the limits it judges against, and how the browser lab runs a full safety test with no equipment.">
+<link rel="canonical" href="https://fieldreadyacademy.com/guides/virtual-electrical-safety-analyzer-lab/">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="How the Virtual Electrical Safety Analyzer Lab Works">
+<meta property="og:description" content="What an electrical safety analyzer measures, the limits it judges against, and how the browser lab runs a full safety test with no equipment.">
+<meta property="og:url" content="https://fieldreadyacademy.com/guides/virtual-electrical-safety-analyzer-lab/">
+<meta property="og:image" content="https://fieldreadyacademy.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fieldreadyacademy.com/og-image.png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How the Virtual Electrical Safety Analyzer Lab Works","description":"What an electrical safety analyzer measures, the limits it judges against, and how the browser lab runs a full safety test with no equipment.","url":"https://fieldreadyacademy.com/guides/virtual-electrical-safety-analyzer-lab/","mainEntityOfPage":"https://fieldreadyacademy.com/guides/virtual-electrical-safety-analyzer-lab/","dateModified":"2026-10-13","inLanguage":"en","isAccessibleForFree":true,"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need a real analyzer to do these labs?","acceptedAnswer":{"@type":"Answer","text":"No. The analyzer is drawn in the browser and the readings come from the scenario, so the lab runs on a phone with no equipment at all. If you do have a real analyzer at work, the same task sheet works with your own readings typed in."}},{"@type":"Question","name":"Why test with the ground open if that never happens on a good outlet?","acceptedAnswer":{"@type":"Answer","text":"Because the test is asking what happens when something breaks. A cord gets yanked, a ground pin snaps off, a receptacle loses its ground screw. Leakage that the ground wire normally carries away then has nowhere to go but through whoever touches the case, so the limits are written for that fault condition, not for the good day."}},{"@type":"Question","name":"What is the difference between NFPA 99 and IEC 60601-1 limits?","acceptedAnswer":{"@type":"Answer","text":"NFPA 99 is the facility standard a hospital tests to: 0.5 ohm of ground wire resistance and 500 microamps of chassis leakage for cord-connected patient-care equipment. IEC 60601-1 is the design standard the manufacturer builds to, and it splits every limit into a normal condition and a single fault condition. They overlap, and where they differ you test to the tighter number your department wrote into its procedure."}},{"@type":"Question","name":"How often is a device safety-tested?","acceptedAnswer":{"@type":"Answer","text":"At incoming inspection before it ever reaches a patient, at every scheduled maintenance interval, after any repair that touched the cord, the ground path, or the power supply, and any time a user reports a shock or a tingle. The interval itself comes from the department's equipment management plan, commonly annually and more often for higher-risk devices."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://fieldreadyacademy.com/guides/"},{"@type":"ListItem","position":3,"name":"How the Virtual Electrical Safety Analyzer Lab Works","item":"https://fieldreadyacademy.com/guides/virtual-electrical-safety-analyzer-lab/"}]}</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/guides/" aria-current="page">Guides</a><a href="/" class="btn primary small">All courses</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/guides/">Guides</a><span class="sep">/</span><span>How the Virtual Electrical Safety Analyzer Lab Works</span></nav>
+<article class="lesson guide">
+  <div class="eyebrow">Guide &middot; updated 2026-10-13</div>
+  <h1>How the Virtual Electrical Safety Analyzer Lab Works</h1>
+  <div class="lesson-body"><p>An electrical safety analyzer decides whether a piece of patient-care equipment goes back to the floor, and it is the most-used instrument in a biomed shop. BMET Academy builds one into the browser: set up the test, press a button, read the meter, judge the reading against the limits.</p><h3>What the analyzer measures</h3><p>Three measurements, and every safety test combines them.</p><ul><li><strong>Ground wire resistance.</strong> The resistance from the chassis to the ground pin on the plug. It is the only thing between a fault inside the device and the person touching it, so it must be intact and tight at both ends.</li><li><strong>Chassis leakage</strong>, also called touch or enclosure leakage. The current that escapes from the power supply and its filters onto the metal case. Leakage is normal; too much of it is not.</li><li><strong>Patient lead leakage</strong>, the leakage out of an applied part: an ECG lead, a temperature probe, an SpO2 sensor. Anything touching the patient is held tighter than the case, because the patient cannot let go.</li></ul><p>Each leakage measurement repeats in every condition the analyzer can create: normal, reversed mains polarity, open ground, and, on a bench analyzer, open neutral. <strong>Reversed polarity with the ground open is the worst case</strong>, and it is the condition that fails devices. Opening the ground removes the path that quietly carries leakage away; reversing polarity puts the hot conductor where the filters leak most. Together they produce the highest reading a device can give, so passing in the normal condition proves little.</p><h3>The limits</h3><pre>Limit                                       Value            Standard
+Ground resistance, chassis to ground pin    0.5 ohm max      NFPA 99
+Chassis (touch) leakage                     500 microamps    NFPA 99 current editions;
+                                                             older used 300 or 100
+GFCI trip, wet locations                    4 to 6 mA        NFPA 99</pre><pre>IEC 60601-1 limit                 Normal condition   Single fault
+Earth (ground) leakage            5 mA               10 mA
+Touch (enclosure) current         100 microamps      500 microamps
+Patient leakage, type B and BF    100 microamps      500 microamps
+Patient leakage, type CF          10 microamps       50 microamps</pre><p>Those limits come from what current does to a body at 60 Hz.</p><pre>Current through the body    Effect
+1 mA                        Threshold of perception
+5 mA                        Accepted maximum harmless current
+10 to 20 mA                 Let-go threshold: the muscles clamp and cannot release
+50 mA                       Pain, possible fainting, respiratory arrest
+100 to 300 mA               Ventricular fibrillation likely
+10 microamps                Microshock: delivered directly to the heart, fibrillation</pre><p>Current reaching the heart skips the skin, most of the body&#39;s resistance, so applied parts are held to microamps.</p><h3>How the lab works</h3><ol><li>Pick the test: ground resistance, chassis leakage, or patient lead leakage.</li><li>Set the mains polarity to normal or reverse and the ground conductor to intact or open.</li><li>Press <strong>Test</strong> and read the analyzer.</li><li>Press <strong>Record the reading</strong> to copy the display into the task sheet, then press <strong>Check</strong>.</li></ol><p>The limits card is printed under the panel, and the engine computes the verdict from it. Nothing is hard-coded: change a scenario&#39;s limits and the right answer changes with them. Readings are deterministic per lab with about one digit of realistic jitter. A wrong answer says why and lets you retry, and when every task is right the card becomes a green summary. Redo any lab any time.</p><p>Three labs use the analyzer. A <strong>passing infusion pump</strong>: 0.11 ohm of ground resistance and a worst case near 205 microamps, inside 0.5 ohm and 500. A <strong>failing vital-signs monitor</strong>: normal-condition readings all fine, then about 640 microamps of chassis leakage with the ground open and polarity reversed, against 500. And an <strong>incoming inspection</strong> on a new suction unit, where the safety test is one step inside paperwork, inspection, function check, and record.</p><h3>What a record looks like</h3><pre>Infusion pump                       Limit      Reading     Result
+Ground wire resistance              0.5 ohm    0.11 ohm    pass
+Chassis leakage, normal             500 uA     42 uA       pass
+Chassis leakage, reverse + open     500 uA     205 uA      pass
+Verdict: PASS. Documented, back in service.</pre><pre>Vital-signs monitor, type BF        Limit      Reading     Result
+Ground wire resistance              0.5 ohm    0.14 ohm    pass
+Chassis leakage, open ground        500 uA     480 uA      pass
+Chassis leakage, reverse + open     500 uA     640 uA      FAIL
+Patient lead leakage, worst case    100 uA     61 uA       pass
+Verdict: FAIL. Tagged out of service.</pre><p>One reading over its limit fails the device, and a failing device never goes back to a patient. Tag it out of service, document every reading rather than only the bad one, repair it (usually a leaky filter capacitor or a damaged cord), and retest before release.</p><div class="tip">Record every condition, not just the worst one: the next technician needs your numbers to spot drift.</div><p>The virtual analyzer is a teaching model of what a real analyzer does, not an emulation of any brand. The controls, measurements, and limits are the ones you will meet; the menus on the box in your shop will look different. Every kit lab in the course also runs on the virtual instruments, so nothing waits on a parts order.</p><p>The analyzer labs live in <strong>BMET Academy</strong>, our free course for people starting out in healthcare technology management: 13 hands-on labs, a printable memorization sheet, and practice exams built toward the CABT. If the limits above are old news because you already work in a shop, the CBET course covers them at exam depth.</p></div>
+  <section class="faq"><h2>Questions people ask</h2><h3>Do I need a real analyzer to do these labs?</h3><p>No. The analyzer is drawn in the browser and the readings come from the scenario, so the lab runs on a phone with no equipment at all. If you do have a real analyzer at work, the same task sheet works with your own readings typed in.</p><h3>Why test with the ground open if that never happens on a good outlet?</h3><p>Because the test is asking what happens when something breaks. A cord gets yanked, a ground pin snaps off, a receptacle loses its ground screw. Leakage that the ground wire normally carries away then has nowhere to go but through whoever touches the case, so the limits are written for that fault condition, not for the good day.</p><h3>What is the difference between NFPA 99 and IEC 60601-1 limits?</h3><p>NFPA 99 is the facility standard a hospital tests to: 0.5 ohm of ground wire resistance and 500 microamps of chassis leakage for cord-connected patient-care equipment. IEC 60601-1 is the design standard the manufacturer builds to, and it splits every limit into a normal condition and a single fault condition. They overlap, and where they differ you test to the tighter number your department wrote into its procedure.</p><h3>How often is a device safety-tested?</h3><p>At incoming inspection before it ever reaches a patient, at every scheduled maintenance interval, after any repair that touched the cord, the ground path, or the power supply, and any time a user reports a shock or a tingle. The interval itself comes from the department&#39;s equipment management plan, commonly annually and more often for higher-risk devices.</p></section>
+  <section class="related"><h2>Related</h2><ul><li><a href="/bmet/">BMET Academy</a> <span class="muted">course</span> &middot; <a href="/bmet/practice-test/">practice test</a></li><li><a href="/cbet/">CBET Academy</a> <span class="muted">course</span> &middot; <a href="/cbet/practice-test/">practice test</a></li><li><a href="/bmet/app/#lesson/u5l1">Electrical Safety: Macroshock, Microshock, and Why Leakage Matters</a> <span class="muted">BMET Academy</span></li><li><a href="/bmet/app/#lesson/u5l2">The Electrical Safety Test: Ground Resistance and Leakage</a> <span class="muted">BMET Academy</span></li><li><a href="/bmet/app/#lesson/u5l3">Reading the Limits: NFPA 99, IEC 60601-1, and a Failing Device</a> <span class="muted">BMET Academy</span></li><li><a href="/bmet/app/#lesson/u6l9">Incoming Inspection and Scheduled Maintenance, Start to Finish</a> <span class="muted">BMET Academy</span></li></ul></section>
+</article>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

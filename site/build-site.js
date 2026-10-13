@@ -58,6 +58,19 @@ function courseDirs() {
   return fs.readdirSync(dir).filter(d => fs.existsSync(path.join(dir, d, 'course.js'))).map(d => path.join(dir, d));
 }
 
+// Guides are standalone articles (exam guides, "how to become", lab explainers) that are not
+// tied to one lesson. Same browser-script-via-vm loading as a course pack: each file pushes
+// onto FRA.guides.
+function loadGuides(dir) {
+  if (!dir || !fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort();
+  const ctx = { console }; ctx.window = ctx; vm.createContext(ctx);
+  for (const f of files) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
+  const guides = (ctx.FRA && ctx.FRA.guides) || [];
+  guides.forEach(g => { if (!/^[a-z0-9-]+$/.test(g.slug || '')) throw new Error(`guide slug invalid: ${g.slug}`); if (!g.title || !g.body || !g.updated) throw new Error(`guide ${g.slug} needs title, body, updated`); });
+  return guides;
+}
+
 // ---------- the page model ----------
 const slugify = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 // The id leads so the URL stays stable if a title is edited.
@@ -483,6 +496,39 @@ ${ctaCard(m, null)}`;
   });
 }
 
+function guidePage(g, courses, origin) {
+  const R = makeRenderer({});
+  const description = shorten(g.description || R.plain(firstParagraph(g.body)), DESC_MAX);
+  const url = `/guides/${g.slug}/`;
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: 'Guides', href: '/guides/' }, { name: g.title, href: url }];
+  const rel = g.related || {}; const byId = {}; courses.forEach(m => { byId[m.c.id] = m; });
+  const courseLinks = (rel.courses || []).map(id => byId[id]).filter(Boolean).map(m => `<li><a href="${m.urls.landing}">${esc(m.c.name)}</a> <span class="muted">course</span> &middot; <a href="${m.urls.practice}">practice test</a></li>`);
+  const lessonLinks = (rel.lessons || []).map(ref => { const [id, lid] = ref.split(':'); const m = byId[id]; const l = m && m.lessons.find(x => x.id === lid); return m && l ? `<li><a href="${m.free.has(l.id) ? m.urls.lesson(l) : m.urls.inApp(l)}">${esc(l.title)}</a> <span class="muted">${esc(m.c.name)}</span></li>` : ''; }).filter(Boolean);
+  const faq = Array.isArray(g.faq) ? g.faq : [];
+  const body = `${crumbs(crumbList)}
+<article class="lesson guide">
+  <div class="eyebrow">Guide &middot; updated ${esc(g.updated)}</div>
+  <h1>${esc(g.title)}</h1>
+  <div class="lesson-body">${R.renderBody(g.body)}</div>
+  ${faq.length ? `<section class="faq"><h2>Questions people ask</h2>${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}</section>` : ''}
+  ${courseLinks.length || lessonLinks.length ? `<section class="related"><h2>Related</h2><ul>${courseLinks.join('')}${lessonLinks.join('')}</ul></section>` : ''}
+</article>`;
+  const jsonld = [
+    { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description, url: origin + url, mainEntityOfPage: origin + url, dateModified: g.updated, inLanguage: 'en', isAccessibleForFree: true, author: org(), publisher: org() }
+  ];
+  if (faq.length) jsonld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) });
+  jsonld.push(breadcrumbLd(origin, crumbList));
+  return shell({ origin, path: url, type: 'article', title: `${g.title} | ${BRAND}`, ogTitle: g.title, description, nav: `<a href="/guides/" aria-current="page">Guides</a><a href="/" class="btn primary small">All courses</a>`, jsonld, body });
+}
+
+function guidesIndex(guides, origin) {
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: 'Guides', href: '/guides/' }];
+  const body = `${crumbs(crumbList)}
+<div class="course-hero"><div class="eyebrow">${esc(BRAND)}</div><h1>Guides for biomed and IT certification candidates</h1><p class="lede ink2">Plain answers about the exams, the jobs, and the tools, written by the people who built the courses.</p></div>
+<ul class="lesson-body guide-list">${guides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul>`;
+  return shell({ origin, path: '/guides/', type: 'website', title: `Guides | ${BRAND}`, ogTitle: 'Guides', description: 'Plain answers about the CBET, the CABT, the CompTIA exams, biomed jobs, and the virtual labs.', nav: `<a href="/" class="btn primary small">All courses</a>`, jsonld: [breadcrumbLd(origin, crumbList)], body });
+}
+
 // ---------- writing ----------
 function writePage(out, urlPath, html) {
   const dir = path.join(out, ...urlPath.split('/').filter(Boolean));
@@ -520,7 +566,14 @@ function buildAll(opts) {
   const dirs = opts.courseDirs || courseDirs();
   fs.mkdirSync(out, { recursive: true });
   const results = dirs.map(dir => buildCourse(loadPack(dir), { out, origin, analytics: opts.analytics }));
-  const urls = ['/'].concat(...results.map(r => r.pages.map(p => p.url)));
+  const models = dirs.map(dir => model(loadPack(dir)));
+  const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
+  const guideUrls = [];
+  if (guides.length) {
+    writePage(out, '/guides/', guidesIndex(guides, origin)); guideUrls.push('/guides/');
+    for (const g of guides) { writePage(out, `/guides/${g.slug}/`, guidePage(g, models, origin)); guideUrls.push(`/guides/${g.slug}/`); }
+  }
+  const urls = ['/'].concat(...results.map(r => r.pages.map(p => p.url))).concat(guideUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
   fs.copyFileSync(path.join(__dirname, 'site.css'), path.join(out, 'site.css'));
@@ -535,4 +588,4 @@ if (require.main === module) {
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
 
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, gaSnippet, ORIGIN, BRAND };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, gaSnippet, loadGuides, guidePage, guidesIndex, ORIGIN, BRAND };
