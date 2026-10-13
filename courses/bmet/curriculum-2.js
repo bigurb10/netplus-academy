@@ -45,7 +45,7 @@ Four scales, one set of bridges.
 1 atmosphere = 14.7 psi = 760 mmHg
 \`\`\`
 
-So 20 cmH2O of airway pressure is 20 / 1.36 = about 15 mmHg, and a 100 kPa cuff spec is 100 x 7.5 = 750 mmHg.
+So 20 cmH2O of airway pressure is 20 / 1.36 = about 15 mmHg, and a 40 kPa cuff range is 40 x 7.5 = 300 mmHg.
 
 ## Temperature
 **F = C x 9/5 + 32** and **C = (F minus 32) x 5/9**. Anchor the three pairs you already know: **37 C = 98.6 F**, 0 C = 32 F, 100 C = 212 F. Check yourself with an anchor every time: if you convert 40 C and get anything less than 98.6 F, you ran the formula backwards.
@@ -67,7 +67,7 @@ A number with no unit is not a measurement, it is a guess waiting to be misread.
 A needle instrument gives you a printed number, a set of ticks between the printed numbers, and a pointer.
 
 1. Check the **range** the instrument is on. The same face can mean 0 to 10 V or 0 to 250 V.
-2. Count the small ticks between two printed numbers and divide. Five ticks between 6 and 7 means each tick is 0.2 V.
+2. Count the divisions between two printed numbers and divide the difference by that count. Five divisions between 6 and 7 means each division is 0.2 V. Then estimate one more digit by eye between ticks.
 3. Find the last tick the needle has passed, then add the ticks beyond it. Two ticks past 6 on a 0.2 V scale is 6.4 V.
 
 **Parallax** is the error you add by looking at the needle from the side: the pointer sits slightly above the scale, so an angled eye reads it against the wrong mark. Get your eye level and square to the face. Good instruments put a mirror strip behind the needle so you can line the needle up with its own reflection.
@@ -79,7 +79,7 @@ Water in a narrow tube climbs the walls, so the surface is a shallow curve calle
 Plenty of measurements are made with a millimeter rule: the height of a complex on a strip, the width of an interval, a gap, a travel, a wear mark. The same three rules apply. Lay the rule flat against the thing you are measuring so it is not held at an angle, start from a printed line rather than the worn end of the rule, and read millimeters to the mark and estimate the half. A gauge face, a cylinder, and a ruler are the same job: find the value of one graduation, then count.
 
 ## How many digits to write down
-Read to the nearest printed graduation, then **estimate one more digit**. On a cylinder marked every 1 mL you may write 37 mL or 37.5 mL, but never 37.4821 mL, because the instrument cannot resolve that. Those trustworthy digits are the **significant figures**: the digits your instrument actually earned. Writing more digits than the instrument can resolve is not extra precision, it is fiction, and it makes a borderline device look fine.
+Read to the nearest printed graduation, then **estimate one more digit**. On a cylinder marked every 10 mL you estimate to the nearest milliliter between the marks, so you may write 37 mL, but never 37.4821 mL, because the instrument cannot resolve that. Those trustworthy digits are the **significant figures**: the digits your instrument actually earned. Writing more digits than the instrument can resolve is not extra precision, it is fiction, and it makes a borderline device look fine.
 
 ## Accuracy and precision are not the same thing
 **Accuracy** is how close a reading is to the truth. **Precision** is how repeatable it is. A meter that reads 9.00 V five times in a row on a 10.00 V source is wonderfully precise and 1 V wrong. Repeatability is comforting and proves nothing on its own, which is why instruments are checked against a known standard.
@@ -460,7 +460,7 @@ Patient leakage, type B and type BF          100 microamps      500 microamps
 Patient leakage, type CF                     10 microamps       50 microamps
 \`\`\`
 
-Read the two columns before the numbers. The **normal condition** is the device working properly. A **single fault condition** is one thing broken: one open ground, one open neutral, one failed insulation barrier. Standards allow more leakage with one fault present because they assume faults happen and that no single one may be allowed to hurt anybody. Two patterns make the table easy: the fault column is **five times** the normal column, and **CF is ten times tighter** than B and BF, because 10 microamps to the heart is the number that matters.
+Read the two columns before the numbers. The **normal condition** is the device working properly. A **single fault condition** is one thing broken: one open ground, one open neutral, one failed insulation barrier. Standards allow more leakage with one fault present because they assume faults happen and that no single one may be allowed to hurt anybody. Two patterns make the table easy: the fault column is **five times** the normal column for touch and patient leakage; earth leakage is the exception, 5 mA to 10 mA. And **CF is ten times tighter** than B and BF, because 10 microamps to the heart is the number that matters.
 
 Earth leakage is the current flowing in the ground conductor itself and is measured in milliamps, not microamps. It is a much larger number because it is the current the ground wire is there to carry, and comparing it with a 500 microamp chassis limit is a classic exam trap.
 
@@ -506,7 +506,7 @@ Keep comparing each reading with the last one on that device. A chassis leakage 
 You test a Class I vital-signs monitor with a type BF sensor and run the whole sequence: ground resistance, chassis leakage in every condition, and patient lead leakage in every condition. One reading is over its limit. You find it, name the limit and the standard it broke, decide the verdict, choose what happens to the monitor next, and say which limit would have applied if that sensor had been type CF.
 
 > Exam tip: IEC 60601-1 normal and single fault, in microamps unless stated: touch 100 / 500, patient leakage B and BF 100 / 500, CF 10 / 50, and earth leakage 5 mA / 10 mA. Class I has a protective earth, Class II is double insulated with no ground to test. One failing reading in any condition fails the device: tag it, document it, repair it, retest it.`,
-      hook: "NFPA 99 is the facility standard (what a hospital tests and to what limit); IEC 60601-1 is the device standard. IEC 60601-1, normal / single fault: earth leakage 5 mA / 10 mA, touch current 100 / 500 microamps, patient leakage type B and BF 100 / 500 microamps, type CF 10 / 50 microamps. A single fault condition is one thing broken, and the fault column is five times the normal one. Class I is protected by a third-wire protective earth, Class II is double insulated with no ground to test and is marked with a square in a square, internally powered runs isolated on its battery. Applied parts: type B stick figure, type BF stick figure in a box and isolated, type CF heart in a box for direct cardiac connection, and defibrillation-proof parts add paddles. On a fail: stop, tag out of service, document every reading with its limit, notify the department, repair, and retest the full sequence. Trend each reading against the last."
+      hook: "NFPA 99 is the facility standard (what a hospital tests and to what limit); IEC 60601-1 is the device standard. IEC 60601-1, normal / single fault: earth leakage 5 mA / 10 mA, touch current 100 / 500 microamps, patient leakage type B and BF 100 / 500 microamps, type CF 10 / 50 microamps. A single fault condition is one thing broken, and the fault column is five times the normal one for touch and patient leakage; earth leakage is the exception, 5 mA to 10 mA. Class I is protected by a third-wire protective earth, Class II is double insulated with no ground to test and is marked with a square in a square, internally powered runs isolated on its battery. Applied parts: type B stick figure, type BF stick figure in a box and isolated, type CF heart in a box for direct cardiac connection, and defibrillation-proof parts add paddles. On a fail: stop, tag out of service, document every reading with its limit, notify the department, repair, and retest the full sequence. Trend each reading against the last."
     },
     {
       id: "u5l4", title: "Lockout Tagout, Safety Data Sheets, and Hazard Communication", domain: 3, obj: "SAF-A", minutes: 9,

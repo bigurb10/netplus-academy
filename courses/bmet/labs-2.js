@@ -6,8 +6,8 @@ FRA.labs["reading-scales"] = {
   id: "reading-scales", lesson: "u4l2", title: "Read the meter, the cylinder, and the strip", instrument: "figures",
   intro: `Three figures, no controls. Read each one the way you would on the bench, then do the arithmetic.
 
-- Figure 1 is an analog voltmeter on its 0 to 10 V range. Read where the needle points; the small ticks are 0.2 V apart.
-- Figure 2 is a 100 mL graduated cylinder. Read the bottom of the liquid level to the nearest milliliter.
+- Figure 1 is an analog voltmeter on its 0 to 10 V range. The face prints 0, 5, and 10 and the small ticks are 1 V apart; read where the needle points and estimate the tenths between ticks.
+- Figure 2 is a 100 mL graduated cylinder marked every 10 mL. Read the bottom of the liquid level and estimate to the nearest milliliter between marks.
 - Figure 3 is six seconds of ECG at 25 mm/s. Count the QRS complexes and multiply by ten.`,
   manual: `## Flow check acceptance
 Expected volume in the 30-minute collection: 40 mL. Acceptable: within plus or minus 5% of expected.`,
@@ -24,8 +24,8 @@ Expected volume in the 30-minute collection: 40 mL. Acceptable: within plus or m
     { id: "v", kind: "verdict", prompt: "Against the manual's plus or minus 5%, does the flow check pass?", expect: "fail" }
   ],
   why: {
-    meter: "The needle sits two small ticks past 6 on a scale where the small ticks are 0.2 V apart: 6.4 V. Read straight on to avoid parallax.",
-    cyl: "The bottom of the meniscus sits just under the 40 mark, three graduations down: 37 mL.",
+    meter: "The needle sits just past the 6 V tick, about four tenths of the way to 7: 6.4 V. Read straight on to avoid parallax.",
+    cyl: "The bottom of the meniscus sits a little under the 40 mark, about three tenths of a division below it: 37 mL.",
     rate: "Ten complexes in six seconds; 10 x 10 = 100 bpm. Six-second strip times ten gives beats per minute.",
     pct: "(37 - 40) / 40 x 100 = -7.5%. The minus sign says the pump delivered less than expected.",
     v: "Plus or minus 5% of 40 mL is 38 to 42 mL. 37 mL is outside that band, so the check fails and the pump needs service."

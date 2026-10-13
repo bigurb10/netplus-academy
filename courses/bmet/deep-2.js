@@ -61,8 +61,8 @@ Digital meter accuracy is usually written as a percentage of the reading plus a 
 \`\`\`
 Step   What you do                                   On the lab's voltmeter
 1      note the range the instrument is on           0 to 10 V
-2      count the small ticks between two numbers     five ticks between 6 and 7
-3      divide to get the value of one tick           1 V / 5 = 0.2 V per tick
+2      count the divisions between two numbers        five divisions between 6 and 7
+3      divide to get the value of one division        1 V / 5 = 0.2 V per division
 4      find the last tick passed, add the rest       two ticks past 6
 5      write the reading with its unit               6.4 V
 \`\`\`
@@ -445,7 +445,7 @@ patient leakage, type B and type BF     100 microamps      500 microamps
 patient leakage, type CF                10 microamps       50 microamps
 \`\`\`
 
-Two patterns carry the whole table: the single fault column is **five times** the normal column, and **type CF is ten times tighter** than B and BF. A single fault condition means exactly one thing has failed, such as an open ground, an open neutral, or one failed insulation barrier. Standards assume faults happen, so a device must still be safe with any one of them present, which is also why your test deliberately creates them.
+Two patterns carry the whole table: the single fault column is **five times** the normal column for touch and patient leakage; earth leakage is the exception, 5 mA to 10 mA. And **type CF is ten times tighter** than B and BF. A single fault condition means exactly one thing has failed, such as an open ground, an open neutral, or one failed insulation barrier. Standards assume faults happen, so a device must still be safe with any one of them present, which is also why your test deliberately creates them.
 
 Earth leakage is the odd row: it is measured in **milliamps**, because it is the current the protective ground conductor exists to carry, not current available to a person. Comparing it with a 500 microamp chassis limit is a common trap.
 
@@ -571,7 +571,7 @@ wall or pipeline     about 50 psi delivered to the device
 regulator            reduces cylinder pressure to working pressure
 \`\`\`
 
-Three consequences follow from those numbers. The cylinder gauge reads **contents**, not flow, so a full gauge with a closed flowmeter delivers nothing. The pressure drop from about 2,000 psi to about 50 psi is the regulator's whole job, so a device fed straight from a cylinder is seeing roughly forty times what it expects. And because volume and pressure fall together in a cylinder, a gauge at half scale is roughly half the gas, which is how transport decisions get made.
+Three consequences follow from those numbers. The cylinder gauge reads **contents**, not flow, so a full gauge with a closed flowmeter delivers nothing. The pressure drop from about 2,000 psi to about 50 psi is the regulator's whole job, so a device fed straight from a cylinder is seeing roughly forty times what it expects. Volume and pressure fall together in a cylinder for a compressed gas such as oxygen or air, so a gauge at half scale is roughly half the gas, which is how transport decisions get made. Nitrous oxide is a liquid in the cylinder, so its gauge holds steady until the liquid is nearly gone.
 
 ## Fittings that only fit one way
 \`\`\`
