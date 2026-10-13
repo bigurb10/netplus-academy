@@ -924,7 +924,13 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     act(w, 'go', 'home');
     check('home hides the kit card once the kit lab is done', !w.$('.kit-card'));
     w = boot({ courseDir: mini });
+    const MK2 = 'fra.mini.state.v3'; const st2 = () => JSON.parse(w.localStorage.getItem(MK2));
+    // Home shows the welcome page until the starter test is taken, so take it first (all right).
+    w.click(w.$('[data-act="go"][data-arg="home"]')); w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const Q2 = {}; w.FRA.questions.forEach(q => { Q2[q.id] = q; }); const fat2 = x => typeof x === 'string' ? Q2[x] : x;
+    st2().active.items.map(fat2).forEach(q => { w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`)); w.click(w.$('[data-act="conf"][data-arg="5"]')); w.click(w.$('[data-act="submit"]')); });
     act(w, 'go', 'home');
+    check('the no-kit window is on Home', !!w.$('.stats'));
     check('a manifest without a kit shows no kit card', !w.$('.kit-card'));
     w.close();
   }
