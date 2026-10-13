@@ -61,7 +61,7 @@ A number with no unit is not a measurement, it is a guess waiting to be misread.
     },
     {
       id: "u4l2", title: "Reading Scales, Meters, and Cylinders; Tolerance and Percent Error", domain: 5, obj: "RPS-A", minutes: 10, lab: "reading-scales",
-      body: `Two technicians read the same analog gauge and write down two different numbers. Only one of them is doing the job. Reading an instrument is a skill with rules, and the pass or fail you write in the record is only as good as the reading it came from. The exam calls this **visual measurement**: taking a number off a scale, a dial, a cylinder, or a ruler with your own eyes, and knowing how many of its digits you have actually earned.
+      body: `Two technicians read the same analog gauge and write down two different numbers. Only one of them is doing the job. Reading an instrument is a skill with rules, and the pass or fail you write in the record is only as good as the reading it came from. This is also called **visual measurement**: taking a number off a scale, a dial, a cylinder, or a ruler with your own eyes, and knowing how many of its digits you have actually earned.
 
 ## Analog scales and the needle
 A needle instrument gives you a printed number, a set of ticks between the printed numbers, and a pointer.
@@ -517,7 +517,7 @@ You test a Class I vital-signs monitor with a type BF sensor and run the whole s
       body: `An autoclave with the panel off, a surgical table raised on its column, a defibrillator with the cover removed, a drum of floor cleaner that got decanted into an unlabeled bottle. Every one of those is somebody about to be hurt by energy or a chemical they thought was handled. The controls for both are procedures, and both are written down before you need them.
 
 ## Lockout tagout, in order
-**Lockout tagout**, written **lock out tag out (LOTO)** on many hospital forms, is the procedure that makes equipment safe to work on by making it impossible to energize while you are inside it.
+**Lockout tagout**, also written **lock out tag out (LOTO)**, is the procedure that makes equipment safe to work on by making it impossible to energize while you are inside it.
 
 1. **Notify** everyone affected: the department, the users, and anyone else who might come looking for the device.
 2. **Shut it down** by its normal controls, in the normal order.

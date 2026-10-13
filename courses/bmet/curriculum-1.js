@@ -132,7 +132,7 @@ Four levels, smallest to largest:
 - **Organs** are structures built of several tissues with a purpose: heart, lungs, brain, kidney, skin.
 - **Systems** are groups of organs that work together.
 
-The systems this course names are the **circulatory** system (heart, vessels, blood), the **respiratory** system (airway and lungs), the **nervous** system (brain, spinal cord, nerves), the **digestive** system (the tube from mouth to the other end, plus liver and pancreas), the **urinary** system (kidneys and bladder), the **endocrine** system (glands and hormones), the **musculoskeletal** system (the skeletal system of bones and joints plus the muscular system that moves them), the **lymphatic system** and the **immune system** it carries (lymph vessels, lymph nodes, spleen, white cells), and the **skin**, which a textbook calls the **integumentary system**.
+The systems this course names are the **circulatory** system (heart, vessels, blood), the **respiratory** system (airway and lungs), the **nervous** system (brain, spinal cord, nerves), the **digestive** system (the tube from mouth to the other end, plus liver and pancreas), the **urinary** system (kidneys and bladder), the **endocrine** system (glands and hormones), the **musculoskeletal** system (the skeletal system of bones and joints plus the muscular system that moves them), the **lymphatic system** and the **immune system** it carries (lymph vessels, lymph nodes, spleen, white cells), and the **skin**, also called the **integumentary system**.
 
 ## Systems do not work alone
 A patient's oxygen number depends on all of them at once. The lungs load oxygen onto the blood, the heart pushes that blood to the tissues, the brainstem sets the breathing and the heart rate, the kidneys keep the fluid balance that gives the heart something to pump, and the skin is the surface your sensor sticks to. When a monitor shows a bad number, the cause can sit in any of those links, which is also why one patient is wired to several of your devices at once. Holding temperature, pressure, fluid, and chemistry inside a narrow band has a name, **homeostasis**, and most alarms announce either that the body has lost that balance or that the device helping it hold the balance has stopped.
@@ -244,7 +244,7 @@ Tidal volume         about 500 mL per breath at rest
 - The **central nervous system** is the brain and the spinal cord: the processor and the main cable.
 - The **peripheral nervous system** is every nerve that branches off, out to muscle, skin, and organs.
 
-The wire in both halves is the **neuron**, one nerve cell that passes a signal along as a travelling change in charge and hands it to the next cell at a junction. **Sensory receptors** in the skin, the muscles, and the organs start those signals, and muscles and glands are where they end. A nerve is a bundle of neurons, which is why a device that stimulates a nerve reaches many cells at once.
+The wire in both halves is the **neuron**, one nerve cell that passes a signal along as a travelling change in charge and hands it to the next cell at a junction. **Sensory receptors** in the skin, the muscles, and the organs start those signals, and muscles and glands are where they end. A nerve is a bundle of nerve fibers (axons), which is why a device that stimulates a nerve reaches many cells at once.
 
 ## Parts of the brain worth knowing
 - The **cerebrum** is the big wrinkled top: thinking, speech, decisions, and voluntary movement.
@@ -481,7 +481,7 @@ In the lab you build both circuits, measure the two series drops and add them, t
 ## Every circuit has three parts
 1. A **source**: the battery, the power supply output, the wall outlet. It provides the push.
 2. A **control**: the switch, relay, or transistor that decides whether the path is complete.
-3. A **load**: the lamp, motor, heater, speaker, or board that does the work and uses the power.
+3. A **load**: a lamp, a heater, a **DC motor** in a pump, a speaker, or a circuit board that does the work and uses the power.
 
 Add the wires that join them and you have a circuit. If current is not flowing, exactly one of those four things is at fault, and the meter tells you which.
 
@@ -590,7 +590,7 @@ In the lab you meet a dead loop with one open part and one shorted part, and the
 - The **120 V** on the label is an **RMS** value, the effective value: the steady DC voltage that would deliver the same heating power. The waveform itself swings higher, peaking near **170 V** in each direction. Your meter shows the effective value; an oscilloscope shows the peaks.
 
 ## Why the grid uses AC at all
-Because of the **transformer**. Two coils wound on a shared iron core: current changing in one coil creates a changing magnetic field, and that changing field induces a voltage in the other. That is **electromagnetic induction**, and it is the same effect that makes a motor turn and a generator produce power. The ratio of turns sets the ratio of voltages. More turns on the output side **steps up** the voltage; fewer turns **steps down**. A 10-to-1 **step-down transformer** fed 120 V delivers 12 V, and a **step-up transformer** does the reverse, which is how the grid carries power at high voltage and low current.
+Because of the **transformer**. Two coils wound on a shared iron core: current changing in one coil creates a changing magnetic field, and that changing field induces a voltage in the other. That is **electromagnetic induction**, and it is the same effect behind a generator and the back voltage a running motor produces. The ratio of turns sets the ratio of voltages. More turns on the output side **steps up** the voltage; fewer turns **steps down**. A 10-to-1 **step-down transformer** fed 120 V delivers 12 V, and a **step-up transformer** does the reverse, which is how the grid carries power at high voltage and low current.
 
 The catch is in the word changing. A transformer only works on AC. Feed it steady DC and you get a brief pulse as you connect it and then nothing but a hot coil. That is why power is generated and distributed as AC and stepped down near the building.
 
@@ -617,7 +617,7 @@ A standard receptacle has three contacts: the narrow slot is **hot**, the wider 
       body: `You do not have to design with these parts. You do have to recognize them on a board and on a drawing, know what each one is for, and know which one can still hurt you after the power is off.
 
 ## Passive and active
-Two words sort the whole parts list. **Passive components** only store, release, or use up what they are handed: resistors, capacitors, inductors, transformers. **Active components** need a supply of their own and can then control or enlarge a signal: diodes, transistors, and the chips built out of them. The distinction is worth having because a board's passive parts usually fail visibly, by burning or leaking, and its active parts usually fail silently.
+Two words sort the whole parts list. **Passive components** only store, release, or use up what they are handed: resistors, capacitors, inductors, transformers. **Active components** are the semiconductors that steer or enlarge a signal, and most need a supply of their own: diodes, transistors, and the chips built out of them. The distinction is worth having because a board's passive parts usually fail visibly, by burning or leaking, and its active parts usually fail silently.
 
 ## Capacitor: stores charge
 Two conducting plates separated by an insulator. Apply a voltage and charge piles up on the plates; remove the supply and the charge stays. Capacitance is measured in **farads**, which is a huge unit, so real parts are marked in **microfarads** (millionths) or picofarads. Capacitors smooth a power supply's output, pass signals while blocking steady voltages, and set timing.
@@ -627,7 +627,7 @@ The safety point is the one to carry out of this lesson. **A capacitor can hold 
 A larger electrolytic capacitor is a **polarized capacitor**: the can is marked with a stripe and the board with a plus sign, and fitting one backwards makes it vent or burst. Every capacitor also carries a **working voltage**, the highest it may ever see; a replacement rated below the rail it sits on fails early even when the capacitance is right.
 
 ## Inductor: stores energy in a magnetic field
-A coil of wire, sometimes on an iron core. Current through it builds a magnetic field; the field resists any sudden change in that current. Inductance is measured in **henries**. You meet coils as filter chokes, as the windings of a **transformer**, as the coil in a **relay** (a switch moved by a magnet, so a small signal can control a big load), and as the windings of every **motor**. Because a coil fights change, switching one off produces a voltage spike, which is why relay and motor circuits carry a protective diode across the coil.
+A coil of wire, sometimes on an iron core. Current through it builds a magnetic field; the field resists any sudden change in that current. Inductance is measured in **henries**, usually millihenries (mH) or microhenries in the parts you will meet. You meet coils as filter chokes, as the windings of a **transformer**, as the coil in a **relay** (a switch moved by a magnet, so a small signal can control a big load), and as the windings of every **motor**. Because a coil fights change, switching one off produces a voltage spike, which is why relay and motor circuits carry a protective diode across the coil.
 
 ## Diode: a one-way valve
 Current passes in the direction the symbol's triangle points, which is called **forward bias**, and is blocked the other way, **reverse bias**. A silicon diode needs about **0.6 to 0.7 V** across it before it conducts, and it holds roughly that drop while it does. Diodes rectify AC into DC, protect against a battery fitted backwards, and clamp those switching spikes.
@@ -645,7 +645,7 @@ Three legs. A small current or voltage on the control leg governs a much larger 
 
 **Integrated circuits** pack thousands or millions of transistors into one package with numbered pins: the processors, memory, amplifiers, and regulators that make up a modern board. They are also the parts a static discharge destroys silently. The chip in charge is usually a **microcontroller**, a whole small computer on one piece of silicon (processor, memory, and input and output pins), and the program inside it is what a manual calls the firmware or the software version.
 
-Two more parts live on the same boards and come up on your bench. A **piezoelectric buzzer** works by the **piezoelectric effect**: a ceramic disc flexes when a voltage is applied across it, and that is what makes the alarm tone in most devices, so a silent alarm can be a dead buzzer rather than a logic fault. A **thermistor** is a resistor whose value changes with temperature, which makes it the sensing element in temperature probes and inside battery packs; most are **negative temperature coefficient** types, so the resistance falls as the part gets hotter, while **positive temperature coefficient** parts rise instead and are used as self-resetting fuses. A **thermocouple** does the same sensing job with two dissimilar metals joined at a tip, where the junction itself produces a tiny voltage that grows with temperature, and it is what survives the heat inside a sterilizer or an oven.
+Two more parts live on the same boards and come up on your bench. A **piezoelectric buzzer** works by the **piezoelectric effect** run backwards: voltage makes the crystal flex, and that is what makes the alarm tone in most devices, so a silent alarm can be a dead buzzer rather than a logic fault. A **thermistor** is a resistor whose value changes with temperature, which makes it the sensing element in temperature probes and inside battery packs; most are **negative temperature coefficient** types, so the resistance falls as the part gets hotter, while **positive temperature coefficient** parts rise instead and are used as self-resetting fuses. A **thermocouple** does the same sensing job with two dissimilar metals joined at a tip, where the junction itself produces a tiny voltage that grows with temperature, and it is what survives the heat inside a sterilizer or an oven.
 
 ## The symbols for these five
 \`\`\`
