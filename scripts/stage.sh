@@ -6,7 +6,7 @@
 #   bash scripts/stage.sh --local    build and assemble only
 #
 # Staged: the catalog (dist/index.html), catalog.css, the favicons, account/, callback/,
-# serviceforge/, the five course bundles as <id>/index.html, and the static site
+# serviceforge/, the six course bundles as <id>/index.html, and the static site
 # (site.css, robots.txt, sitemap.xml, every <id>/lessons/ and <id>/cheatsheet/ page).
 # Cheat sheet PDFs are not staged; they change only when a pack's cheat sheet does.
 set -euo pipefail
@@ -25,7 +25,7 @@ for p in account callback serviceforge; do
   mkdir -p "$STAGE/$p"
   cp "dist/$p.html" "$STAGE/$p/index.html"
 done
-for id in netplus secplus cbet aplus1 aplus2; do
+for id in bmet netplus secplus cbet aplus1 aplus2; do
   mkdir -p "$STAGE/$id"
   cp "dist/$id.html" "$STAGE/$id/index.html"
 done

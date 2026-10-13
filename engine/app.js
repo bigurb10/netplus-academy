@@ -644,6 +644,7 @@
       </div>
       ${stageStrip(st)}
       ${S.seen.cheat ? '' : cheatCallout()}
+      ${kitCard()}
       <div class="stats">
         <div class="stat"><div class="eyebrow">${S.plan && S.plan.source === 'test' ? 'Retraining' : 'Tutorial'}</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + (S.plan.source === 'test' ? ' topics</small>' : ' lessons</small>') : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
@@ -1287,6 +1288,15 @@
   }
   function cheatCallout() {
     return `<div class="callout accent"><div class="row spread"><div><div class="eyebrow">New</div><strong>The memorization sheet</strong><div class="ans ink2">Every port, mask, standard, and step order the exam expects cold. Print it and keep it beside you.</div></div><div class="row"><button class="btn small" data-act="go" data-arg="cheatsheet">Open</button><button class="btn small" data-act="print-cheat">Print</button><button class="btn small ghost" data-act="cheat-dismiss">Dismiss</button></div></div></div>`;
+  }
+  // The lab kit, listed on Home until the kit lab (course.kitLab) is done. Spec section 2.
+  function kitCard() {
+    const kit = Array.isArray(course.kit) ? course.kit : [];
+    if (!kit.length || (course.kitLab && labDone(course.kitLab))) return '';
+    const lab = course.kitLab ? LABS[course.kitLab] : null; const l = lab ? L[lab.lesson] : null;
+    return `<div class="card stack kit-card" style="gap:8px"><div class="row spread"><h3>Your lab kit</h3>${l ? `<button class="btn small" data-act="lesson" data-arg="${esc(l.id)}">Open the kit lab</button>` : ''}</div>
+      <p class="ink2">About $60 to $100 of parts. No kit yet? Every kit lab also runs on the virtual meter.</p>
+      <div class="lab-kit"><ul>${kit.map(k => `<li>${inline(k)}</li>`).join('')}</ul></div></div>`;
   }
 
   // ---------- feedback ----------

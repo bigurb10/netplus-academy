@@ -7180,12 +7180,83 @@ FRA.questions.push(
     }
   }
 
+  // ---------- shape: what each instrument needs in its scenario, as plain sentences ----------
+  // The truth functions above return null on an incomplete scenario, which lets an authored verdict
+  // pass validate unchecked. These checks make the gaps loud (Plan A final review, items 3 and
+  // "deferred to Plan B").
+  const isNum = v => typeof v === 'number' && isFinite(v);
+  const COND = ['normal', 'reverse', 'normal-open', 'reverse-open'];
+  const DMM_TABLES = ['vdc', 'vac', 'ohm', 'adc', 'cont', 'diode'];
+  const FIG_KINDS = ['meter', 'cylinder', 'strip'];
+  function shape(lab) {
+    const out = []; const p = s => out.push(s); const sc = obj(lab.scenario);
+    switch (lab.instrument) {
+      case 'safety': {
+        if (!isNum(sc.ground)) p('safety scenario needs a numeric ground resistance');
+        ['chassis', 'lead'].forEach(k => { if (sc[k] == null) return; const t = obj(sc[k]); COND.forEach(c => { if (!isNum(t[c])) p(`safety ${k} table is missing the ${c} condition`); }); });
+        if (!sc.limits || typeof sc.limits !== 'object') { p('safety scenario needs limits { ground, chassis, lead }'); break; }
+        ['ground', 'chassis', 'lead'].forEach(k => { if (sc[k] != null && !isNum(sc.limits[k])) p(`safety scenario has a ${k} reading but no limits.${k}`); });
+        break;
+      }
+      case 'monitor': {
+        ['hrErr', 'spo2Err', 'sysErr', 'diaErr'].forEach(k => { if (!isNum(sc[k])) p(`monitor scenario needs a numeric ${k}`); });
+        const t = sc.tolerance; if (!t || typeof t !== 'object' || !isNum(t.hr) || !isNum(t.spo2) || !isNum(t.nibp)) p('monitor scenario needs tolerance { hr, spo2, nibp } as numbers');
+        break;
+      }
+      case 'infusion':
+        if (!isNum(sc.rateErr)) p('infusion scenario needs a numeric rateErr (a fraction)');
+        if (!isNum(sc.tolerance)) p('infusion scenario needs a numeric tolerance in percent');
+        if (sc.cylinderMl != null && !(sc.cylinderMl > 0)) p('infusion cylinderMl must be positive');
+        if (sc.graduation != null && !(sc.graduation > 0)) p('infusion graduation must be positive');
+        break;
+      case 'defib': {
+        if (!Array.isArray(sc.energies) || !sc.energies.length || !sc.energies.every(isNum)) p('defib scenario needs a non-empty numeric energies list');
+        const t = obj(sc.tolerance); if (!isNum(t.pct) && !isNum(t.floor)) p('defib scenario needs tolerance { pct, floor } with at least one number');
+        if (sc.deliveredErr != null && typeof sc.deliveredErr !== 'object') p('defib deliveredErr must map an energy to a fraction');
+        break;
+      }
+      case 'dmm': {
+        if (typeof sc.svg !== 'string' || !/<svg\b/i.test(sc.svg)) p('dmm scenario needs an svg drawing');
+        const pts = sc.points && typeof sc.points === 'object' ? sc.points : null;
+        if (!pts || !Object.keys(pts).length) p('dmm scenario needs points: { name: [x, y] }');
+        else Object.keys(pts).forEach(k => {
+          if (!/^[A-Za-z0-9+]+$/.test(k)) p(`dmm point name "${k}" may use letters, digits, and + only`);
+          const xy = pts[k]; if (!Array.isArray(xy) || xy.length !== 2 || !isNum(xy[0]) || !isNum(xy[1])) p(`dmm point ${k} needs [x, y]`);
+        });
+        const tables = DMM_TABLES.filter(t => sc[t] && typeof sc[t] === 'object');
+        if (!tables.length) p('dmm scenario has no readings table (vdc, vac, ohm, adc, cont, or diode)');
+        if (pts) tables.forEach(t => Object.keys(sc[t]).forEach(k => {
+          const ends = k.split('-');
+          if (ends.length !== 2) p(`dmm ${t} key "${k}" must be "pointA-pointB"`);
+          else ends.forEach(e => { if (!Object.prototype.hasOwnProperty.call(pts, e)) p(`dmm ${t} pair "${k}" names a point that is not drawn: ${e}`); });
+        }));
+        break;
+      }
+      case 'figures': {
+        const figs = sc.figures;
+        if (!Array.isArray(figs) || !figs.length) { p('figures scenario needs a non-empty figures array'); break; }
+        figs.forEach((f, i) => {
+          if (!f || FIG_KINDS.indexOf(f.kind) < 0) p(`figure ${i + 1}: kind must be meter, cylinder, or strip`);
+          else if (f.kind === 'strip' && (f.value == null || num(f.value) !== num(f.rate))) p(`figure ${i + 1}: a strip needs value equal to its rate so a task can measure it`);
+        });
+        break;
+      }
+      case 'choices':
+        if (typeof sc.text !== 'string' || !sc.text.trim()) p('choices scenario needs text');
+        break;
+    }
+    return out;
+  }
+
   // ---------- validate: every way a lab record can be wrong, as plain sentences ----------
   function validate(lab) {
     const out = []; const p = s => out.push(s);
     if (!lab || typeof lab !== 'object') return ['lab is not an object'];
+    if (!lab.id || !/^[a-z0-9-]+$/.test(lab.id)) p('lab id must match /^[a-z0-9-]+$/');
+    if (!lab.lesson) p('lab has no lesson');
+    if (!lab.title) p('lab has no title');
     if (NAMES.indexOf(lab.instrument) < 0) p(`unknown instrument "${lab.instrument}"`);
-    if (!lab.scenario || typeof lab.scenario !== 'object') p('scenario is missing');
+    if (!lab.scenario || typeof lab.scenario !== 'object') p('scenario is missing'); else shape(lab).forEach(p);
     if (!Array.isArray(lab.tasks) || !lab.tasks.length) { p('no tasks'); return out; }
     const why = obj(lab.why); const seen = Object.create(null);
     lab.tasks.forEach((t, i) => {
@@ -7234,7 +7305,7 @@ FRA.questions.push(
       for (let i = 0; i <= 10; i++) {
         const a = (180 - 18 * i) * Math.PI / 180; const inner = i % 5 ? r - 6 : r - 10;
         ticks += `<line x1="${(cx + inner * Math.cos(a)).toFixed(1)}" y1="${(cy - inner * Math.sin(a)).toFixed(1)}" x2="${(cx + r * Math.cos(a)).toFixed(1)}" y2="${(cy - r * Math.sin(a)).toFixed(1)}" stroke="currentColor" stroke-width="${i % 5 ? 1 : 2}"/>`;
-        if (i % 5 === 0) ticks += `<text x="${(cx + (r - 22) * Math.cos(a)).toFixed(1)}" y="${(cy - (r - 22) * Math.sin(a) + 4).toFixed(1)}" font-size="10" text-anchor="middle" fill="currentColor">${min + (max - min) * i / 10}</text>`;
+        if (i % 5 === 0) ticks += `<text x="${(cx + (r - 22) * Math.cos(a)).toFixed(1)}" y="${(cy - (r - 22) * Math.sin(a) + 4).toFixed(1)}" font-size="10" text-anchor="middle" fill="currentColor">${Number((min + (max - min) * i / 10).toPrecision(6))}</text>`;
       }
       return `<svg class="fig meter" viewBox="0 0 220 125" width="220" height="125" role="img" aria-label="${esc(f.label || 'analog meter')}" data-kind="meter" data-value="${v}" data-angle="${ang.toFixed(1)}"><path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="currentColor" stroke-width="2"/>${ticks}<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#C8322B" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="4" fill="currentColor"/><text x="${cx}" y="${cy + 13}" font-size="11" text-anchor="middle" fill="currentColor">${esc(f.unit || '')}</text></svg>`;
     }
@@ -8051,6 +8122,7 @@ FRA.questions.push(
       </div>
       ${stageStrip(st)}
       ${S.seen.cheat ? '' : cheatCallout()}
+      ${kitCard()}
       <div class="stats">
         <div class="stat"><div class="eyebrow">${S.plan && S.plan.source === 'test' ? 'Retraining' : 'Tutorial'}</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + (S.plan.source === 'test' ? ' topics</small>' : ' lessons</small>') : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
@@ -8694,6 +8766,15 @@ FRA.questions.push(
   }
   function cheatCallout() {
     return `<div class="callout accent"><div class="row spread"><div><div class="eyebrow">New</div><strong>The memorization sheet</strong><div class="ans ink2">Every port, mask, standard, and step order the exam expects cold. Print it and keep it beside you.</div></div><div class="row"><button class="btn small" data-act="go" data-arg="cheatsheet">Open</button><button class="btn small" data-act="print-cheat">Print</button><button class="btn small ghost" data-act="cheat-dismiss">Dismiss</button></div></div></div>`;
+  }
+  // The lab kit, listed on Home until the kit lab (course.kitLab) is done. Spec section 2.
+  function kitCard() {
+    const kit = Array.isArray(course.kit) ? course.kit : [];
+    if (!kit.length || (course.kitLab && labDone(course.kitLab))) return '';
+    const lab = course.kitLab ? LABS[course.kitLab] : null; const l = lab ? L[lab.lesson] : null;
+    return `<div class="card stack kit-card" style="gap:8px"><div class="row spread"><h3>Your lab kit</h3>${l ? `<button class="btn small" data-act="lesson" data-arg="${esc(l.id)}">Open the kit lab</button>` : ''}</div>
+      <p class="ink2">About $60 to $100 of parts. No kit yet? Every kit lab also runs on the virtual meter.</p>
+      <div class="lab-kit"><ul>${kit.map(k => `<li>${inline(k)}</li>`).join('')}</ul></div></div>`;
   }
 
   // ---------- feedback ----------

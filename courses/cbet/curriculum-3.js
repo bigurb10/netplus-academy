@@ -155,7 +155,7 @@ Get the facts without judgment: what happened, when, what was the device doing, 
 - Never diagnose the patient, never assign blame, never guess at a cause you have not verified.
 
 ## Training users
-The best fix for a recurring complaint is a five-minute demonstration at the bedside. Good training is short, hands-on, and specific to the tasks that go wrong: how to change electrodes, how to zero a transducer, what the alarm colors mean, how to load a set. Coordinate with nurse educators and the manufacturer's clinical specialists; document who was trained, on what, and when. New equipment requires training before first use.
+The best fix for a recurring complaint is a five-minute demonstration at the bedside. Good training is short, hands-on, and specific to the tasks that go wrong: how to change electrodes, how to zero a transducer, what the alarm colors mean, how to load a set. Coordinate with nurse educators and the manufacturer's clinical specialists; document who was trained, on what, and when. New equipment requires training before first use. The scheduled version is **in-service training**: formal instruction for a unit's staff on a device's use, care, cleaning, and alarm response, with attendance recorded.
 
 ## Safety culture and reporting
 Encourage reporting of near misses, not just injuries. Feed device problems into the hospital's incident system; feed patterns into equipment purchasing. Post alerts and recalls where users see them, and confirm the required action was done, not just announced.
@@ -600,6 +600,7 @@ Turns data into unreadable form without a key. **In transit**: HTTPS, TLS, VPNs,
 - **Vendor access** controlled and logged; service laptops kept patched and scanned; no personal USB drives.
 - **Backups** tested by restoring; **incident response** plan: isolate the device, preserve evidence, notify IT security, do not power off if forensics are needed unless told to.
 - **Alerts and recalls** for cybersecurity vulnerabilities handled like any other recall.
+- **Performance goals**: the **HHS cybersecurity performance goals** list the essential practices a hospital is expected to have (multi-factor authentication, patching, tested backups, network segmentation, staff training) and a set of enhanced ones; frameworks such as HITRUST organize the same controls for certification.
 
 ## The technician's habits
 Lock your screen. Do not plug unknown media into anything. Do not share your account. Report a suspicious message instead of clicking. Sanitize PHI before a device leaves. Use the approved remote-access process for vendors, never a workaround. Keep patient details out of photographs, emails, and notes unless the channel is approved.
@@ -624,7 +625,7 @@ Lock your screen. Do not plug unknown media into anything. Do not share your acc
 - **Slow**: nearly full or failing drive, too little RAM, malware, background updates, overheating (dust in fans and heat sinks).
 
 ## Operating systems and software
-- **Windows**, **Linux**, and embedded real-time systems on devices. Know: user accounts and permissions, services, drivers, event logs, updates and patches, the registry on Windows, file systems and shares.
+- **Windows**, **Linux**, **Unix**, and embedded real-time systems on devices. Know: user accounts and permissions, services, drivers, event logs, updates and patches, the registry on Windows, file systems and shares.
 - **Drivers** connect hardware to the operating system; a device that stopped working after an update often needs its driver reinstalled or rolled back.
 - **Application faults**: crashes at a specific action, missing licenses, a configuration file changed, a database full. Vendor logs and the event log point to the cause.
 - **Updates**: on medical devices only the manufacturer's validated updates; on general workstations, IT's patch schedule. A workstation used as a medical device console still follows the device vendor's rules.

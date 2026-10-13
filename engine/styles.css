@@ -374,7 +374,7 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .chip.mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
 /* Labs (engine/app.js labCard) and virtual instruments (engine/instruments.js) */
-.lab .lab-kit ul { margin: 0; padding-left: 20px; }
+.lab .lab-kit ul, .kit-card .lab-kit ul { margin: 0; padding-left: 20px; }
 .lab.done { border-color: var(--good); background: var(--good-soft); }
 .lab-fold > summary { cursor: pointer; color: var(--ink-2); font-size: 0.95rem; }
 .lab-task { border-top: 1px solid var(--line); padding-top: 12px; }
