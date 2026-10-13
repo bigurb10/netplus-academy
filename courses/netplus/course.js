@@ -11,7 +11,7 @@ FRA.course = {
   seo: {
     title: "CompTIA Network+ N10-009 Practice Tests and Study Guide | NetPlus Academy",
     h1: "Network+ N10-009 Practice Tests and Study Guide",
-    intro: "NetPlus Academy is a free Network+ N10-009 practice test and study guide course: forty-nine lessons mapped to the exam objectives, a printable memorization sheet of ports, protocols, and subnetting, tutorials built from what you miss, and unlimited practice tests in the exam's format.",
+    intro: "NetPlus Academy is a free Network+ N10-009 practice test and study guide course: forty-nine lessons mapped to the exam objectives, a printable memorization sheet of ports, protocols, and subnetting, tutorials built from what you miss, and unlimited practice tests in the exam's format. Use it as a Network+ study guide on its own, or work through the N10-009 practice questions bank lesson by lesson.",
     phrases: ["Network+ N10-009 practice test", "Network+ study guide", "N10-009 practice questions"],
     faq: [
       { q: "How many questions are on the Network+ N10-009 exam?", a: "Up to 90 questions in 90 minutes, a mix of multiple choice and performance-based items. The passing score is 720 on a scale of 100 to 900." },

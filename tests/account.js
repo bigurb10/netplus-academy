@@ -102,8 +102,8 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     check('netplus: last studied is relative', /3 hours ago/.test(np));
     check('netplus: last synced is relative', /2 hours ago/.test(np));
     check('netplus: labs done when the course has labs', /Labs done/.test(np) && /1 of 2/.test(np), np);
-    check('netplus: Continue link', !!cards[0].querySelector('a.go[href="/netplus/"]') && /Continue/.test(cards[0].querySelector('a.go').textContent));
-    check('secplus: not started with a Start link', /Not started/.test(cards[1].textContent) && !!cards[1].querySelector('a.go[href="/secplus/"]'));
+    check('netplus: Continue link reaches the app', !!cards[0].querySelector('a.go[href="/netplus/app/"]') && /Continue/.test(cards[0].querySelector('a.go').textContent));
+    check('secplus: not started with a Start link into the app', /Not started/.test(cards[1].textContent) && !!cards[1].querySelector('a.go[href="/secplus/app/"]'));
     check('cbet: an unreadable row does not break the page', /Couldn.t read this course/.test(cards[2].textContent));
     check('a course without labs shows no labs fact', !/Labs done/.test(cards[1].textContent) && !/Labs done/.test(cards[2].textContent));
     w.click(w.$('[data-act="sign-out"]'));
@@ -149,7 +149,7 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     const bars = card.querySelectorAll('.sbars .sbar');
     check('the chart has one bar per domain', bars.length === 2, bars.length);
     check('bars run strongest to weakest', bars.length === 2 && /Implementation/.test(bars[0].textContent) && /100%/.test(bars[0].textContent) && /Concepts/.test(bars[1].textContent), [...bars].map(b => b.textContent).join(' | '));
-    check('the weakest line links the topic into the course', !!card.querySelector('.weakest a[href="/netplus/#lesson/u1l2"]') && /OSI Model/.test(card.querySelector('.weakest').textContent), card.querySelector('.weakest') && card.querySelector('.weakest').textContent);
+    check('the weakest line links the topic into the app', !!card.querySelector('.weakest a[href="/netplus/app/#lesson/u1l2"]') && /OSI Model/.test(card.querySelector('.weakest').textContent), card.querySelector('.weakest') && card.querySelector('.weakest').textContent);
     check('courses without data show no chart', w.$$('.card').slice(1).every(c => !c.querySelector('.sbars') && !c.querySelector('.weakest')));
   }
 

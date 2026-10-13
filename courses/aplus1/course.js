@@ -11,7 +11,7 @@ FRA.course = {
   seo: {
     title: "CompTIA A+ Core 1 220-1201 Practice Test and Study Guide | APlus Academy Core 1",
     h1: "A+ Core 1 220-1201 Practice Test and Study Guide",
-    intro: "APlus Academy Core 1 is a free A+ Core 1 220-1201 practice test and study guide course: forty-one lessons on mobile devices, networking, hardware, virtualization, cloud, and troubleshooting, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests.",
+    intro: "APlus Academy Core 1 is a free A+ Core 1 220-1201 practice test and study guide course: forty-one lessons on mobile devices, networking, hardware, virtualization, cloud, and troubleshooting, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests. Use it as an A+ 220-1201 study guide on its own, or work through the CompTIA A+ practice questions bank lesson by lesson.",
     phrases: ["A+ Core 1 220-1201 practice test", "A+ 220-1201 study guide", "CompTIA A+ practice questions"],
     faq: [
       { q: "How many questions are on the A+ Core 1 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 675 on a scale of 100 to 900." },

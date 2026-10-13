@@ -185,7 +185,7 @@ ${p.body}
 
 function nav(m, current) {
   const item = (href, label, cls) => `<a href="${href}"${cls ? ` class="${cls}"` : ''}${current === href ? ' aria-current="page"' : ''}>${label}</a>`;
-  return item(m.urls.landing, 'Overview') + item(m.urls.course, 'Lessons') + item(m.urls.practice, 'Practice test') + item(m.urls.cheat, 'Cheat sheet') + item(m.urls.app, 'Start the course', 'btn primary small');
+  return item(m.urls.landing, 'Overview') + item(m.urls.course, 'Lessons') + item(m.urls.practice, 'Practice test') + item(m.urls.cheat, 'Cheat sheet') + item('/guides/', 'Guides') + item(m.urls.app, 'Start the course', 'btn primary small');
 }
 
 function crumbs(items) {
@@ -217,7 +217,8 @@ function lessonPage(m, l, R, origin) {
   const deep = m.deep[l.id];
   const crumbList = [
     { name: 'Courses', href: '/' },
-    { name: examName(m.c) || m.c.name, href: m.urls.course },
+    { name: m.c.name, href: m.urls.landing },
+    { name: 'Lessons', href: m.urls.course },
     { name: l.title, href: m.urls.lesson(l) }
   ];
   const body = `${crumbs(crumbList)}
@@ -272,7 +273,7 @@ function coursePage(m, R, origin) {
   const c = m.c; const ex = c.exam || {};
   const totalMin = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
   const description = shorten(`${c.description} ${m.lessons.length} lessons, a printable cheat sheet, adaptive tutorials, and unlimited practice tests. Free.`, DESC_MAX);
-  const crumbList = [{ name: 'Courses', href: '/' }, { name: examName(c) || c.name, href: m.urls.course }];
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Lessons', href: m.urls.course }];
   const lessonCount = {}; m.lessons.forEach(l => { lessonCount[l.domain] = (lessonCount[l.domain] || 0) + 1; });
   const facts = [
     // Titles usually already carry the vendor ("CompTIA Network+"); prefix only when not.
@@ -327,7 +328,7 @@ ${ctaCard(m, null)}`;
   });
 }
 
-const FORWARDER = `<script>if(location.hash&&/^#[a-z]/.test(location.hash))location.replace(location.pathname.replace(/\\/?$/,'/')+'app/'+location.hash)</script>`;
+const FORWARDER = `<script>if(location.hash&&/^#[a-z]/.test(location.hash))location.replace(location.pathname.replace(/(index\\.html)?\\/?$/,'/')+'app/'+location.search+location.hash)</script>`;
 
 function defaultFaq(m) {
   const c = m.c; const ex = c.exam || {}; const t = c.test || {};
@@ -339,8 +340,9 @@ function defaultFaq(m) {
   return out;
 }
 
-function landingPage(m, R, origin) {
+function landingPage(m, R, origin, guides) {
   const c = m.c; const ex = c.exam || {}; const seo = m.seo || {};
+  const relatedGuides = (guides || []).filter(g => ((g.related && g.related.courses) || []).includes(c.id));
   const h1 = seo.h1 || `${c.name}: ${examName(c) || c.name} study guide and practice tests`;
   const title = seo.title || `${h1} | ${BRAND}`;
   const intro = seo.intro || c.description;
@@ -379,6 +381,7 @@ function landingPage(m, R, origin) {
   <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
 </section>
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
+${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
 <section>
   <h2>Questions people ask</h2>
   ${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}
@@ -433,7 +436,7 @@ function pickPractice(m, n) {
 
 function practicePage(m, R, origin) {
   const c = m.c; const items = pickPractice(m, 20); const letters = 'ABCD';
-  const h1 = `${c.name} Practice Test: ${items.length} Free ${c.exam && c.exam.code ? c.exam.code + ' ' : ''}Questions with Answers`;
+  const h1 = `${examName(c) || c.name} Practice Test: ${items.length} Free Questions with Answers`;
   const description = shorten(`${items.length} free ${examName(c) || c.name} practice questions with answers and explanations, drawn from the ${m.questions.length}-question bank behind ${c.name}. Try them, then start the free course.`, DESC_MAX);
   const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Practice test', href: m.urls.practice }];
   const body = `${crumbs(crumbList)}
@@ -457,8 +460,8 @@ function practicePage(m, R, origin) {
       {
         '@context': 'https://schema.org', '@type': 'Quiz',
         name: h1, description, url: origin + m.urls.practice, inLanguage: 'en', isAccessibleForFree: true,
-        about: examName(c) || c.name, educationalLevel: 'Beginner', provider: org(),
-        hasPart: items.map(q => ({ '@type': 'Question', name: R.plain(q.q), eduQuestionType: 'Multiple choice', text: R.plain(q.q), suggestedAnswer: q.a.map(o => ({ '@type': 'Answer', text: R.plain(o) })), acceptedAnswer: { '@type': 'Answer', text: R.plain(q.a[q.c]) } }))
+        about: { '@type': 'Thing', name: examName(c) || c.name }, educationalLevel: 'Beginner', provider: org(),
+        hasPart: items.map(q => ({ '@type': 'Question', name: R.plain(q.q), eduQuestionType: 'Multiple choice', learningResourceType: 'Practice problem', text: R.plain(q.q), suggestedAnswer: q.a.filter((o, i) => i !== q.c).map(o => ({ '@type': 'Answer', text: R.plain(o) })), acceptedAnswer: { '@type': 'Answer', text: R.plain(q.a[q.c]) } }))
       },
       breadcrumbLd(origin, crumbList)
     ],
@@ -469,7 +472,7 @@ function practicePage(m, R, origin) {
 function cheatPage(m, R, origin) {
   const cs = m.cheatsheet; const c = m.c;
   const keys = R.keys.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b));
-  const crumbList = [{ name: 'Courses', href: '/' }, { name: examName(c) || c.name, href: m.urls.course }, { name: 'Cheat sheet', href: m.urls.cheat }];
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Cheat sheet', href: m.urls.cheat }];
   const n = cs.sections.length;
   const body = `${crumbs(crumbList)}
 <div class="cs">
@@ -566,12 +569,20 @@ function buildCourse(FRA, opts) {
   const m = model(FRA);
   const R = makeRenderer(m.acronyms);
   const pages = [];
-  pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin)) });
+  pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin, opts.guides)) });
   pages.push({ url: m.urls.practice, title: 'Practice test', file: writePage(opts.out, m.urls.practice, practicePage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
   if (m.cheatsheet) pages.push({ url: m.urls.cheat, title: m.cheatsheet.title, file: writePage(opts.out, m.urls.cheat, cheatPage(m, R, origin)) });
   for (const l of m.freeLessons) pages.push({ url: m.urls.lesson(l), title: l.title, file: writePage(opts.out, m.urls.lesson(l), lessonPage(m, l, R, origin)) });
   return { course: m.c.id, pages };
+}
+
+// Every URL that belongs to a course model, rendered or not: the landing page, the practice
+// test, the lessons index, the cheat sheet, and every free lesson. A partial build (one
+// course's pages re-rendered after an edit) still needs every course's URLs in the sitemap,
+// so this is computed from a model alone rather than from the pages a build actually wrote.
+function courseUrls(m) {
+  return [m.urls.landing, m.urls.practice, m.urls.course, m.urls.cheat].concat(m.freeLessons.map(l => m.urls.lesson(l)));
 }
 
 function sitemap(origin, urls, lastmod) {
@@ -588,16 +599,25 @@ function buildAll(opts) {
   const origin = (opts.origin || ORIGIN).replace(/\/$/, '');
   const out = opts.out || path.join(ROOT, 'dist', 'site');
   const dirs = opts.courseDirs || courseDirs();
+  // allCourseDirs covers the whole site even on a partial build (only `dirs` get pages
+  // re-rendered): shared files -- the sitemap's course URLs, the 404 page's course list,
+  // and guides' related-course links -- must still name every course, not just the ones
+  // this run re-rendered, or they would be truncated to the partial set.
+  const allDirs = opts.allCourseDirs || dirs;
   fs.mkdirSync(out, { recursive: true });
-  const results = dirs.map(dir => buildCourse(loadPack(dir), { out, origin, analytics: opts.analytics }));
-  const models = dirs.map(dir => model(loadPack(dir)));
+  // Load each pack at most once even though dirs and allDirs can overlap.
+  const packs = {};
+  const packFor = dir => packs[dir] || (packs[dir] = loadPack(dir));
+  allDirs.forEach(packFor); dirs.forEach(packFor);
+  const models = allDirs.map(dir => model(packFor(dir)));
   const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
+  const results = dirs.map(dir => buildCourse(packFor(dir), { out, origin, analytics: opts.analytics, guides }));
   const guideUrls = [];
   if (guides.length) {
     writePage(out, '/guides/', guidesIndex(guides, origin)); guideUrls.push('/guides/');
     for (const g of guides) { writePage(out, `/guides/${g.slug}/`, guidePage(g, models, origin)); guideUrls.push(`/guides/${g.slug}/`); }
   }
-  const urls = ['/'].concat(...results.map(r => r.pages.map(p => p.url))).concat(guideUrls);
+  const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
   fs.writeFileSync(path.join(out, '404.html'), notFoundPage(models, origin), 'utf8');
@@ -609,9 +629,9 @@ function buildAll(opts) {
 if (require.main === module) {
   const wanted = process.argv.slice(2);
   const dirs = wanted.length ? wanted.map(id => path.join(ROOT, 'courses', id)) : undefined;
-  const res = buildAll({ courseDirs: dirs });
+  const res = buildAll({ courseDirs: dirs, allCourseDirs: courseDirs() });
   for (const r of res.courses) console.log(`[${r.course}] ${r.pages.length - 1} pages written`);
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
 
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, ORIGIN, BRAND };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, ORIGIN, BRAND };
