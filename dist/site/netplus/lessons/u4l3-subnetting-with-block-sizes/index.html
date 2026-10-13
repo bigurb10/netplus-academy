@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subnetting with Block Sizes | CompTIA Network+ N10-009 | FieldReady Academy</title>
+<meta name="description" content="Subnetting splits one network into smaller ones. You can do every exam subnetting problem with one trick: the block size.">
+<link rel="canonical" href="https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Subnetting with Block Sizes">
+<meta property="og:description" content="Subnetting splits one network into smaller ones. You can do every exam subnetting problem with one trick: the block size.">
+<meta property="og:url" content="https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/">
+<meta property="og:image" content="https://fieldreadyacademy.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fieldreadyacademy.com/og-image.png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Subnetting with Block Sizes","description":"Subnetting splits one network into smaller ones. You can do every exam subnetting problem with one trick: the block size.","url":"https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/","mainEntityOfPage":"https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/","articleSection":"Unit 4: IP Addressing and Subnetting","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"NetPlus Academy","url":"https://fieldreadyacademy.com/netplus/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"NetPlus Academy","item":"https://fieldreadyacademy.com/netplus/"},{"@type":"ListItem","position":3,"name":"Lessons","item":"https://fieldreadyacademy.com/netplus/lessons/"},{"@type":"ListItem","position":4,"name":"Subnetting with Block Sizes","item":"https://fieldreadyacademy.com/netplus/lessons/u4l3-subnetting-with-block-sizes/"}]}</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/netplus/">Overview</a><a href="/netplus/lessons/" aria-current="page">Lessons</a><a href="/netplus/practice-test/">Practice test</a><a href="/netplus/cheatsheet/">Cheat sheet</a><a href="/guides/">Guides</a><a href="/netplus/app/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/netplus/">NetPlus Academy</a><span class="sep">/</span><a href="/netplus/lessons/">Lessons</a><span class="sep">/</span><span>Subnetting with Block Sizes</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 4</span><span class="pill">Concepts</span><span class="pill">Objective 1.7</span><span class="muted">12 min read</span></div>
+  <h1>Subnetting with Block Sizes</h1>
+  <p class="ink2 lede">Unit 4: IP Addressing and Subnetting. Lesson 13 of 49 in NetPlus Academy.</p>
+  <div class="lesson-body"><p>Subnetting splits one network into smaller ones. You can do every exam subnetting problem with one trick: the <strong>block size</strong>.</p><h3>The method</h3><ol><li>Find the <strong>interesting octet</strong>: the first mask octet that is not 255 or 0.</li><li><strong>Block size = 256 minus that mask octet.</strong> A mask of <code>.224</code> gives 256 - 224 = 32. A mask of <code>.240</code> gives 16.</li><li>Subnets start at multiples of the block size in that octet: 0, 32, 64, 96, 128, 160, 192, 224 for a block of 32.</li><li>The <strong>network address</strong> is the multiple at or below your host&#39;s value. The <strong>broadcast</strong> is one less than the next multiple. <strong>Usable hosts</strong> are everything in between.</li></ol><h3>Worked example</h3><p>Host <code>192.168.1.100</code> with mask <code>255.255.255.224</code> (/27). Interesting octet is the fourth. Block size 32. Multiples: 0, 32, 64, 96, 128. The host sits between 96 and 128, so the network is <code>192.168.1.96</code>, the broadcast is <code>192.168.1.127</code>, and usable hosts run from .97 to .126.</p><h3>Counting hosts</h3><p>Usable hosts = 2 to the power of host bits, minus 2. A /27 has 5 host bits: 32 - 2 = 30 hosts. A /26 has 6: 64 - 2 = 62. A /30 has 2: 4 - 2 = 2, perfect for a point-to-point link. A /31 is used on point-to-point links with no broadcast, and a /32 identifies a single host.</p><h3>Counting subnets</h3><p>Subnets created = 2 to the power of borrowed bits. Splitting a /24 into /27 borrows 3 bits and gives 8 subnets of 30 hosts each.</p><h3>When the interesting octet is the third</h3><p>Mask <code>255.255.240.0</code> (/20): block size 16 in the third octet. Host <code>10.5.37.200</code> falls between 32 and 48, so the network is <code>10.5.32.0</code>, the broadcast is <code>10.5.47.255</code>, and hosts run from 10.5.32.1 to 10.5.47.254.</p><h3>The <abbr title="Classless inter-domain routing. Prefix notation for subnets, such as /24, replacing the old A, B, C classes.">CIDR</abbr> to mask table</h3><p>/25 .128 (block 128), /26 .192 (64), /27 .224 (32), /28 .240 (16), /29 .248 (8), /30 .252 (4). For the third octet, /17 through /23 use the same values in that octet.</p><div class="tip">Exam tip: two hosts can talk directly only if they are in the same block. A gateway must be inside the host&#39;s block too. Most &quot;cannot reach the gateway&quot; problems are a host or gateway outside the subnet range.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>256 minus the mask octet is the block. Network is the multiple below you, broadcast is one before the next multiple, hosts are 2^bits minus 2.</div></div>
+  
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Subnetting with Block Sizes, explained slowly</h2><div class="lesson-body deep-body"><h3>One trick for every subnetting question</h3><p>You never need to convert a whole address to binary. You need one number: the <strong>block size</strong>. Everything else follows from it.</p><h3>The method</h3><ol><li>Find the <strong>interesting octet</strong>: the first mask octet that is not 255 and not 0.</li><li><strong>Block size = 256 minus that mask octet.</strong></li><li>Subnets start at multiples of the block size in that octet: 0, then the block size, then double it, and so on.</li><li>The <strong>network address</strong> is the multiple at or below your host&#39;s value. The <strong>broadcast</strong> is one less than the next multiple. <strong>Usable hosts</strong> are everything between.</li></ol><p>Keep this table beside you until it is automatic:</p><pre>Prefix   Last octet mask   Block size   Usable hosts
+/25      128               128          126
+/26      192               64           62
+/27      224               32           30
+/28      240               16           14
+/29      248               8            6
+/30      252               4            2</pre><h3>Worked example 1: <code>192.168.1.100/27</code></h3><p>Mask is <code>255.255.255.224</code>. Interesting octet: the fourth, 224. Block size: 256 minus 224 = 32. Multiples of 32: 0, 32, 64, 96, 128, 160, 192, 224. The host value 100 sits between 96 and 128.</p><pre>Network:     192.168.1.96
+First host:  192.168.1.97
+Last host:   192.168.1.126
+Broadcast:   192.168.1.127     (one less than the next multiple, 128)
+Usable:      30</pre><h3>Worked example 2: <code>10.20.30.200/28</code></h3><p>Mask <code>255.255.255.240</code>. Block size 256 minus 240 = 16. Multiples: 0, 16, 32, ..., 192, 208, 224. The value 200 is between 192 and 208.</p><pre>Network 10.20.30.192, hosts .193 to .206, broadcast 10.20.30.207, 14 usable.</pre><h3>Worked example 3: the interesting octet is the third</h3><p><code>10.5.37.200/20</code>. Mask <code>255.255.240.0</code>. The interesting octet is now the <strong>third</strong> (240). Block size 16 in the third octet. Multiples: 0, 16, 32, 48. The third octet value 37 is between 32 and 48.</p><pre>Network:    10.5.32.0        (third octet 32, fourth octet all zeros)
+Broadcast:  10.5.47.255      (third octet one less than 48, fourth octet all ones)
+Hosts:      10.5.32.1 to 10.5.47.254</pre><p>The fourth octet does not matter for finding the network when the third octet is interesting; it just runs from 0 to 255 inside the block.</p><h3>Counting hosts and subnets</h3><ul><li><strong>Usable hosts</strong> = 2 to the power of host bits, minus 2 (network and broadcast). A /27 leaves 5 host bits: 32 minus 2 = 30. A /26 leaves 6: 64 minus 2 = 62.</li><li><strong>Subnets created</strong> = 2 to the power of borrowed bits. Cut a /24 into /27s: you borrowed 3 bits, so 8 subnets, each with 30 hosts.</li><li><strong>/30</strong> has 2 usable hosts: perfect for the two ends of a router link. <strong>/31</strong> is allowed on point-to-point links with no broadcast, so both addresses are usable. <strong>/32</strong> is a single host.</li></ul><h3>The question behind many troubleshooting questions</h3><p>Two hosts can talk directly only if they are in the <strong>same block</strong>. A host&#39;s default gateway must be in its block too. Example: host <code>192.168.1.100/27</code> with gateway <code>192.168.1.129</code>. The host&#39;s block is 96 to 127. The gateway is in the next block. The host will never reach it, even though everything else looks fine. Most &quot;cannot reach the gateway&quot; puzzles are a host or gateway outside the block.</p><h3>What to memorize</h3><ul><li>256 minus the mask octet is the block. Networks at multiples of the block.</li><li>Network is the multiple below you, broadcast is one before the next multiple.</li><li>Hosts: 2 to the host bits, minus 2. Subnets: 2 to the borrowed bits.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/netplus/app/#lesson/u4l3">Open this lesson in the course</a> <a class="btn" href="/netplus/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/netplus/lessons/u4l2-public-private-and-special-addresses/" rel="prev">&larr; Public, Private, and Special Addresses</a>
+  <a href="/netplus/lessons/">All lessons</a>
+  <a href="/netplus/lessons/u4l4-subnet-design-and-vlsm/" rel="next">Subnet Design and VLSM &rarr;</a>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>

@@ -791,4 +791,13 @@ git commit -m "docs(plan): course site SEO status"
 
 ## Status
 
-(Filled in by the executing tasks.)
+Built 2026-10-13 on branch `seo-course-site` by subagent-driven development, every task reviewed.
+
+- Pages per course: landing `/<id>/` (keyword title and H1 from the manifest `seo` block, hash forwarder, Course + FAQPage + BreadcrumbList), `/<id>/practice-test/` (twenty bank questions with answers in `<details>`, Quiz data), `/<id>/lessons/`, fifteen lesson pages, `/<id>/cheatsheet/`; the app bundle at `/<id>/app/` with `noindex`.
+- Guides: `/guides/` and eight guides (Article, FAQPage, BreadcrumbList), content-reviewed with 26 fixes applied.
+- Site-wide: sitemap 124 URLs, every entry with `lastmod`; `og-image.png` (1200 x 630) on every generated page and the catalog; `404.html` (noindex); `noindex` on the six app bundles, `/account/`, `/callback/`, and the 404 page (9 pages); the catalog cards link lessons, practice test, and cheat sheet; the catalog header links Guides.
+- Staged tree (`bash scripts/stage.sh --local`): 142 files; every course has `index.html`, `app/index.html`, `practice-test/index.html`, `lessons/index.html`, `cheatsheet/index.html`.
+- Pages without `og:image`: `/account/` and `/callback/` (both noindex) and the hand-written `/serviceforge/` page, which the ServiceForge SEO plan rewrites.
+- Tests: `npm test` green on every task (17 suites); `tests/site.js` grew by the landing, practice-test, guides, sitemap, 404, and image checks; `tests/catalog.js` by the practice-test links and the Guides link.
+- Deploy: `git push` (Blake), `bash scripts/stage.sh`, then the go-live command it prints. The first deploy replaces each `/<id>/index.html` with the landing page and adds `/<id>/app/index.html`; a learner on an old `#lesson/...` link is forwarded to the app. Then the Search Console checklist in README.
+- Deviations: lastmod is the build date for every URL; guide body headings render as h3 under h2 section headers (as lesson pages do); the landing page omits the units list the spec's content order named, to avoid duplicating the lessons index.

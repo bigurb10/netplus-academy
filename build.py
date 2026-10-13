@@ -187,6 +187,8 @@ def build(course_id):
 <meta name="description" content="{m['description']}">
 <title>{m['name']}</title>
 <link rel="canonical" href="https://fieldreadyacademy.com/{course_id}/">
+<meta name="robots" content="noindex">
+<meta property="og:image" content="https://fieldreadyacademy.com/og-image.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FieldReady Academy">
 <meta property="og:title" content="{m['name']}">

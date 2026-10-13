@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your progress - FieldReady Academy</title>
 <meta name="robots" content="noindex">
+<title>Your progress - FieldReady Academy</title>
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -69,6 +69,11 @@ a.brand { color: inherit; text-decoration: none; }
 /* Catalog categories */
 section.cat + section.cat { margin-top: 8px; }
 .cat-lede { color: var(--ink-2); margin: -4px 0 14px; max-width: 720px; }
+
+/* Top nav link to /guides/ in the catalog header */
+.top-links { display: flex; gap: 14px; margin-left: auto; margin-right: 12px; font-weight: 600; }
+.top-links a { color: inherit; text-decoration: none; }
+.top-links a:hover { color: var(--accent); }
 
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
@@ -580,14 +585,17 @@ section.cat + section.cat { margin-top: 8px; }
     var bars = r.domains.map(function (d) {
       return '<div class="sbar" title="' + esc(d.name) + '"><span>' + esc(d.short) + '</span><i' + (d.acc == null ? ' class="dim"' : '') + ' style="width:' + (d.acc == null ? 100 : d.acc) + '%"></i><b>' + (d.acc == null ? '&ndash;' : d.acc + '%') + '</b></div>';
     }).join('');
-    var weak = r.weakest.slice(0, 3).map(function (x) { return '<a href="/' + encodeURIComponent(c.id) + '/#lesson/' + encodeURIComponent(x.id) + '">' + esc(x.title) + '</a>'; }).join(', ');
+    var weak = r.weakest.slice(0, 3).map(function (x) { return '<a href="/' + encodeURIComponent(c.id) + '/app/#lesson/' + encodeURIComponent(x.id) + '">' + esc(x.title) + '</a>'; }).join(', ');
     return '<div class="sbars" title="Strongest to weakest: your last two tests and recent checkpoints">' + bars + '</div>' + (weak ? '<p class="weakest muted">Weakest: ' + weak + '</p>' : '');
   }
   function card(it) {
-    var c = it.course, href = '/' + encodeURIComponent(c.id) + '/';
+    // href is the landing page (the course name heading); appHref is where the actual
+    // action buttons go -- this is a progress page, so Start/Open/Continue drop the
+    // learner straight into the app rather than the marketing landing page.
+    var c = it.course, href = '/' + encodeURIComponent(c.id) + '/', appHref = '/' + encodeURIComponent(c.id) + '/app/';
     var head = '<h3><a href="' + href + '">' + esc(c.name) + '</a></h3><p class="exam">' + esc(c.exam) + '</p>';
-    if (!it.row) return '<div class="card"><div class="pill soon">Not started</div>' + head + '<a class="go" href="' + href + '">Start the course</a></div>';
-    if (it.err || !it.state) return '<div class="card"><div class="pill soon">Progress unavailable</div>' + head + '<p class="muted">Couldn\'t read this course\'s progress.</p><a class="go" href="' + href + '">Open the course</a></div>';
+    if (!it.row) return '<div class="card"><div class="pill soon">Not started</div>' + head + '<a class="go" href="' + appHref + '">Start the course</a></div>';
+    if (it.err || !it.state) return '<div class="card"><div class="pill soon">Progress unavailable</div>' + head + '<p class="muted">Couldn\'t read this course\'s progress.</p><a class="go" href="' + appHref + '">Open the course</a></div>';
     var s = SUM.summarize(it.state, c);
     var pct = s.lessonsTotal ? Math.round(100 * Math.min(s.lessonsPassed, s.lessonsTotal) / s.lessonsTotal) : 0;
     var synced = it.row.updated_at ? Date.parse(it.row.updated_at) : NaN;
@@ -603,7 +611,7 @@ section.cat + section.cat { margin-top: 8px; }
       + fact('Official-format test', s.official && s.official.date ? 'Passed ' + dateOf(s.official.date) : 'Not yet')
       + fact('Last studied', s.lastStudied ? ago(s.lastStudied) : 'Not yet')
       + fact('Last synced', synced === synced ? ago(synced) : 'Unknown')
-      + '</dl>' + strength(it.state, c) + '<a class="go" href="' + href + '">Continue</a></div>';
+      + '</dl>' + strength(it.state, c) + '<a class="go" href="' + appHref + '">Continue</a></div>';
   }
   function get(tok, p) {
     return fetch(api(p), { headers: { Authorization: 'Bearer ' + tok } }).then(function (r) {

@@ -1,2 +1,6 @@
 # Shell scripts run on the Linux server; a CRLF checkout would break them.
 *.sh text eol=lf
+# Generated output: compare bytes as written (the generators write LF), no line-ending conversion.
+dist/** -text
+*.png binary
+*.pdf binary

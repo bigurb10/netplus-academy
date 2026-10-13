@@ -5,9 +5,22 @@ FRA.course = {
   name: "NetPlus Academy",
   short: "N+",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "CompTIA", title: "CompTIA Network+", code: "N10-009", questions: 90, minutes: 90, passPct: 80 },
   description: "Self-paced CompTIA Network+ N10-009 course with adaptive training and practice exams.",
+  seo: {
+    title: "CompTIA Network+ N10-009 Practice Tests and Study Guide | NetPlus Academy",
+    h1: "Network+ N10-009 Practice Tests and Study Guide",
+    intro: "NetPlus Academy is a free Network+ N10-009 practice test and study guide course: forty-nine lessons mapped to the exam objectives, a printable memorization sheet of ports, protocols, and subnetting, tutorials built from what you miss, and unlimited practice tests in the exam's format. Use it as a Network+ study guide on its own, or work through the N10-009 practice questions bank lesson by lesson.",
+    phrases: ["Network+ N10-009 practice test", "Network+ study guide", "N10-009 practice questions"],
+    faq: [
+      { q: "How many questions are on the Network+ N10-009 exam?", a: "Up to 90 questions in 90 minutes, a mix of multiple choice and performance-based items. The passing score is 720 on a scale of 100 to 900." },
+      { q: "What does the exam cover?", a: "Networking concepts, network implementation, network operations, network security, and network troubleshooting, in CompTIA's published weights. The course's practice tests use the same weights." },
+      { q: "How much does Network+ cost?", a: "See CompTIA's current voucher price; the course itself is free." },
+      { q: "How does this course decide I am ready?", a: "Three of your last five fifty-question practice tests at 80% or better, then one ninety-question test at the real passing score of 720 of 900." },
+      { q: "Can I read the lessons without signing up?", a: "The first fifteen lessons and the cheat sheet are open on this site; the full course, with checkpoints and practice tests, is free inside the app." }
+    ]
+  },
   // Domains in exam order. id is what lessons reference in their `domain` field. quota is the count on the full test.
   domains: [
     { id: 1, name: "Networking Concepts", short: "Concepts", pct: 23, quota: 12 },
@@ -35,7 +48,7 @@ FRA.course = {
   },
   // Access. freeCourse true means everything is open (launch mode). free.lessons is the count of free lessons in course order.
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam passes at 720 on a 100 to 900 scale. This course's official-format test uses 80%, that score divided by 900.",

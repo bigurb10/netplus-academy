@@ -83,8 +83,11 @@ function run(token) {
     check('CBET sits under AAMI certifications', under('aami').join(',') === 'cbet/', under('aami').join(','));
     check('the four CompTIA courses sit under CompTIA certifications', under('comptia').join(',') === 'netplus/,secplus/,aplus1/,aplus2/', under('comptia').join(','));
     check('ServiceForge sits under Tools for technicians', under('tools').join(',') === 'serviceforge/', under('tools').join(','));
+    const cards = [...d.querySelectorAll('main .card')].filter(c => c.querySelector('h3 a') && !/serviceforge\//.test(c.querySelector('h3 a').getAttribute('href')));
+    check('every course card links its practice test', cards.length === 6 && cards.every(c => { const id = c.querySelector('h3 a').getAttribute('href'); return !!c.querySelector(`.links a[href="${id}practice-test/"]`); }), cards.map(c => c.querySelector('h3 a').getAttribute('href')).join(','));
     check('every category has a one-line lede', [...d.querySelectorAll('main section.cat')].every(s => s.querySelector('p.cat-lede') && s.querySelector('p.cat-lede').textContent.trim().length > 20));
     check('How every course works is still on the page', /How every course works/.test(d.querySelector('main').textContent));
+    check('the catalog header links the guides', !!d.querySelector('header .top-links a[href="/guides/"]'));
   }
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All catalog tests passed.');

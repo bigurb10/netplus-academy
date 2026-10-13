@@ -5,9 +5,23 @@ FRA.course = {
   name: "CBET Academy",
   short: "CB",
   brand: "FieldReady Academy",
-  catalogUrl: "../",
+  catalogUrl: "/",
   exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180, passPct: 70 },
   description: "Self-paced Certified Biomedical Equipment Technician (CBET) exam prep with adaptive training and practice exams.",
+  seo: {
+    title: "CBET Study Guide and Practice Tests | CBET Academy",
+    h1: "CBET Study Guide and Practice Tests",
+    intro: "CBET Academy is a free study guide and practice-test course for the AAMI/ACI Certified Biomedical Equipment Technician exam. Sixty lessons follow the exam's six domains, a printable CBET cheat sheet collects the numbers and limits worth memorizing, adaptive tutorials rebuild from your misses, and unlimited CBET practice tests draw on a bank of original CBET exam questions, so you can rehearse the real format as often as you like.",
+    phrases: ["CBET study guide", "CBET practice tests", "CBET exam questions", "CBET cheat sheet"],
+    faq: [
+      { q: "How many questions are on the CBET exam?", a: "165 multiple-choice questions in 3 hours, closed book, with a simple on-screen calculator. About 116 correct, roughly 70%, passes; ACI sets the exact cut score with a criterion-referenced method." },
+      { q: "When is the CBET offered?", a: "Twice a year, in May and November, at computer-based test centers. Applications open about three months before each window." },
+      { q: "Who is eligible for the CBET?", a: "Full certification needs an associate degree in electronics, technology, or science plus two years of full-time BMET work, or a US military biomed program plus two years, or four years of full-time work alone. With the degree, the program, or two years of work alone you can sit as a candidate and have five years to upgrade." },
+      { q: "How much does the CBET cost?", a: "In 2026 the exam is $410 for AAMI members and $460 for non-members. Certification is renewed every three years with continuing education." },
+      { q: "How many practice tests should I take?", a: "This course asks for three of your last five fifty-question practice tests at 80% or better, then one full-length test in the real exam's format at the real passing score. Most learners get there in six to ten tests." },
+      { q: "Is the course free?", a: "Yes. The lessons, the cheat sheet, and unlimited practice tests are free while the site launches." }
+    ]
+  },
   domains: [
     { id: 1, name: "Anatomy and Physiology", short: "A&P", pct: 7, quota: 4 },
     { id: 2, name: "Public Safety in the Healthcare Facility", short: "Safety", pct: 10, quota: 5 },
@@ -35,7 +49,7 @@ FRA.course = {
     6: ["u9l1", "u9l5", "u9l4"]
   },
   freeCourse: true,
-  free: { lessons: 10 },
+  free: { lessons: 15 },
   upgradeUrl: "",
   feedbackEndpoint: "https://api.fieldreadyacademy.com/v1/feedback",
   realExamNote: "The real exam requires about 116 of 165 correct, roughly 70%. This course's official-format test uses 70%.",

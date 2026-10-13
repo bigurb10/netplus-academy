@@ -6,7 +6,7 @@ Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses:
 
 ## Run it
 
-- Live: https://fieldreadyacademy.com on the Hetzner box (Caddy, static files under `/var/www/fieldready`). The catalog is `dist/index.html`, each course is `dist/<id>.html` served as `/<id>/index.html`, plus `/account/`, `/callback/`, `/serviceforge/` and the static SEO pages from `dist/site/`. To deploy: `bash scripts/stage.sh` builds everything, mirrors the web root to `hetzner:/tmp/fra-deploy/`, and prints the one command that backs up and copies it live. Google Analytics: put the GA4 Measurement ID in `analytics.json`, rebuild, deploy; `tests/analytics.js` fails if the built pages and the ID disagree. The old GitHub Pages copies (bigurb10.github.io/netplus-academy, secplus-academy, cbet-academy) are stale test deployments.
+- Live: https://fieldreadyacademy.com on the Hetzner box (Caddy, static files under `/var/www/fieldready`). The catalog is `dist/index.html`; each course's landing page is `/<id>/index.html` from the static site in `dist/site/`, and the course app itself (`dist/<id>.html`) is served at `/<id>/app/index.html`; plus `/account/`, `/callback/`, `/serviceforge/`, and the rest of the static site (practice tests, lessons, cheat sheets, guides, the sitemap, the 404 page, and the shared social image; see URL layout, below). To deploy: `bash scripts/stage.sh` builds everything, mirrors the web root to `hetzner:/tmp/fra-deploy/`, and prints the one command that backs up and copies it live. Google Analytics: put the GA4 Measurement ID in `analytics.json`, rebuild, deploy; `tests/analytics.js` fails if the built pages and the ID disagree. The old GitHub Pages copies (bigurb10.github.io/netplus-academy, secplus-academy, cbet-academy) are stale test deployments.
 - Locally: open `netplus/index.html` (or `dist/netplus.html`, a single self-contained file) in any browser. Progress is saved in that browser's local storage.
 - To host elsewhere, upload the repo as-is, or upload `dist/<course>.html` renamed to `index.html` to any static host. For the custom domain, add a `CNAME` file containing `fieldreadyacademy.com` and point the domain's DNS at GitHub Pages.
 
@@ -58,6 +58,27 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 - **Untested domains.** A domain with `quota: 0` and `pct: 0` is course content outside the exam: in the rail and the course, with checkpoints, counted in lessons passed, never on the starter test, tests, bars, or the strength chart. Lessons in it show "Not on the exam".
 - **Certificate.** A manifest with `certificate: true` adds a Progress card and `#certificate`: unlocked when every lesson is passed, every lab is done, and the official-format test is passed; printable, with the account's name or a typed one.
 - **Catalog sections.** `index.html` groups courses under Start here: biomed basic training, AAMI certifications, CompTIA certifications, and Tools for technicians; `tests/catalog.js` checks each card's section.
+
+## URL layout
+
+`site/build-site.js` writes the public, crawlable side of every course (`node site/build-site.js` for all of them, `node site/build-site.js netplus` for one). Per course `<id>`: `/<id>/` is the **landing page**: exam facts, the first free lessons, an FAQ, and a small script that forwards any `#hash` route (`#lesson/n1-...`, `#cheatsheet`) straight into the app, so a shared `/<id>/` link with a hash still opens where it should. `/<id>/app/` is the **course app** itself, built by `build.py`, marked `noindex` (it is the same page regardless of sign-in state and has nothing of its own for search engines to rank). `/<id>/practice-test/` is twenty free bank questions with answers, weighted like the exam. `/<id>/lessons/` lists every lesson, free ones linked, the rest named only; `/<id>/lessons/<id>-<slug>/` is one page per free lesson. `/<id>/cheatsheet/` is the memorization sheet as HTML, with a link to the PDF. `/404.html` is a noindex page listing the catalog, the guides, and every course's landing page. `/og-image.png` is the one social-card image every page's `og:image` and `twitter:image` point at. `/sitemap.xml` lists every URL above except the app, each with a `<lastmod>` date; `/robots.txt` allows everything but `/callback`.
+
+## Guides
+
+Guides are standalone articles not tied to a lesson or a course: exam-prep explainers, "how to become" pieces, lab walkthroughs. `site/guides/<slug>.js` is a browser script, loaded the same way a course pack is, that pushes one entry onto `FRA.guides`: `slug`, `title`, `body` (the same lesson markup a course uses), `updated`, and optionally `faq` and `related: { courses: ['netplus', ...], lessons: ['netplus:n1-...', ...] }`. `site/build-site.js` writes `/guides/` (an index of every guide) and `/guides/<slug>/` for each one, with Article and (when it has a `faq`) FAQPage JSON-LD, and links whatever courses and lessons `related` names.
+
+## After a deploy that adds pages (Search Console)
+
+The first deploy after the `seo-course-site` branch goes live replaces `/<id>/index.html` (until now the course app) with the landing page, and adds `/<id>/app/index.html` (the app, moved there, `noindex`) for all six courses at once; most deploys after that add only a handful of pages (a new guide, a new course). Either way: resubmit `/sitemap.xml` in Search Console so it re-crawls the new list, then use URL inspection and Request indexing on the pages Google is least likely to find on its own first: the six course landing pages, the six practice-test pages, and `/guides/`. Add the site to Bing Webmaster Tools by importing from Search Console (it reads the same verified property, no second verification). Give it about four weeks, then read the Performance report by query to see what people actually searched to land on each page.
+
+Optional: if the host returns its own 404 instead of serving `dist/site/404.html`, add to the Caddy site block:
+
+```
+handle_errors {
+  rewrite * /404.html
+  file_server
+}
+```
 
 ## Testing
 
