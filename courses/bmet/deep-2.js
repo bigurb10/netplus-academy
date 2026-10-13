@@ -59,11 +59,11 @@ Digital meter accuracy is usually written as a percentage of the reading plus a 
 
 ## Reading an analog scale, in steps
 \`\`\`
-Step   What you do                                   On the lab's voltmeter
+Step   What you do                                   On the lab's voltmeter (printed 0, 5, 10)
 1      note the range the instrument is on           0 to 10 V
-2      count the divisions between two numbers        five divisions between 6 and 7
-3      divide to get the value of one division        1 V / 5 = 0.2 V per division
-4      find the last tick passed, add the rest       two ticks past 6
+2      count the divisions between two numbers       five divisions between 5 and 10
+3      divide to get the value of one division       5 V / 5 = 1 V per division
+4      find the last division passed, estimate     a little past 6, four tenths of the way to 7: 6.4 V
 5      write the reading with its unit               6.4 V
 \`\`\`
 
