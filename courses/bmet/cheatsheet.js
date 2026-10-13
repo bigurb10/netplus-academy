@@ -313,7 +313,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Monitoring parameter", "Normal value", "How it is verified", "Common false alarm"], rows: [
           ["ECG and heart rate", "60 to 100 beats per minute", "Patient simulator at several rates and amplitudes", "Loose or dried-out electrode reading as asystole or a lead-off alarm"],
           ["NIBP", "About 120/80 mmHg", "NIBP analyzer for pressure accuracy plus a cuff leak test", "Wrong cuff size or a moving arm; a small cuff reads high"],
-          ["SpO2", "95 to 100%", "SpO2 simulator or finger phantom, plus a probe and cable check", "Motion, poor perfusion, cold fingers, or nail polish"],
+          ["SpO2", "95 to 100%", "SpO2 simulator or finger phantom, plus a probe and cable check, using red about 650 to 660 nm and infrared about 805 to 940 nm", "Motion, poor perfusion, cold fingers, or nail polish"],
           ["EtCO2", "35 to 45 mmHg", "Known calibration gas and a gas analyzer", "Water in the sample line or an occluded sidestream tube"],
           ["Temperature", "37 C = 98.6 F", "Resistance box or reference thermometer at two points", "Probe off the patient reading room temperature"],
           ["Telemetry", "Same vitals, sent by radio", "Signal strength and battery, then a simulator through the transmitter", "Dropouts from dead batteries or a coverage hole, not a real rhythm change"]

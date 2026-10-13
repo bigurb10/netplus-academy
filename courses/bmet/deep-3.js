@@ -9,7 +9,7 @@ Diagnostic devices are small, cheap, numerous, and easy to neglect, which is exa
 \`\`\`
 Otoscope
   what it does        lights and magnifies the ear canal and the eardrum
-  settings            lamp brightness; a specula size chosen for the patient
+  settings            lamp brightness; a speculum size chosen for the patient
   first check         lamp output, battery or charger contacts, clean undamaged specula
   common false alarm  "the light is dim" is almost always the battery or the charger contacts
 
@@ -23,7 +23,7 @@ Electronic thermometer
   what it does        reads body temperature through a thermistor probe, or infrared at ear or forehead
   settings            site mode (oral, axillary, rectal) matched to the probe
   first check         compare against a reference, confirm the probe matches the site, check cover stock
-  common false alarm  a reading that is far too low: no probe cover, a cold probe, or the wrong site mode
+  common false alarm  a wrong reading from a cold probe, the wrong site mode, or a missing or doubled probe cover shifting it either way
 
 Patient scale
   what it does        weighs a patient standing, seated, in bed, or on an infant tray
@@ -206,7 +206,7 @@ Step                 Formula or rule                                 Worked exam
 convert to a rate    rate = volume / minutes x 60                    62 mL / 30 min x 60 = 124 mL/h
 percent error        (delivered minus set) / set x 100, keep the sign (124 - 120) / 120 x 100 = +3.3%
 tolerance band       set rate x percent                              5% of 120 = 6, so 114 to 126 mL/h
-pass or fail         pass when the size of the error is inside the band  +3.3% passes a 5% band
+pass or fail         pass when the size of the error is in the band  +3.3% passes a 5% band
 expected volume      rate x minutes / 60                             120 mL/h x 30 / 60 = 60 mL expected
 \`\`\`
 
@@ -226,8 +226,8 @@ A peristaltic mechanism also delivers in pulses rather than a smooth stream, so 
 \`\`\`
 Method          How it measures          Strength                     Weakness
 volumetric      graduated cylinder       needs nothing special        meniscus and parallax reading error
-gravimetric     balance, 1 g water = 1 mL removes reading error       needs a good balance, and water only
-infusion analyzer automatic flow sensing  fast, also reads occlusion   one instrument shared by the shop
+gravimetric     balance, 1 g water=1 mL  removes reading error        needs a good balance, and water only
+analyzer        automatic flow sensing   fast, also reads occlusion   one instrument shared by the shop
 \`\`\`
 
 Read a cylinder with it standing on a flat bench, your eye level with the liquid, at the bottom of the curved surface, to the nearest printed graduation. Choose a cylinder close to the expected volume: a 100 mL cylinder marked every milliliter is a far better instrument for a 60 mL collection than a 1,000 mL cylinder marked every 10 mL.
@@ -445,7 +445,7 @@ solid-state drive  flash storage, no moving parts   fails without warning but su
 GPU             draws the display                   artifacts, blank screen, or poor imaging performance
 power supply    converts wall AC into low-voltage DC  random reboots, no start at all, a burnt smell
 motherboard     carries the connections between parts  one subsystem dead while the rest works
-BIOS or UEFI    starts the hardware, finds the boot device  wrong clock and no boot device when its cell dies
+BIOS or UEFI    starts the hardware, finds the boot device  a wrong clock, and on older machines a lost boot order
 operating system  manages hardware, runs applications  slow, crashing, or will not start after a change
 drivers         let the system talk to one device    printing, scanning, or serial access broken after an update
 \`\`\`
@@ -504,7 +504,7 @@ fiber   light              long distances, very high bandwidth, complete electri
 The isolation point matters in a hospital. Copper between two buildings can carry a difference in ground potential, and a lightning strike on one building has a path into the other. Glass carries no current at all, which is why building-to-building links are fiber.
 
 ## Power connectors, and the one that is a safety issue
-Most medical devices take a detachable mains cord: a hospital-grade three-prong plug at the wall and the common rectangular appliance connector at the device. Because the cord detaches, it is a replaceable part, and because it is the part that gets run over by beds and wheels, it is also the most common failure on an electrical safety test. Low-voltage supplies use barrel plugs that vary in outside diameter, inside diameter, voltage, and polarity. Check all four: a plug that fits mechanically and carries the wrong voltage or polarity destroys the device it fits.
+Most medical devices take a detachable mains cord: a hospital-grade three-prong plug at the wall and the common rectangular appliance connector at the device. Because the cord detaches, it is a replaceable part, and because it is the part that gets run over by beds and wheels, it is also the most common failure on an electrical safety test. Low-voltage supplies use barrel plugs that vary in diameter (outside and inside), voltage, and polarity. Check all three: a plug that fits mechanically and carries the wrong voltage or polarity destroys the device it fits.
 
 Never use a three-prong to two-prong adapter on patient-care equipment. It defeats the protective ground, which is the conductor the whole electrical safety test exists to verify.
 
@@ -891,7 +891,7 @@ Read your own row, put the date in a calendar, and work backward: the next exam 
 Both sit above the technician credential, and nobody jumps from the bottom to the top. The shape is: associate, technician, then specialist or manager.
 
 ## Membership, continuing education, and the study plan
-**AAMI** membership lowers the exam fee by enough to pay for itself at the first sitting and brings the publications, webinars, and job listings that keep you current. Local and regional biomed associations are worth more for the people than the programs.
+**AAMI** membership gets you a lower fee on every ACI exam ($50 less on the technician-level exam in 2026), and the real value is the publications, webinars, standards access, and job listings that keep you current. Local and regional biomed associations are worth more for the people than the programs.
 
 Continuing education is a recertification requirement above the associate level and is also the actual mechanism of getting better. In a sensible order: the device families your department owns, your department's own procedures and limits card, the service manuals for your fleet, networking and device integration, then one specialty to go deep in (imaging, laboratory, dialysis, anesthesia, sterilizers). The CompTIA networking certification is a common and well-recognized complement for the technician who wants to be the person in the department who speaks fluently with the network team, and device connectivity is where this work is heading.`
 });
