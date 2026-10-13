@@ -93,7 +93,7 @@ The stages run in order, and each one unlocks the next.
 - **A slide switch**: makes and breaks a path.
 - **A fuse holder with a 1 A fuse**: the sacrificial part that opens before something expensive does.
 
-Resistors carry their value as color bands; the memorization sheet's band table decodes them (brown, black, red, gold is 1,000 ohm at 5 percent), and the lab asks you to read one.
+Resistors carry their value as color bands; the memorization sheet's band table decodes them (brown, black, red, gold is 1,000 ohm at 5%), and the lab asks you to read one.
 
 ## The meter, one control at a time
 - The **dial** picks what the meter measures: V DC for steady voltage, V AC for wall voltage, Ohms for resistance, continuity for "is this one piece of wire", A DC for current, and on many meters a diode test.

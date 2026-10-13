@@ -560,13 +560,13 @@ The fix follows from the diagnosis, and the order matters: remove the short, **t
 \`\`\`
 Property           What it means                         Rule
 current rating     the amps it will carry indefinitely   replace with the same value, never larger
-voltage rating     the voltage it can safely interrupt   same rating as the original (a higher voltage rating is also safe, but match the original unless the manual says otherwise)
+voltage rating     the voltage it can safely interrupt   same rating as the original, never lower
 fast-acting        opens almost at once                  protects semiconductors
 slow-blow          tolerates a brief inrush              motors, transformers, heaters
 physical size      the body dimensions, as in 5 x 20 mm  it must fit the holder properly
 \`\`\`
 
-A fast fuse fitted where a slow one belongs blows every time the device starts, because the inrush when a motor or transformer energizes is many times the running current. That is a repeatable, maddening fault whose cause is a parts-bin substitution.
+A higher voltage rating is also safe, but match the original unless the manual says otherwise. A fast fuse fitted where a slow one belongs blows every time the device starts, because the inrush when a motor or transformer energizes is many times the running current. That is a repeatable, maddening fault whose cause is a parts-bin substitution.
 
 ## Breakers and GFCI
 A **circuit breaker** interrupts the same way a fuse does but resets, using a heat-operated strip for slow overloads and a magnetic element for sudden ones. A breaker that will not stay set is reporting a fault that is still present; holding it in is never the answer.
