@@ -1694,7 +1694,7 @@ Every powered device leaks a little current to its chassis through the capacitan
 The green wire and the third prong exist to give fault and leakage current a low-resistance path back to the source so a breaker trips or the current is diverted. A broken ground pin, a two-prong adapter, or a damaged cord removes that protection. Ground resistance on patient-care equipment must stay below **0.5 ohm** (NFPA 99).
 
 ## Cord and plug inspection
-Check for cracked insulation, bent or missing ground pins, strain relief pulled out, and burned contacts. Replace the cord; never tape it. Hospital-grade plugs and receptacles have a green dot. Extension cords and unapproved power strips are prohibited for patient care equipment; approved relocatable power taps must be rated, secured, and never daisy-chained.
+Check for cracked insulation, bent or missing ground pins, strain relief pulled out, and burned contacts. Replace the cord; never tape it. Hospital-grade plugs and receptacles have a green dot. Extension cords and unapproved power strips are prohibited for patient care equipment; approved relocatable power taps must be rated, secured, and never daisy-chained. Know the **power cord color coding** when you open a plug or an inlet: US cords run black (or red) for hot, white for neutral, and green or bare for ground; IEC cords use brown for live, blue for neutral, and green-yellow for ground.
 
 ## GFCI and isolated power
 A **GFCI** trips when about 5 mA more leaves on the hot wire than returns on the neutral, protecting people near water from macroshock; it does nothing against microshock because its threshold is a thousand times too high. **Isolated power** with a **line isolation monitor** removes the ground reference entirely so a first fault causes no current flow; the LIM alarms at 5 mA of total hazard current so the fault is found before a second one appears.
@@ -2521,7 +2521,7 @@ Get the facts without judgment: what happened, when, what was the device doing, 
 - Never diagnose the patient, never assign blame, never guess at a cause you have not verified.
 
 ## Training users
-The best fix for a recurring complaint is a five-minute demonstration at the bedside. Good training is short, hands-on, and specific to the tasks that go wrong: how to change electrodes, how to zero a transducer, what the alarm colors mean, how to load a set. Coordinate with nurse educators and the manufacturer's clinical specialists; document who was trained, on what, and when. New equipment requires training before first use.
+The best fix for a recurring complaint is a five-minute demonstration at the bedside. Good training is short, hands-on, and specific to the tasks that go wrong: how to change electrodes, how to zero a transducer, what the alarm colors mean, how to load a set. Coordinate with nurse educators and the manufacturer's clinical specialists; document who was trained, on what, and when. New equipment requires training before first use. The scheduled version is **in-service training**: formal instruction for a unit's staff on a device's use, care, cleaning, and alarm response, with attendance recorded.
 
 ## Safety culture and reporting
 Encourage reporting of near misses, not just injuries. Feed device problems into the hospital's incident system; feed patterns into equipment purchasing. Post alerts and recalls where users see them, and confirm the required action was done, not just announced.
@@ -2966,6 +2966,7 @@ Turns data into unreadable form without a key. **In transit**: HTTPS, TLS, VPNs,
 - **Vendor access** controlled and logged; service laptops kept patched and scanned; no personal USB drives.
 - **Backups** tested by restoring; **incident response** plan: isolate the device, preserve evidence, notify IT security, do not power off if forensics are needed unless told to.
 - **Alerts and recalls** for cybersecurity vulnerabilities handled like any other recall.
+- **Performance goals**: the **HHS cybersecurity performance goals** list the essential practices a hospital is expected to have (multi-factor authentication, patching, tested backups, network segmentation, staff training) and a set of enhanced ones; frameworks such as HITRUST organize the same controls for certification.
 
 ## The technician's habits
 Lock your screen. Do not plug unknown media into anything. Do not share your account. Report a suspicious message instead of clicking. Sanitize PHI before a device leaves. Use the approved remote-access process for vendors, never a workaround. Keep patient details out of photographs, emails, and notes unless the channel is approved.
@@ -2990,7 +2991,7 @@ Lock your screen. Do not plug unknown media into anything. Do not share your acc
 - **Slow**: nearly full or failing drive, too little RAM, malware, background updates, overheating (dust in fans and heat sinks).
 
 ## Operating systems and software
-- **Windows**, **Linux**, and embedded real-time systems on devices. Know: user accounts and permissions, services, drivers, event logs, updates and patches, the registry on Windows, file systems and shares.
+- **Windows**, **Linux**, **Unix**, and embedded real-time systems on devices. Know: user accounts and permissions, services, drivers, event logs, updates and patches, the registry on Windows, file systems and shares.
 - **Drivers** connect hardware to the operating system; a device that stopped working after an update often needs its driver reinstalled or rolled back.
 - **Application faults**: crashes at a specific action, missing licenses, a configuration file changed, a database full. Vendor logs and the event log point to the cause.
 - **Updates**: on medical devices only the manufacturer's validated updates; on general workstations, IT's patch schedule. A workstation used as a medical device console still follows the device vendor's rules.
@@ -4320,7 +4321,7 @@ A broken ground does not stop the device working, so nobody notices until the sa
 The third prong and the green wire give fault current a path of almost no resistance back to the source, so a real fault trips the breaker in milliseconds and leakage is diverted around people. NFPA 99 requires the resistance from the chassis to the plug's ground pin to be no more than **0.5 ohm** on patient-care equipment; a worn plug, a corroded internal strap, or a damaged cord raises it.
 
 ## Cords, plugs, and outlets
-Inspect every cord at every PM: cracked insulation, exposed conductors, a strain relief pulled loose, a bent or missing ground pin, scorched blades. Replace, never tape. Hospital-grade plugs and receptacles (green dot) hold tighter and are built for the abuse. Two-prong adapters and extension cords are forbidden for patient-care equipment. Relocatable power taps are allowed only if rated, secured, used within their capacity, and never plugged into one another.
+Inspect every cord at every PM: cracked insulation, exposed conductors, a strain relief pulled loose, a bent or missing ground pin, scorched blades. Replace, never tape. Hospital-grade plugs and receptacles (green dot) hold tighter and are built for the abuse. Two-prong adapters and extension cords are forbidden for patient-care equipment. Relocatable power taps are allowed only if rated, secured, used within their capacity, and never plugged into one another. Power cord color coding is part of the inspection whenever a plug has been replaced: US cords black (hot), white (neutral), green (ground); IEC cords brown, blue, green-yellow. A cord rewired with hot and neutral swapped passes a continuity check and fails the reversed-polarity leakage test, which is one reason the analyzer runs that condition.
 
 ## Two protective systems, two different jobs
 - **GFCI**: watches for current leaving on the hot conductor that does not come back on the neutral. At about 5 mA of difference it opens the circuit. It saves a person touching a faulty device in a wet area. It does nothing for a microshock patient; 5 mA is far above the cardiac threshold.
@@ -6006,6 +6007,7 @@ specific      the exact tasks that generated the calls: load a set, zero a line,
 timed         at go-live for new equipment, after a software change, when a pattern of use errors appears, for new staff
 documented    who, what, when, by whom; sign-in sheets or the learning system; surveyors ask
 partnered     nurse educators, the vendor's clinical specialists, super-users on each unit
+in-service    the scheduled, formal version for a whole unit: use, care, cleaning, alarm response; attendance recorded for the survey file
 \`\`\`
 Job aids help: a laminated card on the pump pole, a label at the socket showing which cable goes where, a color-coded hose.
 
@@ -6754,6 +6756,7 @@ backups              scheduled, off-network copies, restore tests
 change control       every configuration change recorded and tested
 incident response    isolate, preserve, notify IT security; do not wipe evidence; a plan practiced in advance
 alerts               cybersecurity advisories and recalls tracked like any recall
+performance goals    HHS cybersecurity performance goals: essential practices (MFA, patching, backups, segmentation, training) plus enhanced ones; the checklist surveyors and insurers now ask about
 \`\`\`
 
 ## Two scenarios
@@ -6809,6 +6812,7 @@ event logs                 errors with times; the first thing to read after a cr
 updates                    validated by the medical device vendor before they touch a device computer
 file shares and printers   SMB shares, print spooler
 registry (Windows)         configuration database; changed only by the application or with guidance
+Unix and Linux             the command-line family behind many servers, imaging consoles, and device controllers; the same ideas (accounts, services, logs), different tools
 \`\`\`
 
 ## Storage, RAID, and backups
