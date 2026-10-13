@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://fieldreadyacademy.com/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus1/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u1l1-laptop-hardware-replacing-batteries-keyboards-ram-storage-wireless-cards-cameras-and-biometrics/</loc></url>
@@ -20,6 +21,7 @@
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l5-soho-network-setup-internet-connection-types-and-network-types/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus1/lessons/u3l6-networking-tools-crimper-stripper-punchdown-tester-toner-probe-loopback-plug-wi-fi-analyzer-and-tap/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/aplus2/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u1l1-operating-system-types-filesystems-life-cycles-and-compatibility/</loc></url>
@@ -38,6 +40,7 @@
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u4l2-logical-security-least-privilege-zero-trust-acls-mfa-saml-sso-jit-pam-mdm-dlp-iam-and-directory-services/</loc></url>
   <url><loc>https://fieldreadyacademy.com/aplus2/lessons/u4l3-wireless-security-protocols-and-authentication-methods/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/bmet/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u1l1-what-a-bmet-does/</loc></url>
@@ -56,6 +59,7 @@
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l5-opens-shorts-fuses-and-circuit-breakers/</loc></url>
   <url><loc>https://fieldreadyacademy.com/bmet/lessons/u3l6-dc-versus-ac-transformers-and-wall-power/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/cbet/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u1l1-body-organization-terminology-and-the-skin/</loc></url>
@@ -74,6 +78,7 @@
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u2l7-ac-power-impedance-transducers-batteries-by-the-numbers-and-regulators/</loc></url>
   <url><loc>https://fieldreadyacademy.com/cbet/lessons/u3l1-electrical-safety-shock-leakage-grounding-and-gfci/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/netplus/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u1l1-networks-and-their-types/</loc></url>
@@ -92,6 +97,7 @@
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l4-subnet-design-and-vlsm/</loc></url>
   <url><loc>https://fieldreadyacademy.com/netplus/lessons/u4l5-ipv6-addressing/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/</loc></url>
+  <url><loc>https://fieldreadyacademy.com/secplus/practice-test/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/cheatsheet/</loc></url>
   <url><loc>https://fieldreadyacademy.com/secplus/lessons/u1l1-security-controls-categories-and-types/</loc></url>

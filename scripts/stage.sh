@@ -6,8 +6,9 @@
 #   bash scripts/stage.sh --local    build and assemble only
 #
 # Staged: the catalog (dist/index.html), catalog.css, the favicons, account/, callback/,
-# serviceforge/, the six course bundles as <id>/index.html, and the static site
-# (site.css, robots.txt, sitemap.xml, every <id>/lessons/ and <id>/cheatsheet/ page).
+# serviceforge/, the six course bundles as <id>/app/index.html, each course's landing page
+# at <id>/index.html from the static site, and the rest of the static site (site.css,
+# robots.txt, sitemap.xml, every <id>/lessons/ and <id>/cheatsheet/ page).
 # Cheat sheet PDFs are not staged; they change only when a pack's cheat sheet does.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,8 +27,9 @@ for p in account callback serviceforge; do
   cp "dist/$p.html" "$STAGE/$p/index.html"
 done
 for id in bmet netplus secplus cbet aplus1 aplus2; do
-  mkdir -p "$STAGE/$id"
-  cp "dist/$id.html" "$STAGE/$id/index.html"
+  mkdir -p "$STAGE/$id/app"
+  cp "dist/$id.html" "$STAGE/$id/app/index.html"
+  test -f "$STAGE/$id/index.html" || { echo "missing landing page for $id (run node site/build-site.js)"; exit 1; }
 done
 echo "staged $(find "$STAGE" -type f | wc -l | tr -d ' ') files in $STAGE"
 
