@@ -81,13 +81,16 @@ function model(FRA) {
     deep: FRA.deep || {},
     cheatsheet: FRA.cheatsheet || null,
     acronyms: FRA.acronyms || {},
+    questions: FRA.questions || [], seo: c.seo || null,
     urls: {
-      app: `/${c.id}/`,
+      landing: `/${c.id}/`,
+      app: `/${c.id}/app/`,
+      practice: `/${c.id}/practice-test/`,
       course: `/${c.id}/lessons/`,
       cheat: `/${c.id}/cheatsheet/`,
       pdf: `/${c.id}/cheatsheet.pdf`,
       lesson: l => `/${c.id}/lessons/${slug(l)}/`,
-      inApp: l => `/${c.id}/#lesson/${l.id}`
+      inApp: l => `/${c.id}/app/#lesson/${l.id}`
     }
   };
 }
@@ -124,16 +127,20 @@ function shell(p) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
+${p.head || ''}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.description)}">
 <link rel="canonical" href="${esc(url)}">
+${p.noindex ? '<meta name="robots" content="noindex">' : ''}
 <meta property="og:type" content="${p.type || 'article'}">
 <meta property="og:site_name" content="${BRAND}">
 <meta property="og:title" content="${esc(p.ogTitle || p.title)}">
 <meta property="og:description" content="${esc(p.description)}">
 <meta property="og:url" content="${esc(url)}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${esc(p.origin)}/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${esc(p.origin)}/og-image.png">
 ${ICONS}
 ${FONTS}
 <link rel="stylesheet" href="/catalog.css">
@@ -158,7 +165,7 @@ ${p.body}
 
 function nav(m, current) {
   const item = (href, label, cls) => `<a href="${href}"${cls ? ` class="${cls}"` : ''}${current === href ? ' aria-current="page"' : ''}>${label}</a>`;
-  return item(m.urls.course, 'Lessons') + item(m.urls.cheat, 'Cheat sheet') + item(m.urls.app, 'Start the course', 'btn primary small');
+  return item(m.urls.landing, 'Overview') + item(m.urls.course, 'Lessons') + item(m.urls.practice, 'Practice test') + item(m.urls.cheat, 'Cheat sheet') + item(m.urls.app, 'Start the course', 'btn primary small');
 }
 
 function crumbs(items) {
@@ -259,7 +266,7 @@ function coursePage(m, R, origin) {
   const body = `${crumbs(crumbList)}
 <div class="course-hero">
   <div class="eyebrow">${esc(examName(c) || 'Course')}</div>
-  <h1>${esc(c.name)}: a free ${esc(ex.title || c.name)} course</h1>
+  <h1>Every lesson in ${esc(c.name)}</h1>
   <p class="lede ink2">${esc(c.description)}</p>
   <p class="row"><a class="btn primary lg" href="${m.urls.app}">Start the free course</a> <a class="btn lg" href="${m.urls.cheat}">Read the cheat sheet</a></p>
 </div>
@@ -281,7 +288,7 @@ ${(c.examDay || []).length ? `<section><h2>On exam day</h2><ul class="lesson-bod
 ${ctaCard(m, null)}`;
   return shell({
     origin, path: m.urls.course, type: 'website',
-    title: `${examName(c) || c.name} free course | ${BRAND}`,
+    title: `${c.name} lessons | ${BRAND}`,
     ogTitle: `${c.name}: a free ${ex.title || c.name} course`,
     description,
     nav: nav(m, m.urls.course),
@@ -294,6 +301,83 @@ ${ctaCard(m, null)}`;
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', category: 'Free' },
         hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'Online', courseWorkload: totalMin ? `PT${totalMin}M` : undefined }
       },
+      breadcrumbLd(origin, crumbList)
+    ],
+    body
+  });
+}
+
+const FORWARDER = `<script>if(location.hash&&/^#[a-z]/.test(location.hash))location.replace(location.pathname.replace(/\\/?$/,'/')+'app/'+location.hash)</script>`;
+
+function defaultFaq(m) {
+  const c = m.c; const ex = c.exam || {}; const t = c.test || {};
+  const out = [];
+  if (ex.questions && ex.minutes) out.push({ q: `How many questions are on the ${examName(c)} exam?`, a: `${ex.questions} questions in ${ex.minutes} minutes.${c.realExamNote ? ' ' + c.realExamNote : ''}` });
+  if (t.passesNeeded && t.passWindow && t.passPct) out.push({ q: 'How does the course decide I am ready?', a: `${t.passesNeeded} of your last ${t.passWindow} practice tests at ${t.passPct}% or better, then one full-length test in the real exam's format at its passing score.` });
+  out.push({ q: 'Is the course free?', a: 'Yes. Every lesson, the cheat sheet, and unlimited practice tests are free while the site launches.' });
+  out.push({ q: 'Can I read the lessons without signing in?', a: `The first ${m.freeLessons.length} lessons and the cheat sheet are open on this site; the full course runs in the app.` });
+  return out;
+}
+
+function landingPage(m, R, origin) {
+  const c = m.c; const ex = c.exam || {}; const seo = m.seo || {};
+  const h1 = seo.h1 || `${c.name}: ${examName(c) || c.name} study guide and practice tests`;
+  const title = seo.title || `${h1} | ${BRAND}`;
+  const intro = seo.intro || c.description;
+  const faq = Array.isArray(seo.faq) && seo.faq.length ? seo.faq : defaultFaq(m);
+  const description = shorten(intro, DESC_MAX);
+  const totalMin = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
+  const labs = m.lessons.filter(l => l.lab);
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }];
+  const facts = [
+    ['Exam', ex.title ? (ex.vendor && !ex.title.startsWith(ex.vendor) ? `${ex.vendor} ${ex.title}` : ex.title) : c.name],
+    ex.code ? ['Code', ex.code] : null,
+    ex.questions ? ['Questions', `${ex.questions}`] : null,
+    ex.minutes ? ['Time', `${ex.minutes} minutes`] : null,
+    c.realExamNote ? ['Passing', c.realExamNote] : null,
+    ['Course', `${m.lessons.length} lessons across ${m.units.length} units${labs.length ? `, ${labs.length} labs` : ''}${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
+    ['Cost', 'Free']
+  ].filter(Boolean);
+  const body = `${crumbs(crumbList)}
+<div class="course-hero">
+  <div class="eyebrow">${esc(BRAND)}</div>
+  <h1>${esc(h1)}</h1>
+  <p class="lede ink2">${esc(intro)}</p>
+  <p class="row"><a class="btn primary lg" href="${m.urls.app}">Start the free course</a> <a class="btn lg" href="${m.urls.practice}">Try a practice test</a> <a class="btn lg" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+</div>
+<section>
+  <h2>The exam at a glance</h2>
+  <div class="table-wrap"><table class="plain facts"><tbody>${facts.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
+</section>
+<section>
+  <h2>How the course works</h2>
+  <ol class="steps">${HOW(c).map(s => `<li>${s}</li>`).join('')}</ol>
+</section>
+<section id="free-lessons">
+  <h2>Read the first ${m.freeLessons.length} lessons here</h2>
+  <ol class="lesson-list">${m.freeLessons.map(l => `<li><a href="${m.urls.lesson(l)}">${esc(l.title)}</a> <span class="muted">${l.minutes} min</span></li>`).join('')}</ol>
+  <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
+</section>
+${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. Every lab also runs on a $60 to $100 home kit.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
+<section>
+  <h2>Questions people ask</h2>
+  ${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}
+</section>
+${ctaCard(m, null)}`;
+  return shell({
+    origin, path: m.urls.landing, type: 'website', head: FORWARDER,
+    title, ogTitle: h1, description,
+    nav: nav(m, m.urls.landing),
+    jsonld: [
+      {
+        '@context': 'https://schema.org', '@type': 'Course',
+        name: c.name, description: intro, url: origin + m.urls.landing,
+        about: examName(c) || undefined, inLanguage: 'en', isAccessibleForFree: true,
+        provider: org(),
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', category: 'Free' },
+        hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'Online', courseWorkload: totalMin ? `PT${totalMin}M` : undefined }
+      },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
       breadcrumbLd(origin, crumbList)
     ],
     body
@@ -351,7 +435,7 @@ function buildCourse(FRA, opts) {
   const m = model(FRA);
   const R = makeRenderer(m.acronyms);
   const pages = [];
-  pages.push({ url: m.urls.app, title: m.c.name, file: null });
+  pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
   if (m.cheatsheet) pages.push({ url: m.urls.cheat, title: m.cheatsheet.title, file: writePage(opts.out, m.urls.cheat, cheatPage(m, R, origin)) });
   for (const l of m.freeLessons) pages.push({ url: m.urls.lesson(l), title: l.title, file: writePage(opts.out, m.urls.lesson(l), lessonPage(m, l, R, origin)) });

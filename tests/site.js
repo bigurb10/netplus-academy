@@ -55,7 +55,16 @@ check('cheat sheet page written', exists('mini/cheatsheet/index.html'));
 const nonFree = m.lessons.filter(l => !m.free.has(l.id));
 check('one page per free lesson', m.freeLessons.every(l => exists(`mini/lessons/${site.slug(l)}/index.html`)));
 check('no page for any lesson beyond the free set', nonFree.length > 0 && !nonFree.some(l => exists(`mini/lessons/${site.slug(l)}/index.html`)), nonFree.length);
-check('the course app index is never written by the generator', !exists('mini/index.html'));
+check('the landing page is written at the course URL', exists('mini/index.html'));
+const landing = read('mini/index.html');
+check('landing H1 falls back to "<name>: <exam> study guide and practice tests" without a seo block', landing.includes('<h1>Mini Course: Mini Exam MC-1 study guide and practice tests</h1>'), (landing.match(/<h1>[^<]*<\/h1>/) || [])[0]);
+check('landing forwards hash routes to the app before anything else in head', landing.indexOf("location.replace(location.pathname.replace(/\\/?$/,'/')+'app/'+location.hash)") > 0 && landing.indexOf('location.replace') < landing.indexOf('<link rel="stylesheet"'));
+check('landing links the app, the practice test, the lessons index and the cheat sheet', landing.includes('href="/mini/app/"') && landing.includes('href="/mini/practice-test/"') && landing.includes('href="/mini/lessons/"') && landing.includes('href="/mini/cheatsheet/"'));
+check('landing lists every free lesson', m.freeLessons.every(l => landing.includes(`href="${m.urls.lesson(l)}"`)));
+const lld = [...landing.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
+check('landing JSON-LD: Course, FAQPage, BreadcrumbList', lld.map(x => x['@type']).join(',') === 'Course,FAQPage,BreadcrumbList', lld.map(x => x['@type']).join(','));
+check('landing FAQ falls back to exam facts when the manifest has none', lld[1].mainEntity.length >= 3);
+check('landing carries og:image and is indexable', landing.includes('property="og:image" content="https://example.test/og-image.png"') && !landing.includes('name="robots"'));
 check('site.css, robots.txt and sitemap.xml written at the root', exists('site.css') && exists('robots.txt') && exists('sitemap.xml'));
 
 const sm = read('sitemap.xml');
@@ -69,7 +78,7 @@ check('lesson title tag: lesson | exam | brand', p0.includes(`<title>${esc(l0.ti
 check('lesson canonical URL', p0.includes(`<link rel="canonical" href="https://example.test${m.urls.lesson(l0)}">`));
 check('lesson body is on the page', p0.includes(R.renderBody(l0.body)));
 check('deep explanation is on the page when the pack has one', !m.deep[l0.id] || p0.includes(R.renderBody(m.deep[l0.id])));
-check('lesson links into the app at its own lesson', p0.includes(`href="/mini/#lesson/${l0.id}"`));
+check('lesson links into the app at its own lesson', p0.includes(`href="/mini/app/#lesson/${l0.id}"`));
 const lds = [...p0.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
 check('lesson JSON-LD parses: an Article and a BreadcrumbList', lds.length === 2 && lds[0]['@type'] === 'Article' && lds[1]['@type'] === 'BreadcrumbList' && lds[0].headline === l0.title, lds.map(x => x['@type']).join(','));
 check('lesson description is under 160 characters and not empty', (p0.match(/<meta name="description" content="([^"]*)">/) || [])[1].length > 0 && (p0.match(/<meta name="description" content="([^"]*)">/) || [])[1].length < 160);
