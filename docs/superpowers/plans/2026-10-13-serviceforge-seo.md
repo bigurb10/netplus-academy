@@ -4,7 +4,7 @@
 
 **Goal:** Rewrite the ServiceForge product page around its head terms and generate one crawlable page per device model with knowledge (plus a models index and device-class pages) from a knowledge-base export, showing every symptom and cause with the first check and keeping the rest behind the connect button, per `docs/superpowers/specs/2026-10-13-serviceforge-seo-design.md`.
 
-**Architecture:** A SQL export run on the server against ServiceForge's Postgres produces `site/data/serviceforge.json` (committed to this repo; refreshed when the knowledge base grows). A new generator `site/build-serviceforge.js` reads that file and writes `dist/site/serviceforge/models/`, `.../classes/<class>/`, and `.../models/<manufacturer>/<model>/`; `site/build-site.js` calls it when the file exists and adds the URLs to the sitemap. The hand-written product page `serviceforge/index.html` stays the product page (built by `build.py` as today) and is rewritten around the head terms. A fixture JSON drives `tests/serviceforge.js`.
+**Architecture:** A SQL export run on the server against ServiceForge's Postgres produces `site/data/serviceforge.json.gz` (committed to this repo, about 6 MB; refreshed when the knowledge base grows). A new generator `site/build-serviceforge.js` reads that file and writes `dist/site/serviceforge/models/`, `.../classes/<class>/`, and `.../models/<manufacturer>/<model>/`; `site/build-site.js` calls it when the file exists and adds the URLs to the sitemap. The hand-written product page `serviceforge/index.html` stays the product page (built by `build.py` as today) and is rewritten around the head terms. A fixture JSON drives `tests/serviceforge.js`.
 
 **Tech Stack:** Node 20 + jsdom tests, the existing `site/markup.js` renderer and `shell()`, PostgreSQL 16 in ServiceForge's Docker container `app-db-1` on the Hetzner box (reachable only over ssh), `python build.py`, `scripts/stage.sh`.
 
@@ -18,14 +18,15 @@
 - Every page carries the knowledge-base label verbatim: "ServiceForge knowledge base record. Field-unverified unless technicians confirmed it." and the line "A teaching summary of the record, not a service manual."
 - Plain ASCII in files written; the export JSON may carry UTF-8 text from the database, which the generator escapes as HTML; the generator must not choke on non-ASCII.
 - Connect CTA: a button "Connect ServiceForge to your AI" linking to `/serviceforge/#connect` with `data-sf="connect"` so GA4 can count clicks (`gtag('event','sf_connect_click',{page_path: location.pathname})` on click, inline, only when the analytics snippet is present).
+- Scale (measured 2026-10-13 against the live database with the Task 1 query): 796 models with knowledge, 48,891 symptoms, 70,288 causes, 108,985 steps, 36,254 error codes. Consequences: the export is stored gzipped as `site/data/serviceforge.json.gz` (the generator reads it with `zlib.gunzipSync`; the runner writes it with Python's gzip module); `dist/site/serviceforge/` is in `.gitignore` and is generated at build and stage time, never committed; a model page renders at most 60 symptoms in full (ordered by cause count then title) and lists the remaining titles under "More symptoms" with the connect button; the sitemap gains roughly 800 model URLs plus class pages, which is under the 50,000-URL limit for one sitemap file. Measured after the full export (5.9 MB gzipped): median 25 symptoms per model, 168 models above the 60 cap (the largest has 1,152), 11,548 of 48,891 symptoms have no diagnostic step (the page shows their causes and omits the First check block).
 - Commit after every task; never push. Branch `serviceforge-seo` off `main` (after the course-site SEO plan merges, or in parallel on its own branch if that plan is still running; the two touch different files except `site/build-site.js`'s `buildAll`, where this plan adds four lines).
 
 ## File structure
 
 Create:
 - `scripts/export_serviceforge_kb.sql` (Task 1): the export query.
-- `scripts/export-serviceforge.sh` (Task 1): runs the query over ssh and writes `site/data/serviceforge.json`.
-- `site/data/serviceforge.json` (Task 4): the committed export.
+- `scripts/export-serviceforge.sh` (Task 1): runs the query over ssh, streams to a temp file, and writes `site/data/serviceforge.json.gz`.
+- `site/data/serviceforge.json.gz` (Task 4): the committed export, gzipped.
 - `tests/fixtures/serviceforge/sample.json` (Task 2): two models, one with knowledge, one thin.
 - `site/build-serviceforge.js` (Task 2): the generator.
 - `tests/serviceforge.js` (Task 2): the suite, added to `package.json`'s test script.
@@ -41,10 +42,10 @@ Modify:
 ### Task 1: The export query and script
 
 **Files:**
-- Create: `scripts/export_serviceforge_kb.sql`, `scripts/export-serviceforge.sh`
+- Create: `scripts/export_serviceforge_kb.sql`, `scripts/export-serviceforge.sh` (both already written by the controller on 2026-10-13 and validated with `--check` against the live database; this task commits them and switches the runner to gzip output)
 
 **Interfaces:**
-- Produces: `site/data/serviceforge.json` with the shape in the spec's section 4: `{ exported, stats, models: [{ id, manufacturer, name, family, category_key, community_fix_count, symptoms: [{ id, title, description, safety_class, cause_count, step_count, action_count, causes: [{ rank, title, likelihood }], first_step: { check_text, test_point, expected, value_unit, tolerance, tools } | null }], error_codes: [{ code, meaning, trigger_condition, severity }] }] }`.
+- Produces: `site/data/serviceforge.json.gz` (gzip of the JSON document) with the shape in the spec's section 4: `{ exported, stats, models: [{ id, manufacturer, name, family, category_key, community_fix_count, symptoms: [{ id, title, description, safety_class, cause_count, step_count, action_count, causes: [{ rank, title, likelihood }], first_step: { check_text, test_point, expected, value_unit, tolerance, tools } | null }], error_codes: [{ code, meaning, trigger_condition, severity }] }] }`.
 
 - [ ] **Step 1: Write the query**
 
@@ -135,17 +136,23 @@ SELECT json_build_object(
 
 ```bash
 #!/usr/bin/env bash
-# Export the ServiceForge knowledge base (public fields only) to site/data/serviceforge.json.
-# Runs the SQL inside the database container on the Hetzner box over ssh (alias "hetzner").
-#   bash scripts/export-serviceforge.sh            write site/data/serviceforge.json
-#   bash scripts/export-serviceforge.sh --check    print the stats line only
+# Export the ServiceForge knowledge base (public fields only) to site/data/serviceforge.json.gz.
+# Runs the SQL inside the database container on the Hetzner box over ssh (alias "hetzner") and
+# streams the one-line JSON result to a temp file (never through a shell variable: the document
+# is tens of megabytes of UTF-8 and a Windows console codec would corrupt it).
+#   bash scripts/export-serviceforge.sh            write site/data/serviceforge.json.gz
+#   bash scripts/export-serviceforge.sh --check    print the export date and the stats line only
 set -euo pipefail
 cd "$(dirname "$0")/.."
-SQL=$(cat scripts/export_serviceforge_kb.sql)
-JSON=$(ssh hetzner "docker exec -i app-db-1 psql -U serviceforge -d serviceforge -At -v ON_ERROR_STOP=1" <<< "$SQL")
+TMP="$(mktemp)"
+trap 'rm -f "$TMP"' EXIT
+ssh hetzner "docker exec -i app-db-1 psql -U serviceforge -d serviceforge -At -v ON_ERROR_STOP=1" < scripts/export_serviceforge_kb.sql > "$TMP"
 mkdir -p site/data
-if [ "${1:-}" = "--check" ]; then printf '%s' "$JSON" | python -c "import json,sys; d=json.load(sys.stdin); print(d['exported'], d['stats'])"; exit 0; fi
-printf '%s\n' "$JSON" | python -c "import json,sys; d=json.load(sys.stdin); json.dump(d, open('site/data/serviceforge.json','w',encoding='utf-8'), ensure_ascii=False, indent=1); print('wrote site/data/serviceforge.json:', d['stats'])"
+if [ "${1:-}" = "--check" ]; then
+  python -c "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); print(d['exported'], d['stats'])" "$TMP"
+  exit 0
+fi
+python -c "import json,sys,gzip; d=json.load(open(sys.argv[1],encoding='utf-8')); gzip.open('site/data/serviceforge.json.gz','wt',encoding='utf-8').write(json.dumps(d, ensure_ascii=False)); print('wrote site/data/serviceforge.json.gz:', d['stats'])" "$TMP"
 ```
 
 Make it executable in git: `git update-index --chmod=+x scripts/export-serviceforge.sh`.
@@ -183,7 +190,7 @@ git commit -m "feat(serviceforge): knowledge-base export query and runner (publi
   "exported": "2026-10-13",
   "stats": { "models_with_knowledge": 1, "symptoms": 2, "causes": 3, "steps": 3, "error_codes": 1 },
   "models": [
-    { "id": "11111111-1111-1111-1111-111111111111", "manufacturer": "Acme & Sons", "name": "Pump 100 <X>", "family": "Pump", "category_key": "infusion-pump", "community_fix_count": 2,
+    { "id": "11111111-1111-1111-1111-111111111111", "manufacturer": "Acme & Sons", "name": "Pump 100 <X>", "family": "Pump", "category_key": "infusion_pump", "community_fix_count": 2,
       "symptoms": [
         { "id": "s1", "title": "Occlusion alarm with a clear line", "description": "Alarm sounds although the set is open.", "safety_class": "caution", "cause_count": 2, "step_count": 3, "action_count": 2,
           "causes": [ { "rank": 1, "title": "Pressure sensor drift", "likelihood": "likely" }, { "rank": 2, "title": "Door latch not fully closed", "likelihood": "possible" } ],
@@ -232,7 +239,7 @@ check('JSON-LD: TechArticle with dateModified from the export, then BreadcrumbLi
 const idx = read('serviceforge/models/index.html'); const cls = read('serviceforge/classes/infusion-pump/index.html');
 check('the index lists the model under its manufacturer and links the class page', idx.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && idx.includes('href="/serviceforge/classes/infusion-pump/"'));
 check('the class page names the class, lists the model, and its symptom titles', cls.includes('Infusion pumps') && cls.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && cls.includes('Occlusion alarm with a clear line'));
-check('classLabel maps keys to plain labels and falls back to a title-cased key', sf.classLabel('infusion-pump') === 'Infusion pumps' && sf.classLabel('odd-key') === 'Odd key');
+check('classLabel maps keys to plain labels and falls back to a title-cased key', sf.classLabel('infusion_pump') === 'Infusion pumps' && sf.classLabel('odd_key') === 'Odd key');
 fs.rmSync(out, { recursive: true, force: true });
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nAll ServiceForge page tests passed.');
 process.exit(fails.length ? 1 : 0);
@@ -254,9 +261,11 @@ const site = require('./build-site');
 const { esc } = require('./markup');
 const { shell, crumbs, breadcrumbLd, org, slugify, shorten, BRAND, DESC_MAX } = site;
 
-const CLASS_LABELS = { 'infusion-pump': 'Infusion pumps', 'patient-monitor': 'Patient monitors', 'defibrillator': 'Defibrillators', 'ventilator': 'Ventilators', 'anesthesia': 'Anesthesia machines', 'imaging': 'Imaging systems', 'xray': 'X-ray systems', 'ultrasound': 'Ultrasound systems', 'esu': 'Electrosurgical units', 'suction': 'Suction units', 'bed': 'Beds and support surfaces', 'lab-analyzer': 'Laboratory analyzers', 'sterilizer': 'Sterilizers and reprocessors', 'infant-warmer': 'Infant warmers and incubators', 'light': 'Procedure lights' };
+// category_key values in the export use underscores (patient_monitor, x_ray_system, infusion_pump, ventilator,
+// anesthesia_machine, hospital_bed, test_equipment_power_supply, ultrasound_system, ct_scanner, patient_lift, ...).
+const CLASS_LABELS = { infusion_pump: 'Infusion pumps', patient_monitor: 'Patient monitors', defibrillator: 'Defibrillators', ventilator: 'Ventilators', anesthesia_machine: 'Anesthesia machines', x_ray_system: 'X-ray systems', ct_scanner: 'CT scanners', ultrasound_system: 'Ultrasound systems', hospital_bed: 'Hospital beds', patient_lift: 'Patient lifts', test_equipment_power_supply: 'Test equipment and power supplies', electrosurgical_unit: 'Electrosurgical units', suction_pump: 'Suction units', sterilizer: 'Sterilizers and reprocessors', infant_warmer: 'Infant warmers and incubators', procedure_light: 'Procedure lights' };
 const classLabel = key => CLASS_LABELS[key] || (key ? key.replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()) : 'Other equipment');
-const classSlug = key => key || 'other';
+const classSlug = key => (key || 'other').replace(/_/g, '-');
 const LABEL = 'ServiceForge knowledge base record. Field-unverified unless technicians confirmed it.';
 const SUMMARY = 'A teaching summary of the record, not a service manual.';
 const connect = text => `<a class="btn primary" href="/serviceforge/#connect" data-sf="connect">${esc(text || 'Connect ServiceForge to your AI')}</a>`;
@@ -339,7 +348,7 @@ function indexPage(models, data, origin) {
 }
 
 function buildServiceForge(opts) {
-  const data = opts.data || JSON.parse(fs.readFileSync(opts.dataFile, 'utf8'));
+  const data = opts.data || JSON.parse(/\.gz$/.test(opts.dataFile) ? require('zlib').gunzipSync(fs.readFileSync(opts.dataFile)).toString('utf8') : fs.readFileSync(opts.dataFile, 'utf8'));
   const origin = (opts.origin || site.ORIGIN).replace(/\/$/, '');
   const models = slugModels((data.models || []).filter(hasKnowledge));
   const write = (urlPath, html) => { const dir = path.join(opts.out, ...urlPath.split('/').filter(Boolean)); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8'); };
@@ -355,12 +364,14 @@ function buildServiceForge(opts) {
 module.exports = { buildServiceForge, classLabel, slugModels, hasKnowledge };
 ```
 
+Symptom cap: in `modelPage`, sort `m.symptoms` by `cause_count` descending then title, render the first 60 through `symptomBlock`, and when more remain add `<section><h2>More symptoms</h2><ul>` with the remaining titles and a connect button; the fixture has two symptoms so the cap is exercised only by a dedicated check (build a model with 61 generated symptoms in the test and assert 60 `class="symptom"` blocks plus a "More symptoms" list of 1).
+
 Note the fixture test expects `res.urls.length === 3`: index, one class page, one model page.
 
 In `site/build-site.js`: export `shell, crumbs, breadcrumbLd, org, DESC_MAX, slugify` (add to `module.exports`), and in `buildAll` after the guides block:
 
 ```js
-  const sfData = path.join(__dirname, 'data', 'serviceforge.json');
+  const sfData = path.join(__dirname, 'data', 'serviceforge.json.gz');
   const sfUrls = (opts.serviceforge === false || !fs.existsSync(sfData)) ? [] : require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls;
 ```
 and add `sfUrls` to `urls`. (The mini-fixture build in `tests/site.js` passes `serviceforge: false`.) Add `node tests/serviceforge.js` to `package.json`'s test script after `tests/site.js`. Add to `site/site.css`: `.symptom { margin: 18px 0 26px; padding-top: 10px; border-top: 1px solid var(--line, #e3e3e3); } .causes .rank { font-weight: 600; } .step { background: var(--panel, #f6f6f6); border-radius: 10px; padding: 12px 14px; margin: 10px 0; } .step dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 6px 0 0; } .step dt { font-weight: 600; } .rest { margin-top: 10px; }`.
@@ -410,7 +421,7 @@ git commit -m "feat(serviceforge): product page around the troubleshooting knowl
 ### Task 4: Run the export, build the real pages, stage
 
 **Files:**
-- Create: `site/data/serviceforge.json`
+- Create: `site/data/serviceforge.json.gz`, `.gitignore` entry `dist/site/serviceforge/`
 - Modify: this plan's Status section
 
 - [ ] **Step 1: Export**
