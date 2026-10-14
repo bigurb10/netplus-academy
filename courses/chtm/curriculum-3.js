@@ -567,7 +567,7 @@ Learn imaging              pass the general radiographic service school
                            by October and hold two observed competency
                            sign-offs by December
 \`\`\`
-Individual goals come down from the department's goals, which cover financial performance, scheduled maintenance completion, customer satisfaction, response time, repeat repairs, and use errors. Share those with everybody and explain why each one matters, so a technician can see how his own list adds up to the department's. Then set the individual goals with the person rather than for them. A goal the employee helped write gets worked at; a goal handed down gets quoted back at you.
+Write the desired result rather than the activity. A goal that names the desired result says what will be true when the work has succeeded, which is the only version two people can check the same way a year later. Individual goals come down from the department's goals, which cover financial performance, scheduled maintenance completion, customer satisfaction, response time, repeat repairs, and use errors. Share those with everybody and explain why each one matters, so a technician can see how his own list adds up to the department's. Then set the individual goals with the person rather than for them. A goal the employee helped write gets worked at; a goal handed down gets quoted back at you.
 
 ## Coaching, in the moment
 Coaching is continuous and specific, and it happens near the event. Name the behavior, say what it cost, show the better version, ask for agreement, and write one dated line in your notes. Five minutes at the bench outranks a paragraph in a review eight months later, and it is the only way the review ends up containing nothing new.
@@ -576,7 +576,7 @@ Coaching is continuous and specific, and it happens near the event. Name the beh
 Pair a new or developing technician with an experienced one, name both, give the mentor the goal in writing, and schedule the hours. Mentoring that is assumed turns into "ask me if you get stuck," which produces a technician who does not ask. Choose for teaching ability and for habits you want copied, not only for years of service.
 
 ## Recognition that is worth having
-Financial incentives are difficult to arrange in a hospital, and managers overestimate how much they matter. For technicians, recognition of good work and a genuine say in where the department is going usually outrank the money items. Recognition works when it is specific, prompt, and visible to peers: name what the person did and what it achieved, in front of the shop or in the committee report where their work actually landed. Recognition fails when it is late, generic, or distributed to everyone equally, because at that point it is attendance.
+Financial incentives are difficult to arrange in a hospital, and managers overestimate how much they matter. Try the exercise: rank the motivators you believe your staff care about, then ask them to rank the same list themselves. Managers usually put pay, bonuses, and benefits near the top, while technicians usually put interesting work, a say in decisions, feedback, training, and plain respect above the money items. That gap is the useful part, because the motivators your staff name are the ones a supervisor can hand out this week without a budget line, while the ones managers guess at need a compensation committee. Recognition works when it is specific, prompt, and visible to peers: name what the person did and what it achieved, in front of the shop or in the committee report where their work actually landed. Recognition fails when it is late, generic, or distributed to everyone equally, because at that point it is attendance.
 
 ## Conflict, handled early and written down
 1. Act early. Conflict left alone becomes two camps and then a staffing problem.
@@ -724,7 +724,7 @@ The second sense is market fairness, and it is genuinely hard. No two jobs are i
       body: `Four conversations in one week. A technician asks for a stool because standing all day has become painful. A second needs six weeks to care for a parent after surgery. Two more are standing in the corridor comparing their pay out loud, and a fifth has told you the guard is missing from the shop grinder. Every one of those is a law, and in all four the correct first move is the same.
 
 ## The first call is always human resources
-Call before you act, not after you have already answered. You own the job, the facts, and the records; human resources owns the process, the consistency across the whole hospital, and the legal exposure. The answers that get hospitals into court are almost always given quickly, from memory, by a well-meaning manager who was trying to be helpful.
+The legal aspects of employment are the one part of this job where being fast and being helpful is a hazard. Call before you act, not after you have already answered. You own the job, the facts, and the records; human resources owns the process, the consistency across the whole hospital, and the legal exposure. The answers that get hospitals into court are almost always given quickly, from memory, by a well-meaning manager who was trying to be helpful.
 
 ## The five that come up most
 \`\`\`
@@ -758,7 +758,7 @@ FMLA     Gives eligible employees 12 workweeks of unpaid,
          First move: send the request to human resources, who
          determine eligibility. Do not grant, deny, or interpret
          it yourself, and do not ask for medical detail
-NLRA      Protects employees' rights to organize, to bargain
+NLRA     Protects employees' rights to organize, to bargain
          collectively, and to act together about the terms and
          conditions of their employment, whether or not a union
          is present. That acting together is called concerted

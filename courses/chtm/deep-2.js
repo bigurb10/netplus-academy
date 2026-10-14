@@ -171,6 +171,9 @@ Costing field     original cost, the price paid
 Granularity       anything with a serial number; group the numerous,
                   cheap, low-risk items under one record with a count
 Vendor work       logged in your system, with the report inside 24 hours
+Virtual ID        records for the work that has no asset: a department,
+numbers           an activity, a project, so those hours still reach a
+                  cost center instead of disappearing
 Audit             annual formal inventory plus sampling on every round
 \`\`\``,
 
@@ -797,10 +800,12 @@ based                     the onset of degradation and    than recommended,
                           schedule just before            based on monitoring
                           performance is lost             showing capacity
                                                           holds
-Reactive                  run to failure. Acceptable      replace after the
-                          only for low cost, low risk     device fails, when a
-                          items where failure has         spare is on the shelf
-                          little consequence              and nothing is at risk
+Reactive                  run to failure, also called     replace after the
+                          breakdown or corrective         device fails, when a
+                          maintenance. Acceptable only    spare is on the shelf
+                          for low cost, low risk items    and nothing is at risk
+                          where failure has little
+                          consequence
 Reliability centered      condition plus function,        replace more often in
                           consequence of failure, and     an ambulance than at
                           the operating environment,      a nurse station, same
@@ -994,6 +999,25 @@ HTM-18-01   Information security and    3   this year   annual   manager
 HTM-21-01   Telemetry and spectrum      1   this year   annual   manager
 \`\`\`
 The register is the document a surveyor asks for when they want to know whether your library is managed. It takes an hour a year to maintain and it answers four questions at once: what exists, which version governs, who owns it, and whether the review is current.
+
+## What sits above the register: the EOC manual
+\`\`\`
+Level                        Who owns it        What it says
+EOC manual                   environment of     the written management plans for
+                             care committee     the physical environment: safety,
+                                                security, hazardous materials and
+                                                waste, fire safety, medical
+                                                equipment, utilities, emergency
+                                                management
+Medical equipment            HTM manager,       scope of the inventory, the
+management plan, a           approved by the    maintenance strategies, who does
+chapter of the manual        committee          the work, how performance is
+                                                measured and reported
+Departmental procedures      HTM manager and    the numbered steps that carry the
+in the register above        supervisors        chapter out, day to day
+Work orders and records      the technician     evidence that the steps happened
+\`\`\`
+Read that table upward when a surveyor asks a question and downward when you write something new. Upward, because a finding on one work order is traced back to a procedure, then to the plan, then to the manual, and the answer you want to give is that all four agree. Downward, because a new procedure that contradicts the equipment chapter of the EOC manual creates the gap it was meant to close, and a change to the chapter itself goes back to the environment of care committee for approval before the procedures beneath it are rewritten.
 
 ## Training against procedures
 \`\`\`

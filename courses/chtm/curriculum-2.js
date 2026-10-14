@@ -87,6 +87,9 @@ date
 \`\`\`
 Inventory anything with a serial number on it, because serial ranges are what recalls name. Items that are numerous, cheap, and low consequence can share one group record with a count, which is the honest way to handle a hundred poles rather than pretending to track each one.
 
+## Virtual ID numbers for the work that has no asset
+Not every hour your staff works happens on a device. Meetings, rounding, training, inventory sweeps, project time, and help given to another department all consume hours that vanish if the system will only accept an asset number. The answer is a short list of virtual ID numbers: records that behave like assets to the **CMMS** but stand for a department, an activity, or a project. A technician charges an hour of committee work or an hour spent helping the laboratory to one of those numbers exactly as they would charge an hour on a pump, and the time then lands on a cost center instead of disappearing. Some systems let you link an activity straight to a cost center and need no such trick; for the rest, virtual ID numbers are what let you answer the two questions that follow every productivity report, which are where the hours went and which customer consumed them.
+
 ## Parts, history, and recalls on the asset
 Parts records carry what is on the shelf, what it cost, what it fits, and what is on order, so a repair's true cost is known and a slow-moving part is visible. Service history carries the full life of the asset including every vendor visit, which is the only way a repeat problem, a bad batch of parts, or a vendor who is not delivering ever becomes visible. Recalls and advisories are tracked against the affected assets with the action taken and the closure date, never on a spreadsheet one person keeps, because the recall outlives the person.
 
@@ -101,6 +104,8 @@ An inventory decays. Devices move, get traded between units, and leave with a pa
       body: `It is the twenty-eighth of the month and your scheduled maintenance completion sits at 71 percent. Four technicians are chasing devices they cannot find, one is on leave you approved, and the report goes to the environment of care committee in eight days. The month is already lost. The lesson is that completion is managed daily and only reported monthly.
 
 ## Building the schedule
+Say your **PM philosophy** out loud before you build anything, because a surveyor will ask for it in plain words: how often does regular maintenance happen on each kind of device, who decided that, and what evidence stands behind the decision. A department that tests everything every six months because it always has is as exposed as one that stretched an interval on a hunch. The strategy sets the philosophy, the schedule carries it out, and both stay inside what your accreditor, your state, and the manufacturer's instructions allow.
+
 The maintenance strategy decides what each asset gets; the schedule decides when. Scheduled maintenance is planned by month, with each asset landing in one of the twelve. Three rules keep the year workable. Balance it against the calendar, because February is short, summers lose people to leave, and the last two months of the year lose days to holidays. Sweep by location or by equipment type rather than visiting a unit every month, so one set of kits, tools, and test equipment serves a whole batch. And place the biggest jobs first, then fit the smaller ones into what is left, the way you would pack a jar with large rocks before sand.
 
 ## The arithmetic, and what each word means
@@ -228,6 +233,7 @@ A high ratio on a device type points at three possible actions: change the servi
       body: `You are two people short, overtime has run above plan for five months, and administration has a hiring freeze. The request you are about to write will fail if it argues from workload, because scheduled maintenance that prevents problems is invisible to the people who approve positions. It will succeed if it argues from cost avoided.
 
 ## Build the workload from the inventory upward
+Determining staffing levels is one calculation done twice. The first half is estimating staffing needs from the inventory you actually maintain, line by line, instead of from a ratio somebody published; the second half is pricing that need against the alternative, which is what the approver cares about.
 \`\`\`
 Input                        Where it comes from
 Scheduled hours              hours per procedure times quantity, by model,
@@ -382,7 +388,7 @@ A change made quietly on a clinical device is the most common self-inflicted out
       body: `A surveyor opens your inventory, filters it to the devices you maintain on your own intervals rather than the manufacturer's, picks the two most dangerous things on that list, and asks how the decision was made. That question has a right answer, and it is a document rather than an opinion.
 
 ## What an alternative program is, and what it is not
-An **AEM** program changes how often maintenance, inspection, and testing happen and what each one includes, away from the manufacturer's recommendations, on the strength of a risk-based assessment by qualified personnel. Regulators permit the change itself. What they do not permit is improvisation: once the hospital sets its own activities and frequencies it must follow them strictly, and a program that drifts is worse than no program at all. Following the manufacturer is always compliant, and doing the work more often than the manufacturer recommends is allowed too, as long as you still perform the manufacturer's activities when you do.
+An **AEM** program changes how often maintenance, inspection, and testing happen and what each one includes, away from the manufacturer's recommendations, on the strength of a risk-based assessment by qualified personnel. You will meet the same thing under two names, an alternative equipment maintenance program and an alternate equipment management program, and the exam may use either; the three letters are what matter. Regulators permit the change itself. What they do not permit is improvisation: once the hospital sets its own activities and frequencies it must follow them strictly, and a program that drifts is worse than no program at all. Following the manufacturer is always compliant, and doing the work more often than the manufacturer recommends is allowed too, as long as you still perform the manufacturer's activities when you do.
 
 ## What may not go in
 \`\`\`
@@ -503,6 +509,9 @@ Approval and dates   approver, effective date, version, review date
 ## The library a department needs
 A copy of the organization's equipment management plan sits at the front. Then: inventory processes including incoming inspection and removal from inventory; scheduled maintenance covering procedure assignment, the risk-based or alternative strategy, frequencies, responsibility, workload balancing, and what to do when a device cannot be found; test equipment and calibration management; unscheduled maintenance; equipment under warranty and under service agreement; vendor and service management; infection control for devices; work order documentation for scheduled, unscheduled, use error, and non-departmental work; on-call and after-hours call-back; travel time; repair parts, purchase orders, and service contracts; the escalation policy; safety across electrical, radiological, biological, and occupational requirements; information security and patient privacy; telemetry and wireless spectrum management; coordination with information technology; communication with customers; satisfaction and feedback; and professional conduct.
 
+## Where the EOC manual fits above your procedures
+The organization keeps an environment of care manual, usually called the **EOC manual**, and your procedures live underneath it. The EOC manual is the single place a surveyor can find the written management plans for the physical environment: safety, security, hazardous materials and waste, fire safety, medical equipment, utilities, and emergency management. The medical equipment management plan is one chapter of that manual, so the chain runs from the EOC manual to the equipment plan to your departmental procedures to the work orders that show the procedure was followed. Two practical consequences follow. First, the EOC committee owns the manual, which means a change to your equipment chapter goes to that committee for approval rather than being filed by the department alone. Second, when another chapter changes around you, usually utilities or emergency management, read it, because the equipment plan has to stay consistent with the rest of the manual and surveyors read across chapters.
+
 ## Document control and training against them
 \`\`\`
 Control                 Why it matters
@@ -524,7 +533,7 @@ Training against a procedure is what converts it from a document into a practice
 ## What procedures prove, and what a missing one costs
 In a survey, procedures are the bridge between the plan and the records. The plan says the hospital does something, the procedure says how, and the work order says it happened. Break any link and the chain fails. A missing or outdated procedure costs you three ways: the finding itself, the corrective action plan that follows, and the discovery that two technicians were doing the same job differently for two years, which is the kind of variation that eventually produces an incident rather than just a citation.
 
-> Exam tip: procedures support the equipment management plan, are kept under document control with an owner, version, effective date, and review cycle, and are taught with a dated training record. An unwritten practice, however good, cannot be audited or proved, and a superseded version left in circulation is itself a finding.`,
+> Exam tip: procedures support the equipment management plan, which is itself a chapter of the EOC manual the environment of care committee owns. Procedures are kept under document control with an owner, version, effective date, and review cycle, and are taught with a dated training record. An unwritten practice, however good, cannot be audited or proved, and a superseded version left in circulation is itself a finding.`,
       hook: "Standard operating procedures turn the equipment management plan into auditable practice, under document control with an owner, a version, a review cycle, and a dated training record for every person who works to them."
     },
     {
@@ -593,6 +602,8 @@ Five parts, one page: the number, the trend, what caused it, what is being done,
 
 ## Why the money is the lever
 **CMS** pays for a large share of hospital care, and to receive that reimbursement a hospital has to meet the federal **CoP**. Several of those conditions reach equipment directly: facilities, supplies, and equipment must be maintained to ensure an acceptable level of safety and quality; equipment must be inspected and tested for performance and safety before first use and after major repairs or upgrades; the people responsible for developing, implementing, and managing the maintenance program must be qualified and the hospital must hold records proving it; and the complete equipment inventory must exist regardless of ownership. Failure here is not a fine. It is a threat to participation, which is why an equipment finding gets attention from people who have never visited your shop.
+
+The conditions themselves are only a few lines each. What a surveyor actually works from is the agency's **interpretive guidelines**, the much longer text that says what a condition means in practice and what evidence satisfies it, followed by the survey procedures that tell the surveyor what to ask for and which devices to pull. Both are public. Read the equipment parts once a year and write your plan in their language, because a finding is written against the interpretive guidelines rather than against the one-line condition above them, and a department that already speaks that language spends the survey confirming things instead of explaining them.
 
 ## Deemed status and the organizations that hold it
 The federal agency lets approved accrediting organizations survey on its behalf, and a hospital accredited by one of them is deemed to meet the conditions. That is deemed status. The accreditor's standards must be at least as demanding as the federal requirements, and its survey substitutes for the routine federal one, although the agency retains the right to validate. In hospitals the bodies you are most likely to meet are **TJC**, **DNV**, and **HFAP**, and specific services such as blood banks, laboratories, and imaging carry their own accreditors on top of whichever one surveys the hospital. Whoever arrives, the equipment evidence they ask for is the same.
@@ -749,6 +760,9 @@ Staffing and training      the hours it adds, the competencies it needs,
 Feasibility               whether the hospital can physically site, power,
                           network, and service it
 \`\`\`
+
+## Replacement or addition: label it on the first line
+Every request is one of two things, and the committee reads them differently. A replacement swaps out a device the hospital already owns, already staffs, and already supports, so it argues from age, condition, support status, repair cost, and the remaining life expectancy of what is in service, and the budget it needs is mostly already there. An addition brings capability or capacity the hospital did not have, so it argues from volume, a new service, or a clinical gap, and it drags in costs no budget carries yet: staffing hours, training, consumables, space, power, network, and often a service contract. Say which one it is in the first line of the review. A request that quietly hides an addition inside a replacement line shows up later as an overrun somebody has to explain, and the person explaining it will be you.
 
 ## Scoring, so that ranking is possible
 Score every request on the same factors with the same weights, publish the weights before you score, and rank. The committee's real question is never whether a device is worthwhile; it is why this one before that one. A scoring sheet answers that in one page and survives the question asked two years later. Common factors are clinical need, regulatory or safety driver, condition or support status of what it replaces, total cost of ownership, downtime impact, standardization fit, and staffing impact. Score from the evidence, not from who asked loudest, and keep the sheet.
@@ -917,7 +931,7 @@ The argument applies as strongly below the device as to the device. Cables, prob
     },
     {
       id: "u6l5", title: "Coordinating Service Providers Across the Lifecycle: Acquisition, Contracting, Installation, Training, Sustainment", domain: 3, obj: "OPS-C", minutes: 10,
-      body: `A vendor engineer spends three hours in an operating room on a Saturday, changes a board, and leaves. No service report arrives. Six weeks later the device fails in a case, the investigation asks what was done in that visit, and the answer is that nobody knows. The department is accountable for the whole maintenance history of that device, including the parts of it that other people performed.
+      body: `A vendor engineer spends three hours in an operating room on a Saturday, changes a board, and leaves. No service report arrives. Six weeks later the device fails in a case, the investigation asks what was done in that visit, and the answer is that nobody knows. The department is accountable for the whole maintenance history of that device, including the parts of it that other people performed. Lifecycle management is the name for that whole duty: one owner follows the device from the first quotation to the disposal record, whoever happens to turn the screws on any given day.
 
 ## The coordination role, stage by stage
 \`\`\`

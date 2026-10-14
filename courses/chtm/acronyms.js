@@ -77,4 +77,4 @@ FRA.acronyms = {
   "WMTS": { full: "Wireless Medical Telemetry Service", tip: "Protected radio spectrum reserved for patient telemetry, coordinated under FCC rules.", more: "Because the spectrum is protected, a hospital's use of it is registered and coordinated so that other transmitters stay out of the bands. That coordination is a named duty somebody has to own.\n\nWhere nobody owns it, the symptom is an intermittent telemetry complaint that no bench test reproduces, because the interference is in the air and not in the device." }
 };
 // Uppercase words in the course text that are not acronyms (emphasis in question stems, recall class numerals).
-FRA.acronymIgnore = ["BEST", "FIRST", "II", "III", "LEAST", "MOST", "NOT"];
+FRA.acronymIgnore = ["BEST", "FIRST", "ID", "II", "III", "LEAST", "MOST", "NOT"];
