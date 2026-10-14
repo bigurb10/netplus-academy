@@ -77,9 +77,11 @@ function run(token) {
   {
     const w = run(null); const d = w.document;
     const heads = [...d.querySelectorAll('main section.cat > h2')].map(h => h.textContent.trim());
-    check('the catalog has four category sections in order', heads.join('|') === 'Start here: biomed basic training|AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
+    check('the catalog has four category sections in order', heads.join('|') === 'Start here: Biomed basic training|AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
     const under = id => [...d.querySelectorAll(`#${id} .card h3 a`)].map(a => a.getAttribute('href'));
     check('BMET sits under Start here', under('start').join(',') === 'bmet/', under('start').join(','));
+    // Blake, 2026-10-14: the exam name sits in parentheses to the right of the title so the card says what it trains for.
+    check('the BMET card title names the CABT', d.querySelector('#start .card h3 a').textContent.trim() === 'BMET Academy (CABT)', d.querySelector('#start .card h3 a').textContent.trim());
     check('CBET sits under AAMI certifications', under('aami').join(',') === 'cbet/', under('aami').join(','));
     check('the four CompTIA courses sit under CompTIA certifications', under('comptia').join(',') === 'netplus/,secplus/,aplus1/,aplus2/', under('comptia').join(','));
     check('ServiceForge sits under Tools for technicians', under('tools').join(',') === 'serviceforge/', under('tools').join(','));

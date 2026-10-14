@@ -4,3 +4,4 @@
 dist/** -text
 *.png binary
 *.pdf binary
+*.gz binary

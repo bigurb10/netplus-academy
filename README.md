@@ -57,7 +57,7 @@ Every question has a flag button and every lesson has feedback buttons and a 1-t
 - **Instruments** live in `engine/instruments.js`: `dmm`, `safety`, `monitor`, `infusion`, `defib`, plus `figures` (meter, cylinder, ECG strip) and `choices` (preformatted text). Readings are deterministic per lab id. The engine carries no limit or tolerance of its own; every number is in the lab's `scenario`. The app reads the module at render time, so a pack without labs never depends on it.
 - **Untested domains.** A domain with `quota: 0` and `pct: 0` is course content outside the exam: in the rail and the course, with checkpoints, counted in lessons passed, never on the starter test, tests, bars, or the strength chart. Lessons in it show "Not on the exam".
 - **Certificate.** A manifest with `certificate: true` adds a Progress card and `#certificate`: unlocked when every lesson is passed, every lab is done, and the official-format test is passed; printable, with the account's name or a typed one.
-- **Catalog sections.** `index.html` groups courses under Start here: biomed basic training, AAMI certifications, CompTIA certifications, and Tools for technicians; `tests/catalog.js` checks each card's section.
+- **Catalog sections.** `index.html` groups courses under Start here: Biomed basic training, AAMI certifications, CompTIA certifications, and Tools for technicians; `tests/catalog.js` checks each card's section.
 
 ## URL layout
 

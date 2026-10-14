@@ -6,7 +6,7 @@ python build.py netplus    builds one course
 dist/<course>.html           - complete standalone page (open locally or host anywhere)
 dist/<course>-artifact.html  - body-only fragment for publishing as a Claude artifact
 """
-import os, re, sys, json
+import gzip, os, re, sys, json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ENGINE = os.path.join(ROOT, "engine")
@@ -114,9 +114,25 @@ def with_analytics(html):
     return html.replace("</head>", ga_snippet() + "</head>")
 
 
+def serviceforge_stats_sentence():
+    """The SF_STATS sentence: real export numbers when the export exists, else a fallback."""
+    gz_path = os.path.join(ROOT, "site", "data", "serviceforge.json.gz")
+    if not os.path.exists(gz_path):
+        return "Model pages are published as the knowledge base grows."
+    with gzip.open(gz_path, "rt", encoding="utf-8") as f:
+        d = json.load(f)
+    s = d["stats"]
+    return (f"{s['models_with_knowledge']:,} models, {s['symptoms']:,} symptoms, "
+            f"{s['causes']:,} ranked causes, {s['steps']:,} checks, and "
+            f"{s['error_codes']:,} error codes, exported {d['exported']}.")
+
+
 def build_serviceforge():
     """dist/serviceforge.html - the ServiceForge connector page, with analytics."""
-    html = with_analytics(read(os.path.join(ROOT, "serviceforge", "index.html")))
+    html = read(os.path.join(ROOT, "serviceforge", "index.html"))
+    assert "<!-- SF_STATS -->" in html, "expected the SF_STATS marker in serviceforge/index.html"
+    html = html.replace("<!-- SF_STATS -->", serviceforge_stats_sentence())
+    html = with_analytics(html)
     os.makedirs(DIST, exist_ok=True)
     with open(os.path.join(DIST, "serviceforge.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(html)

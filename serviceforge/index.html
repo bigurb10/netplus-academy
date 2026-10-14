@@ -6,12 +6,24 @@
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <title>ServiceForge — FieldReady Academy</title>
-  <meta name="description" content="Connect ServiceForge to Claude, ChatGPT, Gemini or Copilot and ask your AI about medical equipment faults, error codes, part numbers, PM intervals and service access codes.">
+  <title>ServiceForge: Medical Equipment Troubleshooting Knowledge Base for Biomeds</title>
+  <meta name="description" content="ServiceForge is a medical equipment troubleshooting knowledge base for biomeds: symptom to ranked causes to checks with test points to actions with parts, plus fixes other technicians logged, delivered through your own AI (Claude, ChatGPT, Gemini, or Copilot).">
+  <link rel="canonical" href="https://fieldreadyacademy.com/serviceforge/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FieldReady Academy">
+  <meta property="og:title" content="ServiceForge: Medical Equipment Troubleshooting Knowledge Base for Biomeds">
+  <meta property="og:description" content="ServiceForge is a medical equipment troubleshooting knowledge base for biomeds: symptom to ranked causes to checks with test points to actions with parts, plus fixes other technicians logged, delivered through your own AI (Claude, ChatGPT, Gemini, or Copilot).">
+  <meta property="og:url" content="https://fieldreadyacademy.com/serviceforge/">
+  <meta property="og:image" content="https://fieldreadyacademy.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fieldreadyacademy.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
   <link rel="stylesheet" href="../catalog.css">
   <style>
+    .eyebrow { font-family: "Archivo", system-ui, sans-serif; font-size: 0.78rem; font-weight: 600;
+               letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 18px 0 0; }
+    .hero h1 { margin-top: 6px; }
     .back { display: inline-block; margin-bottom: 14px; color: var(--accent); text-decoration: none;
             font-family: "Archivo", system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; }
     .urlbox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--surface);
@@ -45,26 +57,32 @@
     table.limits th { font-family: "Archivo", system-ui, sans-serif; font-size: 0.82rem; color: var(--muted);
                       text-transform: uppercase; letter-spacing: 0.04em; }
     table.limits td:first-child { white-space: nowrap; font-weight: 600; }
+    .models-cta { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+                  padding: 16px 20px; margin: 14px 0; }
+    .faq h3 { font-size: 1.05rem; margin: 20px 0 6px; }
+    .faq h3:first-child { margin-top: 12px; }
+    .faq p { color: var(--ink-2); margin: 0; }
   </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ServiceForge","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"A medical equipment troubleshooting knowledge base for biomeds, reached through Claude, ChatGPT, Gemini, or Copilot.","url":"https://fieldreadyacademy.com/serviceforge/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","category":"Free"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is ServiceForge?","acceptedAnswer":{"@type":"Answer","text":"A knowledge base of medical equipment troubleshooting records: symptom, ranked causes, ordered checks with test points and expected values, corrective actions with part numbers, error codes, and PM intervals, plus fixes logged by other technicians. You reach it through your own AI assistant instead of a separate app."}},{"@type":"Question","name":"How do I connect it?","acceptedAnswer":{"@type":"Answer","text":"Add it as a custom connector or MCP server in Claude, ChatGPT, Gemini, or Copilot using the connector address on this page, then sign in with your email and a one-time code. The exact steps for each assistant are above, under Setting it up."}},{"@type":"Question","name":"What does it cost right now?","acceptedAnswer":{"@type":"Answer","text":"Nothing. Everything is free while we launch. You sign in with a free account and there is no payment step."}},{"@type":"Question","name":"Are the records verified?","acceptedAnswer":{"@type":"Answer","text":"They are ServiceForge knowledge base records, and the page for every model states it directly: field-unverified unless technicians confirmed it. Treat ServiceForge as a starting point and confirm anything safety-critical against your own procedure."}},{"@type":"Question","name":"Who writes the community fixes?","acceptedAnswer":{"@type":"Answer","text":"Technicians, through their own AI. When one of them solves something, their assistant can log the fix along with its outcome, and the next technician who hits the same symptom sees it."}}]}</script>
 </head>
 <body>
   <header class="hero">
     <div class="wrap">
       <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
-      <h1>ServiceForge</h1>
-      <p>A troubleshooting knowledge base for biomed and HTM technicians. Connect it to the AI you already use and ask in your own words. Free while we launch.</p>
+      <p class="eyebrow">ServiceForge</p>
+      <h1>Medical equipment troubleshooting knowledge base for biomeds</h1>
+      <p>Symptom to ranked causes to checks with test points to corrective actions with parts, plus fixes other technicians logged with outcomes, delivered through the AI you already use. Free while we launch.</p>
     </div>
   </header>
 
   <main class="wrap">
     <a class="back" href="../">&larr; All courses</a>
 
-    <h2>The connector address</h2>
-    <p class="note">Every setup below asks for this URL. Nothing to install. The first time you connect you will be asked to sign in or create a free account: enter your email and the six-digit code we send you.</p>
-    <div class="urlbox">
-      <code id="mcp-url">https://mcp.fieldreadyacademy.com/mcp</code>
-      <button type="button" id="copy">Copy</button>
-    </div>
+    <section id="what-is-in-it">
+      <h2>What is in it</h2>
+      <p>ServiceForge is a biomed troubleshooting database built the way a technician works a fault: a symptom narrows to a set of ranked causes, each cause carries an ordered sequence of checks with a test point and an expected value, and each check leads to a corrective action with part numbers. Error codes resolve to what they mean, what triggers them, and what to do. PM intervals and checklists are included where documented. Community fixes are entries other technicians logged through their own AI, each one carrying the outcome, so you can see what worked for someone else before you start. All of it is organized as an HTM knowledge base &mdash; healthcare technology management, the field biomeds work in &mdash; and searchable from inside the AI you already use.</p>
+    </section>
 
     <h2>What you can ask once it is connected</h2>
     <div class="asks">
@@ -77,52 +95,71 @@
     </div>
     <p class="note">Answers come back in two labelled parts: what ServiceForge holds, kept separate from what your AI knows on its own. You always see which is which.</p>
 
-    <h2>Setting it up</h2>
+    <section id="connect">
+      <h2>Connect ServiceForge to your AI</h2>
 
-    <div class="host">
-      <h3>Claude <span class="tag">Free, Pro and Max</span></h3>
-      <ol>
-        <li>Open Claude in a web browser at <code>claude.ai</code> and sign in.</li>
-        <li>Go to <strong>Settings &rarr; Connectors</strong>.</li>
-        <li>Choose <strong>Add custom connector</strong>.</li>
-        <li>Paste the URL. Claude detects the settings for you &mdash; <strong>Authentication: &ldquo;Sign in now&rdquo;</strong> and <strong>OAuth client: &ldquo;Use Claude&rsquo;s published identity&rdquo;</strong>, each marked <em>Detected</em>. Leave them as shown.</li>
-        <li>Click <strong>Add</strong>, then sign in or create a free account when Claude opens the sign-in page. Start a new chat and ask an equipment question.</li>
-      </ol>
-      <p class="note">Add it on the web once and it works in the phone app too. On a Free plan you get one custom connector, so this would be it. On a Team or Enterprise account an owner adds it under Organization settings and everyone can then connect. If the sign-in page never opens, edit the connector and set <strong>OAuth client</strong> to <strong>Register automatically</strong>, then try again.</p>
-    </div>
+      <h3>The connector address</h3>
+      <p class="note">Every setup below asks for this URL. Nothing to install. The first time you connect you will be asked to sign in or create a free account: enter your email and the six-digit code we send you.</p>
+      <div class="urlbox">
+        <code id="mcp-url">https://mcp.fieldreadyacademy.com/mcp</code>
+        <button type="button" id="copy">Copy</button>
+      </div>
 
-    <div class="host">
-      <h3>ChatGPT <span class="tag">Plus, Pro, Team, Enterprise, Edu</span></h3>
-      <ol>
-        <li>Open <code>chatgpt.com</code> in a browser and sign in.</li>
-        <li>In <strong>Settings</strong>, turn on <strong>Developer mode</strong> (under Connectors or Apps, depending on your plan).</li>
-        <li>Choose <strong>Create</strong> or <strong>Add custom connector</strong> and paste the URL.</li>
-        <li>Set authentication to <strong>OAuth</strong>, save, and sign in or create a free account when prompted. Then enable it in a new chat.</li>
-      </ol>
-      <p class="note">Custom connectors are not available on the free ChatGPT tier. On Business and Enterprise accounts an administrator has to switch developer mode on before you will see the option.</p>
-    </div>
+      <h3>Setting it up</h3>
 
-    <div class="host">
-      <h3>Gemini <span class="tag warn">Personal Google accounts only</span></h3>
-      <ol>
-        <li>Open <code>gemini.google.com</code> and sign in with a personal Google account.</li>
-        <li>Go to <strong>Settings &amp; help &rarr; Connected Apps</strong>.</li>
-        <li>Under <strong>Custom apps</strong>, choose <strong>Add a custom app</strong> and paste the URL.</li>
-      </ol>
-      <p class="note"><strong>Read this before you try:</strong> custom apps need Gemini Spark access, and they are blocked on Google Workspace accounts &mdash; so a hospital-issued Google account will not work. ServiceForge also now requires a sign-in, and the personal-account custom-app flow may not complete it. Use a personal account with Spark, or &mdash; more reliably &mdash; use Claude or ChatGPT instead.</p>
-    </div>
+      <div class="host">
+        <h3>Claude <span class="tag">Free, Pro and Max</span></h3>
+        <ol>
+          <li>Open Claude in a web browser at <code>claude.ai</code> and sign in.</li>
+          <li>Go to <strong>Settings &rarr; Connectors</strong>.</li>
+          <li>Choose <strong>Add custom connector</strong>.</li>
+          <li>Paste the URL. Claude detects the settings for you &mdash; <strong>Authentication: &ldquo;Sign in now&rdquo;</strong> and <strong>OAuth client: &ldquo;Use Claude&rsquo;s published identity&rdquo;</strong>, each marked <em>Detected</em>. Leave them as shown.</li>
+          <li>Click <strong>Add</strong>, then sign in or create a free account when Claude opens the sign-in page. Start a new chat and ask an equipment question.</li>
+        </ol>
+        <p class="note">Add it on the web once and it works in the phone app too. On a Free plan you get one custom connector, so this would be it. On a Team or Enterprise account an owner adds it under Organization settings and everyone can then connect. If the sign-in page never opens, edit the connector and set <strong>OAuth client</strong> to <strong>Register automatically</strong>, then try again.</p>
+      </div>
 
-    <div class="host">
-      <h3>Microsoft Copilot <span class="tag warn">Requires an administrator</span></h3>
-      <p class="note">Copilot has no place for an individual to paste a connector URL. It has to be added as an action in <strong>Copilot Studio</strong> by someone with maker or admin rights in your tenant &mdash; usually your IT department, not you.</p>
-      <ol>
-        <li>In Copilot Studio, open the agent you want to extend.</li>
-        <li>Go to <strong>Tools &rarr; Add a tool &rarr; New tool &rarr; Model Context Protocol</strong>.</li>
-        <li>Enter the URL above. For authentication choose <strong>OAuth 2.0</strong> with dynamic discovery (automatic registration) &mdash; not &ldquo;no authentication.&rdquo; Copilot Studio registers itself and each user signs in.</li>
-        <li>Publish the agent so your users get the tools.</li>
-      </ol>
-      <p class="note">If you do not have Copilot Studio access, send your IT group this page and the URL.</p>
-    </div>
+      <div class="host">
+        <h3>ChatGPT <span class="tag">Plus, Pro, Team, Enterprise, Edu</span></h3>
+        <ol>
+          <li>Open <code>chatgpt.com</code> in a browser and sign in.</li>
+          <li>In <strong>Settings</strong>, turn on <strong>Developer mode</strong> (under Connectors or Apps, depending on your plan).</li>
+          <li>Choose <strong>Create</strong> or <strong>Add custom connector</strong> and paste the URL.</li>
+          <li>Set authentication to <strong>OAuth</strong>, save, and sign in or create a free account when prompted. Then enable it in a new chat.</li>
+        </ol>
+        <p class="note">Custom connectors are not available on the free ChatGPT tier. On Business and Enterprise accounts an administrator has to switch developer mode on before you will see the option.</p>
+      </div>
+
+      <div class="host">
+        <h3>Gemini <span class="tag warn">Personal Google accounts only</span></h3>
+        <ol>
+          <li>Open <code>gemini.google.com</code> and sign in with a personal Google account.</li>
+          <li>Go to <strong>Settings &amp; help &rarr; Connected Apps</strong>.</li>
+          <li>Under <strong>Custom apps</strong>, choose <strong>Add a custom app</strong> and paste the URL.</li>
+        </ol>
+        <p class="note"><strong>Read this before you try:</strong> custom apps need Gemini Spark access, and they are blocked on Google Workspace accounts &mdash; so a hospital-issued Google account will not work. ServiceForge also now requires a sign-in, and the personal-account custom-app flow may not complete it. Use a personal account with Spark, or &mdash; more reliably &mdash; use Claude or ChatGPT instead.</p>
+      </div>
+
+      <div class="host">
+        <h3>Microsoft Copilot <span class="tag warn">Requires an administrator</span></h3>
+        <p class="note">Copilot has no place for an individual to paste a connector URL. It has to be added as an action in <strong>Copilot Studio</strong> by someone with maker or admin rights in your tenant &mdash; usually your IT department, not you.</p>
+        <ol>
+          <li>In Copilot Studio, open the agent you want to extend.</li>
+          <li>Go to <strong>Tools &rarr; Add a tool &rarr; New tool &rarr; Model Context Protocol</strong>.</li>
+          <li>Enter the URL above. For authentication choose <strong>OAuth 2.0</strong> with dynamic discovery (automatic registration) &mdash; not &ldquo;no authentication.&rdquo; Copilot Studio registers itself and each user signs in.</li>
+          <li>Publish the agent so your users get the tools.</li>
+        </ol>
+        <p class="note">If you do not have Copilot Studio access, send your IT group this page and the URL.</p>
+      </div>
+    </section>
+
+    <section id="models">
+      <h2>Browse the models</h2>
+      <div class="models-cta">
+        <p class="note"><!-- SF_STATS --></p>
+        <p><a href="/serviceforge/models/">Browse the models</a> to see which manufacturers and models already have documented symptoms, ranked causes, checks, and error codes.</p>
+      </div>
+    </section>
 
     <h2>Worth knowing</h2>
     <table class="limits">
@@ -135,6 +172,24 @@
 
     <h2>If it does not work</h2>
     <p class="note">Check <a href="https://mcp.fieldreadyacademy.com/health" style="color:var(--accent)">the status endpoint</a> &mdash; it should return <code>{"status":"ok"}</code>. If that is fine but your AI still cannot see the tools, remove the connector and add it again; the URL must end in <code>/mcp</code>. Menu names move around as these products change, so if a step above does not match what you see, look for anything called connectors, custom apps, or MCP servers.</p>
+
+    <section id="faq" class="faq">
+      <h2>FAQ</h2>
+      <h3>What is ServiceForge?</h3>
+      <p>A knowledge base of medical equipment troubleshooting records: symptom, ranked causes, ordered checks with test points and expected values, corrective actions with part numbers, error codes, and PM intervals, plus fixes logged by other technicians. You reach it through your own AI assistant instead of a separate app.</p>
+
+      <h3>How do I connect it?</h3>
+      <p>Add it as a custom connector or MCP server in Claude, ChatGPT, Gemini, or Copilot using the connector address on this page, then sign in with your email and a one-time code. The exact steps for each assistant are above, under Setting it up.</p>
+
+      <h3>What does it cost right now?</h3>
+      <p>Nothing. Everything is free while we launch. You sign in with a free account and there is no payment step.</p>
+
+      <h3>Are the records verified?</h3>
+      <p>They are ServiceForge knowledge base records, and the page for every model states it directly: field-unverified unless technicians confirmed it. Treat ServiceForge as a starting point and confirm anything safety-critical against your own procedure.</p>
+
+      <h3>Who writes the community fixes?</h3>
+      <p>Technicians, through their own AI. When one of them solves something, their assistant can log the fix along with its outcome, and the next technician who hits the same symptom sees it.</p>
+    </section>
   </main>
 
   <script>
