@@ -16,15 +16,20 @@ check('urls returned match the files written: index, the two-model class, three 
 const page = read('serviceforge/models/acme-sons/pump-100-x/index.html');
 check('title and H1 carry the troubleshooting phrase, escaped', page.includes('<title>Acme &amp; Sons Pump 100 &lt;X&gt; Troubleshooting and Error Codes | ServiceForge</title>') && page.includes('<h1>Acme &amp; Sons Pump 100 &lt;X&gt;: troubleshooting and error codes</h1>'));
 check('every symptom title and every cause is on the page', ['Occlusion alarm with a clear line', 'Will not power on', 'Pressure sensor drift', 'Door latch not fully closed', 'Discharged battery and no mains'].every(t => page.includes(t)));
-check('exactly the first step is shown, with test point, expected value, tolerance, and tools', page.includes('Read the occlusion pressure with the set open') && page.includes('below 1 psi') && page.includes('plus or minus 0.2') && (page.match(/class="step"/g) || []).length === 1);
+check('exactly the first step is shown per symptom, with test point, expected value, tolerance, and tools', page.includes('Read the occlusion pressure with the set open') && page.includes('below 1 psi') && page.includes('plus or minus 0.2') && (page.match(/class="step"/g) || []).length === 2);
 check('the remaining checks line and the connect button appear per symptom', page.includes('2 more checks with pass and fail actions, 2 corrective actions, and part numbers are in ServiceForge') && (page.match(/data-sf="connect"/g) || []).length >= 2);
 check('error codes show code, meaning, trigger, severity only', page.includes('E-14') && page.includes('Air in line') && page.includes('Ultrasonic detector sees a bubble') && !/likely_causes|actions":/.test(page));
+// Prose that uses the credential words without giving a value must survive the screen untouched:
+// a boot-code message (the screen must not swallow "CODE IS NOT"), an error-code meaning with a
+// number in it, and a power-supply pin table (a measurement, never a credential).
+check('an error code meaning that reads BOOT CODE IS NOT COMPATIBLE renders unchanged', page.includes('BOOT CODE IS NOT COMPATIBLE') && page.includes('Error code 412 means the boot and main code versions differ'));
+check('a first step whose expected value is a pin voltage table renders in full', page.includes('Pin 1: +15.0 V; Pin 2: ground; Pin 3: -15.0 V') && page.includes('J2 pins 1, 2, 3'));
 check('community fixes appear as a count only', page.includes('2 fixes logged by technicians'));
 check('a safety class of none shows no badge; a known class shows its label', !page.includes('<span class="pill">none</span>') && page.includes('<span class="pill">caution</span>') && (page.match(/class="pill"/g) || []).length === 1);
 check('the record label and the teaching-summary line are present', page.includes('ServiceForge knowledge base record. Field-unverified unless technicians confirmed it.') && page.includes('A teaching summary of the record, not a service manual.'));
 // A credential-shaped value in a first step drops the whole step; s8's "Service code 812" first step
 // must not render, and s1's real step is still the only one on the page.
-check('a service access code in a first step is withheld: the step is dropped entirely, not redacted in place', !page.includes('812') && (page.match(/class="step"/g) || []).length === 1);
+check('a service access code in a first step is withheld: the step is dropped entirely, not redacted in place', !page.includes('812') && (page.match(/class="step"/g) || []).length === 2 && !page.includes('Enter the service menu') && !page.includes('Front panel'));
 // s2 has nothing behind the button (0 steps, 0 actions): no promise with an empty button. s1 keeps
 // its full sentence (more checks and corrective actions both > 0), and the page still carries at
 // least two connect buttons (the lede and s1's rest line).
@@ -51,8 +56,60 @@ check('a model alone in its class has no class crumb but keeps the class as its 
 // list still needs to show there is a second cause) while a plain, valueless mention of "password"
 // in s6's own description survives unchanged.
 check('a cause with a credential value is redacted and the raw value never renders', !single.includes('1234') && single.includes('[withheld]'));
+check('a cause naming a bare service account has the account withheld', !single.includes('ulsadm') && single.includes('Service password [withheld] still set'));
+check('a symptom description that gives a passcode has the passcode withheld', !single.includes('2580') && single.includes('Enter [withheld] at the prompt to clear the jam counter.'));
 check('a legitimate mention of "password" with no value attached is not redacted', single.includes('Ask the department for the service password before you start.'));
 check('classLabel maps keys to plain labels, falls back to a pluralized acronym-aware label, and fuses x-ray/c-arm compounds', sf.classLabel('infusion_pump') === 'Infusion pumps' && sf.classLabel('odd_key') === 'Odd keys' && sf.classLabel('dental_x_ray_system') === 'Dental X-ray systems' && sf.classLabel('c_arm') === 'C-arms');
+
+// The credential screen, tested on the exported classifier rather than through a page: the forms the
+// export actually carries (a noun followed by a bare value is the commonest) must be caught, and the
+// technician prose that uses the same words must come back byte-for-byte.
+[
+  'Login succeeds with username ADM and password ulsadm',
+  'ADM login successful with password ulsadm',
+  'Biomed menu accessible with passcode 2580',
+  'System Diagnostics > Maintenance (password 1-2-9) > Self Test',
+  'Login as mlcltechuser to OS and custom shell',
+  'username mlcltechuser',
+  'username mlclsqluser',
+  'mlclsqluser logged in with password validated message',
+  'Correct password (default is model number, e.g., 6681)',
+  'Password 101867 accepted',
+  'Service Mode menu accessible after entering password 1025 and selecting NIBP Service',
+  'Service code 812 entered successfully; diagnostics available',
+  'Service code entry required (F06 = 384)',
+  'Username: cxdi, Password: service',
+  'Logon accepted with Administrator/admin1,3,5,7',
+  'Logon as cxdi user',
+  'Enter passcode 2580 at the prompt'
+].forEach(s => check(`a credential value is detected and withheld: ${s}`, sf.hasCredential(s) && !/ulsadm|2580|1-2-9|mlcltechuser|mlclsqluser|6681|101867|1025|\b812\b|384|cxdi|admin1/.test(sf.redact(s)), sf.redact(s)));
+[
+  'Item code is not supported by current configuration',
+  'VERSION OF BOOT CODE IS NOT COMPATIBLE WITH VERSION OF MAIN CODE',
+  'error code 412 means the door is open',
+  'Verify correct password is available',
+  'password prompt appears',
+  'Pin 1: +15.0 V; Pin 2: ground; Pin 3: -15.0 V',
+  'PIN 7 = 12 V',
+  'serial number 6681',
+  'Pin 1: +15.0 +/-.1V; Pin 2: ground; Pin 3: +5.27 +/-.05V; Pin 4: ground; Pin 5: -15.0 +/-.1V',
+  'Centering pin is not well centered or a detector has failed',
+  'User did not type the same password twice on Change Password screen',
+  'User entered a password of fewer than six characters',
+  'PIN 10383 test circuit connection',
+  'Log on as Administrator',
+  'Verify correct SSID and password for hospital network'
+].forEach(s => check(`technician text with no credential value is left alone: ${s}`, !sf.hasCredential(s) && sf.redact(s) === s, sf.redact(s)));
+// A mass-noun label ("X-ray equipment") must not be counted directly ("2 x-ray equipment"), and an
+// acronym-hyphen compound keeps its capital mid-sentence.
+{
+  const mk = (n, i) => ({ id: 'eq' + i, manufacturer: 'Equip Co', name: n, family: null, category_key: 'x_ray_equipment', community_fix_count: 0, error_codes: [], symptoms: [0, 1].map(j => ({ id: 'e' + i + j, title: 'Symptom ' + j, description: null, safety_class: 'none', cause_count: 1, step_count: 0, action_count: 0, causes: [{ rank: 1, title: 'Cause ' + j, likelihood: null }], first_step: null })) });
+  const eqOut = fs.mkdtempSync(path.join(os.tmpdir(), 'fra-sf-eq-'));
+  sf.buildServiceForge({ data: { exported: '2026-10-13', stats: {}, models: [mk('Room A', 1), mk('Room B', 2)] }, out: eqOut, origin: 'https://example.test' });
+  const eqPage = fs.readFileSync(path.join(eqOut, 'serviceforge', 'classes', 'x-ray-equipment', 'index.html'), 'utf8');
+  check('a class label ending in "equipment" counts models and keeps the X-ray capital', eqPage.includes('2 models in X-ray equipment with troubleshooting records') && !eqPage.includes('2 x-ray equipment'), eqPage.includes('2 models in X-ray equipment with troubleshooting records'));
+  fs.rmSync(eqOut, { recursive: true, force: true });
+}
 
 // Symptom cap: a model with 61 generated symptoms renders exactly 60 symptom blocks, with the
 // remaining 1 listed under "More symptoms" instead.

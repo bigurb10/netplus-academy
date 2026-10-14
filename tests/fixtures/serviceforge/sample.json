@@ -11,9 +11,15 @@
           "causes": [ { "rank": 1, "title": "Discharged battery and no mains", "likelihood": null } ], "first_step": null },
         { "id": "s8", "title": "Service menu will not open", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 2, "action_count": 1,
           "causes": [ { "rank": 1, "title": "Wrong service entry sequence", "likelihood": "likely" } ],
-          "first_step": { "check_text": "Enter the service menu", "test_point": "Front panel", "expected": "Service code 812 entered successfully; diagnostics available", "value_unit": null, "tolerance": null, "tools": null } }
+          "first_step": { "check_text": "Enter the service menu", "test_point": "Front panel", "expected": "Service code 812 entered successfully; diagnostics available", "value_unit": null, "tolerance": null, "tools": null } },
+        { "id": "s9", "title": "Supply rails out of tolerance", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 2, "action_count": 1,
+          "causes": [ { "rank": 1, "title": "Power supply board aged", "likelihood": "likely" } ],
+          "first_step": { "check_text": "Measure output voltages at power supply J2", "test_point": "J2 pins 1, 2, 3", "expected": "Pin 1: +15.0 V; Pin 2: ground; Pin 3: -15.0 V", "value_unit": null, "tolerance": null, "tools": "meter" } }
       ],
-      "error_codes": [ { "code": "E-14", "meaning": "Air in line", "trigger_condition": "Ultrasonic detector sees a bubble", "severity": "warning" } ] },
+      "error_codes": [
+        { "code": "E-14", "meaning": "Air in line", "trigger_condition": "Ultrasonic detector sees a bubble", "severity": "warning" },
+        { "code": "E-20", "meaning": "BOOT CODE IS NOT COMPATIBLE", "trigger_condition": "Error code 412 means the boot and main code versions differ", "severity": "fault" }
+      ] },
     { "id": "33333333-3333-3333-3333-333333333333", "manufacturer": "Acme & Sons", "name": "Pump 200", "family": "Pump", "category_key": "infusion_pump", "community_fix_count": 0,
       "symptoms": [
         { "id": "s4", "title": "Occlusion alarm with a clear line", "description": null, "safety_class": "caution", "cause_count": 1, "step_count": 1, "action_count": 1,
@@ -25,9 +31,9 @@
       "error_codes": [] },
     { "id": "44444444-4444-4444-4444-444444444444", "manufacturer": "Acme & Sons", "name": "Imager 5", "family": null, "category_key": "dry_imager", "community_fix_count": 0,
       "symptoms": [
-        { "id": "s6", "title": "Film comes out blank", "description": "Ask the department for the service password before you start.", "safety_class": "none", "cause_count": 2, "step_count": 0, "action_count": 0,
-          "causes": [ { "rank": 1, "title": "Thermal head not heating", "likelihood": null }, { "rank": 2, "title": "Default password is 1234 on this revision", "likelihood": null } ], "first_step": null },
-        { "id": "s7", "title": "Film jams at the exit", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 0, "action_count": 0,
+        { "id": "s6", "title": "Film comes out blank", "description": "Ask the department for the service password before you start.", "safety_class": "none", "cause_count": 3, "step_count": 0, "action_count": 0,
+          "causes": [ { "rank": 1, "title": "Thermal head not heating", "likelihood": null }, { "rank": 2, "title": "Default password is 1234 on this revision", "likelihood": null }, { "rank": 3, "title": "Service password ulsadm still set", "likelihood": null } ], "first_step": null },
+        { "id": "s7", "title": "Film jams at the exit", "description": "Enter passcode 2580 at the prompt to clear the jam counter.", "safety_class": "none", "cause_count": 1, "step_count": 0, "action_count": 0,
           "causes": [ { "rank": 1, "title": "Worn exit roller", "likelihood": null } ], "first_step": null }
       ],
       "error_codes": [] },

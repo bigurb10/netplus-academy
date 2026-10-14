@@ -15,39 +15,16 @@ if [ "${1:-}" = "--check" ]; then
   python -c "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); print(d['exported'], d['stats'])" "$TMP"
   exit 0
 fi
-# Write the gz, then report (not enforce -- site/build-serviceforge.js is the enforcement point) how
-# many exported strings read as a value-shaped credential, with patterns equivalent to the generator's
-# CRED list: service/access/unlock/engineer/tech codes and passwords, PINs, usernames, and logins.
+# Write the gz.
 python - "$TMP" <<'PYEOF'
-import json, sys, gzip, re
-
-CRED = [
-    re.compile(r'\b(password|passcode|pass ?code|pass ?word|service code|access code|unlock code|engineer(?:ing)? code|tech(?:nician)? code|service pin|pin|username|user ?name|user id|login)\b[^.;\n]{0,24}?[:=]\s*["\']?[A-Za-z0-9*#_.-]{2,}', re.I),
-    re.compile(r'\b(?:service|access|unlock|engineer(?:ing)?|tech(?:nician)?|maintenance|setup|config(?:uration)?|supervisor|biomed|factory|default)\s+(?:code|password|passcode|pin)\b[^0-9\n]{0,16}\d{3,}', re.I),
-    re.compile(r'\b(?:code|password|passcode|pin)\s+(?:is|was|=|:)\s*["\']?[A-Za-z0-9*#_.-]{3,}', re.I),
-]
-
-def flagged(t):
-    return bool(t) and any(p.search(t) for p in CRED)
-
-def scan(d):
-    n = 0
-    for m in (d.get('models') or []):
-        for s in (m.get('symptoms') or []):
-            texts = [s.get('title'), s.get('description')]
-            for c in (s.get('causes') or []):
-                texts.append(c.get('title'))
-            fs = s.get('first_step')
-            if fs:
-                texts += [fs.get('check_text'), fs.get('test_point'), fs.get('expected'), fs.get('tools'), fs.get('tolerance')]
-            n += sum(1 for t in texts if flagged(t))
-        for e in (m.get('error_codes') or []):
-            n += sum(1 for t in [e.get('meaning'), e.get('trigger_condition')] if flagged(t))
-    return n
-
+import json, sys, gzip
 d = json.load(open(sys.argv[1], encoding='utf-8'))
 with gzip.open('site/data/serviceforge.json.gz', 'wt', encoding='utf-8') as f:
     f.write(json.dumps(d, ensure_ascii=False))
 print('wrote site/data/serviceforge.json.gz:', d['stats'])
-print('credential-shaped strings in export:', scan(d))
 PYEOF
+# Then report (not enforce -- site/build-serviceforge.js is the enforcement point) what the generator's
+# credential screen will do with this export: how many first steps it drops whole and how many printed
+# strings it redacts a span out of. Run through the generator's own classifier so the count cannot drift
+# away from what is published; read the two numbers against the last export before shipping.
+node -e 'const fs=require("fs"),zlib=require("zlib");const sf=require("./site/build-serviceforge");const d=JSON.parse(zlib.gunzipSync(fs.readFileSync("site/data/serviceforge.json.gz")).toString("utf8"));const F=["check_text","test_point","expected","tools","tolerance"];const hk=m=>(m.symptoms||[]).filter(s=>(s.causes||[]).length).length>=2;let drop=0,red=0;(d.models||[]).filter(hk).forEach(m=>{const sorted=m.symptoms.slice().sort((a,b)=>(b.cause_count||0)-(a.cause_count||0)||String(a.title).localeCompare(String(b.title)));sorted.slice(0,60).forEach(s=>{if(s.first_step&&F.some(k=>sf.hasCredential(s.first_step[k])))drop++;[s.title,s.description].concat((s.causes||[]).map(c=>c.title)).forEach(t=>{if(sf.hasCredential(t))red++;});});sorted.slice(60).forEach(s=>{if(sf.hasCredential(s.title))red++;});(m.error_codes||[]).forEach(e=>{if(sf.hasCredential(e.meaning))red++;if(sf.hasCredential(e.trigger_condition))red++;});});console.log("credential screen on this export: first steps dropped whole:",drop,"| printed strings with a redacted span:",red);'
