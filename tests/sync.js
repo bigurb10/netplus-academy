@@ -925,6 +925,16 @@ function state(extra) {
       ok === false && h.calls.length === 1, `${ok} / ${h.calls.length} call(s) / labs=${JSON.stringify(local.labs)} certAt=${local.certAt}`);
   }
 
+  // ----- the additive pbqs map must not look like a change either -----
+  // Same class as labs above: mergeState always emits `pbqs`, even {} when neither side ever had
+  // one, so a server row written before PBQs existed must hash the same as a fresh merge's empty
+  // map. hashOf is on the FRASync surface for exactly this pair of checks.
+  {
+    const w = harness([]).w;
+    check('hashOf: an empty pbqs map hashes like no pbqs at all', w.FRASync.hashOf({ v: 3, course: 'mini', exams: [], pbqs: {} }) === w.FRASync.hashOf({ v: 3, course: 'mini', exams: [] }));
+    check('hashOf: a non-empty pbqs map changes the hash', w.FRASync.hashOf({ v: 3, course: 'mini', exams: [], pbqs: { p1: { best: 1, done: true, at: 1, tasks: {} } } }) !== w.FRASync.hashOf({ v: 3, course: 'mini', exams: [] }));
+  }
+
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All sync tests passed.');
   // Explicit on the success path too: booting the real engine arms a real 5s FRASync

@@ -219,6 +219,8 @@
     // emits `labs`, even {} when neither side ever had one, so a server blob written before
     // labs existed must hash the same as a fresh merge's empty map, not differ by one key.
     if (c.labs && typeof c.labs === 'object' && !Object.keys(c.labs).length) delete c.labs;
+    // Same class again: pbqs is an additive map.
+    if (c.pbqs && typeof c.pbqs === 'object' && !Object.keys(c.pbqs).length) delete c.pbqs;
     // Same class again: certAt (Task 5) is an additive timestamp, 0 by default, that a server
     // blob written before the certificate existed never carries at all.
     if (!c.certAt) delete c.certAt;
@@ -557,6 +559,9 @@
     schedulePush: schedulePush,
     forgetOwner: forgetOwner,
     isDirty: function () { return dirty; },
+    // Pure, and on the surface so a test can pin what the change-detection hash ignores
+    // (the additive maps and stamps above) directly instead of inferring it from a push.
+    hashOf: hashOf,
     reset: reset
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,7 +1,8 @@
 // engine/summary.js: the account page's read-only view of one course's progress blob.
 // It mirrors stage() and planDone() in engine/app.js. Run: node tests/summary.js
 'use strict';
-const { summarize } = require('../engine/summary.js');
+const SUM = require('../engine/summary.js');
+const { summarize } = SUM;
 
 const fails = [];
 const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== undefined ? '  [' + x + ']' : ''}`); if (!ok) fails.push(n); };
@@ -59,6 +60,13 @@ check('garbage topics do not throw', (() => { try { return stageOf({ exams: [exa
 
 check('labs done counts done entries and takes the total from meta', (() => { const s = summarize(state({ labs: { a: { done: true, at: 1 }, b: { done: false, at: 2 }, c: 'x' } }), Object.assign({}, META, { labs: 3 })); return s.labsDone === 1 && s.labsTotal === 3; })());
 check('no labs in meta or state: both zero', (() => { const s = summarize(state(), META); return s.labsDone === 0 && s.labsTotal === 0; })());
+
+{
+  const s = SUM.summarize({ pbqs: { a: { done: true, at: 1 }, b: { done: false, at: 2 }, c: 'junk' } }, { pbqs: 10 });
+  check('summarize: pbqsDone counts done entries only, pbqsTotal comes from meta', s.pbqsDone === 1 && s.pbqsTotal === 10);
+  const s0 = SUM.summarize({}, {});
+  check('summarize: no pbqs reads as zero of zero', s0.pbqsDone === 0 && s0.pbqsTotal === 0);
+}
 
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('All summary tests passed.');

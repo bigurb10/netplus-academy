@@ -144,7 +144,7 @@
 
   // ---------- state ----------
   function fresh() {
-    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, certAt: 0, settingsAt: 0, touchedAt: 0, created: Date.now() };
+    return { v: 3, course: course.id, view: { name: 'cheatsheet', arg: 'intro' }, lessons: {}, qstats: {}, topics: {}, exams: [], passes: 0, official: null, plan: null, path: null, pathAt: 0, active: null, settings: { timer: true }, feedback: [], ratings: {}, seen: {}, labs: {}, pbqs: {}, certAt: 0, settingsAt: 0, touchedAt: 0, created: Date.now() };
   }
   // The pass rule lives in one fold (engine/merge.js). Recomputing on load migrates blobs saved
   // under the old streak rule (passStreak goes; passes and official come from the exam log) and
@@ -158,14 +158,23 @@
     delete s.passStreak;
     return s;
   }
+  // The additive progress maps (labs, pbqs) arrive missing from a blob saved before the feature
+  // existed, and as a non-object from a hand-edited stored blob. Object.assign(fresh(), s) copies
+  // either straight over the default, so guard them here, where every migration passes, and the
+  // accessors can assume a map.
+  function guardMaps(s) {
+    if (!s.labs || typeof s.labs !== 'object') s.labs = {};
+    if (!s.pbqs || typeof s.pbqs !== 'object') s.pbqs = {};
+    return s;
+  }
   let S = load();
   function load() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) { const s = JSON.parse(raw); if (s && s.v === 3) return adoptRule(Object.assign(fresh(), s)); }
+      if (raw) { const s = JSON.parse(raw); if (s && s.v === 3) return adoptRule(guardMaps(Object.assign(fresh(), s))); }
       for (const key of (course.legacyStoreKeys || [])) {
         const old = localStorage.getItem(key);
-        if (old) { const s = JSON.parse(old); if (s && s.v === 2) return adoptRule(Object.assign(fresh(), s, { v: 3, course: course.id })); }
+        if (old) { const s = JSON.parse(old); if (s && s.v === 2) return adoptRule(guardMaps(Object.assign(fresh(), s, { v: 3, course: course.id }))); }
       }
     } catch (e) { /* storage unavailable */ }
     return fresh();
@@ -206,6 +215,11 @@
   const labStat = id => S.labs[id] || (S.labs[id] = { done: false, at: 0, values: {}, ok: {} });
   const labDone = id => !!(S.labs[id] && S.labs[id].done);
   const labsDoneCount = () => labIds.filter(labDone).length;
+  // PBQ progress: best score and done flag per PBQ, task scores from the last Check.
+  const PBQS = FRA.pbqs || {}; const pbqIds = Object.keys(PBQS);
+  const pbqStat = id => S.pbqs[id] || (S.pbqs[id] = { best: 0, done: false, at: 0, tasks: {} });
+  const pbqDone = id => !!(S.pbqs[id] && S.pbqs[id].done);
+  const pbqsDoneCount = () => pbqIds.filter(pbqDone).length;
   const labOfView = () => { const l = S.view.name === 'lesson' ? L[S.view.arg] : null; return l && l.lab ? LABS[l.lab] : null; };
   function checkLab(lab, t, value) {
     let ok;
