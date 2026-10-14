@@ -82,11 +82,11 @@ function run(token) {
     check('BMET sits under Start here', under('start').join(',') === 'bmet/', under('start').join(','));
     // Blake, 2026-10-14: the exam name sits in parentheses to the right of the title so the card says what it trains for.
     check('the BMET card title names the CABT', d.querySelector('#start .card h3 a').textContent.trim() === 'BMET Academy (CABT)', d.querySelector('#start .card h3 a').textContent.trim());
-    check('CBET sits under AAMI certifications', under('aami').join(',') === 'cbet/', under('aami').join(','));
+    check('CBET and CRES sit under AAMI certifications', under('aami').join(',') === 'cbet/,cres/', under('aami').join(','));
     check('the four CompTIA courses sit under CompTIA certifications', under('comptia').join(',') === 'netplus/,secplus/,aplus1/,aplus2/', under('comptia').join(','));
     check('ServiceForge sits under Tools for technicians', under('tools').join(',') === 'serviceforge/', under('tools').join(','));
     const cards = [...d.querySelectorAll('main .card')].filter(c => c.querySelector('h3 a') && !/serviceforge\//.test(c.querySelector('h3 a').getAttribute('href')));
-    check('every course card links its practice test', cards.length === 6 && cards.every(c => { const id = c.querySelector('h3 a').getAttribute('href'); return !!c.querySelector(`.links a[href="${id}practice-test/"]`); }), cards.map(c => c.querySelector('h3 a').getAttribute('href')).join(','));
+    check('every course card links its practice test', cards.length === 7 && cards.every(c => { const id = c.querySelector('h3 a').getAttribute('href'); return !!c.querySelector(`.links a[href="${id}practice-test/"]`); }), cards.map(c => c.querySelector('h3 a').getAttribute('href')).join(','));
     check('every category has a one-line lede', [...d.querySelectorAll('main section.cat')].every(s => s.querySelector('p.cat-lede') && s.querySelector('p.cat-lede').textContent.trim().length > 20));
     check('How every course works is still on the page', /How every course works/.test(d.querySelector('main').textContent));
     check('the catalog header links the guides', !!d.querySelector('header .top-links a[href="/guides/"]'));
