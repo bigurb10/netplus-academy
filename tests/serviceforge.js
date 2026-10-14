@@ -98,8 +98,82 @@ check('classLabel maps keys to plain labels, falls back to a pluralized acronym-
   'User entered a password of fewer than six characters',
   'PIN 10383 test circuit connection',
   'Log on as Administrator',
-  'Verify correct SSID and password for hospital network'
+  'Verify correct SSID and password for hospital network',
+  // Round two: sentences the screen must still return byte-for-byte. The "secured with" forms sit
+  // next to the verb-side rule that catches a factory code; the rest are the sentence-inverting
+  // false positives of the earlier waves, the prose shapes the ordinary-word and account-token
+  // rules run closest to, and measurements the value rules must never read as a value.
+  'secured with retaining straps',
+  'secured with 2.5 mm hex key screw',
+  'secured with correct torque',
+  'Password/user name incorrect',
+  'login user credentials invalid',
+  'Enter calibration password',
+  'Hospital User',
+  'Setup login section',
+  'PW Doppler',
+  'PW board',
+  '/usr/local/bin',
+  'Error code is displayed on screen indicating a system fault',
+  'Event code is not in recognized air sensor event list',
+  "Confirm battery code is set to '6' after software update",
+  'Black downstream pressure pin is bent, broken off',
+  'Potentiometer position feedback may be inaccurate if pin is not properly tightened',
+  'error code 402 during calibration password entry',
+  '40 kV and 0.020 mA; right monitor prompts for password',
+  'Passcode entry exceeds 15 second window',
+  'CASE 6.73',
+  '100%',
+  // Published strings from the real export that sit right against the account-token rule: an
+  // ordinary word in front of "user"/"login" is a thing's name or a role, never an account.
+  'Calibration: CRT monitor user color adjustment',
+  'Calibration: Standard paddles user test',
+  'Server User Name or Password is incorrect',
+  'Incorrect PPP User Name or Password in Phone settings',
+  'Technical event: regulator data log on',
+  'Individual user settings based on user password not retained between system power cycles',
+  '-34.1?C',
+  '-34.1' + String.fromCharCode(176) + 'C'   // the degree sign the export really carries, kept out of this file's bytes
 ].forEach(s => check(`technician text with no credential value is left alone: ${s}`, !sf.hasCredential(s) && sf.redact(s) === s, sf.redact(s)));
+// Round two of the credential screen (.superpowers/sdd/review-sf-cred-verdict.md): the verb-side form
+// that published a real factory access code, values that are ordinary words or carry symbols, short
+// account tokens, abbreviation and separator nouns, a value in front of its noun, digits spelled with
+// spaces, and "default model number" as a value. Each pair is the string and every value redact() must
+// take out of it.
+[
+  ['Power supply is factory-secured with code HP003633 (E3633A) or HP003634 (E3634A).', ['HP003633', 'HP003634']],
+  ['password service', ['service']],
+  ['password biomed', ['biomed']],
+  ['password admin', ['admin']],
+  ['Service password is "biomed"', ['biomed']],
+  ['the supervisor code is service', ['service']],
+  ['password P@ss1', ['P@ss1']],
+  ['password #1234', ['#1234']],
+  ['passcode *#06#', ['*#06#']],
+  ['password Serv!ce1', ['Serv!ce1']],
+  ['password A-B-C-D', ['A-B-C-D']],
+  ['cxdi user session established', ['cxdi']],
+  ['login cxdi', ['cxdi']],
+  ['username cxdi', ['cxdi']],
+  ['pwd 2580', ['2580']],
+  ['pswd: 2580', ['2580']],
+  ['pass.code 2580', ['2580']],
+  ['user-name cxdi', ['cxdi']],
+  ['user_name cxdi', ['cxdi']],
+  ['2580 is the biomed passcode', ['2580']],
+  ['The password for the maintenance menu is 1-2-9', ['1-2-9']],
+  ['password 1 2 9', ['1 2 9']],
+  ['passcode 2 5 8 0', ['2 5 8 0']],
+  ['Administrator group members (INW\\Domain Admins, INW\\MLCLSqlUser, INW\\MLCLTechUser) must be present', ['MLCLSqlUser', 'MLCLTechUser']],
+  ['Correct password as per Appendix A of Operating Manual or default model number', ['default model number']],
+  // Found by this round's own sweep of the generated pages: the live GE Dinamap Pro 100 service
+  // access code, written as a menu path, where the qualifier is a separator away from "code".
+  ['Main menu > More > Service > code 2213 > NIBP > Check', ['2213']]
+].forEach(([s, vals]) => check(`a credential value is detected and withheld: ${s}`, sf.hasCredential(s) && vals.every(v => !sf.redact(s).includes(v)), sf.redact(s)));
+// The redaction's own edges: a quoted value takes its closing quote with it rather than leaving one
+// behind, and the group name beside two withheld account names is not collateral damage.
+check('a quoted ordinary-word value is withheld with no stray quote left behind', sf.redact('Service password is "biomed"') === 'Service [withheld]', sf.redact('Service password is "biomed"'));
+check('the live backslash account list withholds both accounts and keeps the group name', sf.redact('Administrator group members (INW\\Domain Admins, INW\\MLCLSqlUser, INW\\MLCLTechUser) must be present').includes('Domain Admins'), sf.redact('Administrator group members (INW\\Domain Admins, INW\\MLCLSqlUser, INW\\MLCLTechUser) must be present'));
 // A mass-noun label ("X-ray equipment") must not be counted directly ("2 x-ray equipment"), and an
 // acronym-hyphen compound keeps its capital mid-sentence.
 {
