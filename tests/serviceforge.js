@@ -22,15 +22,37 @@ check('error codes show code, meaning, trigger, severity only', page.includes('E
 check('community fixes appear as a count only', page.includes('2 fixes logged by technicians'));
 check('a safety class of none shows no badge; a known class shows its label', !page.includes('<span class="pill">none</span>') && page.includes('<span class="pill">caution</span>') && (page.match(/class="pill"/g) || []).length === 1);
 check('the record label and the teaching-summary line are present', page.includes('ServiceForge knowledge base record. Field-unverified unless technicians confirmed it.') && page.includes('A teaching summary of the record, not a service manual.'));
-check('nothing protected leaks', !/password|procedure|part_number|citation|quote|org_id/i.test(page));
+// A credential-shaped value in a first step drops the whole step; s8's "Service code 812" first step
+// must not render, and s1's real step is still the only one on the page.
+check('a service access code in a first step is withheld: the step is dropped entirely, not redacted in place', !page.includes('812') && (page.match(/class="step"/g) || []).length === 1);
+// s2 has nothing behind the button (0 steps, 0 actions): no promise with an empty button. s1 keeps
+// its full sentence (more checks and corrective actions both > 0), and the page still carries at
+// least two connect buttons (the lede and s1's rest line).
+check('a symptom with nothing left to show omits the more-checks line and its button', !page.includes('0 more checks'));
+check('a symptom with both more checks and actions keeps the full sentence', page.includes('2 more checks with pass and fail actions, 2 corrective actions, and part numbers are in ServiceForge'));
+check('the per-page connect button count stays at least two', (page.match(/data-sf="connect"/g) || []).length >= 2);
+check('no export key name outside the documented shape appears', !/likely_causes|"actions"|procedure_text|part_number|org_id/.test(page));
+{
+  const descMatch = page.match(/<meta name="description" content="([^"]*)">/);
+  check('the model description fits DESC_MAX with no truncation ellipsis', !!descMatch && !descMatch[1].includes('...') && descMatch[1].length <= 155, descMatch && descMatch[1].length);
+}
 const ld = [...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
 check('JSON-LD: TechArticle with dateModified from the export, then BreadcrumbList', ld[0]['@type'] === 'TechArticle' && ld[0].dateModified === '2026-10-13' && ld[1]['@type'] === 'BreadcrumbList');
 const idx = read('serviceforge/models/index.html'); const cls = read('serviceforge/classes/infusion-pump/index.html');
 check('the index lists every model under its manufacturer, links the two-model class, and does not link the single-model class', idx.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && idx.includes('href="/serviceforge/models/acme-sons/imager-5/"') && idx.includes('href="/serviceforge/classes/infusion-pump/"') && !idx.includes('href="/serviceforge/classes/dry-imager/"'));
+// The fixture's own data.stats says 1 model; the lede must count the 3 models this page actually
+// lists, not repeat that stale top-level figure.
+check('the index lede totals come from the models it lists, not data.stats', idx.includes('3 models,'));
 check('the class page names the class, lists both models, and their shared symptom title', cls.includes('Infusion pumps') && cls.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && cls.includes('href="/serviceforge/models/acme-sons/pump-200/"') && cls.includes('Occlusion alarm with a clear line'));
+check('common symptoms require two or more models; a title only one model carries is omitted', !cls.includes('Battery runs down early'));
 const single = read('serviceforge/models/acme-sons/imager-5/index.html');
-check('a model alone in its class has no class crumb but keeps the class as its eyebrow; a model in a two-model class links its class', !single.includes('href="/serviceforge/classes/dry-imager/"') && single.includes('Dry imager') && page.includes('href="/serviceforge/classes/infusion-pump/"'));
-check('classLabel maps keys to plain labels and falls back to a title-cased key', sf.classLabel('infusion_pump') === 'Infusion pumps' && sf.classLabel('odd_key') === 'Odd key');
+check('a model alone in its class has no class crumb but keeps the class as its eyebrow; a model in a two-model class links its class', !single.includes('href="/serviceforge/classes/dry-imager/"') && single.includes('Dry imagers') && page.includes('href="/serviceforge/classes/infusion-pump/"'));
+// The second cause on s6 carries a value-shaped default password; it is redacted in place (the cause
+// list still needs to show there is a second cause) while a plain, valueless mention of "password"
+// in s6's own description survives unchanged.
+check('a cause with a credential value is redacted and the raw value never renders', !single.includes('1234') && single.includes('[withheld]'));
+check('a legitimate mention of "password" with no value attached is not redacted', single.includes('Ask the department for the service password before you start.'));
+check('classLabel maps keys to plain labels, falls back to a pluralized acronym-aware label, and fuses x-ray/c-arm compounds', sf.classLabel('infusion_pump') === 'Infusion pumps' && sf.classLabel('odd_key') === 'Odd keys' && sf.classLabel('dental_x_ray_system') === 'Dental X-ray systems' && sf.classLabel('c_arm') === 'C-arms');
 
 // Symptom cap: a model with 61 generated symptoms renders exactly 60 symptom blocks, with the
 // remaining 1 listed under "More symptoms" instead.

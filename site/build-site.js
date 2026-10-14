@@ -618,7 +618,13 @@ function buildAll(opts) {
     for (const g of guides) { writePage(out, `/guides/${g.slug}/`, guidePage(g, models, origin)); guideUrls.push(`/guides/${g.slug}/`); }
   }
   const sfData = path.join(__dirname, 'data', 'serviceforge.json.gz');
-  const sfUrls = (opts.serviceforge === false || !fs.existsSync(sfData)) ? [] : require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls;
+  const sfEnabled = opts.serviceforge !== false;
+  // /serviceforge/ is the hand-written product page (dist/serviceforge.html, built by build.py and
+  // placed by scripts/stage.sh) that every generated model page's connect button points at; it belongs
+  // in the sitemap whenever the feature is on, independent of whether the generated model/class tree
+  // exists yet.
+  const sfModelUrls = (sfEnabled && fs.existsSync(sfData)) ? require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls : [];
+  const sfUrls = sfEnabled ? ['/serviceforge/'].concat(sfModelUrls) : [];
   const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls).concat(sfUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');

@@ -1,16 +1,64 @@
 'use strict';
 // Public ServiceForge pages from site/data/serviceforge.json: a models index, one page per device class,
 // one page per model with knowledge. Middle-path exposure: every symptom and cause, the first check in
-// full, everything else behind the connect button. Nothing protected is in the export to begin with.
+// full, everything else behind the connect button. Nothing protected is in the export to begin with, and
+// a value-shaped credential screen below drops or redacts anything that still reads like an access code,
+// password, PIN, or username before it reaches a page.
 const fs = require('fs'); const path = require('path');
 const site = require('./build-site');
 const { esc } = require('./markup');
 const { shell, crumbs, breadcrumbLd, org, slugify, shorten, BRAND, DESC_MAX } = site;
 
+// Value-shaped credential screen. hasCredential() gates whether a first step is published at all;
+// redact() blanks the matched span out of any other printed text (titles, descriptions, error codes).
+// This is the enforcement point: the export query excludes the password table, but a service access
+// code or a username/password pair can still show up as free text inside a diagnostic step, a symptom
+// description, or a cause title, and this is what stops it from being published anyway.
+const CRED = [
+  /\b(password|passcode|pass ?code|pass ?word|service code|access code|unlock code|engineer(?:ing)? code|tech(?:nician)? code|service pin|pin|username|user ?name|user id|login)\b[^.;\n]{0,24}?[:=]\s*["']?[A-Za-z0-9*#_.-]{2,}/i,
+  /\b(?:service|access|unlock|engineer(?:ing)?|tech(?:nician)?|maintenance|setup|config(?:uration)?|supervisor|biomed|factory|default)\s+(?:code|password|passcode|pin)\b[^0-9\n]{0,16}\d{3,}/i,
+  /\b(?:code|password|passcode|pin)\s+(?:is|was|=|:)\s*["']?[A-Za-z0-9*#_.-]{3,}/i
+];
+const hasCredential = s => CRED.some(re => re.test(String(s || '')));
+const redact = s => CRED.reduce((acc, re) => acc.replace(new RegExp(re.source, 'gi'), '[withheld]'), String(s || ''));
+
 // category_key values in the export use underscores (patient_monitor, x_ray_system, infusion_pump, ventilator,
 // anesthesia_machine, hospital_bed, test_equipment_power_supply, ultrasound_system, ct_scanner, patient_lift, ...).
+// Override here only where the computed fallback below (acronym-aware, pluralized) reads wrong.
 const CLASS_LABELS = { infusion_pump: 'Infusion pumps', patient_monitor: 'Patient monitors', defibrillator: 'Defibrillators', ventilator: 'Ventilators', anesthesia_machine: 'Anesthesia machines', x_ray_system: 'X-ray systems', ct_scanner: 'CT scanners', ultrasound_system: 'Ultrasound systems', hospital_bed: 'Hospital beds', patient_lift: 'Patient lifts', test_equipment_power_supply: 'Test equipment and power supplies', electrosurgical_unit: 'Electrosurgical units', suction_pump: 'Suction units', sterilizer: 'Sterilizers and reprocessors', infant_warmer: 'Infant warmers and incubators', procedure_light: 'Procedure lights' };
-const classLabel = key => CLASS_LABELS[key] || (key ? key.replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()) : 'Other equipment');
+// Acronyms that stay upper-case as a whole token (checked case-insensitively against each "_"-split token).
+const UPPER_TOKENS = new Set(['ct', 'mri', 'pet', 'spect', 'ecg', 'ekg', 'eeg', 'emg', 'iv', 'ac', 'dc', 'uv', 'led', 'aed', 'esu', 'cpap', 'bipap', 'icu', 'nicu', 'or', 'er', 'hd', 'hf', 'rf', 'ir', 'tee', 'ivus', 'abp', 'nibp', 'spo2', 'etco2']);
+function pluralizeWord(word) {
+  if (/s$/i.test(word) || /^equipment$/i.test(word)) return word;
+  if (/[^aeiouAEIOU]y$/.test(word)) return word.slice(0, -1) + 'ies';
+  if (/(x|z|ch|sh)$/i.test(word)) return word + 'es';
+  return word + 's';
+}
+// Fallback for a category_key with no CLASS_LABELS entry: split on "_", fuse the two-token compounds
+// "x_ray" and "c_arm" into one hyphenated word, upper-case known acronym tokens, lowercase the rest,
+// pluralise the last word, and capitalise the label's first character.
+function classLabelFallback(key) {
+  const raw = key.split(/_+/).filter(Boolean);
+  const tokens = [];
+  for (let i = 0; i < raw.length; i++) {
+    const pair = `${raw[i].toLowerCase()}_${(raw[i + 1] || '').toLowerCase()}`;
+    if (pair === 'x_ray') { tokens.push('X-ray'); i++; continue; }
+    if (pair === 'c_arm') { tokens.push('C-arm'); i++; continue; }
+    tokens.push(UPPER_TOKENS.has(raw[i].toLowerCase()) ? raw[i].toUpperCase() : raw[i].toLowerCase());
+  }
+  if (!tokens.length) return 'Other equipment';
+  tokens[tokens.length - 1] = pluralizeWord(tokens[tokens.length - 1]);
+  const label = tokens.join(' ');
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+const classLabel = key => CLASS_LABELS[key] || (key ? classLabelFallback(key) : 'Other equipment');
+// Mid-sentence use of a label: lowercase only the first character, and only when the first word is not
+// an all-caps acronym (so "CT scanners" stays "CT scanners" but "Infusion pumps" becomes "infusion pumps").
+function lowerLabel(label) {
+  const first = label.split(' ')[0];
+  if (first.length > 1 && first === first.toUpperCase() && /[A-Z]/.test(first)) return label;
+  return label.charAt(0).toLowerCase() + label.slice(1);
+}
 const classSlug = key => (key || 'other').replace(/_/g, '-');
 // A class page needs at least this many models; a one-model class page would only repeat that model's page
 // (the live export has 247 single-model classes out of 346).
@@ -34,13 +82,26 @@ function slugModels(models) {
   });
 }
 
+const FIRST_STEP_FIELDS = ['check_text', 'test_point', 'expected', 'tools', 'tolerance'];
+// A first step with a credential-shaped value in any of its fields is dropped entirely rather than
+// redacted in place: a dropped step still has a free-text check_text and test_point, and redacting one
+// field while keeping the rest would still read like instructions for getting past the credential.
+const stepCredential = s => s.first_step && FIRST_STEP_FIELDS.some(k => hasCredential(s.first_step[k]));
+
 function symptomBlock(s) {
-  const causes = (s.causes || []).map(c => `<li>${c.rank ? `<span class="rank">${c.rank}.</span> ` : ''}${esc(c.title)}${c.likelihood ? ` <span class="muted">(${esc(c.likelihood)})</span>` : ''}</li>`).join('');
-  const f = s.first_step;
+  const causes = (s.causes || []).map(c => `<li>${c.rank ? `<span class="rank">${c.rank}.</span> ` : ''}${esc(redact(c.title))}${c.likelihood ? ` <span class="muted">(${esc(c.likelihood)})</span>` : ''}</li>`).join('');
+  const f = stepCredential(s) ? null : s.first_step;
   const step = f ? `<div class="step"><div class="eyebrow">First check</div><p>${esc(f.check_text)}</p><dl>${f.test_point ? `<dt>Test point</dt><dd>${esc(f.test_point)}</dd>` : ''}${f.expected ? `<dt>Expected</dt><dd>${esc(f.expected)}${f.value_unit && !String(f.expected).includes(f.value_unit) ? ' ' + esc(f.value_unit) : ''}${f.tolerance ? `, ${esc(f.tolerance)}` : ''}</dd>` : ''}${f.tools ? `<dt>Tools</dt><dd>${esc(f.tools)}</dd>` : ''}</dl></div>` : '';
+  // more = everything not shown as the first step; a dropped step counts as nothing shown, so more
+  // then equals the full step_count. The line (and its connect button) renders only when there is
+  // something behind it: a check still to come, a corrective action, or both.
   const more = Math.max(0, (s.step_count || 0) - (f ? 1 : 0));
-  const rest = `<p class="rest">${more} more check${more === 1 ? '' : 's'} with pass and fail actions, ${s.action_count || 0} corrective action${s.action_count === 1 ? '' : 's'}, and part numbers are in ServiceForge. ${connect()}</p>`;
-  return `<section class="symptom"><h3>${esc(s.title)}${safety(s.safety_class) ? ` <span class="pill">${safety(s.safety_class)}</span>` : ''}</h3>${s.description ? `<p class="ink2">${esc(s.description)}</p>` : ''}<h4>Ranked causes</h4><ol class="causes">${causes}</ol>${step}${rest}</section>`;
+  const actions = s.action_count || 0;
+  let rest = '';
+  if (more > 0 && actions > 0) rest = `<p class="rest">${more} more check${more === 1 ? '' : 's'} with pass and fail actions, ${actions} corrective action${actions === 1 ? '' : 's'}, and part numbers are in ServiceForge. ${connect()}</p>`;
+  else if (more > 0) rest = `<p class="rest">${more} more check${more === 1 ? '' : 's'} with pass and fail actions are in ServiceForge. ${connect()}</p>`;
+  else if (actions > 0) rest = `<p class="rest">${actions} corrective action${actions === 1 ? '' : 's'} and part numbers are in ServiceForge. ${connect()}</p>`;
+  return `<section class="symptom"><h3>${esc(redact(s.title))}${safety(s.safety_class) ? ` <span class="pill">${safety(s.safety_class)}</span>` : ''}</h3>${s.description ? `<p class="ink2">${esc(redact(s.description))}</p>` : ''}<h4>Ranked causes</h4><ol class="causes">${causes}</ol>${step}${rest}</section>`;
 }
 
 function modelPage(m, data, origin, classPages) {
@@ -48,7 +109,8 @@ function modelPage(m, data, origin, classPages) {
   const title = `${name} Troubleshooting and Error Codes | ServiceForge`;
   const h1 = `${name}: troubleshooting and error codes`;
   const steps = m.symptoms.reduce((a, s) => a + (s.step_count || 0), 0); const causes = m.symptoms.reduce((a, s) => a + (s.causes || []).length, 0);
-  const description = shorten(`${name} troubleshooting from the ServiceForge knowledge base: ${m.symptoms.length} symptoms, ${causes} ranked causes, ${steps} checks with test points, and ${(m.error_codes || []).length} error codes for this ${cls.toLowerCase().replace(/s$/, '')}.`, DESC_MAX);
+  const codeCount = (m.error_codes || []).length;
+  const description = shorten(`${name} troubleshooting: ${m.symptoms.length} symptoms with ranked causes and first checks${codeCount ? `, ${codeCount} error codes` : ''}. From the ServiceForge knowledge base.`, DESC_MAX);
   // The class crumb only when the class has its own page; a single-model class stays as the eyebrow text.
   const classCrumb = classPages && classPages.has(classSlug(m.category_key)) ? [{ name: cls, href: `/serviceforge/classes/${classSlug(m.category_key)}/` }] : [];
   const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: '/serviceforge/models/' }].concat(classCrumb, [{ name: name, href: m.url }]);
@@ -56,13 +118,13 @@ function modelPage(m, data, origin, classPages) {
   // are named so the page stays truthful about total scope, with one connect button.
   const sorted = m.symptoms.slice().sort((a, b) => (b.cause_count || 0) - (a.cause_count || 0) || String(a.title).localeCompare(String(b.title)));
   const shown = sorted.slice(0, SYMPTOM_CAP); const hidden = sorted.slice(SYMPTOM_CAP);
-  const moreSymptoms = hidden.length ? `<section><h2>More symptoms</h2><ul>${hidden.map(s => `<li>${esc(s.title)}</li>`).join('')}</ul><p class="rest">${hidden.length} more symptom${hidden.length === 1 ? '' : 's'} with ranked causes and checks are in ServiceForge. ${connect()}</p></section>` : '';
-  const codes = (m.error_codes || []).length ? `<section><h2>Error codes</h2><div class="table-wrap"><table class="plain"><thead><tr><th>Code</th><th>Meaning</th><th>Trigger</th><th>Severity</th></tr></thead><tbody>${m.error_codes.map(e => `<tr><td><code>${esc(e.code)}</code></td><td>${esc(e.meaning || '')}</td><td>${esc(e.trigger_condition || '')}</td><td>${esc(e.severity || '')}</td></tr>`).join('')}</tbody></table></div><p class="rest">Likely causes and actions for each code are in ServiceForge. ${connect()}</p></section>` : '';
+  const moreSymptoms = hidden.length ? `<section><h2>More symptoms</h2><ul>${hidden.map(s => `<li>${esc(redact(s.title))}</li>`).join('')}</ul><p class="rest">${hidden.length} more symptom${hidden.length === 1 ? '' : 's'} with ranked causes and checks are in ServiceForge. ${connect()}</p></section>` : '';
+  const codes = codeCount ? `<section><h2>Error codes</h2><div class="table-wrap"><table class="plain"><thead><tr><th>Code</th><th>Meaning</th><th>Trigger</th><th>Severity</th></tr></thead><tbody>${m.error_codes.map(e => `<tr><td><code>${esc(e.code)}</code></td><td>${esc(redact(e.meaning || ''))}</td><td>${esc(redact(e.trigger_condition || ''))}</td><td>${esc(e.severity || '')}</td></tr>`).join('')}</tbody></table></div><p class="rest">Likely causes and actions for each code are in ServiceForge. ${connect()}</p></section>` : '';
   const body = `${crumbs(crumbList)}
 <article class="lesson sf-model">
   <div class="eyebrow">${esc(cls)}${m.family ? ` &middot; ${esc(m.family)} family` : ''}</div>
   <h1>${esc(h1)}</h1>
-  <p class="lede ink2">The ServiceForge knowledge base holds ${m.symptoms.length} documented symptoms for the ${esc(name)}, with ${causes} ranked causes, ${steps} diagnostic checks with test points and expected values, and ${(m.error_codes || []).length} error codes. Each symptom below shows its causes and the first check; the rest is one connection away. ${connect()}</p>
+  <p class="lede ink2">The ServiceForge knowledge base holds ${m.symptoms.length} documented symptoms for the ${esc(name)}, with ${causes} ranked causes, ${steps} diagnostic checks with test points and expected values, and ${codeCount} error codes. Each symptom below shows its causes and the first check; the rest is one connection away. ${connect()}</p>
   <h2>Symptoms</h2>
   ${shown.map(symptomBlock).join('')}
   ${moreSymptoms}
@@ -79,27 +141,36 @@ function modelPage(m, data, origin, classPages) {
 function classPage(key, models, data, origin) {
   const label = classLabel(key); const url = `/serviceforge/classes/${classSlug(key)}/`;
   const titles = {}; models.forEach(m => m.symptoms.forEach(s => { titles[s.title] = (titles[s.title] || []).concat(m); }));
-  const common = Object.keys(titles).sort((a, b) => titles[b].length - titles[a].length || a.localeCompare(b)).slice(0, 15);
+  // "Common" means shared by at least two models in the class; a title only one model carries is not
+  // common, it is just that model's own symptom list repeated.
+  const common = Object.keys(titles).filter(t => titles[t].length >= 2).sort((a, b) => titles[b].length - titles[a].length || a.localeCompare(b)).slice(0, 15);
   const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: '/serviceforge/models/' }, { name: label, href: url }];
   const body = `${crumbs(crumbList)}
 <article class="lesson">
   <h1>${esc(label)} troubleshooting: models and common symptoms</h1>
-  <p class="lede ink2">${models.length} ${esc(label.toLowerCase())} with troubleshooting records in ServiceForge. Each model page lists every documented symptom with its ranked causes and first check.</p>
+  <p class="lede ink2">${models.length} ${esc(lowerLabel(label))} with troubleshooting records in ServiceForge. Each model page lists every documented symptom with its ranked causes and first check.</p>
   <h2>Models</h2><ul>${models.map(m => `<li><a href="${m.url}">${esc(m.manufacturer)} ${esc(m.name)}</a> <span class="muted">${m.symptoms.length} symptoms</span></li>`).join('')}</ul>
-  <h2>Common symptoms</h2><ul>${common.map(t => `<li>${esc(t)} <span class="muted">${titles[t].map(m => `<a href="${m.url}">${esc(m.name)}</a>`).join(', ')}</span></li>`).join('')}</ul>
+  ${common.length ? `<h2>Common symptoms</h2><ul>${common.map(t => `<li>${esc(redact(t))} <span class="muted">${titles[t].map(m => `<a href="${m.url}">${esc(m.name)}</a>`).join(', ')}</span></li>`).join('')}</ul>` : ''}
   <p class="muted">${LABEL} ${SUMMARY}</p>
 </article>`;
-  return shell({ origin, path: url, type: 'website', title: `${label} Troubleshooting: Models and Common Symptoms | ServiceForge`, ogTitle: `${label} troubleshooting`, description: shorten(`Troubleshooting records for ${models.length} ${label.toLowerCase()} in the ServiceForge knowledge base: symptoms, ranked causes, and first checks per model.`, DESC_MAX), nav: `<a href="/serviceforge/models/">Models</a><a href="/serviceforge/" class="btn primary small">ServiceForge</a>`, jsonld: [breadcrumbLd(origin, crumbList)], body });
+  return shell({ origin, path: url, type: 'website', title: `${label} Troubleshooting: Models and Common Symptoms | ServiceForge`, ogTitle: `${label} troubleshooting`, description: shorten(`Troubleshooting records for ${models.length} ${lowerLabel(label)} in the ServiceForge knowledge base: symptoms, ranked causes, and first checks per model.`, DESC_MAX), nav: `<a href="/serviceforge/models/">Models</a><a href="/serviceforge/" class="btn primary small">ServiceForge</a>`, jsonld: [breadcrumbLd(origin, crumbList)], body });
 }
 
 function indexPage(models, data, origin, classPages) {
   const url = '/serviceforge/models/'; const byMfr = {}; models.forEach(m => { (byMfr[m.manufacturer] = byMfr[m.manufacturer] || []).push(m); });
   const classes = {}; models.forEach(m => { const k = classSlug(m.category_key); if (classPages.has(k)) (classes[k] = classes[k] || { key: m.category_key, n: 0 }).n++; });
+  // The lede's totals come from the models this page actually lists, not from data.stats: the stats
+  // block describes the whole export (including symptoms the model pages never render), and a sentence
+  // next to a list of models should add up to that list.
+  const symptoms = models.reduce((a, m) => a + m.symptoms.length, 0);
+  const sCauses = models.reduce((a, m) => a + m.symptoms.reduce((b, s) => b + (s.causes || []).length, 0), 0);
+  const sSteps = models.reduce((a, m) => a + m.symptoms.reduce((b, s) => b + (s.step_count || 0), 0), 0);
+  const sCodes = models.reduce((a, m) => a + (m.error_codes || []).length, 0);
   const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: url }];
   const body = `${crumbs(crumbList)}
 <article class="lesson">
   <h1>Medical equipment models with troubleshooting records</h1>
-  <p class="lede ink2">${models.length} models, ${data.stats.symptoms} symptoms, ${data.stats.causes} ranked causes, ${data.stats.steps} checks, and ${data.stats.error_codes} error codes in the ServiceForge knowledge base, exported ${esc(data.exported)}.</p>
+  <p class="lede ink2">${models.length} models, ${symptoms.toLocaleString('en-US')} symptoms, ${sCauses.toLocaleString('en-US')} ranked causes, ${sSteps.toLocaleString('en-US')} checks, and ${sCodes.toLocaleString('en-US')} error codes in the ServiceForge knowledge base, exported ${esc(data.exported)}.</p>
   ${Object.keys(classes).length ? `<h2>By device class</h2><p class="ink2">Classes with two or more documented models. A model that is alone in its class is listed under its manufacturer below.</p><ul>${Object.keys(classes).sort().map(k => `<li><a href="/serviceforge/classes/${k}/">${esc(classLabel(classes[k].key))}</a> <span class="muted">${classes[k].n}</span></li>`).join('')}</ul>` : ''}
   <h2>By manufacturer</h2>${Object.keys(byMfr).sort().map(mf => `<h3>${esc(mf)}</h3><ul>${byMfr[mf].map(m => `<li><a href="${m.url}">${esc(m.name)}</a> <span class="muted">${m.symptoms.length} symptoms</span></li>`).join('')}</ul>`).join('')}
   <p class="muted">${LABEL} ${SUMMARY}</p>

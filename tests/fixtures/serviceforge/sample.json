@@ -8,7 +8,10 @@
           "causes": [ { "rank": 1, "title": "Pressure sensor drift", "likelihood": "likely" }, { "rank": 2, "title": "Door latch not fully closed", "likelihood": "possible" } ],
           "first_step": { "check_text": "Read the occlusion pressure with the set open", "test_point": "Service menu, pressure", "expected": "below 1 psi", "value_unit": "psi", "tolerance": "plus or minus 0.2", "tools": "none" } },
         { "id": "s2", "title": "Will not power on", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 0, "action_count": 0,
-          "causes": [ { "rank": 1, "title": "Discharged battery and no mains", "likelihood": null } ], "first_step": null }
+          "causes": [ { "rank": 1, "title": "Discharged battery and no mains", "likelihood": null } ], "first_step": null },
+        { "id": "s8", "title": "Service menu will not open", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 2, "action_count": 1,
+          "causes": [ { "rank": 1, "title": "Wrong service entry sequence", "likelihood": "likely" } ],
+          "first_step": { "check_text": "Enter the service menu", "test_point": "Front panel", "expected": "Service code 812 entered successfully; diagnostics available", "value_unit": null, "tolerance": null, "tools": null } }
       ],
       "error_codes": [ { "code": "E-14", "meaning": "Air in line", "trigger_condition": "Ultrasonic detector sees a bubble", "severity": "warning" } ] },
     { "id": "33333333-3333-3333-3333-333333333333", "manufacturer": "Acme & Sons", "name": "Pump 200", "family": "Pump", "category_key": "infusion_pump", "community_fix_count": 0,
@@ -22,8 +25,8 @@
       "error_codes": [] },
     { "id": "44444444-4444-4444-4444-444444444444", "manufacturer": "Acme & Sons", "name": "Imager 5", "family": null, "category_key": "dry_imager", "community_fix_count": 0,
       "symptoms": [
-        { "id": "s6", "title": "Film comes out blank", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 0, "action_count": 0,
-          "causes": [ { "rank": 1, "title": "Thermal head not heating", "likelihood": null } ], "first_step": null },
+        { "id": "s6", "title": "Film comes out blank", "description": "Ask the department for the service password before you start.", "safety_class": "none", "cause_count": 2, "step_count": 0, "action_count": 0,
+          "causes": [ { "rank": 1, "title": "Thermal head not heating", "likelihood": null }, { "rank": 2, "title": "Default password is 1234 on this revision", "likelihood": null } ], "first_step": null },
         { "id": "s7", "title": "Film jams at the exit", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 0, "action_count": 0,
           "causes": [ { "rank": 1, "title": "Worn exit roller", "likelihood": null } ], "first_step": null }
       ],

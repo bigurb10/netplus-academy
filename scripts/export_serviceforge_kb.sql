@@ -55,9 +55,12 @@ SELECT json_build_object(
   'exported', to_char(now(), 'YYYY-MM-DD'),
   'stats', json_build_object(
     'models_with_knowledge', (SELECT count(*) FROM knowledge),
-    'symptoms', (SELECT count(*) FROM canon c WHERE c.model_id IN (SELECT model_id FROM knowledge)),
-    'causes', (SELECT count(*) FROM kb_causes k JOIN canon c ON c.id = k.symptom_id WHERE k.canonical_id IS NULL AND c.model_id IN (SELECT model_id FROM knowledge)),
-    'steps', (SELECT count(*) FROM kb_diagnostic_steps d JOIN canon c ON c.id = d.symptom_id WHERE c.model_id IN (SELECT model_id FROM knowledge)),
+    -- Each stat below counts only the canon symptoms the export actually emits (those with a cause,
+    -- via cause_counts) and what hangs off them, so this sentence matches the per-model arithmetic on
+    -- the pages it describes instead of also counting the causeless symptoms sym_json drops.
+    'symptoms', (SELECT count(*) FROM canon c JOIN cause_counts cc ON cc.symptom_id = c.id WHERE c.model_id IN (SELECT model_id FROM knowledge)),
+    'causes', (SELECT count(*) FROM kb_causes k JOIN canon c ON c.id = k.symptom_id JOIN cause_counts cc ON cc.symptom_id = c.id WHERE k.canonical_id IS NULL AND c.model_id IN (SELECT model_id FROM knowledge)),
+    'steps', (SELECT count(*) FROM kb_diagnostic_steps d JOIN canon c ON c.id = d.symptom_id JOIN cause_counts cc ON cc.symptom_id = c.id WHERE c.model_id IN (SELECT model_id FROM knowledge)),
     'error_codes', (SELECT count(*) FROM kb_error_codes e WHERE e.canonical_id IS NULL AND e.model_id IN (SELECT model_id FROM knowledge))
   ),
   'models', coalesce((
