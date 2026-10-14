@@ -51,6 +51,12 @@ check('classLabel maps keys to plain labels and falls back to a title-cased key'
   fs.rmSync(capOut, { recursive: true, force: true });
 }
 
+{
+  const stale = path.join(out, 'serviceforge', 'classes', 'stale-class', 'index.html');
+  fs.mkdirSync(path.dirname(stale), { recursive: true }); fs.writeFileSync(stale, 'stale', 'utf8');
+  sf.buildServiceForge({ data, out, origin: 'https://example.test' });
+  check('a rebuild removes pages that are no longer generated and rewrites the live ones', !fs.existsSync(stale) && exists('serviceforge/models/acme-sons/pump-100-x/index.html') && exists('serviceforge/classes/infusion-pump/index.html'));
+}
 fs.rmSync(out, { recursive: true, force: true });
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nAll ServiceForge page tests passed.');
 process.exit(fails.length ? 1 : 0);

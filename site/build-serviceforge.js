@@ -112,6 +112,8 @@ function buildServiceForge(opts) {
   const origin = (opts.origin || site.ORIGIN).replace(/\/$/, '');
   const models = slugModels((data.models || []).filter(hasKnowledge));
   const write = (urlPath, html) => { const dir = path.join(opts.out, ...urlPath.split('/').filter(Boolean)); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8'); };
+  // Start clean: a model or class that left the export must not survive as a stale page.
+  fs.rmSync(path.join(opts.out, 'serviceforge'), { recursive: true, force: true });
   const urls = [];
   if (!models.length) return { urls };
   const byClass = {}; models.forEach(m => { (byClass[classSlug(m.category_key)] = byClass[classSlug(m.category_key)] || []).push(m); });
