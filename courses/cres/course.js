@@ -15,9 +15,9 @@ FRA.course = {
     phrases: ["CRES study guide", "CRES practice tests", "CRES exam questions", "CRES cheat sheet"],
     faq: [
       { q: "How many questions are on the CRES exam?", a: "165 multiple-choice questions in 3 hours, closed book, with an on-screen calculator and notepad. ACI sets the cut score with a criterion-referenced method and does not publish it; this course's official-format test uses 70%." },
-      { q: "When is the CRES offered?", a: "Twice a year, May 1 to 15 and November 1 to 15, at computer-based test centers. Applications open about three months before each window." },
+      { q: "When is the CRES offered?", a: "Twice a year, May 1 to 15 and November 1 to 15, at Kryterion computer-based test centers. Applications open about three months before each window." },
       { q: "Who is eligible for the CRES?", a: "Full certification needs an associate degree in electronics, technology, or science plus two years of full-time BMET work, or a US military biomed program plus two years, or four years of full-time work alone, and at least 40 percent of that work in radiology over the last two years with 25 percent over the last five. Candidate status is open with the degree, the military program, or two years of work alone." },
-      { q: "How much does the CRES cost?", a: "In 2026 the exam is $410 for AAMI members and $460 for non-members; a retake is $355 or $405. Certification is renewed every three years with continuing education." },
+      { q: "How much does the CRES cost?", a: "In 2026 the exam is $410 for AAMI members and $460 for non-members; a retake is $355 or $405. In 2027 the fees rise to $425 and $480. Certification is renewed every three years with continuing education." },
       { q: "How many practice tests should I take?", a: "This course asks for three of your last five fifty-question practice tests at 80% or better, then one full-length test in the real exam's format at the real passing score." },
       { q: "Is the course free?", a: "Yes. The lessons, the cheat sheet, and unlimited practice tests are free while the site launches." }
     ]
