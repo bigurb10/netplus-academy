@@ -87,13 +87,13 @@ window.FRA = window.FRA || {};
     if (kind === 0) return build("u3l5", `In an FMEA, the failure mode "${pick(MODES)}" scores severity ${s}, occurrence ${o}, and detection ${d}. What is its risk priority number?`, String(rpn),
       wrong(String(rpn), [String(s + o + d), String(s * o), String(s * d), String(rpn * 2), String(o * d), String((s + 1) * (o + 1) * (d + 1))]),
       `Risk priority number = severity x occurrence x detection = ${s} x ${o} x ${d} = ${rpn}. The three scores multiply; they are not added.`, "fmea");
-    const s2 = pick([3, 5, 6, 7, 8, 9, 10]); const o2 = pick([2, 3, 4, 5, 6, 7]); const d2 = pick([2, 3, 4, 5, 6, 8]); let rpn2 = s2 * o2 * d2;
-    if (rpn2 === rpn) rpn2 = rpn + 1;
+    let s2, o2, d2, rpn2;
+    do { s2 = pick([3, 5, 6, 7, 8, 9, 10]); o2 = pick([2, 3, 4, 5, 6, 7]); d2 = pick([2, 3, 4, 5, 6, 8]); rpn2 = s2 * o2 * d2; } while (rpn2 === rpn);
     const first = rpn > rpn2 ? "the first" : "the second";
     const m1 = pick(MODES); let m2 = pick(MODES); if (m2 === m1) m2 = MODES[(MODES.indexOf(m1) + 1) % MODES.length];
     return build("u3l5", `Two failure modes: "${m1}" scores ${s} / ${o} / ${d} and "${m2}" scores ${s2} / ${o2} / ${d2} (severity / occurrence / detection). Which gets attention first?`, `${first.replace(/^./, c => c.toUpperCase())}, with a risk priority number of ${Math.max(rpn, rpn2)}`,
       [`${(rpn > rpn2 ? "The second" : "The first")}, with a risk priority number of ${Math.min(rpn, rpn2)}`, `${s >= s2 ? "The first" : "The second"}, because severity alone decides the order`, `Neither, because both must be fixed before any scoring`],
-      `RPN = severity x occurrence x detection: ${s} x ${o} x ${d} = ${rpn} and ${s2} x ${o2} x ${d2} = ${rpn2 === s2 * o2 * d2 ? rpn2 : rpn2}. The higher number is addressed first; severity alone does not decide, though a very high severity is often reviewed regardless.`, "fmea");
+      `RPN = severity x occurrence x detection: ${s} x ${o} x ${d} = ${rpn} and ${s2} x ${o2} x ${d2} = ${rpn2}. The higher number is addressed first; severity alone does not decide, though a very high severity is often reviewed regardless.`, "fmea");
   }
 
   FRA.generators = { u1l3: variance, u1l5: roi, u1l4: depreciation, u4l5: csr, u3l5: fmea };
