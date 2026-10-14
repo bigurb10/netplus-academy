@@ -352,7 +352,7 @@ Light field to beam       within 2 percent of the SID; at 100 cm that is 2 cm
 PBL and SID indicator     each held within the same 2 percent
 Minimum total filtration  2.5 mm Al above 70 kVp, 1.5 mm Al from 50 to 70 kVp, 0.5 mm Al below 50
 Fluoroscopy               10 R/min tabletop, 20 R/min with high-level control; dead-man control;
-                          cumulative timer signalling at 5 minutes; SSD at least 38 cm fixed, 30 cm mobile
+                          cumulative timer signaling at 5 minutes; SSD at least 38 cm fixed, 30 cm mobile
 \`\`\`
 The standard binds the manufacturer and anyone who **modifies** a system, and that includes you. Swap a collimator, recalibrate an automatic exposure control, or replace a high-voltage component and the room must still meet every one of those numbers when you leave, with the measurement in the record to prove it.
 
@@ -400,7 +400,7 @@ After any work on a mammography unit the compliance state has to be restored and
 4. **Records**: the measurement, the tolerance, pass or fail, and whether a physicist survey is now required because the component you changed was a major one.
 
 ## Accreditation beyond mammography
-The **ACR** also accredits computed tomography, magnetic resonance, ultrasound, nuclear medicine, and breast tomosynthesis programs, with their own phantoms and submitted images. Those are voluntary in the sense that the law does not compel them, but payers often do, so losing accreditation has the same practical effect as losing a licence.
+The **ACR** also accredits computed tomography, magnetic resonance, ultrasound, nuclear medicine, and breast tomosynthesis programs, with their own phantoms and submitted images. Those are voluntary in the sense that the law does not compel them, but payers often do, so losing accreditation has the same practical effect as losing a license.
 
 > Exam tip: MQSA is federal, administered by the FDA, with annual inspection, annual physicist survey, accreditation by an approved body, and a legally required quality control schedule. Phantom weekly; minimum score four fibers, three specks, three masses; no drop over 0.5. Compression 25 to 40 lb, held 15 seconds, never above 40 in power mode.`,
       hook: "MQSA puts mammography under the FDA with a certificate, accreditation by an approved body such as the ACR, annual inspection, annual medical physicist survey, personnel requirements, and a legally mandated quality control schedule of daily detector checks, weekly phantom images, a monthly visual checklist, quarterly repeat analysis, semiannual compression force, and annual physicist tests; the test object must score at least four fibers, three speck groups, and three masses with no drop over 0.5; and any receptor work ends with compression verified at 25 to 40 lb, the AEC checked, and a scored phantom image in the file."

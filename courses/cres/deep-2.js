@@ -598,7 +598,7 @@ Scan a tissue-mimicking phantom at a fixed preset and depth and compare with the
 - Approved chemicals only, never past the immersion line, and leak test a transesophageal probe.`,
 
 u7l3: `## A modality where the source is the patient
-Everything unfamiliar about nuclear medicine comes from one fact: the radioactive material is administered, so the regulation attaches to the material and its licence rather than to a machine you can switch off. The camera is a passive instrument. Your access, your surveys, and the boundary of your work are all set by that licence, which the facility holds.
+Everything unfamiliar about nuclear medicine comes from one fact: the radioactive material is administered, so the regulation attaches to the material and its license rather than to a machine you can switch off. The camera is a passive instrument. Your access, your surveys, and the boundary of your work are all set by that license, which the facility holds.
 
 ## The chain, stage by stage, with what fails
 \`\`\`
@@ -633,7 +633,7 @@ Daily or at least regularly, the staff run a **flood** image to check uniformity
 - Technetium-99m at about 140 keV; activity falls by half-life, which depends on the agent.
 - Positron imaging: about 0.51 MeV photon pairs in coincidence, from agents such as fluorine-18.
 - Flood for uniformity, bar phantom for resolution, center of rotation for tomography.
-- The dose calibrator, surveys, licence, and the material itself belong to the physicist and the facility.`,
+- The dose calibrator, surveys, license, and the material itself belong to the physicist and the facility.`,
 
 u7l4: `## The room where the hazard is mechanical
 The field is on, it is on everywhere in the room, and it does not care that you are a technician. People have been injured by oxygen cylinders, floor polishers, and tool bags. The habit that keeps you alive is simple and absolute: nothing enters the magnet room until it has been screened, every single time, including you, your pockets, your cart, and your test equipment.

@@ -140,7 +140,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Body", "What it does and what it asks you for"], rows: [
           ["FDA", "Regulates devices and radiation-emitting products through CDRH, which carries the work the former BRH began; publishes the standards in 21 CFR 1020 and runs recalls and device reporting"],
           ["State radiation control programs", "Register every tube, inspect rooms, set operator and posting rules; CRCPD is where those programs write their shared suggested regulations"],
-          ["NRC", "Licenses byproduct radioactive material, so nuclear medicine carries its own licence, surveys, and records"],
+          ["NRC", "Licenses byproduct radioactive material, so nuclear medicine carries its own license, surveys, and records"],
           ["CMS and TJC", "CMS sets the conditions of participation and may survey directly; The Joint Commission surveys environment of care, asking for the inventory, maintenance strategy, PM completion, test records, and inspection history"],
           ["MQSA and ACR", "Federal mammography law under the FDA: accreditation, annual inspection, an annual medical physicist survey, personnel qualifications, a written QC program. ACR accredits facilities and publishes the phantoms"],
           ["OSHA", "Worker safety: hazard communication, bloodborne pathogens, electrical practice, and the PPE the employer must supply"],
@@ -472,7 +472,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["DICOM item", "What to know"], rows: [
           ["Association, AE title, host, port", "Two application entities negotiate an association and must agree on who they are and what services they support. Each node answers to a case-sensitive AE title plus address and port, commonly 104 or 11112; a typo here is the most common reason a new room cannot send"],
           ["SOP class", "The service and object pair that says what a node can do, such as store a CT image or query a worklist"],
-          ["C-ECHO and C-STORE", "Verification, then the push that sends images to the archive. A node that verifies but cannot store usually has a class mismatch, or a disk, licence, or permission limit at the receiver"],
+          ["C-ECHO and C-STORE", "Verification, then the push that sends images to the archive. A node that verifies but cannot store usually has a class mismatch, or a disk, license, or permission limit at the receiver"],
           ["C-FIND and C-MOVE", "Query for matching studies, then ask a node to send them somewhere; retrieving priors needs the destination configured on the sending node"],
           ["MWL and MPPS", "The modality worklist query pulls scheduled patients and accession numbers to the console; performed procedure step reports started, completed, or discontinued, which drives status boards and billing"],
           ["Storage commitment and GSDF", "Storage commitment is the archive confirming permanent responsibility, which makes local deletion safe; the grayscale standard display function is the calibration curve that makes an image look the same on every reading station"]

@@ -525,7 +525,7 @@ A **radiopharmaceutical** is a radioactive atom attached to something the body h
 **SPECT** rotates that camera around the patient and reconstructs slices, which adds gantry motion, uniformity, and center-of-rotation calibrations to the list. **PET** uses tracers such as **fluorine-18** that emit positrons; each positron meets an electron and annihilates, sending out two photons of about **0.51 MeV** in opposite directions, and a ring of detectors accepts only pairs that arrive together, which is **coincidence** detection. **SPECT/CT** and **PET/CT** add a scanner for anatomy and attenuation correction, so everything from unit 6 comes with them.
 
 ## Instruments and the hot lab
-Doses are measured in a **dose calibrator** before they are given, and contamination is found with survey meters. Both are calibrated and logged. The hot lab works behind shielding, with syringe shields, gloves, labeled containers, decay storage for waste, and surveys, all under a materials licence held by the facility rather than by you.
+Doses are measured in a **dose calibrator** before they are given, and contamination is found with survey meters. Both are calibrated and logged. The hot lab works behind shielding, with syringe shields, gloves, labeled containers, decay storage for waste, and surveys, all under a materials license held by the facility rather than by you.
 
 ## Where your work stops
 \`\`\`
@@ -534,12 +534,12 @@ Yours                       Detector heads and gantry motion, collimator changer
                             daily flood and resolution phantom runs with the staff
 Shared or vendor            photomultiplier tuning and energy peaking, crystal
                             replacement, deep electronics calibration
-Physicist and licensee      dose calibrator calibration, surveys, licence records,
+Physicist and licensee      dose calibrator calibration, surveys, license records,
                             wipe tests, and anything involving the material itself
 \`\`\`
 
-> Exam tip: a tracer goes in the patient and the camera only listens; collimator, sodium iodide crystal, light guide, photomultiplier array, position and energy circuits, computer; technetium-99m gives about 140 keV and activity falls by half-life; single photon emission tomography rotates the camera, positron tomography counts coincident photons of about 0.51 MeV from agents such as fluorine-18, and hybrids add a scanner; the dose calibrator and the licence belong to the physicist and the facility.`,
-      hook: "A radiopharmaceutical puts the source inside the patient, so the gamma camera only listens through a lead collimator, a sodium iodide crystal, a light guide, a photomultiplier array, and position and energy circuits into a computer; technetium-99m emits about 140 keV and every agent decays by its own half-life; rotating the camera gives single photon emission tomography while positron tomography counts the pairs of about 0.51 MeV photons from annihilation of positrons from agents such as fluorine-18, and hybrid units add a scanner for anatomy and attenuation correction; the dose calibrator, survey meters, hot lab, and licence belong to the physicist and the facility, while heads, gantry, collimators, table, cooling, and computers belong to you."
+> Exam tip: a tracer goes in the patient and the camera only listens; collimator, sodium iodide crystal, light guide, photomultiplier array, position and energy circuits, computer; technetium-99m gives about 140 keV and activity falls by half-life; single photon emission tomography rotates the camera, positron tomography counts coincident photons of about 0.51 MeV from agents such as fluorine-18, and hybrids add a scanner; the dose calibrator and the license belong to the physicist and the facility.`,
+      hook: "A radiopharmaceutical puts the source inside the patient, so the gamma camera only listens through a lead collimator, a sodium iodide crystal, a light guide, a photomultiplier array, and position and energy circuits into a computer; technetium-99m emits about 140 keV and every agent decays by its own half-life; rotating the camera gives single photon emission tomography while positron tomography counts the pairs of about 0.51 MeV photons from annihilation of positrons from agents such as fluorine-18, and hybrid units add a scanner for anatomy and attenuation correction; the dose calibrator, survey meters, hot lab, and license belong to the physicist and the facility, while heads, gantry, collimators, table, cooling, and computers belong to you."
     },
     {
       id: "u7l4", title: "MRI at Recognition Depth: Magnet, Gradients, RF Coils, Cryogens, and What the Technician Services", domain: 4, obj: "FUN-A", minutes: 9,

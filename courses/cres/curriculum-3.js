@@ -23,7 +23,7 @@ FRA.units.push({
 Block          Prove it with
 Power          line voltage under load, breaker, contactor, internal supplies
 Control        console entries reaching the controller, interlock chain closed
-High voltage   measured kVp and mAs, cable terminations, tank and tube behaviour
+High voltage   measured kVp and mAs, cable terminations, tank and tube behavior
 Mechanical     locks, drives, detents, collision sensors, light field, distance
 Receptor       a flat-field image and a phantom image against the baseline on file
 Network        link light, address, then a DICOM echo to the archive
@@ -33,7 +33,7 @@ Network        link light, address, then a DICOM echo to the archive
 Reproduce the complaint yourself before you order a part. An image that is too dark on one station, a burnt-out abdomen, a chest with the lungs blown out: those come from the wrong technique, the wrong AEC chamber, the wrong receptor selected, or the wrong protocol chosen as often as from a fault. A device error is fixed with a repair and a verification. A use error is fixed with a demonstration and applications training, documented the same way, without blame. Calling one the other wastes either a part or a reputation.
 
 ## Simplest cause first, and when to stop
-Check the free, fast, and safe things first: power, the right mode, a parked receptor, a cable, a setting. Escalate to the manufacturer when the fault is inside a sealed assembly, when the adjustment needs service software or a licence you do not hold, when the parts are not field-replaceable, or when two attempts have not moved the symptom. Stopping is a decision, not a defeat, and it belongs in the record with everything you proved.
+Check the free, fast, and safe things first: power, the right mode, a parked receptor, a cable, a setting. Escalate to the manufacturer when the fault is inside a sealed assembly, when the adjustment needs service software or a license you do not hold, when the parts are not field-replaceable, or when two attempts have not moved the symptom. Stopping is a decision, not a defeat, and it belongs in the record with everything you proved.
 
 > Exam tip: symptom in the operator's words and reproduced, history from the CMMS and the error log, isolate by halves, verify with a measurement. Simplest and safest cause first. A fault nobody else can reproduce is usually use error, and its fix is training, not a part.`,
       hook: "Get the symptom in the operator's words and reproduce it, read the history in the CMMS and the error log, isolate power, control, high voltage, mechanics, receptor, and network by halves, then verify with the measurement that would have caught the fault, and tell a device error (repair) from a use error (applications training) before you order a part."
@@ -45,7 +45,7 @@ Check the free, fast, and safe things first: power, the right mode, a parked rec
 ## What makes one call outrank another
 - **Risk to the patient or staff.** Anything that can deliver unintended dose, drop a part of the machine on somebody, or shock somebody goes first. A collimator lamp that no longer shows the field invites an uncollimated exposure, so it is a dose problem wearing a cosmetic disguise.
 - **Regulatory exposure.** A system outside the limits the state and the federal performance rules set does not stay in use while you schedule the fix. Measured kVp outside 10 percent of the indicated value, a fluoroscope above the 10 R/min tabletop limit, or an AEC backup timer that will not end an exposure at 6 s or 600 mAs is an out-of-service decision.
-- **Clinical downtime.** Weigh what the room carries. The only computed tomography scanner in the building outranks the third radiographic room, which has two neighbours; an emergency department portable outranks a clinic unit that works tomorrow.
+- **Clinical downtime.** Weigh what the room carries. The only computed tomography scanner in the building outranks the third radiographic room, which has two neighbors; an emergency department portable outranks a clinic unit that works tomorrow.
 - **Convenience.** Cosmetic and comfort items wait, but they are written down so they are not lost and so a pattern shows.
 
 ## Ordering the morning
@@ -146,7 +146,7 @@ Stripes or a dead line      a stale gain or pixel map, or dead rows and columns
 A faint previous image      an incomplete plate erase
 The same mark every image   a scored plate, dust in the beam path, or a bad pixel group
 \`\`\`
-Digital artifacts fall into three families: the receptor, the software that corrects it, and the object in the beam. Dead or defective pixels and dead rows are normal and are filled in from neighbouring pixels by the correction map; a single one does not harm a diagnosis but many of them must be corrected, and scratches or large groups mean a replacement. Stripes that survive a fresh detector calibration are a map or a hardware fault rather than a response error. A plate that has sat unused for 24 hours picks up background radiation and must be erased again before use.
+Digital artifacts fall into three families: the receptor, the software that corrects it, and the object in the beam. Dead or defective pixels and dead rows are normal and are filled in from neighboring pixels by the correction map; a single one does not harm a diagnosis but many of them must be corrected, and scratches or large groups mean a replacement. Stripes that survive a fresh detector calibration are a map or a hardware fault rather than a response error. A plate that has sat unused for 24 hours picks up background radiation and must be erased again before use.
 
 ## Geometry and motion
 Magnification and distortion are geometry, not faults: a longer SID and a smaller OID give a sharper, truer image, and an angled part or an off-center tube distorts it. Prove that the light field coincides with the radiation field within **2 percent of the SID**, prove the SID indicator to the same 2 percent, and prove the detent positions. Blur with sharp bone edges elsewhere is patient motion; blur across the whole image with a correct geometry is focal spot or exposure time, so measure the time with a meter and suspect the timer.
@@ -192,7 +192,7 @@ Lubricate only what the manual names, with what it names; grease on a clutch sur
       body: `Receptors are the most expensive part of a modern room and the part the department complains about most, so knowing when a calibration fixes a fault and when it only hides one is worth real money.
 
 ## Receptor faults
-- **Dead pixels, rows, and columns** are expected and are filled in from neighbouring pixels by the defect map. A scratch, a growing cluster, or a line that the map does not cover is a replacement, not a recalibration.
+- **Dead pixels, rows, and columns** are expected and are filled in from neighboring pixels by the defect map. A scratch, a growing cluster, or a line that the map does not cover is a replacement, not a recalibration.
 - **Uniformity** drifts as the detector ages or as its temperature changes, so a flat-field image shows shading, banding, or a mottled background. That is what a gain calibration corrects.
 - **Ghosting** is a previous image still in the receptor: on a plate it is an incomplete erase, and a plate unused for 24 hours is re-erased before use; on a panel it is lag, which worsens as the panel ages or runs hot.
 - **Wireless panels** add their own list: a battery that will not hold a shift, a panel that drops off the access point mid-exam, a charging contact that is dirty, and a panel left out of its holder so the room does not know it is parked.
@@ -237,7 +237,7 @@ No Doppler signal              preset, wall filter, gain, then the probe
 Image fine, controls dead      panel, cart power, or battery
 Probe failed after cleaning    wrong disinfectant, soaked past the line, wet connector
 \`\`\`
-Swap a known good probe before you condemn anything: a fault that follows the probe is the probe, and a fault that stays with the port is the system. Immersion damage is the most common avoidable probe failure, so the fix is a labelled immersion line, the manufacturer's approved high-level disinfection chemistry, a dry connector, and retraining. Transesophageal probes carry a leakage test as well, because they are inside a patient.
+Swap a known good probe before you condemn anything: a fault that follows the probe is the probe, and a fault that stays with the port is the system. Immersion damage is the most common avoidable probe failure, so the fix is a labeled immersion line, the manufacturer's approved high-level disinfection chemistry, a dry connector, and retraining. Transesophageal probes carry a leakage test as well, because they are inside a patient.
 
 ## Verify with the right phantom
 Mammography uses the accreditation phantom and its scored image. Ultrasound uses a tissue-mimicking phantom at fixed settings for depth of penetration, resolution, and uniformity, compared with the baseline on file. Without the baseline, a phantom image proves nothing.
@@ -283,7 +283,7 @@ A unit used in an isolation room is cleaned with the facility's approved product
 Lead with what the clinicians in front of you need: what works now, what does not, and when the room comes back. Translate into their world rather than yours. "The high-voltage cable termination was arcing" becomes "the snapping noise and the dark images came from a cable connection; it is replaced, the output measures correct, and the room is yours." Give a time you can keep, update it when it slips, and tell the lead technologist first so the schedule can move.
 
 ## Explaining a use error without blame
-When the fault is workflow, make the demonstration the fix. Show the behaviour on the machine, show the setting that produces it, and show the one that does not. Say "this console does that when the outer chamber is selected on a small patient" rather than anything beginning with "you". Offer applications training through the vendor or the superuser, document the conversation in the work order as you would any other corrective action, and watch for the same call returning, because a repeat means the training did not take.
+When the fault is workflow, make the demonstration the fix. Show the behavior on the machine, show the setting that produces it, and show the one that does not. Say "this console does that when the outer chamber is selected on a small patient" rather than anything beginning with "you". Offer applications training through the vendor or the superuser, document the conversation in the work order as you would any other corrective action, and watch for the same call returning, because a repeat means the training did not take.
 
 ## Escalating to the manufacturer
 \`\`\`
@@ -460,7 +460,7 @@ Two nodes negotiate an **association** before anything moves, over a TCP connect
 \`\`\`
 Service    What it does                          First thought when it fails
 C-ECHO     verification: proves the association   AE title, host, port spelling
-C-STORE    pushes images to the archive           SOP class, disk, licence, rights
+C-STORE    pushes images to the archive           SOP class, disk, license, rights
 C-FIND     queries for matching studies           query keys, dates, character set
 C-MOVE     asks a node to send studies somewhere  destination not configured there
 MWL        pulls the scheduled patients and
@@ -472,12 +472,12 @@ Commitment the archive accepts permanent
 \`\`\`
 
 ## The worklist, and why it matters more than it looks
-A modality worklist query pulls the day's scheduled patients, their identifiers, and their accession numbers to the console, so the technologist selects a patient instead of typing one. That is the single largest defence against misidentified studies in the department. When the worklist is empty, technologists type names by hand, and every typing error becomes a study that cannot be matched to its order and has to be corrected downstream by somebody with privileges you do not have.
+A modality worklist query pulls the day's scheduled patients, their identifiers, and their accession numbers to the console, so the technologist selects a patient instead of typing one. That is the single largest defense against misidentified studies in the department. When the worklist is empty, technologists type names by hand, and every typing error becomes a study that cannot be matched to its order and has to be corrected downstream by somebody with privileges you do not have.
 
 ## The header, the conformance statement, and mismatches
 Every object carries a header of tagged fields: patient name and identifier, accession number, study and series description, modality, dates, and the technique used. Downstream systems match on those fields, so a mismatch does not look like an error on the modality at all; it looks like a study in the wrong place, a study that will not attach to its order, or a report with nowhere to go. The **conformance statement** is the document where each product states its AE titles, its supported SOP classes, its roles, its transfer syntaxes, and its limits, and comparing two conformance statements is how you find out before installation that two devices will not in fact talk.
 
-> Exam tip: an association needs the AE title, host, port (commonly 104 or 11112), and matching SOP classes. C-ECHO verifies, C-STORE sends, C-FIND queries, C-MOVE retrieves, MWL brings the schedule to the console, MPPS reports progress, and storage commitment makes local deletion safe. A node that echoes but cannot store has a class, disk, licence, or permission problem.`,
+> Exam tip: an association needs the AE title, host, port (commonly 104 or 11112), and matching SOP classes. C-ECHO verifies, C-STORE sends, C-FIND queries, C-MOVE retrieves, MWL brings the schedule to the console, MPPS reports progress, and storage commitment makes local deletion safe. A node that echoes but cannot store has a class, disk, license, or permission problem.`,
       hook: "DICOM pairs objects with services into SOP classes, an association over a TCP connection needs matching AE titles, host, port (commonly 104 or 11112), and SOP classes on both sides, C-ECHO verifies while C-STORE sends, C-FIND queries, C-MOVE retrieves, the modality worklist brings scheduled patients and accession numbers to the console so nobody types them, MPPS reports progress, storage commitment transfers permanent responsibility, and the conformance statement tells you before installation whether two devices can talk."
     },
     {
@@ -516,7 +516,7 @@ Every step is joined by identifiers, which is where the path breaks.
 The **accession number** ties one order to one study, and the medical record number ties studies to a person. Trouble comes from duplicate records created at registration, two records merged after the fact, a name changed between the order and the exam, a study acquired before the order reached the worklist, and a patient typed in by hand during a worklist outage. The symptom is never a network error: it is a study that will not attach, a report that cannot be filed, or images in the wrong person's record, and correcting it needs the informatics team because the correction has to be made in several systems at once.
 
 ## Dose reporting, at recognition level
-Modern systems produce a structured dose record for each study and send it the same way an image goes, so dose can be totalled per patient, compared against reference levels, and submitted to a national registry. For you, that means a dose record that stops arriving is an interface fault with regulatory consequences, and it is worth knowing which systems in your department produce one.
+Modern systems produce a structured dose record for each study and send it the same way an image goes, so dose can be totaled per patient, compared against reference levels, and submitted to a national registry. For you, that means a dose record that stops arriving is an interface fault with regulatory consequences, and it is worth knowing which systems in your department produce one.
 
 > Exam tip: ADT carries identity and location, ORM carries the order, ORU carries the result. The RIS schedules and holds the worklist, the interface engine translates and queues, and the EMR is where the order starts and the report lands. Misfiled studies are identifier problems (accession numbers, duplicates, merges, hand typing), not network problems.`,
       hook: "The RIS schedules exams and holds the worklist, HL7 carries identity in ADT, orders in ORM, and results in ORU through an interface engine whose queue and log show stuck messages, and the path runs order in the EMR to schedule in the RIS to worklist on the modality to acquisition to archive to read to report back into the record, joined at every step by the accession number and the medical record number, which is exactly where duplicates, merges, name changes, and hand typing break it."
@@ -665,7 +665,7 @@ The modality says it cannot connect, or the association is rejected or aborted. 
 ## Images sent but not arriving
 \`\`\`
 Observation                        Likely cause
-Echo passes, store fails           SOP class mismatch, disk, licence, permissions
+Echo passes, store fails           SOP class mismatch, disk, license, permissions
 Local queue growing, retries        link speed, congestion, or the archive is down
 Archive has them, reader does not   routing or prefetch rules, or the database index
 Modality shows sent, archive empty  sent to the wrong destination or a test node
@@ -680,8 +680,8 @@ An empty worklist is upstream of you more often than not. Prove the scope first:
 ## Wrong patient, and slow sends
 A study attached to the wrong patient is an identifier problem: a patient typed in by hand during a worklist outage, an accession number that does not match the order, a duplicate record, or two records merged after acquisition. Do not attempt the correction on the modality; it has to be made consistently in the archive, the record system, and the report, which is informatics work. Slow sends are bandwidth, a link negotiated at the wrong speed, or a backup job sharing the path. Compression is the other lever: lossless compression up to about 3:1 is generally accepted for diagnostic images, while heavier lossy compression of about 10:1 or more supports remote viewing but is not acceptable for computer-aided detection or for archiving.
 
-> Exam tip: C-ECHO is the first test for anything that will not move. Echo passes and store fails means SOP class, disk, licence, or permissions. Empty worklists on every modality are upstream at the RIS or the broker; on one modality they are its own query. Wrong patient is an identifier problem corrected by informatics, not at the console. Lossless up to about 3:1 is fine; heavy lossy compression is not for archiving.`,
-      hook: "Run a DICOM echo first for anything that will not move, then check the AE title, host, port, and SOP classes on both ends; an echo that passes with a failing store points at the SOP class, disk, licence, or permissions, a growing local queue points at the link or a down archive, an empty worklist on every modality is upstream at the RIS or broker while on one modality it is that node's own query keys and dates, a study on the wrong patient is an identifier problem for informatics rather than the console, and slow sends are bandwidth, link speed, or compression, where lossless up to about 3:1 is accepted and heavy lossy compression is not for archiving."
+> Exam tip: C-ECHO is the first test for anything that will not move. Echo passes and store fails means SOP class, disk, license, or permissions. Empty worklists on every modality are upstream at the RIS or the broker; on one modality they are its own query. Wrong patient is an identifier problem corrected by informatics, not at the console. Lossless up to about 3:1 is fine; heavy lossy compression is not for archiving.`,
+      hook: "Run a DICOM echo first for anything that will not move, then check the AE title, host, port, and SOP classes on both ends; an echo that passes with a failing store points at the SOP class, disk, license, or permissions, a growing local queue points at the link or a down archive, an empty worklist on every modality is upstream at the RIS or broker while on one modality it is that node's own query keys and dates, a study on the wrong patient is an identifier problem for informatics rather than the console, and slow sends are bandwidth, link speed, or compression, where lossless up to about 3:1 is accepted and heavy lossy compression is not for archiving."
     },
     {
       id: "u10l12", title: "Monitors, Display Calibration, and Workstation Troubleshooting", domain: 6, obj: "HIT-C", minutes: 9,

@@ -8,7 +8,7 @@ Imaging systems are too varied to memorize. A department can run four generator 
 
 ## Step one is harder than it looks
 The symptom you are given is already a translation. Somebody saw something, interpreted it, and told somebody else, who called you. Three things recover the original: the operator's own words, the exact step where it happens, and how often. "The exposure fails" and "it fails only on the second image of a two-view chest when she uses the wall stand" are the same call, and only one of them is solvable from the hallway.
-Then reproduce it. Reproducing a fault does four things at once: it proves the fault exists, it shows you the conditions, it gives you a before image or reading to compare against, and it tells you whether the operator's description matches the machine's behaviour. If you cannot reproduce it, you are either missing a condition or looking at a use error.
+Then reproduce it. Reproducing a fault does four things at once: it proves the fault exists, it shows you the conditions, it gives you a before image or reading to compare against, and it tells you whether the operator's description matches the machine's behavior. If you cannot reproduce it, you are either missing a condition or looking at a use error.
 
 ## The splits, and why order matters
 \`\`\`
@@ -29,7 +29,7 @@ The two have different evidence. A device error reproduces at a fixed technique 
 
 ## Verification and the decision to stop
 A repair is finished when the measurement that would have caught the fault reads inside tolerance and is written down with the tolerance beside it. That is also what protects you: a number in the record is the difference between "I fixed it" and evidence.
-Stop and escalate when the next step needs a licence, a tool, a password, or a part you do not have; when the assembly is sealed; when the hazard exceeds what you can control alone; or when two honest attempts have not moved the symptom. Escalation with full notes is professional. Escalation after three days of guessing is not.
+Stop and escalate when the next step needs a license, a tool, a password, or a part you do not have; when the assembly is sealed; when the hazard exceeds what you can control alone; or when two honest attempts have not moved the symptom. Escalation with full notes is professional. Escalation after three days of guessing is not.
 
 ## What to memorize
 - Four steps: symptom in the operator's words and reproduced, history from the CMMS and the error log, isolate by halves, verify with a measurement.
@@ -58,7 +58,7 @@ AEC backup will not end at 6 s or 600 mAs  out of service
 \`\`\`
 
 ## Weighing downtime honestly
-Downtime is not counted in rooms, it is counted in patients who cannot be imaged. One scanner in the building and a stroke protocol on it is a different number from a third radiographic room with two working neighbours twenty feet away. Ask the lead technologist three questions: what volume does this room carry, where does that volume go while it is down, and what cannot be done anywhere else. The answers change the queue, and they also give you the sentence you use when you ask a vendor for an emergency part.
+Downtime is not counted in rooms, it is counted in patients who cannot be imaged. One scanner in the building and a stroke protocol on it is a different number from a third radiographic room with two working neighbors twenty feet away. Ask the lead technologist three questions: what volume does this room carry, where does that volume go while it is down, and what cannot be done anywhere else. The answers change the queue, and they also give you the sentence you use when you ask a vendor for an emergency part.
 
 ## Loaners, backups, and the paperwork
 Plan the workaround before you need it. Know which rooms can absorb which exams, which mobile unit can stand in, whether the service contract includes a loaner and what its response clock is, and who signs for a rental. A loaner arriving on site is not ready for patients: it needs incoming inspection, electrical safety, output verification, and a network configuration before the first exposure, and that work is part of the downtime estimate you give radiology.
@@ -181,7 +181,7 @@ edges soft              focal spot growth or long
                         exposure time                measure time, then phantom  tube or generator
 Blur in one direction    patient motion               exposure time and protocol  shorter time, coaching
 \`\`\`
-Digital artifacts group into three families: the receptor itself, the software that corrects it, and the object in the beam. Dead pixels, rows, and columns are normal and are filled in from neighbouring pixel values by the correction map, and a single one does not affect a diagnosis, but many of them must be corrected and physical damage means replacement. A plate that has been idle for 24 hours collects enough background radiation to fog, so it is erased again before use.
+Digital artifacts group into three families: the receptor itself, the software that corrects it, and the object in the beam. Dead pixels, rows, and columns are normal and are filled in from neighboring pixel values by the correction map, and a single one does not affect a diagnosis, but many of them must be corrected and physical damage means replacement. A plate that has been idle for 24 hours collects enough background radiation to fog, so it is erased again before use.
 
 ## Geometry is not a fault
 Magnification is the ratio of the source-to-image distance to the source-to-object distance, so a longer SID and a smaller OID give a truer, sharper image. Distortion comes from an angled part, an off-center tube, or a tilted receptor. Before accepting a sharpness complaint as a fault, prove that the light field coincides with the radiation field within 2 percent of the SID, that the SID indicator reads within the same 2 percent, and that the detents put the tube where the label says.
@@ -191,7 +191,7 @@ Expose a phantom at a fixed, written-down technique on the suspect receptor, the
 
 ## What to memorize
 - Grid faults: lines mean stationary, pale edges mean upside down, low everywhere means off level or wrong focal distance, low at the sides means off center, a wavy pattern means frequency beating.
-- Ghost is an incomplete erase; a plate idle 24 hours is re-erased; dead pixels are interpolated from neighbours.
+- Ghost is an incomplete erase; a plate idle 24 hours is re-erased; dead pixels are interpolated from neighbors.
 - Blur everywhere with correct geometry is focal spot or time; blur in one direction is motion.
 - Phantom at a fixed technique, swapped receptor, then measured kVp and mAs separates the three systems.`,
 
@@ -236,7 +236,7 @@ u9l7: `## Where the money is
 A flat-panel detector is often the most expensive single part in a radiographic room, and an image intensifier is not far behind. Both are also the parts the department complains about most, so the decision that matters is whether a fault is a calibration, a cleaning, a setting, or a replacement.
 
 ## Receptor faults and what calibration can reach
-A gain and offset calibration measures each pixel's response to a uniform beam and builds a correction, so it reaches anything that is a smooth, repeatable response error: shading, banding, a mottled background, drift after a board change, and the small noise increase that comes with age. It cannot reach a physical defect. A scratch, an impact, a growing cluster of dead pixels, a delaminated plate, or a cracked panel is a replacement. Between those sits the defect map, which interpolates a dead pixel, row, or column from its neighbours: a single defect is invisible in a diagnosis, many of them must be corrected, and a map that has grown every quarter is telling you the panel is dying.
+A gain and offset calibration measures each pixel's response to a uniform beam and builds a correction, so it reaches anything that is a smooth, repeatable response error: shading, banding, a mottled background, drift after a board change, and the small noise increase that comes with age. It cannot reach a physical defect. A scratch, an impact, a growing cluster of dead pixels, a delaminated plate, or a cracked panel is a replacement. Between those sits the defect map, which interpolates a dead pixel, row, or column from its neighbors: a single defect is invisible in a diagnosis, many of them must be corrected, and a map that has grown every quarter is telling you the panel is dying.
 \`\`\`
 Fault                           Calibration  Clean  Setting  Replace
 Shading, banding, mottle         yes          -      -        -
@@ -269,8 +269,8 @@ u9l8: `## Two systems held to a written program
 Mammography and ultrasound look like opposites: one is the most heavily regulated x-ray system in the building, the other has no ionizing radiation at all. What they share is that both are governed by a written quality control program with baselines, and on both the phantom image is the evidence that ends an argument about whether a system is fit to use.
 
 ## Mammography faults
-Compression is the fault that reaches you most. The requirement is a force of 25 to 40 lb available in both powered and manual modes, with no way for the system to exceed 40 lb automatically, and it is verified with a scale rather than a technologist's judgement. A unit that will not reach the force is a drive, a force sensor, or a calibration; a unit that reads force it is not applying is a sensor or a calibration and is the more dangerous of the two. A paddle that will not release is an immediate out-of-service fault, because it can trap a patient, and the release path including any manual override is tested at every visit. Paddles that are cracked, chipped, or bent are replaced, never dressed.
-Image faults divide the same way they do in radiography. Light or dark images and a falling phantom score point at the AEC detector position, the cell selected, detector calibration, or target and filter selection. The rule the program gives you is a trigger rather than a judgement: a phantom score that drops by more than 0.5 means stop and investigate calibration, target and filter selection, compression, and processing, instead of adjusting technique to make the image look right again. A target or filter error is the filter wheel motor, its position sensor, or an interlock. A mark in the same place on every image is a detector or plate defect, dust in the beam path, or a damaged paddle, and the way to tell them apart is to image the phantom with the paddle removed and then refitted.
+Compression is the fault that reaches you most. The requirement is a force of 25 to 40 lb available in both powered and manual modes, with no way for the system to exceed 40 lb automatically, and it is verified with a scale rather than a technologist's judgment. A unit that will not reach the force is a drive, a force sensor, or a calibration; a unit that reads force it is not applying is a sensor or a calibration and is the more dangerous of the two. A paddle that will not release is an immediate out-of-service fault, because it can trap a patient, and the release path including any manual override is tested at every visit. Paddles that are cracked, chipped, or bent are replaced, never dressed.
+Image faults divide the same way they do in radiography. Light or dark images and a falling phantom score point at the AEC detector position, the cell selected, detector calibration, or target and filter selection. The rule the program gives you is a trigger rather than a judgment: a phantom score that drops by more than 0.5 means stop and investigate calibration, target and filter selection, compression, and processing, instead of adjusting technique to make the image look right again. A target or filter error is the filter wheel motor, its position sensor, or an interlock. A mark in the same place on every image is a detector or plate defect, dust in the beam path, or a damaged paddle, and the way to tell them apart is to image the phantom with the paddle removed and then refitted.
 Returning a mammography unit to clinical use is evidence-driven, because the program is federal: the phantom image back in tolerance, the quality control record signed and dated, and a qualified medical physicist survey after a major component is replaced, which is the same trigger as the annual survey requirement.
 
 ## Ultrasound faults
@@ -345,7 +345,7 @@ Lead with their three questions, in their order: what works now, what does not, 
 Radiologists ask a different question: can I trust the image. Answer it with what you measured. "Measured kVp and time are within tolerance, the detector was recalibrated, and the phantom image matches the baseline" is an answer; "it should be fine now" is not.
 
 ## Use error without blame
-When reproduction shows the machine is behaving as designed, the corrective action is a demonstration. Put the behaviour on the screen, show the setting that produces it and the setting that does not, and name the machine as the subject of every sentence: "this console does that when the outer chamber is selected on a small patient." Then arrange real applications training through the vendor or the department superuser, and record the conversation in the work order exactly as you would a part number, because the next person needs to know this was not a hardware fault. Watch for the call to return; a repeat means the training is still an open item, and it may belong in the department's competency record.
+When reproduction shows the machine is behaving as designed, the corrective action is a demonstration. Put the behavior on the screen, show the setting that produces it and the setting that does not, and name the machine as the subject of every sentence: "this console does that when the outer chamber is selected on a small patient." Then arrange real applications training through the vendor or the department superuser, and record the conversation in the work order exactly as you would a part number, because the next person needs to know this was not a hardware fault. Watch for the call to return; a repeat means the training is still an open item, and it may belong in the department's competency record.
 
 ## Escalation
 \`\`\`
@@ -377,7 +377,7 @@ u10l1: `## Why addressing is a service skill in imaging
 In most of a hospital the network is somebody else's problem. In imaging it is partly yours, because the modality's network settings are entered by hand during installation, written in the service manual's configuration section, and changed by you when the archive moves. That makes four values worth understanding rather than copying: the address, the mask, the gateway, and the name servers.
 
 ## The mask, and the mistake it causes
-The address names the device; the mask says how much of that address is the network. With {{255.255.255.0}} the first three numbers are the network and the last names the host, so {{10.4.7.20}} and {{10.4.7.90}} are neighbours and talk directly, while {{10.4.9.12}} is on another network and the conversation must go through a router. Get the mask wrong and the device develops a strange personality: some destinations work and others do not, with no pattern the user can describe, because the device is deciding wrongly which destinations are local. Get the gateway wrong and the device works perfectly inside its own subnet and can reach nothing else, which users report as "the whole network is down" from that one console.
+The address names the device; the mask says how much of that address is the network. With {{255.255.255.0}} the first three numbers are the network and the last names the host, so {{10.4.7.20}} and {{10.4.7.90}} are neighbors and talk directly, while {{10.4.9.12}} is on another network and the conversation must go through a router. Get the mask wrong and the device develops a strange personality: some destinations work and others do not, with no pattern the user can describe, because the device is deciding wrongly which destinations are local. Get the gateway wrong and the device works perfectly inside its own subnet and can reach nothing else, which users report as "the whole network is down" from that one console.
 \`\`\`
 Value             What it is for               Symptom when it is wrong
 Address            names this device            duplicate address, nothing works
@@ -523,7 +523,7 @@ Before anything moves, two application entities negotiate an association over a 
 \`\`\`
 Service      Plain meaning                      Typical failure and first check
 C-ECHO        verification, the DICOM ping        AE title, host, port spelling
-C-STORE       push images to a destination        SOP class, disk space, licence, rights
+C-STORE       push images to a destination        SOP class, disk space, license, rights
 C-FIND        query for studies that match        query keys, date range, character set
 C-MOVE        ask a node to send studies to a
               third destination                   destination not configured on sender
@@ -535,10 +535,10 @@ Commitment    archive accepts permanent
               responsibility for the study        local deletion becomes unsafe
 Print         send an image to a hardcopy device  rarely used now, still on the exam
 \`\`\`
-Read that table twice, because problem-solving items are built on it: an echo that passes with a store that fails is a class, capacity, licence, or permission problem, and nothing else.
+Read that table twice, because problem-solving items are built on it: an echo that passes with a store that fails is a class, capacity, license, or permission problem, and nothing else.
 
 ## The worklist is a patient safety feature
-A modality worklist query brings the day's scheduled patients, their identifiers, and their accession numbers to the console so the technologist selects rather than types. It is the department's main defence against misidentified studies, which is why an empty worklist is an urgent informatics call rather than an inconvenience: every study acquired by hand during the outage has to be reconciled afterwards by somebody with privileges in several systems.
+A modality worklist query brings the day's scheduled patients, their identifiers, and their accession numbers to the console so the technologist selects rather than types. It is the department's main defense against misidentified studies, which is why an empty worklist is an urgent informatics call rather than an inconvenience: every study acquired by hand during the outage has to be reconciled afterwards by somebody with privileges in several systems.
 
 ## The header, and what a mismatch does downstream
 Every object carries tagged fields: patient name, identifier, accession number, study and series description, modality, dates, and technique. Downstream systems match on those fields, so a mismatch never looks like an error at the modality. It looks like a study that will not attach to its order, a report with nowhere to file, a study missing from a worklist of unread cases, or priors that no longer recognize their own patient. That is why you change those fields only through the worklist, and why corrections are made in the archive and the record systems together rather than at the console.
@@ -583,7 +583,7 @@ Dose record follows the identifiers     dose reporting gaps with regulatory weig
 Two identifiers hold the chain together: the medical record number, which ties studies to a person, and the accession number, which ties one order to one study. The classic breakages are a duplicate record created at registration, two records merged after a study was acquired, a name changed between the order and the exam, a study acquired before the order reached the worklist, and a patient typed in by hand during a worklist outage. None of these produces a network error. They produce a study that will not attach, a report with nowhere to go, or images in the wrong person's record, and correcting them means consistent changes in the archive, the record system, and the report, which is informatics work with an audit trail, not a console edit.
 
 ## Dose reporting at recognition level
-Modern systems generate a structured dose record for each study and send it the way they send an image, so dose can be totalled per patient, compared with reference levels, and submitted to a registry. Two things follow for you. A dose record that stops arriving is an interface fault with a compliance consequence, so it belongs on the post-change test list. And dose records contain patient identifiers, which makes them protected information in a place people forget to look.
+Modern systems generate a structured dose record for each study and send it the way they send an image, so dose can be totaled per patient, compared with reference levels, and submitted to a registry. Two things follow for you. A dose record that stops arriving is an interface fault with a compliance consequence, so it belongs on the post-change test list. And dose records contain patient identifiers, which makes them protected information in a place people forget to look.
 
 ## What to memorize
 - ADT identity and location, ORM orders, ORU results; the broker translates, queues, and logs.
@@ -752,7 +752,7 @@ Association rejected            AE title typed wrongly, case       both sides, c
                                 included                           by character
 Association rejected            wrong port or host                 port 104 or 11112, address
 Echo passes, store fails        SOP class mismatch                 both conformance statements
-Echo passes, store fails        archive disk, licence, or rights    archive log and its alerts
+Echo passes, store fails        archive disk, license, or rights    archive log and its alerts
 Sent, nothing arrived           sent to the wrong destination       the destination entry used
 Local queue growing, retries     link speed, congestion, archive
                                 down                               link, then archive status
@@ -779,7 +779,7 @@ A study attached to the wrong patient is an identifier fault, not a transport fa
 
 ## What to memorize
 - Echo first. Echo fails means titles, host, port, or path; echo passes means look at the service.
-- Store failing after a good echo is SOP class, disk, licence, or permissions.
+- Store failing after a good echo is SOP class, disk, license, or permissions.
 - One empty worklist is that node's query; all of them is the scheduling system, the broker, or name resolution.
 - Wrong patient is an identifier correction for informatics; lossless to about 3:1 is accepted, heavy lossy compression is not for archiving.`,
 
@@ -790,7 +790,7 @@ Everything the department does arrives at a display. A generator calibrated to a
 A diagnostic display is a calibrated grayscale device in a controlled room, used to make the report: high luminance, measured uniformity, limited ambient light, and a calibration history. A clinical display is an ordinary monitor in a ward, clinic, or office, used to look at a study that has already been reported. Mammography is the strictest case of all. The distinction matters in service because the right answer to "can you put this on the monitor in my office so I can read it" is that the display is not qualified for that use, and the reading moves to a station that is.
 
 ## The curve, and why it exists
-The grayscale standard display function is the curve in the imaging standard that maps stored pixel values to displayed brightness so that equal steps in stored value produce equal steps in perceived brightness. Calibration is the act of making a display follow that curve, and it is done with a luminance meter, not by eye. The point of the standard is consistency: a study looks the same on every calibrated station in the enterprise, so a radiologist's judgement does not depend on which room they sat in.
+The grayscale standard display function is the curve in the imaging standard that maps stored pixel values to displayed brightness so that equal steps in stored value produce equal steps in perceived brightness. Calibration is the act of making a display follow that curve, and it is done with a luminance meter, not by eye. The point of the standard is consistency: a study looks the same on every calibrated station in the enterprise, so a radiologist's judgment does not depend on which room they sat in.
 
 ## The numbers
 \`\`\`
