@@ -11,7 +11,8 @@ const read = p => fs.readFileSync(path.join(out, p), 'utf8'); const exists = p =
 check('a model with knowledge gets a page at manufacturer/model slugs', exists('serviceforge/models/acme-sons/pump-100-x/index.html'));
 check('a thin model (one symptom) gets no page', !exists('serviceforge/models/acme-sons/thin-1/index.html'));
 check('the models index and the class page are written', exists('serviceforge/models/index.html') && exists('serviceforge/classes/infusion-pump/index.html'));
-check('urls returned match the files written', res.urls.length === 3 && res.urls.includes('/serviceforge/models/acme-sons/pump-100-x/'));
+check('a class with one model gets no class page; its model page still exists', !exists('serviceforge/classes/dry-imager/index.html') && exists('serviceforge/models/acme-sons/imager-5/index.html'));
+check('urls returned match the files written: index, the two-model class, three models', res.urls.length === 5 && res.urls.includes('/serviceforge/models/acme-sons/pump-100-x/') && res.urls.includes('/serviceforge/classes/infusion-pump/') && !res.urls.includes('/serviceforge/classes/dry-imager/'), res.urls.join(' '));
 const page = read('serviceforge/models/acme-sons/pump-100-x/index.html');
 check('title and H1 carry the troubleshooting phrase, escaped', page.includes('<title>Acme &amp; Sons Pump 100 &lt;X&gt; Troubleshooting and Error Codes | ServiceForge</title>') && page.includes('<h1>Acme &amp; Sons Pump 100 &lt;X&gt;: troubleshooting and error codes</h1>'));
 check('every symptom title and every cause is on the page', ['Occlusion alarm with a clear line', 'Will not power on', 'Pressure sensor drift', 'Door latch not fully closed', 'Discharged battery and no mains'].every(t => page.includes(t)));
@@ -25,8 +26,10 @@ check('nothing protected leaks', !/password|procedure|part_number|citation|quote
 const ld = [...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
 check('JSON-LD: TechArticle with dateModified from the export, then BreadcrumbList', ld[0]['@type'] === 'TechArticle' && ld[0].dateModified === '2026-10-13' && ld[1]['@type'] === 'BreadcrumbList');
 const idx = read('serviceforge/models/index.html'); const cls = read('serviceforge/classes/infusion-pump/index.html');
-check('the index lists the model under its manufacturer and links the class page', idx.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && idx.includes('href="/serviceforge/classes/infusion-pump/"'));
-check('the class page names the class, lists the model, and its symptom titles', cls.includes('Infusion pumps') && cls.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && cls.includes('Occlusion alarm with a clear line'));
+check('the index lists every model under its manufacturer, links the two-model class, and does not link the single-model class', idx.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && idx.includes('href="/serviceforge/models/acme-sons/imager-5/"') && idx.includes('href="/serviceforge/classes/infusion-pump/"') && !idx.includes('href="/serviceforge/classes/dry-imager/"'));
+check('the class page names the class, lists both models, and their shared symptom title', cls.includes('Infusion pumps') && cls.includes('href="/serviceforge/models/acme-sons/pump-100-x/"') && cls.includes('href="/serviceforge/models/acme-sons/pump-200/"') && cls.includes('Occlusion alarm with a clear line'));
+const single = read('serviceforge/models/acme-sons/imager-5/index.html');
+check('a model alone in its class has no class crumb but keeps the class as its eyebrow; a model in a two-model class links its class', !single.includes('href="/serviceforge/classes/dry-imager/"') && single.includes('Dry imager') && page.includes('href="/serviceforge/classes/infusion-pump/"'));
 check('classLabel maps keys to plain labels and falls back to a title-cased key', sf.classLabel('infusion_pump') === 'Infusion pumps' && sf.classLabel('odd_key') === 'Odd key');
 
 // Symptom cap: a model with 61 generated symptoms renders exactly 60 symptom blocks, with the

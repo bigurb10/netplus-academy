@@ -12,6 +12,9 @@ const { shell, crumbs, breadcrumbLd, org, slugify, shorten, BRAND, DESC_MAX } = 
 const CLASS_LABELS = { infusion_pump: 'Infusion pumps', patient_monitor: 'Patient monitors', defibrillator: 'Defibrillators', ventilator: 'Ventilators', anesthesia_machine: 'Anesthesia machines', x_ray_system: 'X-ray systems', ct_scanner: 'CT scanners', ultrasound_system: 'Ultrasound systems', hospital_bed: 'Hospital beds', patient_lift: 'Patient lifts', test_equipment_power_supply: 'Test equipment and power supplies', electrosurgical_unit: 'Electrosurgical units', suction_pump: 'Suction units', sterilizer: 'Sterilizers and reprocessors', infant_warmer: 'Infant warmers and incubators', procedure_light: 'Procedure lights' };
 const classLabel = key => CLASS_LABELS[key] || (key ? key.replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()) : 'Other equipment');
 const classSlug = key => (key || 'other').replace(/_/g, '-');
+// A class page needs at least this many models; a one-model class page would only repeat that model's page
+// (the live export has 247 single-model classes out of 346).
+const MIN_CLASS_MODELS = 2;
 const LABEL = 'ServiceForge knowledge base record. Field-unverified unless technicians confirmed it.';
 const SUMMARY = 'A teaching summary of the record, not a service manual.';
 const connect = text => `<a class="btn primary" href="/serviceforge/#connect" data-sf="connect">${esc(text || 'Connect ServiceForge to your AI')}</a>`;
@@ -40,13 +43,15 @@ function symptomBlock(s) {
   return `<section class="symptom"><h3>${esc(s.title)}${safety(s.safety_class) ? ` <span class="pill">${safety(s.safety_class)}</span>` : ''}</h3>${s.description ? `<p class="ink2">${esc(s.description)}</p>` : ''}<h4>Ranked causes</h4><ol class="causes">${causes}</ol>${step}${rest}</section>`;
 }
 
-function modelPage(m, data, origin) {
+function modelPage(m, data, origin, classPages) {
   const name = `${m.manufacturer} ${m.name}`; const cls = classLabel(m.category_key);
   const title = `${name} Troubleshooting and Error Codes | ServiceForge`;
   const h1 = `${name}: troubleshooting and error codes`;
   const steps = m.symptoms.reduce((a, s) => a + (s.step_count || 0), 0); const causes = m.symptoms.reduce((a, s) => a + (s.causes || []).length, 0);
   const description = shorten(`${name} troubleshooting from the ServiceForge knowledge base: ${m.symptoms.length} symptoms, ${causes} ranked causes, ${steps} checks with test points, and ${(m.error_codes || []).length} error codes for this ${cls.toLowerCase().replace(/s$/, '')}.`, DESC_MAX);
-  const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: '/serviceforge/models/' }, { name: cls, href: `/serviceforge/classes/${classSlug(m.category_key)}/` }, { name: name, href: m.url }];
+  // The class crumb only when the class has its own page; a single-model class stays as the eyebrow text.
+  const classCrumb = classPages && classPages.has(classSlug(m.category_key)) ? [{ name: cls, href: `/serviceforge/classes/${classSlug(m.category_key)}/` }] : [];
+  const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: '/serviceforge/models/' }].concat(classCrumb, [{ name: name, href: m.url }]);
   // Middle-path symptom cap: the first 60 (by cause count, then title) render in full; the rest
   // are named so the page stays truthful about total scope, with one connect button.
   const sorted = m.symptoms.slice().sort((a, b) => (b.cause_count || 0) - (a.cause_count || 0) || String(a.title).localeCompare(String(b.title)));
@@ -87,15 +92,15 @@ function classPage(key, models, data, origin) {
   return shell({ origin, path: url, type: 'website', title: `${label} Troubleshooting: Models and Common Symptoms | ServiceForge`, ogTitle: `${label} troubleshooting`, description: shorten(`Troubleshooting records for ${models.length} ${label.toLowerCase()} in the ServiceForge knowledge base: symptoms, ranked causes, and first checks per model.`, DESC_MAX), nav: `<a href="/serviceforge/models/">Models</a><a href="/serviceforge/" class="btn primary small">ServiceForge</a>`, jsonld: [breadcrumbLd(origin, crumbList)], body });
 }
 
-function indexPage(models, data, origin) {
+function indexPage(models, data, origin, classPages) {
   const url = '/serviceforge/models/'; const byMfr = {}; models.forEach(m => { (byMfr[m.manufacturer] = byMfr[m.manufacturer] || []).push(m); });
-  const classes = {}; models.forEach(m => { (classes[classSlug(m.category_key)] = classes[classSlug(m.category_key)] || { key: m.category_key, n: 0 }).n++; });
+  const classes = {}; models.forEach(m => { const k = classSlug(m.category_key); if (classPages.has(k)) (classes[k] = classes[k] || { key: m.category_key, n: 0 }).n++; });
   const crumbList = [{ name: 'ServiceForge', href: '/serviceforge/' }, { name: 'Models', href: url }];
   const body = `${crumbs(crumbList)}
 <article class="lesson">
   <h1>Medical equipment models with troubleshooting records</h1>
   <p class="lede ink2">${models.length} models, ${data.stats.symptoms} symptoms, ${data.stats.causes} ranked causes, ${data.stats.steps} checks, and ${data.stats.error_codes} error codes in the ServiceForge knowledge base, exported ${esc(data.exported)}.</p>
-  <h2>By device class</h2><ul>${Object.keys(classes).sort().map(k => `<li><a href="/serviceforge/classes/${k}/">${esc(classLabel(classes[k].key))}</a> <span class="muted">${classes[k].n}</span></li>`).join('')}</ul>
+  ${Object.keys(classes).length ? `<h2>By device class</h2><p class="ink2">Classes with two or more documented models. A model that is alone in its class is listed under its manufacturer below.</p><ul>${Object.keys(classes).sort().map(k => `<li><a href="/serviceforge/classes/${k}/">${esc(classLabel(classes[k].key))}</a> <span class="muted">${classes[k].n}</span></li>`).join('')}</ul>` : ''}
   <h2>By manufacturer</h2>${Object.keys(byMfr).sort().map(mf => `<h3>${esc(mf)}</h3><ul>${byMfr[mf].map(m => `<li><a href="${m.url}">${esc(m.name)}</a> <span class="muted">${m.symptoms.length} symptoms</span></li>`).join('')}</ul>`).join('')}
   <p class="muted">${LABEL} ${SUMMARY}</p>
 </article>`;
@@ -109,10 +114,11 @@ function buildServiceForge(opts) {
   const write = (urlPath, html) => { const dir = path.join(opts.out, ...urlPath.split('/').filter(Boolean)); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8'); };
   const urls = [];
   if (!models.length) return { urls };
-  write('/serviceforge/models/', indexPage(models, data, origin)); urls.push('/serviceforge/models/');
   const byClass = {}; models.forEach(m => { (byClass[classSlug(m.category_key)] = byClass[classSlug(m.category_key)] || []).push(m); });
-  Object.keys(byClass).forEach(k => { const u = `/serviceforge/classes/${k}/`; write(u, classPage(byClass[k][0].category_key, byClass[k], data, origin)); urls.push(u); });
-  models.forEach(m => { write(m.url, modelPage(m, data, origin)); urls.push(m.url); });
+  const classPages = new Set(Object.keys(byClass).filter(k => byClass[k].length >= MIN_CLASS_MODELS));
+  write('/serviceforge/models/', indexPage(models, data, origin, classPages)); urls.push('/serviceforge/models/');
+  [...classPages].sort().forEach(k => { const u = `/serviceforge/classes/${k}/`; write(u, classPage(byClass[k][0].category_key, byClass[k], data, origin)); urls.push(u); });
+  models.forEach(m => { write(m.url, modelPage(m, data, origin, classPages)); urls.push(m.url); });
   return { urls };
 }
 
