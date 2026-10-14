@@ -883,4 +883,12 @@ The merge to `main`, the branch deletion, and the hand-off (Blake pushes, runs `
 
 ## Status
 
-(filled in by Tasks 7 and 8)
+### Task 7: reference and outline coverage checks (2026-10-14, commit a1e1196)
+
+- Checker: `scripts/termcheck_chtm.py`, run from the repo root; resolves the pack path from its own location and walks wrapped CFR section titles (two adjustments to the plan's listing, recorded in `.superpowers/sdd/chtm-task-7-report.md`).
+- References read: the AAMI CHTM study guide; 21 CFR Part 7 (recalls); 21 CFR Part 803 (device reporting); 21 CFR Part 820 (quality system); the CMS S&C 14-07 equipment maintenance memo. Wang was never obtained; the four public documents stand in for it.
+- Counts (entries / misses before / misses after): outline named examples 113 / 3 / 0 (none); guide table of contents 48 / 5 / 0; guide bold headings 98 / 11 / 2 (both the guide's own "Breaking Down" callouts, out of scope); Part 7 48 / 25 / 24; Part 803 33 / 7 / 6; Part 820 50 / 14 / 13; CMS memo 61 / 15 / 12. Every remaining Part 7, 803, 820, and memo entry is classified out of scope with a reason in the report (manufacturer, importer, or FDA-procedure text, neighboring parts carried by the printed pages, or a spelling difference such as "followup").
+- Gaps fixed: 19 entries in 16 content edits across u3l2, u3l6, u3l7, u3l9, u4l2, u4l3, u4l6, u4l9, u5l2, u5l4, u6l1, u6l5, u8l4, u8l7 and the u4l2, u4l9, u5l2 deep dives; `ID` added to the acronym ignore list. The review (`.superpowers/sdd/chtm-task-7-review.md`) reproduced every count, reclassified none of the 57 out-of-scope entries, and found the edits original; one unsourced cadence ("once a year") was removed by the controller afterwards.
+- Pack tools after the fixes: packcheck OK (8 units, 60 lessons, 60 deep dives, 324 questions), acronyms 72 keys OK, gen-smoke 0 problems. `npm test`, `python build.py chtm`, and `node site/build-site.js` wait for Task 6, which runs after the CRES branch merges and this branch rebases.
+
+(Task 8 adds the stage results)
