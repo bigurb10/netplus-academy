@@ -77,7 +77,7 @@ function run(token) {
   {
     const w = run(null); const d = w.document;
     const heads = [...d.querySelectorAll('main section.cat > h2')].map(h => h.textContent.trim());
-    check('the catalog has four category sections in order', heads.join('|') === 'Start here: biomed basic training|AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
+    check('the catalog has four category sections in order', heads.join('|') === 'Start here: Biomed basic training|AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
     const under = id => [...d.querySelectorAll(`#${id} .card h3 a`)].map(a => a.getAttribute('href'));
     check('BMET sits under Start here', under('start').join(',') === 'bmet/', under('start').join(','));
     check('CBET sits under AAMI certifications', under('aami').join(',') === 'cbet/', under('aami').join(','));
