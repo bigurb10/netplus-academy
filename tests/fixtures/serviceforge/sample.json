@@ -14,7 +14,10 @@
           "first_step": { "check_text": "Enter the service menu", "test_point": "Front panel", "expected": "Service code 812 entered successfully; diagnostics available", "value_unit": null, "tolerance": null, "tools": null } },
         { "id": "s9", "title": "Supply rails out of tolerance", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 2, "action_count": 1,
           "causes": [ { "rank": 1, "title": "Power supply board aged", "likelihood": "likely" } ],
-          "first_step": { "check_text": "Measure output voltages at power supply J2", "test_point": "J2 pins 1, 2, 3", "expected": "Pin 1: +15.0 V; Pin 2: ground; Pin 3: -15.0 V", "value_unit": null, "tolerance": null, "tools": "meter" } }
+          "first_step": { "check_text": "Measure output voltages at power supply J2", "test_point": "J2 pins 1, 2, 3", "expected": "Pin 1: +15.0 V; Pin 2: ground; Pin 3: -15.0 V", "value_unit": null, "tolerance": null, "tools": "meter" } },
+        { "id": "s10", "title": "Flow rate reads low after calibration", "description": null, "safety_class": "none", "cause_count": 1, "step_count": 2, "action_count": 1,
+          "causes": [ { "rank": 1, "title": "Flow sensor out of calibration", "likelihood": "occasional" } ],
+          "first_step": { "check_text": "Read the delivered rate in the calibration screen", "test_point": "Calibration screen", "expected": "within 5 percent of the setpoint", "value_unit": "mL/h, biomed passcode 2580", "tolerance": null, "tools": null } }
       ],
       "error_codes": [
         { "code": "E-14", "meaning": "Air in line", "trigger_condition": "Ultrasonic detector sees a bubble", "severity": "warning" },

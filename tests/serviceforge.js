@@ -30,6 +30,9 @@ check('the record label and the teaching-summary line are present', page.include
 // A credential-shaped value in a first step drops the whole step; s8's "Service code 812" first step
 // must not render, and s1's real step is still the only one on the page.
 check('a service access code in a first step is withheld: the step is dropped entirely, not redacted in place', !page.includes('812') && (page.match(/class="step"/g) || []).length === 2 && !page.includes('Enter the service menu') && !page.includes('Front panel'));
+// s10 carries its passcode in value_unit, the field the screen read nothing from before finding 9.
+// The whole step goes, so neither the unit nor the check text that leads to it reaches the page.
+check('a credential in value_unit alone drops the step too', !page.includes('2580') && !page.includes('Read the delivered rate in the calibration screen') && !page.includes('Calibration screen') && page.includes('Flow rate reads low after calibration'));
 // s2 has nothing behind the button (0 steps, 0 actions): no promise with an empty button. s1 keeps
 // its full sentence (more checks and corrective actions both > 0), and the page still carries at
 // least two connect buttons (the lede and s1's rest line).
@@ -133,7 +136,25 @@ check('classLabel maps keys to plain labels, falls back to a pluralized acronym-
   'Technical event: regulator data log on',
   'Individual user settings based on user password not retained between system power cycles',
   '-34.1?C',
-  '-34.1' + String.fromCharCode(176) + 'C'   // the degree sign the export really carries, kept out of this file's bytes
+  '-34.1' + String.fromCharCode(176) + 'C',   // the degree sign the export really carries, kept out of this file's bytes
+  // Round three (.superpowers/sdd/review-sf-cred2-verdict.md): the precision cases the confirmation
+  // review demonstrated. A part number three words after "secured with" is hardware, not a code
+  // (I1); a numeric designator in front of "unlocks" is mechanical unless the clause is about access
+  // (I2); and a lower-case field opening with an acronym in front of "user" is still a thing's name,
+  // which is why typography alone cannot carry that rule (I3).
+  'Middle beam is secured with square nut part 453561182601',
+  'Transducer secured with bracket 6600-0701-700',
+  'Cable secured using clamp 453561182601 at the chassis',
+  'Rail locked with pin 10383 installed',
+  'Panel is secured with screw kit 2019 revision B',
+  'Solenoid 1200 unlocked during the test',
+  'Latch 2213 unlocks after the handle is released',
+  'Pressure 4000 unlocks the valve',
+  'ppp user name or password is incorrect',
+  'som user EEPROM device failure',
+  'crt user color adjustment required',
+  'cine user interface board replaced',
+  'adm user menu opens'
 ].forEach(s => check(`technician text with no credential value is left alone: ${s}`, !sf.hasCredential(s) && sf.redact(s) === s, sf.redact(s)));
 // Round two of the credential screen (.superpowers/sdd/review-sf-cred-verdict.md): the verb-side form
 // that published a real factory access code, values that are ordinary words or carry symbols, short
@@ -168,12 +189,38 @@ check('classLabel maps keys to plain labels, falls back to a pluralized acronym-
   ['Correct password as per Appendix A of Operating Manual or default model number', ['default model number']],
   // Found by this round's own sweep of the generated pages: the live GE Dinamap Pro 100 service
   // access code, written as a menu path, where the qualifier is a separator away from "code".
-  ['Main menu > More > Service > code 2213 > NIBP > Check', ['2213']]
+  ['Main menu > More > Service > code 2213 > NIBP > Check', ['2213']],
+  // Round three: the forms the confirmation review demonstrated as still published, plus the two
+  // targets whose rules it asked to be narrowed (the verb-side code and the "unlocks" form) so the
+  // narrowing cannot quietly turn into a miss.
+  ['Passcode does not match value at model number location in EEPROM', ['model number']],
+  ['password *see note* 2580', ['2580']],
+  ['password (*note) 2580', ['2580']],
+  ['passcode #ref 2580', ['2580']],
+  ['Service code *see Appendix* 812', ['812']],
+  ['Service password is biomed and must be changed', ['biomed']],
+  ['password service accepted', ['service']],
+  ['password A-B-C-D accepted', ['A-B-C-D']],
+  ['812 unlocks the service menu', ['812']]
 ].forEach(([s, vals]) => check(`a credential value is detected and withheld: ${s}`, sf.hasCredential(s) && vals.every(v => !sf.redact(s).includes(v)), sf.redact(s)));
 // The redaction's own edges: a quoted value takes its closing quote with it rather than leaving one
 // behind, and the group name beside two withheld account names is not collateral damage.
 check('a quoted ordinary-word value is withheld with no stray quote left behind', sf.redact('Service password is "biomed"') === 'Service [withheld]', sf.redact('Service password is "biomed"'));
 check('the live backslash account list withholds both accounts and keeps the group name', sf.redact('Administrator group members (INW\\Domain Admins, INW\\MLCLSqlUser, INW\\MLCLTechUser) must be present').includes('Domain Admins'), sf.redact('Administrator group members (INW\\Domain Admins, INW\\MLCLSqlUser, INW\\MLCLTechUser) must be present'));
+// The second code in a "secured with code X" clause is withheld only when it is another code of the
+// same family, not every designator that happens to share the sentence.
+{
+  const s = 'Supply is factory-secured with code HP003633, replace board AB1234 if it fails';
+  check('a board designator beside a withheld code is not collateral', sf.hasCredential(s) && !sf.redact(s).includes('HP003633') && sf.redact(s).includes('AB1234'), sf.redact(s));
+}
+// The credential screen is its own module; the generator re-exports it, so tests and the export
+// runner keep one import path, and the runner no longer keeps its own copy of the screened fields.
+check('the screen is a module of its own and the generator re-exports it', (() => {
+  const cs = require('../site/credential-screen');
+  return typeof cs.hasCredential === 'function' && typeof cs.redact === 'function' && typeof cs.findCredentials === 'function'
+    && cs.hasCredential === sf.hasCredential && cs.redact === sf.redact && cs.findCredentials === sf.findCredentials;
+})());
+check('the screened first-step fields are exported, value_unit among them', Array.isArray(sf.FIRST_STEP_FIELDS) && sf.FIRST_STEP_FIELDS.includes('value_unit') && sf.FIRST_STEP_FIELDS.includes('check_text'), sf.FIRST_STEP_FIELDS && sf.FIRST_STEP_FIELDS.join(','));
 // A mass-noun label ("X-ray equipment") must not be counted directly ("2 x-ray equipment"), and an
 // acronym-hyphen compound keeps its capital mid-sentence.
 {
