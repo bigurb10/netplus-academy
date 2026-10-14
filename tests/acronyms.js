@@ -6,7 +6,7 @@ const fs = require('fs'); const path = require('path');
 const { JSDOM } = require('jsdom');
 const ROOT = path.resolve(__dirname, '..');
 // How each course names itself. A glossary entry may not name any other course: every pack stands alone.
-const COURSE_NAMES = { netplus: /Network\+|\bNet\+/, secplus: /Security\+|\bSec\+/, cbet: /\bCBET\b/, aplus1: /\bA\+(?!\+)/, aplus2: /\bA\+(?!\+)/, bmet: /\bCABT\b|\bBMET Academy\b/ };
+const COURSE_NAMES = { netplus: /Network\+|\bNet\+/, secplus: /Security\+|\bSec\+/, cbet: /\bCBET\b/, cres: /\bCRES\b|\bCRES Academy\b/, aplus1: /\bA\+(?!\+)/, aplus2: /\bA\+(?!\+)/, bmet: /\bCABT\b|\bBMET Academy\b/ };
 
 function loadPack(dir) {
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort();

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic | Certified Radiology Equipment Specialist CRES | FieldReady Academy</title>
+<meta name="description" content="Open an imaging generator and you see the same two dozen parts over and over. Knowing what each one does, and what each one does when it fails, is most...">
+<link rel="canonical" href="https://fieldreadyacademy.com/cres/lessons/u4l2-components-in-a-circuit-passive-active-rectifiers-and-reading-the-schematic/">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FieldReady Academy">
+<meta property="og:title" content="Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic">
+<meta property="og:description" content="Open an imaging generator and you see the same two dozen parts over and over. Knowing what each one does, and what each one does when it fails, is most...">
+<meta property="og:url" content="https://fieldreadyacademy.com/cres/lessons/u4l2-components-in-a-circuit-passive-active-rectifiers-and-reading-the-schematic/">
+<meta property="og:image" content="https://fieldreadyacademy.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fieldreadyacademy.com/og-image.png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/catalog.css">
+<link rel="stylesheet" href="/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic","description":"Open an imaging generator and you see the same two dozen parts over and over. Knowing what each one does, and what each one does when it fails, is most...","url":"https://fieldreadyacademy.com/cres/lessons/u4l2-components-in-a-circuit-passive-active-rectifiers-and-reading-the-schematic/","mainEntityOfPage":"https://fieldreadyacademy.com/cres/lessons/u4l2-components-in-a-circuit-passive-active-rectifiers-and-reading-the-schematic/","articleSection":"Unit 4: Electricity, Electronics, and Imaging Power","inLanguage":"en","isAccessibleForFree":true,"isPartOf":{"@type":"Course","name":"CRES Academy","url":"https://fieldreadyacademy.com/cres/lessons/"},"author":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"},"publisher":{"@type":"Organization","name":"FieldReady Academy","url":"https://fieldreadyacademy.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Courses","item":"https://fieldreadyacademy.com/"},{"@type":"ListItem","position":2,"name":"CRES Academy","item":"https://fieldreadyacademy.com/cres/"},{"@type":"ListItem","position":3,"name":"Lessons","item":"https://fieldreadyacademy.com/cres/lessons/"},{"@type":"ListItem","position":4,"name":"Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic","item":"https://fieldreadyacademy.com/cres/lessons/u4l2-components-in-a-circuit-passive-active-rectifiers-and-reading-the-schematic/"}]}</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap row spread">
+    <a class="brand" href="/"><span class="mark">FR</span> FieldReady Academy</a>
+    <nav class="site-nav" aria-label="Course"><a href="/cres/">Overview</a><a href="/cres/lessons/" aria-current="page">Lessons</a><a href="/cres/practice-test/">Practice test</a><a href="/cres/cheatsheet/">Cheat sheet</a><a href="/guides/">Guides</a><a href="/cres/app/" class="btn primary small">Start the course</a></nav>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Courses</a><span class="sep">/</span><a href="/cres/">CRES Academy</a><span class="sep">/</span><a href="/cres/lessons/">Lessons</a><span class="sep">/</span><span>Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic</span></nav>
+<article class="lesson">
+  <div class="row pills"><span class="pill accent">Unit 4</span><span class="pill">Electronics</span><span class="pill">Objective E&amp;E-B</span><span class="muted">10 min read</span></div>
+  <h1>Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic</h1>
+  <p class="ink2 lede">Unit 4: Electricity, Electronics, and Imaging Power. Lesson 15 of 60 in CRES Academy.</p>
+  <div class="lesson-body"><p>Open an imaging generator and you see the same two dozen parts over and over. Knowing what each one does, and what each one does when it fails, is most of electronic troubleshooting.</p><h3>Passive components</h3><ul><li><strong>Resistors</strong> limit current and drop voltage. In the filament circuit they set the milliampere stations, so a drifted resistor or a dirty tap is a linearity problem.</li><li><strong>Capacitors</strong> store charge. They pass alternating current and block direct current, smooth rectified voltage, and in a capacitor-discharge portable they are the exposure energy itself. Treat every one as charged until you have discharged it with the manufacturer&#39;s tool and read zero.</li><li><strong>Inductors</strong> oppose a change in current: chokes, stator windings, and the windings of every transformer.</li><li><strong>Transformers</strong> at component level are two coupled windings that change alternating voltage by their turns ratio.</li></ul><h3>The <abbr title="Resistor-capacitor (circuit). A resistor and a capacitor together, whose time constant is the resistance times the capacitance.">RC</abbr> time constant</h3><p>A capacitor charging through a resistor fills on a curve, not instantly. One time constant is <strong>tau = R x C</strong>: a capacitor reaches about <strong>63 percent</strong> of the final voltage in one time constant and is essentially full, about 99 percent, after <strong>five</strong>. A 10 kohm resistor with a 100 microfarad capacitor gives tau = 1 second, so five seconds to full. The same curve runs backward on discharge, which is why a bleeder resistor&#39;s value tells you how long a cabinet needs before it is safe.</p><h3>Active components</h3><pre>Diode        conducts one way; about 0.7 V forward drop in silicon; shorted passes both ways, open neither
+Rectifier    half-wave passes one half-cycle, full-wave uses both, a bridge of four diodes is the usual form
+Transistor   switches or amplifies on a small control current
+SCR          a gate-triggered AC switch; the usual exposure and rotor switching element
+Relay        a small coil current switching a large load; a contactor is a heavy-duty relay
+Fuse, breaker opens on overcurrent; a repeat trip is a fault, never a nuisance</pre><p>Rectification matters because the tube needs one-way current. Without it the negative half-cycle would drive electrons the wrong way and destroy the tube; with it, ripple falls as pulses per cycle rise, from 100 percent on single-phase to about 14 percent on six-pulse three-phase, 4 percent on twelve-pulse, and about 1 percent on a high-frequency generator.</p><h3>Interlocks and indicators</h3><p>An <strong>interlock</strong> is a contact in series with the exposure circuit: door, rotor ready, receptor parked, correct cassette size, collimator, emergency stop. Because they are in series, one open contact gives no exposure and very often no fault code, which is the classic &quot;nothing happens&quot; call. An indicator <strong><abbr title="Light-emitting diode. A diode that emits light; the indicator and display backlight of almost every console and panel.">LED</abbr></strong> that is dark means the lamp or the circuit driving it is dead, so prove which before you conclude anything from it.</p><h3>Reading an imaging schematic</h3><p>Learn the schematic symbols first, because a drawing is unreadable without them: a resistor is a zigzag or a plain rectangle, a capacitor two parallel plates with one curved if it is polarized, an inductor or winding a coil, a transformer two coils with a core between them, a diode a triangle against a bar pointing the way current flows, a transistor a circle with three leads, a fuse a short link, and a contact a pair of lines that a coil symbol beside it operates. Then follow four paths, in this order:</p><ol><li><strong>Power path</strong>: incoming supply, disconnect, main contactor, the autotransformer, the step-up transformer, rectifiers, and the tube.</li><li><strong>Control path</strong>: console, logic boards, the timer, and the exposure switch&#39;s two stages.</li><li><strong>Interlock chain</strong>: drawn as a string of normally open or normally closed contacts in series. Walk it contact by contact with the power off, on continuity.</li><li><strong>Test points</strong>: the manual marks them with the expected value. A test point that matches the printed value proves everything upstream of it; the first one that does not names the stage.</li></ol><div class="tip">Exam tip: capacitors pass alternating current and block direct current, inductors do the opposite. Tau = R x C, 63 percent in one time constant and about 99 percent in five. Rectifiers exist because the tube needs direct current. Interlocks are in series, so one open contact gives no exposure and no code. Discharge before you touch.</div></div>
+  <div class="hook"><span class="eyebrow">Remember</span><div>Resistors drop voltage and set milliampere stations, capacitors store charge and pass alternating current, inductors oppose current change, and transformers change voltage by turns ratio; tau equals R times C gives 63 percent in one time constant and about 99 percent in five; diodes drop about 0.7 V and rectify half-wave, full-wave, or as a bridge so the tube gets one-way current, while transistors, <abbr title="Silicon controlled rectifier. A gate-triggered solid-state switch used to control alternating current power.">SCRs</abbr>, relays, contactors, fuses, and breakers switch and protect; and a schematic is read as power path, control path, interlock chain in series, and test points against their printed values.</div></div>
+  
+  <section class="deep"><div class="eyebrow">Deeper explanation</div><h2>Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic, explained slowly</h2><div class="lesson-body deep-body"><h3>A small parts list, used over and over</h3><p>An imaging generator looks complicated because it is large, not because it has many kinds of parts. Learn what each part does, what it does when it fails, and how it is drawn, and a schematic becomes readable.</p><h3>The passive parts and their failure modes</h3><pre>Part        Does                              Fails as
+Resistor    limits current, drops voltage,    open (no current), or drifted high (low mA,
+            sets the mA stations              failed linearity); discolored or cracked
+Capacitor   stores charge, passes AC, blocks  shorted (blows a fuse), open (ripple, resets),
+            DC, smooths rectified voltage     leaking or bulging (the visible warning)
+Inductor    opposes a change in current:      open winding (no rotor, no drive), shorted turns
+            chokes, stator windings           (overheating, hum, nuisance trips)
+Transformer two coupled windings changing     open or shorted winding, failed insulation,
+            AC voltage by turns ratio         oil low or contaminated, arcing</pre><p>A capacitor deserves the extra caution: in a capacitor-discharge portable it holds the exposure energy itself, and in any generator the smoothing and filter capacitors hold enough to hurt long after the disconnect is open. Discharge with the manufacturer&#39;s tool, to ground, and verify with a meter.</p><h3>The <abbr title="Resistor-capacitor (circuit). A resistor and a capacitor together, whose time constant is the resistance times the capacitance.">RC</abbr> time constant, and why you care</h3><p>A capacitor charging through a resistor fills along a curve. One time constant is <strong>tau = R x C</strong>, and the curve is always the same shape:</p><pre>After 1 tau     about 63 percent of the final voltage
+After 2 tau     about 86 percent
+After 3 tau     about 95 percent
+After 5 tau     about 99 percent: treated as full
+Discharge       the same curve downward, through the bleeder resistor
+Worked          10 kohm x 100 microfarads = 10,000 x 0.0001 = 1 second, so about 5 seconds to full</pre><p>The practical use is safety: the bleed-down time a service manual gives you is five time constants of the bleeder path, and it is the difference between a safe cabinet and a trip to the emergency department. The second use is timing: filter cutoffs, delay circuits, and charge times are all this curve in disguise.</p><h3>The active parts</h3><pre>Part         Does                                     Fails as
+Diode        conducts one way; about 0.7 V forward     shorted (conducts both ways, overcurrent
+             drop in silicon                           fault), or open (half the waveform missing)
+Rectifier    makes the one-way current the tube        one failed element: low output, high ripple,
+             needs: half-wave, full-wave, bridge       a tube arc or overcurrent fault
+Transistor   switches or amplifies on a small          shorted on, open off, or thermally
+             control current                           intermittent
+SCR          a gate-triggered AC switch, used in       shorted passes power continuously, open
+             primary circuits and rotor drives         passes nothing; check both sides before
+                                                       blaming the control board
+Relay or     a small coil current switching a large    coil open, contacts pitted or welded,
+contactor    load; a contactor is the heavy version    chatter from a weak coil supply
+Fuse or      opens on overcurrent                      a repeat trip is a fault, never a nuisance
+breaker</pre><p>Rectification is not optional: without it the negative half-cycle would drive current backward through the tube and destroy it. As pulses per cycle rise, ripple falls, and ripple is image quality: 100 percent on single-phase, about 14 percent six-pulse, about 4 percent twelve-pulse, about 1 percent high-frequency. Less ripple means more output and a harder beam for the same settings, which is why one technique chart does not transfer between generator types.</p><h3>The interlock chain, and why it hides</h3><p>Interlocks are contacts <strong>in series</strong> with the exposure circuit: door, rotor ready, receptor parked and the right size, collimator, emergency stop, tube thermal. Because they are in series, one open contact produces no exposure and frequently no fault code at all, which is the classic &quot;I press it and nothing happens&quot; call. Walk the chain with the power off on continuity, contact by contact, from one end. An <strong><abbr title="Light-emitting diode. A diode that emits light; the indicator and display backlight of almost every console and panel.">LED</abbr></strong> that is dark tells you either the lamp or its drive circuit is dead, so prove which before concluding anything from it.</p><h3>Reading an imaging schematic</h3><pre>Path             Follow it from                       to                         Looking for
+Power            disconnect, main contactor           autotransformer, step-up,  the first point with no
+                                                      rectifier, tube            voltage
+Control          console, logic boards, timer         the exposure contactor     a command that is sent
+                                                                                 but not obeyed
+Interlock chain  one end of the string                the other                  the open contact
+Low voltage      each cabinet supply                  each board it feeds        a sagging rail
+Test points      the manual&#39;s marked points           their printed values       the first mismatch</pre><p>Test points are the whole reason a service manual is worth reading before you open anything: a point that reads its printed value proves everything upstream of it is working, so each measurement halves the problem.</p><h3>What to memorize</h3><ul><li>Capacitors pass <abbr title="Alternating current. Mains power that reverses direction, 60 Hz in the United States and 50 Hz in much of the world.">AC</abbr> and block <abbr title="Direct current. Current in one direction only; what an x-ray tube needs across its cathode and anode.">DC</abbr>; inductors oppose a change in current.</li><li>Tau = R x C; 63 percent in one time constant, about 99 percent in five; bleed-down time is five time constants.</li><li>Silicon diode drops about 0.7 V; rectifiers exist because the tube needs <abbr title="Direct current. Current in one direction only; what an x-ray tube needs across its cathode and anode.">DC</abbr>; ripple 100, 14, 4, and about 1 percent.</li><li>Interlocks are in series: one open contact means no exposure and often no code.</li><li>Read a schematic as power path, control path, interlock chain, low-voltage rails, and test points.</li></ul></div></section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Keep going</div>
+  <h2>Check what you learned</h2>
+  <p class="ink2">This lesson's 4-question checkpoint, the starter test, every other lesson, and unlimited practice tests are free in the course. Progress saves in your browser, and to your account if you sign in.</p>
+  <p><a class="btn primary" href="/cres/app/#lesson/u4l2">Open this lesson in the course</a> <a class="btn" href="/cres/cheatsheet/">Read the cheat sheet</a></p>
+</aside>
+<nav class="pager" aria-label="Lessons">
+  <a href="/cres/lessons/u4l1-voltage-current-resistance-and-power-ohm-s-law-series-and-parallel/" rel="prev">&larr; Voltage, Current, Resistance, and Power: Ohm&#39;s Law, Series and Parallel</a>
+  <a href="/cres/lessons/">All lessons</a>
+  <span></span>
+</nav>
+</main>
+<footer class="wrap muted">FieldReady Academy. All course content is original. Everything is free while we launch.</footer>
+</body>
+</html>
