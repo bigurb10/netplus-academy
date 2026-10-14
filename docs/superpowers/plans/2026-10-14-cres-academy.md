@@ -924,4 +924,12 @@ The merge to `main`, the branch deletion, and the hand-off (Blake pushes, runs `
 
 ## Status
 
-(filled in by Tasks 7 and 8)
+### Task 7: reference and outline coverage checks (2026-10-14, commit e3c33aa)
+
+- Checker: `scripts/termcheck_cres.py`, run from the repo root (it names the main checkout's pack path), committed as the plan lists it; every check beat the plan's thresholds on the first run.
+- References read: the Mometrix CRES guide (OCR text), the Bushong textbook (10th edition, chapters 1 to 11, 14 to 18, 21 to 28, and 35 to 38 in full; 12, 13, 19, 20, and 29 to 34 at heading level), the Bushong workbook (its table of contents), and the ACI handbook's CRES outline.
+- Counts (entries / misses before / misses after): outline named examples 92 / 11 / 0 (none); guide section headings 94 / 25 / 9; guide defined terms 155 / 65 / 17; textbook table of contents 588 / 119 / 51; workbook table of contents 239 / 208 / 206 (182 of those the lone word "worksheet" that each worksheet title carries). Every remaining entry is classified out of scope with a reason in `.superpowers/sdd/cres-task-7-report.md` (radiographer practice the technician does not perform, radiobiology detail, film darkroom detail, laboratory experiment procedure, the textbook's historical and biographical sections, and the workbook's "worksheet" tokens).
+- Gaps fixed: 145 reference entries cleared by additions to 37 lesson bodies and 6 deep dives, plus two glossary keys (AAPM, SMPTE); 146 acronyms. Judgment calls recorded in the report: binary, hexadecimal, and bytes kept in scope for the informatics unit; DIN 2001 and VESA ruled out; one airborne-precautions sentence added to u2l1.
+- After the fixes: packcheck OK (10 units, 60 lessons, 60 deep dives, 300 questions), acronyms OK, gen-smoke 4500 calls 0 problems, `npm test` 1154 pass, `python build.py cres` and `node site/build-site.js` (all seven courses) clean, sitemap 1040 URLs.
+
+(Task 8 adds the stage results)
