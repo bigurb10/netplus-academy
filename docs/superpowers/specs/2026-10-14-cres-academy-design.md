@@ -13,11 +13,14 @@ that note's draft outline.
   official-format test at the exam's score, recorded permanently. No labs (Blake,
   2026-10-14, "No labs"), no certificate, no untested domain.
 - **References on disk:** the OCR'd Mometrix CRES guide (`E:\CERT GUIDES\CRES\CRES-study-guide-OCR.txt`),
-  the Bushong *Workbook and Laboratory Manual* (`E:\CERT GUIDES\CRES\Stewart C. Bushong.pdf`,
+  the Bushong textbook *Radiologic Science for Technologists*, 10th edition
+  (`E:\CERT GUIDES\CRES\Bushong - Radiologic Science for Technologists 10e.pdf`, 677 pages with a
+  text layer and a 1,034-entry table of contents, added by Blake later on 2026-10-14), the Bushong
+  *Workbook and Laboratory Manual* (`E:\CERT GUIDES\CRES\Bushong - Workbook and Laboratory Manual.pdf`,
   432 pages, 360 with a text layer, 333-entry table of contents), the ACI handbook
   (`E:\CERT GUIDES\BMET\ACI-Certification-Handbook-090926.pdf`), and the CBET-era books under
-  `E:\CERT GUIDES\CBET\`. Blake chose "guide + handbook + CBET books, buy Bushong"; the
-  workbook is what arrived. Ultrasound, MRI, and nuclear medicine are not in any of these
+  `E:\CERT GUIDES\CBET\`. Blake chose "guide + handbook + CBET books, buy Bushong".
+  Ultrasound, MRI, and nuclear medicine are not in any of these
   beyond the guide's mentions, so Unit 7 is checked against the guide and the CBET imaging
   lesson's sources only and is written at recognition depth, which matches the outline.
 - **Lessons follow the exam weights** (Blake: "Rebalance to the exam weights, 60 lessons"):
@@ -276,7 +279,8 @@ Status with their counts before the pack is called done.
 | File | What it is | Used for |
 |---|---|---|
 | `E:\CERT GUIDES\CRES\CRES-study-guide-OCR.txt` | Mometrix CRES guide, pages 19 to 85, OCR'd from screenshots (method in `E:\CERT GUIDES\CRES\ocr\`) | check 1 |
-| `E:\CERT GUIDES\CRES\Stewart C. Bushong.pdf` | Bushong, Workbook and Laboratory Manual for Radiologic Science for Technologists, 432 pages | check 2 |
+| `E:\CERT GUIDES\CRES\Bushong - Radiologic Science for Technologists 10e.pdf` | Bushong, Radiologic Science for Technologists, 10th edition, 677 pages, 38 chapters | check 2a, physics numbers |
+| `E:\CERT GUIDES\CRES\Bushong - Workbook and Laboratory Manual.pdf` | Bushong, Workbook and Laboratory Manual, 432 pages | check 2b |
 | `E:\CERT GUIDES\BMET\ACI-Certification-Handbook-090926.pdf` | ACI handbook 2026, CRES outline on pages 16 to 19 | check 3, exam facts |
 | `E:\CERT GUIDES\CBET\` | the CBET pack's references | safety numbers, units 1, 2, 4, 10, Unit 7 |
 | `E:\CERT GUIDES\CHTM\AAMI CHTM Study Guide (Lynch, 2016).pdf` | AAMI CHTM study guide, 58 pages | CHTM later, not CRES |
