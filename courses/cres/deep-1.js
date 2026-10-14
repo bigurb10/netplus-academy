@@ -270,6 +270,16 @@ A radio transmitter and an x-ray tube both put out electromagnetic energy. The d
 - Dividing cells are most sensitive, which ranks bone marrow, the gonads, and children at the top of the risk list.
 - **Dose rate** matters: the same total dose given slowly does less harm than the same dose at once, because repair mechanisms have time to work. That is the biological reason pulsed fluoroscopy is more than a dose arithmetic trick.
 
+## Two kinds of effect, and which limit answers which
+Every number in the limit table exists to hold down one of two very different risks, and the exam expects the two words.
+\`\`\`
+Stochastic effects     cancer and genetic change; no threshold, so any dose carries some
+                       probability; more dose raises the chance, not the severity
+Deterministic effects  skin reddening, hair loss, cataract, reduced fertility; a threshold
+                       must be passed first, and above it severity rises with dose
+\`\`\`
+Occupational and public limits are written against stochastic risk, which is why they are low, annual, and cumulative. The alerts and trigger levels on a long interventional case are written against deterministic injury, which is why they are about one patch of skin during one procedure rather than a yearly total. A technician who keeps those apart can answer the common exam trap: a dose limit protects a worker over a career, while a skin dose trigger protects one patient during one case.
+
 ## The quantities, in the order a question walks them
 \`\`\`
 Quantity          Asks                                  Units and conversions
@@ -731,6 +741,10 @@ Resistance   R       ohm         filament a fraction of an ohm, ground path unde
 Power        P       watt        a generator station in kW, a board's rail in a few watts
 \`\`\`
 The water analogy carries you a long way: voltage is pressure, current is flow, resistance is the narrowness of the pipe, power is the work the water does when it arrives. A high-voltage section is high pressure and low flow; a filament circuit is low pressure and high flow.
+
+## Energy, charge at rest, and charge in motion
+Energy is the ability to do work, and the **law of conservation** of energy says it only changes form. The forms are all in the department: **potential energy** in a raised table, a counterweight, or a charged capacitor bank; kinetic energy in a gantry that is already moving when you reach for it; **thermal energy** in an anode at the end of a run; **electrical energy** in everything you measure; **chemical energy** in a portable's battery pack; and **nuclear energy** in the tracer a gamma camera watches. Nothing on a service call is created or destroyed, only moved, which is why heat has to go somewhere and why a capacitor still holds what you put into it an hour ago.
+**Electrostatics** is charge sitting still. The **laws of electrostatics** are short: unlike charges attract and like charges repel, charge on a conductor migrates to its outer surface, and the force between two charges falls off with the square of the distance between them. **Electrification** is how something acquires charge, and the **methods of electrification** are three: friction, contact, and induction. All three are practical rather than academic here. Friction on a plastic cover is why dust ends up on a detector face. Contact is why you take a shock off a cart in a dry corridor in February. Induction is why a charged object can affect a nearby board without touching it, and why **ESD** precautions are a procedure and not a superstition. **Electrodynamics** is that same charge in motion, and from here on the whole unit is electrodynamics.
 
 ## Ohm's law and power, with the rearrangements
 \`\`\`

@@ -155,7 +155,11 @@ Digital systems add the exposure index and the deviation index, which are the on
 - Off-cell anatomy, clipped collimation, and a missing grid all produce density complaints with nothing broken.
 - Four factors: density, contrast, recorded detail, distortion; exposure index and deviation index for digital dose.`,
 
-u5l5: `## Everything between the target and the receptor throws something away
+u5l5: `## Why there is an image at all
+Before any device throws a photon away, the patient has already done most of the work. Five interactions are named: **coherent scattering**, which redirects a low-energy photon without taking energy from it; the **photoelectric effect**, which absorbs the photon outright and climbs steeply with atomic number, so bone, iodine, and barium go white; **Compton scattering**, which takes part of the photon's energy and sends the rest off in a new direction; **pair production**, which needs at least 1.02 MeV; and **photodisintegration**, which needs above about 10 MeV. Only the middle two happen in a diagnostic room, and they are opposites in value: the photoelectric effect makes the picture, Compton scattering spoils it and exposes everyone standing in the room.
+That difference in absorption across the field is **differential absorption**, and it is the whole reason a shadow becomes a diagnosis. Air and lung have high **radiolucency** and read dark; fat and muscle sit between; bone, metal, and contrast are radiopaque and read light. What actually leaves the patient is **exit radiation**: image-forming primary photons plus scatter, mixed together, and every device below carries the same instruction, which is to keep more of the first than of the second.
+
+## Everything between the target and the receptor throws something away
 The useful beam is a cone of photons aimed at anatomy. The collimator throws away the ones aimed anywhere else, filtration throws away the ones too soft to reach the receptor, and the grid throws away the ones that changed direction inside the patient. Each device has a number attached, and those numbers are the quality control tests.
 
 \`\`\`
@@ -289,6 +293,10 @@ Defective pixel map   which pixels, rows, and          analysis of the    new da
                       columns cannot be trusted        calibration runs   drop or a fault
 \`\`\`
 Order matters: offset first, then gain, then the map, because each step depends on the one before. Do them in the geometry and at the techniques the manufacturer specifies, and keep the uniformity image from before and after in the work order. A recalibration without a before and after image is an assertion; with them it is evidence.
+
+## Preprocessing, the histogram, and postprocessing
+Those three calibrations are **preprocessing**: they happen on raw values, before anybody looks at anything. Everything after them is **postprocessing**, and its first step is the **image histogram**, a simple count of how many pixels hold each value. The system reads the shape of that histogram, decides which part of it is anatomy rather than collimator shadow or raw beam, and sets the display scale from there. That one decision explains a whole class of complaints that look like detector failure and are not: a field left uncollimated, a hip prosthesis, a lead apron in the corner of the image, or two exposures **partitioned** onto one plate without clear margins between them, each of which can send the algorithm to the wrong part of the histogram and leave the picture too dark or too light with every calibration in tolerance.
+Two measured numbers describe what the panel can still do. **Signal-to-noise ratio** is anatomy signal against the random noise beneath it, and it falls with exposure, which is why underexposed digital images look grainy instead of pale. **Modulation transfer function** is the curve of surviving contrast against detail fineness, measured from a bar pattern, and it is how a specification or a physicist's report states spatial resolution. Neither is a daily test, but both are the language a vendor and a physicist will use when a panel is argued about.
 
 ## Reading the image to find the circuit
 The readout is a grid: gate lines switch rows on, data lines carry charge out. That geometry is why detector faults are so often straight.
@@ -758,6 +766,9 @@ Pencil chamber            dose along a 10 cm length            computed tomograp
 Badges and electronic     accumulated occupational dose        staff monitoring, worn at
 dosimeters                                                    the collar outside the apron
 \`\`\`
+
+## Gas detectors, and why one meter cannot do both jobs
+Three of those instruments are the same idea at different voltages: a sealed gas volume with a collecting electrode. Raise the voltage across it and the behavior changes in stages. At very low voltage the ion pairs radiation created find each other and recombine before they reach the electrode, which is the **recombination** region and reads too low to mean anything. Raise it to the chamber's working point and every pair created is collected, so the charge collected is proportional to the radiation that arrived; this is the ionization region, and it is where a dosimeter and a **DAP** meter live. Raise it much further and each single event starts an avalanche that produces one large pulse of a fixed size, which is the Geiger-Muller region. That is why a **Geiger-Muller** counter is the right instrument for finding contamination or a shielding gap, and the wrong instrument for stating a dose: it hears every event loudly but it no longer tells you how much energy arrived.
 
 ## The measurement sequence that answers an output complaint
 1. Set a known geometry: the detector on the central ray at a measured distance, collimated to the detector and no tighter, nothing else in the beam.

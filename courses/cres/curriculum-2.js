@@ -16,13 +16,16 @@ FRA.units.push({
 The cathode is a coiled **thoriated tungsten filament**, 1 to 2 cm long and about 2 mm across, sitting inside a **focusing cup**. The filament circuit heats it, and at a filament current of about 4 A the outer electrons gain enough energy to leave the metal. That is **thermionic emission**. The freed electrons hang around the filament as a cloud called the **space charge**, and because like charges repel, the cloud itself resists further emission. The focusing cup is held negative, so it squeezes that cloud into a narrow stream instead of letting it spread. **Tube current**, read in mA, is simply how many of those electrons cross to the anode each second. It is set by filament heating, and a small change in filament current makes a large change in mA, which is why the mA calibration lives in the filament circuit and not in the high-voltage section.
 
 ## One percent x-rays, ninety-nine percent heat
-The kilovoltage across the tube accelerates the electrons; the target stops them. About **1 percent** of their energy leaves as x-rays and about **99 percent** becomes heat. That single ratio is behind rating charts, cooling curves, warm-up procedures, and most dead tubes.
+The kilovoltage across the tube accelerates the electrons; the target stops them. The **law of conservation** of energy means all of that kinetic energy has to go somewhere: about **1 percent** of it leaves as x-rays and about **99 percent** becomes heat. That single ratio is behind rating charts, cooling curves, warm-up procedures, and most dead tubes.
 
 ## The two ways an x-ray is made
-- **Bremsstrahlung**, or braking radiation: an electron passing near a tungsten nucleus is pulled off course and slowed, and the energy it gives up leaves as a photon. Any amount can be lost, so these photons come out in a continuous spread from near zero up to the peak kilovoltage. They are the bulk of a diagnostic beam.
+- **Bremsstrahlung**, or braking radiation: an electron passing near a tungsten nucleus is pulled off course and slowed, and the energy it gives up leaves as a photon. Any amount can be lost, so these photons come out in a continuous spread from near zero up to the peak kilovoltage. That mix of energies makes every diagnostic beam a **heterogeneous beam**: never one energy, which is why beam quality has to be measured as a half-value layer rather than read off the console. They are the bulk of a diagnostic beam.
 - **Characteristic** radiation: an electron knocks a K-shell electron out of a target atom, an outer electron falls into the hole, and the photon carries exactly the difference between the two binding energies. Only K-shell transitions are useful, and in tungsten they sit at about **69.5 keV**, so none of them appear until the tube runs above that.
 
-## What moves the emission spectrum
+Target atoms hold their electrons in **electron shells**, named K, L, and M outward from the **atomic nucleus**, and each shell has an **electron-binding energy** that grows with the **atomic number** of the element. Tungsten's high atomic number and high **atomic mass** are exactly why it is the target: more protons in the nucleus means more bremsstrahlung, and tightly bound K-shell electrons means characteristic photons energetic enough to be useful.
+
+## What moves the emission spectra
+Plot how many photons come out against their energy and you have the beam's **emission spectra**: a continuous bremsstrahlung hump with the characteristic lines standing on top of it. Five things move those spectra, and the exam asks which way.
 \`\`\`
 Raise this            Quantity (how many)   Quality (average energy)
 mA or mAs             up                    no change
@@ -44,9 +47,10 @@ The **actual focal spot** is the strip of target the electrons land on. The **ef
 
 ## How the tube is built
 - The **envelope** is a vacuum vessel of glass or metal holding the cathode and anode. Metal lasts longer, because tungsten boiling off the electrodes plates the inside of a glass envelope and eventually conducts.
+- **External components** are the parts you can see and touch: the housing with its high-voltage cable receptacles, the port and its added filter, the expansion bellows and thermal switch, the collimator mount, and the stand or ceiling support that carries all of it.
 - **Oil** around the envelope carries heat away and insulates. The **housing** is lead-lined, and that lining is what holds stray radiation escaping anywhere but the port below **100 mR/h at 1 m** while keeping high voltage away from hands.
-- The **anode** is a disc of tungsten-rhenium backed by molybdenum or graphite, angled a few degrees, spun by an induction motor: a **rotor** shaft inside the vacuum, a **stator** winding outside it. Standard speed is about **3,400 rpm**, high speed about **10,000 rpm**, and reversing the stator field is how the disc is braked.
-- **Dual focus** means two filaments in the focusing cup, large and small, giving two focal spots: small stations about 0.3 to 0.6 mm for detail, large stations about 1.0 to 1.2 mm when the exposure needs the heat capacity.
+- The **anode** is a disc of tungsten-rhenium backed by molybdenum or graphite, angled a few degrees, spun by an induction motor. That **target composition** is chosen for three things at once: a high melting point, a high atomic number for output, and backing metals whose **thermal conductivity** moves heat away from the track faster than tungsten alone would. The motor itself is a **rotor** shaft inside the vacuum with a **stator** winding outside it. Standard speed is about **3,400 rpm**, high speed about **10,000 rpm**, and reversing the stator field is how the disc is braked.
+- **Dual focus**, which is why a manual calls it a **dual-focus tube**, means two filaments in the focusing cup, large and small, giving two focal spots: small stations about 0.3 to 0.6 mm for detail, large stations about 1.0 to 1.2 mm when the exposure needs the heat capacity.
 
 ## Heat units, the number every rating is written in
 \`\`\`
@@ -55,6 +59,7 @@ Three phase or high frequency HU = 1.4 x kVp x mA x s
 Energy equivalent             1 HU = about 1.4 J
 Worked                        98 kVp at 120 mAs single phase = 11,760 HU
 \`\`\`
+**Heat dissipation** happens by three paths and all three can fail: conduction from the track into the disc, the stem, and the oil; convection as that oil circulates, sometimes through a pump and a heat exchanger; and radiation from the hot disc to the housing wall. A blocked filter, a dead fan, a tired pump, or low oil removes one path and the tube pays for it.
 A **rating chart** answers one question: is this single exposure safe at this kVp, mA, time, focal spot, and anode speed? The **anode cooling curve** and the **housing cooling curve** answer the next one: how long before the next series. The anode is only at its peak for about 1 to 3 seconds per exposure, but a housing holding millions of heat units can need an hour or two to come all the way down. A cold anode loaded hard cracks, which is the entire reason the **warm-up** series in the manual exists.
 
 ## How it fails
@@ -94,6 +99,7 @@ Three phase, six pulse      14%    voltage never drops below about 86% of peak
 Three phase, twelve pulse    4%    never below about 96% of peak
 High frequency               1%    nearly constant; the standard on new equipment
 \`\`\`
+A manual spells those names out in full, so recognize them: full-wave rectified **single-phase, two-pulse alternating current** gives two useful pulses per cycle, while **three-phase alternating current** gives six or twelve, and a high-frequency generator converts the supply to a much higher frequency before rectifying it, which is how it gets to almost no ripple at all.
 Less ripple means more x-rays and more penetrating ones for the same settings, so a technique chart does not move between generators. Going from single phase to three phase can need as much as **10 kVp less** for the same receptor exposure at the same mAs.
 
 ## Timers and the exposure sequence
@@ -151,7 +157,7 @@ On digital systems the **exposure index** reports what the detector actually rec
       body: `X-rays leave the target in every direction. Everything between the target and the receptor exists to throw away the photons that would only add dose or fog, and every one of those devices is a test you will be asked for.
 
 ## Collimation
-A **collimator** is two pairs of lead shutters at right angles, with a lamp and mirror that project where the field will land. The upper pair trims badly aimed radiation close to the tube and the lower pair sizes the field. **Cones** and **cylinders** bolt underneath to cut a small round field, and an **aperture diaphragm** is a lead plate with a fixed opening for the same purpose. Two numbers matter: the light field must agree with the radiation field within **2 percent of the SID**, and **positive beam limitation**, which sizes the shutters automatically to the receptor, must hold the same 2 percent. At a 100 cm SID that tolerance is 2 cm.
+A **collimator** is two pairs of lead shutters at right angles, with a lamp and mirror that project where the field will land. The upper pair trims badly aimed radiation close to the tube and the lower pair sizes the field. **Cones** and **cylinders** bolt underneath to cut a small round field, and an **aperture diaphragm** is a lead plate with a fixed opening for the same purpose. All of them are **beam-restricting devices**, or **beam restrictors**: they decide how much of the patient the beam is allowed to reach, and every one of them lowers scatter and dose at the same time. Two numbers matter: the light field must agree with the radiation field within **2 percent of the SID**, and **positive beam limitation**, which sizes the shutters automatically to the receptor, must hold the same 2 percent. At a 100 cm SID that tolerance is 2 cm.
 
 ## Filtration
 **Inherent** filtration is what the tube and its oil remove on their own; **added** filtration is the aluminum at the port; together they are total filtration. Filtration throws away low-energy photons that would be absorbed in skin without reaching the receptor, so the average energy rises while the number of photons falls.
@@ -162,9 +168,23 @@ Above 70 kVp     at least 2.5 mm Al
 \`\`\`
 You cannot measure the layers separately, so beam quality is proven by **half-value layer**: add calibrated aluminum sheets until intensity halves, and compare with the minimum for that kVp and waveform. **Compensating filters**, wedge and trough shaped, even out a part that changes thickness.
 
+## What the beam does inside the patient
+Five interactions are named, and only two of them matter at the energies a diagnostic room uses.
+\`\`\`
+Coherent scattering   low energy; the photon changes direction and loses no energy;
+                      adds a little fog and nothing else
+Photoelectric effect  the photon is absorbed outright, which is what makes bone and
+                      contrast white; it climbs steeply with atomic number
+Compton scattering    the photon gives up part of its energy and goes on in a new
+                      direction; this is the scatter that fogs images and exposes the room
+Pair production       needs at least 1.02 MeV, so it never happens in diagnostic work
+Photodisintegration   needs above about 10 MeV; a therapy energy, not a diagnostic one
+\`\`\`
+**Differential absorption** is the reason an image exists at all: bone absorbs more than soft tissue and soft tissue absorbs more than air, so what reaches the receptor varies across the field. Tissue the beam passes through easily, such as lung, fat, and air, has high **radiolucency**, and tissue that stops it, such as bone, metal, and contrast, is radiopaque. What leaves the patient is the **exit radiation**: the surviving primary beam that carries the picture, plus the scatter that spoils it. Everything in the rest of this lesson is an attempt to keep the first and throw away the second.
+
 ## Scatter, and the grid
 Scatter rises with **kVp**, with **field size**, and with **part thickness**. You control the first two. Collimation is the cheapest control there is, because a smaller field makes less scatter in the first place.
-A **grid** is lead strips separated by spacers that lets straight-line photons through and absorbs angled ones.
+A **grid** is lead strips separated by spacers that lets straight-line photons through and absorbs angled ones. **Grid construction** is worth picturing: strips of lead alternating with an **interspace material** of aluminum or fiber, which holds the exact spacing and passes the primary beam, the whole stack sealed in a protective frame. Damage to that frame or to the interspace material is permanent and shows on every image the grid is used for.
 - **Ratio** is strip height over gap, commonly 4:1 to 16:1. **Frequency** is strips per inch, commonly 60 to 150. Higher ratio removes more scatter and costs more dose.
 - **Types**: linear strips are parallel, focused strips are angled to match the beam and must face the tube on the labeled side, crossed grids are two linear grids at right angles.
 - The **Bucky factor**, also called the grid conversion factor, is the mAs increase a grid costs, and it rises with ratio and with kVp. **Selectivity** compares primary to scattered radiation passed; contrast improvement factors typically run 1.5 to 2.5.
@@ -224,10 +244,10 @@ FRA.units.push({
       body: `Three generations of receptor are still in the field and all three are still on exams. You will service digital panels, you will meet a plate reader in a clinic, and you will be asked film questions because the vocabulary of image quality was written in film.
 
 ## Film-screen, and why it still matters
-A cassette held double-emulsion film between two **intensifying screens**. The screens carry a phosphor layer that flashes visible light when x-rays strike it, and that light, not the x-rays, exposed most of the film, which is what made the dose tolerable. Screen speed rose with thicker phosphor and larger crystals, and fell in sharpness as it rose. An **automatic processor** moved the film by rollers through developer, fixer, wash, and dryer. **Sensitometry** is how the whole chain was monitored: expose a step strip, read it with a densitometer, and compare speed, contrast, and base plus fog against the baseline. The limits were tight, typically within 0.10 of the baseline for speed and contrast and 0.05 for base plus fog. Three ideas survive from all of this: optical density, screen speed, and screen-film contact.
+A cassette held double-emulsion film between two **intensifying screens**. The screens carry a phosphor layer that flashes visible light when x-rays strike it, and that light, not the x-rays, exposed most of the film, which is what made the dose tolerable. Screen speed rose with thicker phosphor and larger crystals, and fell in sharpness as it rose. An **automatic processor** moved the film by rollers through developer, fixer, wash, and dryer, and the film came out **developed**, fixed, and dry, carrying whatever markers and identification were in the field at the moment of exposure, permanently. **Sensitometry** is how the whole chain was monitored: expose a step strip, read it with a densitometer, and compare speed, contrast, and base plus fog against the baseline. The limits were tight, typically within 0.10 of the baseline for speed and contrast and 0.05 for base plus fog. Three ideas survive from all of this: optical density, screen speed, and screen-film contact.
 
 ## Computed radiography
-A **CR** cassette holds a **PSP** plate instead of film. The exposure leaves a latent image trapped in the phosphor; a reader scans the plate with a laser, the trapped energy is released as light, a photodetector reads it line by line, and a bright lamp erases the plate for reuse. The workflow still involves carrying cassettes, which is its weakness, and the plate itself becomes an image quality item.
+A **CR** cassette holds a **PSP** plate instead of film. The exposure leaves a latent image trapped in the phosphor; a reader scans the plate with a laser, and that laser **stimulation** releases the trapped energy as light, which is why the plate is called photostimulable. A photodetector reads the light line by line, and a bright lamp erases the plate for reuse. The workflow still involves carrying cassettes, which is its weakness, and the plate itself becomes an image quality item.
 \`\`\`
 Dust or scratches on the plate   the same mark on every image from that plate
 Incomplete erase                 a ghost of the previous exposure
@@ -271,7 +291,10 @@ Nothing at all, panel offline           battery, charge, radio link, cable, or p
 Panels also have a temperature window and a warm-up period. A panel pulled from a cold corridor can read badly until it stabilizes, which is a service note worth telling the department rather than a fault.
 
 ## What the processing does, and why it hides problems
-After correction, the image goes through a **look-up table** that maps detector values to displayed brightness, then through windowing and often edge enhancement. **Window width** sets how many values are spread over the gray scale, which is displayed contrast; **window level** sets where in the range that spread sits, which is displayed brightness. Because the processing normalizes brightness, an image that received twice the needed radiation can look correct, which is exactly why the **EI** and **DI** are reported alongside it.
+Correction before anything else happens is **preprocessing**: offset, gain, and the defective pixel map, done on the raw values. Everything after it is **postprocessing**, and it starts with the **image histogram**, a count of how many pixels hold each value. The system looks at the shape of that histogram, decides which part of it is anatomy, and scales the display from there, which is why a histogram error is one of the most common digital image complaints: an uncollimated field, a prosthesis, a large metal object, or an exposure field the algorithm cannot find leaves the whole image too dark or too light with nothing wrong in the hardware. **Partitioning** two exposures onto one plate works only when each field has clear collimated margins, because the field recognition step has to be able to tell them apart.
+After that, the image goes through a **look-up table** that maps detector values to displayed brightness, then through windowing and often edge enhancement. **Window width** sets how many values are spread over the gray scale, which is displayed contrast; **window level** sets where in the range that spread sits, which is displayed brightness. Because the processing normalizes brightness, an image that received twice the needed radiation can look correct, which is exactly why the **EI** and **DI** are reported alongside it.
+
+Two measured numbers describe how good a panel still is. **Signal-to-noise ratio** compares the signal the anatomy produced with the random noise under it, and it falls when exposure falls, which is why an underexposed digital image looks grainy rather than light. **Modulation transfer function** is the curve of how much of an object's contrast survives as the detail gets finer, measured from a bar pattern, and it is the formal way spatial resolution is stated when a specification or a physicist's report gives one.
 
 ## Service tools
 The manufacturer's calibration software, a repeatable test exposure geometry, a uniformity phantom or a simple flat absorber for flat-field checks, a resolution test tool, and the panel's own error log. Keep the before and after images with the work order; a uniformity image is the proof that the recalibration worked.
@@ -284,6 +307,7 @@ The manufacturer's calibration software, a repeatable test exposure geometry, a 
       body: `Fluoroscopy trades image quality for time: a live image at a tube current of only about 5 mA, held bright by electronics instead of by technique. That bargain is where the dose is, and it is where the faults are.
 
 ## The image intensifier chain
+The whole trick is **image intensification**: taking a faint pattern of x-rays and turning it into a bright visible image inside a tube, instead of raising technique until the picture is bright on its own.
 1. X-rays leaving the patient strike the **input phosphor**, which converts them to light. Input diameters run about 10 to 40 cm and name the tube.
 2. A **photocathode** bonded to it turns that light into electrons.
 3. **Electrostatic focusing lenses** and an **accelerating anode** at high voltage drive those electrons down the tube and focus them.
@@ -301,7 +325,7 @@ Conversion factor  output brightness per unit input rate, about 0.01 x brightnes
 Brightness gain falls as the tube ages, and because the dose control defends brightness, an aging intensifier quietly raises patient dose until it is replaced. Intensifier tubes also give away their age in the image: **vignetting**, a dimming toward the edges, geometric distortion at the periphery, and **veiling glare** that flattens contrast. Flat-panel fluoroscopy has none of those.
 
 ## Magnification, and the dose it costs
-Most intensifiers are multifield: a trifield tube might be 25, 17, and 12 cm. Selecting a smaller field uses only the central part of the input phosphor, which improves spatial and contrast resolution and raises patient dose, because the system must deliver more radiation per unit area to keep the picture bright. A magnification mode left engaged is a classic cause of a high measured dose rate.
+Most intensifiers are multifield, so the mode is called **multifield image intensification**: a trifield tube might be 25, 17, and 12 cm. Selecting a smaller field uses only the central part of the input phosphor, which improves spatial and contrast resolution and raises patient dose, because the system must deliver more radiation per unit area to keep the picture bright. A magnification mode left engaged is a classic cause of a high measured dose rate.
 
 ## Holding brightness, and holding dose down
 **ABC** raises mA, kVp, or pulse width as the patient thickens, so the dose rate climbs with patient size by design. The operator's real dose controls are: **pulsed** fluoroscopy at the lowest acceptable frame rate, which is the single biggest saving available; **last-image hold**, which leaves the final frame on the monitor with the beam off; collimation; and keeping the receptor close to the patient.
@@ -309,7 +333,7 @@ Most intensifiers are multifield: a trifield tube might be 25, 17, and 12 cm. Se
 Federal limits are the numbers to know: the tabletop rate must not exceed **10 R/min**, or **20 R/min** where a high-level control is fitted, with no limit while recording; a **5-minute** cumulative timer must sound; and source-to-skin distance must be at least **38 cm** on a stationary unit and **30 cm** on a mobile one.
 
 ## Digital fluoroscopy and subtraction
-The output phosphor is coupled by optics to a television camera or a **CCD**, whose video drives the monitors at the table and in the control booth, with the recording and processing hardware on the monitor cart. That video, or a flat panel's output, is digitized, so frames can be stored, replayed, and processed. **DSA** takes a mask frame before contrast arrives and subtracts it from the contrast run, leaving only the vessels. Any motion between mask and run leaves a misregistration artifact that mimics disease, so table, tube, and detector stability are image quality items here.
+The output phosphor is coupled by optics to a television camera or a **CCD**, whose video drives the monitors at the table and in the control booth, with the recording and processing hardware on the monitor cart. That video, or a flat panel's output, is digitized, so frames can be stored, replayed, and processed. **DSA** takes a mask frame before contrast arrives and subtracts it from the contrast run, leaving only the vessels. Any motion between mask and run leaves a misregistration artifact that mimics disease, so table, tube, and detector stability are image quality items here. Two features built on the same subtraction are worth knowing by name: **remasking** picks a better mask frame out of the stored run when the first one was spoiled by motion, and **roadmapping** holds a subtracted vessel map on the screen as a guide while the physician advances a catheter under live fluoroscopy. Older fluoroscopic television drew each frame as two **interlaced** fields, which blurred anything moving; digital systems read **progressive** frames line by line, which is what makes a freeze frame usable.
 
 ## Geometry and operator dose
 Under-table tubes with the receptor above put most scatter below the waist and are shielded by the table, the Bucky slot cover, and the drape. An over-table tube with the receptor below throws scatter at the operator's head and neck, which is why those configurations and mobile C-arms need deliberate positioning, aprons, thyroid shields, and a step back during the run.
@@ -324,7 +348,7 @@ Under-table tubes with the receptor above put most scatter below the waist and a
 ## How a mobile C-arm is built
 The **C** carries the tube at one end and an intensifier or flat panel at the other, so the two stay aligned through every angle. The arm orbits within the C and rotates about its support, and each motion has a brake. A separate **monitor cart** holds the displays, the recording system, and often the image processor, joined to the C by a thick interconnecting cable. The unit runs from a wall outlet, so the power cord, plug, and strain relief are inspection items along with the brakes, the cable, the foot switch, and the laser aimers. **Mini C-arms** are small-field units for extremities, with the same requirements at lower output.
 
-In the room, the C-arm is draped and worked around a sterile field: covers go on before the case, the operator positions by brake and detent rather than by force, and nothing is adjusted across the field. A unit that drifts or whose brake slips is a sterility and a safety problem at once.
+Most of that work is in surgery, and surgery sets the rules: the unit comes in clean, the covers go on before the case, and nothing about it is adjusted once the field is sterile. In the room, the C-arm is draped and worked around a sterile field: covers go on before the case, the operator positions by brake and detent rather than by force, and nothing is adjusted across the field. A unit that drifts or whose brake slips is a sterility and a safety problem at once.
 
 ## The interventional and cardiac suite
 A fixed suite is the same chain built heavier: a floor-mounted or ceiling-mounted gantry, sometimes two of them for **biplane** work, a table that floats and tilts under a sterile drape, large displays on a boom, a power injector for contrast, hemodynamic monitoring, and a control room. The tube is a high heat capacity unit because the runs are long. For a technician that means more of everything: gantry motion and collision systems, cable management through a moving arc, cooling, injector interfaces, monitors, and the network link that gets every run to the archive.
@@ -332,7 +356,7 @@ A fixed suite is the same chain built heavier: a floor-mounted or ceiling-mounte
 ## The procedure, at recognition level
 1. The patient is prepared and consented, and an access site is cleaned and anesthetized.
 2. A needle enters the vessel, a **guidewire** is threaded, and a **catheter** is advanced over it to the target.
-3. Contrast is injected and imaged, usually with subtraction, from the angles the physician needs.
+3. Contrast is injected and imaged, usually with subtraction, from the angles the physician needs; imaging the arteries this way is **arteriography**, and the same approach on veins is venography.
 4. A device may be placed: balloon, stent, coil, or embolic agent.
 5. Access is closed and the patient is watched for bleeding and for reaction.
 
@@ -341,7 +365,8 @@ Contrast reactions are the complication the room is equipped for. Low-osmolality
 ## Dose management
 Long cases put the dose in one place on the skin, so interventional work tracks dose rather than estimating it.
 \`\`\`
-Reference air kerma   cumulative dose at a defined reference point; a proxy for skin dose
+Reference air kerma   cumulative dose at a defined reference point; an estimation of
+                      skin dose rather than a measurement of it
 Dose area product     dose multiplied by field area, so it falls when the field is
                       collimated even though the dose rate does not change
 Fluoroscopy time      beam-on minutes; the crudest of the indicators
@@ -406,6 +431,9 @@ Above 1.0   the spiral stretches: faster coverage, lower dose, less overlap
 Below 1.0   the spiral overlaps: more data, more dose
 \`\`\`
 
+## Reconstruction, and the views built from it
+Helical data does not land neatly in the plane of a slice, so building each one starts with **interpolation** between the measurements either side of it, and then a reconstruction **algorithm** turns those projections into an image. Because the result is a volume of numbers rather than a shadow, the same data can be re-cut: **multiplanar reformation** builds coronal, sagittal, and oblique views out of axial data, with no extra exposure to the patient.
+
 ## The numbers on the image
 Reconstruction converts attenuation into **HU**, the density scale: air is about **-1000**, water is exactly **0** by continuous calibration, and dense bone reaches about **+3000**. Water being exactly zero is why a water phantom is scanned so often; when those numbers drift, the calibration is the suspect. The display is then **windowed**: window width is how many values are spread across the gray scale, which sets contrast, and window level is where in the range that window sits, which sets brightness. The same raw data can be read as lung, soft tissue, or bone by windowing alone.
 
@@ -413,7 +441,7 @@ Reconstruction converts attenuation into **HU**, the density scale: air is about
 **CTDI** expresses the dose in a slice spread over a defined 10 cm length, so dose delivered outside the chosen slice is counted. **DLP** multiplies that index by the scanned length, which is why it tracks with how much of the patient was scanned. Both are displayed and recorded, and both are measured with pencil ionization chambers in phantoms, generally by the physicist.
 
 ## What the technician services
-Table travel, indexing accuracy, and alignment lights; gantry covers, slip-ring brushes, and the wear dust they produce; air and water calibrations on the manufacturer's schedule; chillers, fans, and filters, because heat is the chronic enemy; power quality and the distribution inside the system; consoles, reconstruction computers, disks, and the archive link; contrast injectors and their interface. Tube replacement and the deeper calibrations are usually shared with or owned by the vendor, so read the service contract before you open the gantry.
+Table travel and **couch incrementation** accuracy, meaning the table actually moves the distance the protocol asked for, and the **laser localizer** lights it is positioned by; gantry covers, slip-ring brushes, and the wear dust they produce; air and water calibrations on the manufacturer's schedule; chillers, fans, and filters, because heat is the chronic enemy; power quality and the distribution inside the system; consoles, reconstruction computers, disks, and the archive link; contrast injectors and their interface. Tube replacement and the deeper calibrations are usually shared with or owned by the vendor, so read the service contract before you open the gantry.
 
 > Exam tip: the slip ring is what makes continuous rotation possible; pitch is couch travel per rotation over beam width, so above 1.0 means faster and lower dose; Hounsfield units run air about -1000, water exactly 0, dense bone about +3000, and a water phantom drift is a calibration finding; window width sets contrast and window level sets brightness; computed tomography dose index is defined over a 10 cm length and the dose length product scales with the length scanned.`,
       hook: "A scanner rotates a high heat capacity tube and a solid-state detector array on a gantry whose slip ring carries power and data so rotation never stops, with the couch moving to trace a helix at a pitch of couch travel per rotation over beam width; reconstruction gives Hounsfield units with air about -1000, water exactly 0, and dense bone about +3000, displayed by window width for contrast and window level for brightness; dose is reported as a computed tomography dose index defined over a 10 cm length and a dose length product that scales with scan length; and the technician owns the table, alignment, covers and brushes, air and water calibrations, cooling and filters, power, computers, and the archive link, while tube replacement usually belongs to the vendor."
@@ -428,10 +456,10 @@ FRA.units.push({
   lessons: [
     {
       id: "u7l1", title: "Ultrasound Physics and Probes: Frequency, Attenuation, Resolution, Probe Types and Failure Modes", domain: 4, obj: "FUN-A", minutes: 10,
-      body: `Ultrasound is the modality an imaging technician actually repairs, because the expensive, fragile, frequently damaged part is a handheld probe. There is no ionizing radiation here; the hazards are to the equipment and to infection control.
+      body: `**Diagnostic ultrasound** is the modality an imaging technician actually repairs, because the expensive, fragile, frequently damaged part is a handheld probe. There is no ionizing radiation here; the hazards are to the equipment and to infection control.
 
 ## How sound makes a picture
-A probe contains **piezoelectric** elements: materials that produce a voltage when squeezed and change shape when a voltage is applied. Drive one with a short electrical pulse and it rings, sending sound into the body at a frequency far above anything the ear can hear. The same element then listens. That is the **pulse-echo** principle, and the depth of each echo is read from how long it took to come back.
+A probe contains **piezoelectric** elements: materials that produce a voltage when squeezed and change shape when a voltage is applied. Drive one with a short electrical pulse and it rings, sending sound into the body at a frequency far above anything the ear can hear. The same element then listens. That is the **pulse-echo** principle: the time an echo takes to come back sets the depth it is drawn at, and the **amplitude** of that echo sets how bright the spot is drawn.
 
 Echoes come from boundaries. Every tissue has an **acoustic impedance**, and sound reflects where that impedance changes. A small difference, as between soft tissues, reflects a little and lets the rest pass, which is what makes an image. A huge difference, as at air or bone, reflects almost everything and leaves a shadow behind it, which is why gel excludes air from the skin and why bowel gas and ribs block the view.
 
@@ -493,7 +521,7 @@ Doppler works from the frequency shift of an echo returning from something movin
 Reprocessing follows what the probe touched. Intact skin needs cleaning and low-level disinfection; anything touching mucous membranes needs **HLD**; anything entering sterile tissue must be sterile. Endocavity probes are used with a cover, and the cover does not replace high-level disinfection afterward. Two rules protect the hardware: use only a chemical the manufacturer lists for that probe, and never take the probe past its immersion line, which means the connector never gets wet. More probes are destroyed by cleaning than by clinical use.
 
 ## Quality control and the usual faults
-Scan a phantom at fixed settings and compare depth of penetration, resolution, and uniformity with the baseline on file; inspect the probe; check the display against a test pattern; prove every control, trackball, and footswitch.
+Scan a phantom at fixed settings and compare depth of penetration, resolution, and uniformity with the baseline on file; inspect the probe; check the display against a test pattern; prove every control, trackball, and footswitch. A probe's **frequency response**, the band of frequencies its elements actually send and receive, drifts as elements age and as the backing and lens degrade, which is what a dedicated probe tester measures and why a probe can pass a visual check and still produce a poor image.
 \`\`\`
 Dark stripe in the image        element dropout or a broken conductor; swap the probe
 Weak, noisy image               wrong preset, poor contact and gel, lens damage, or a
@@ -513,7 +541,7 @@ Probe damaged after cleaning     the wrong chemical, soaking past the line, or a
       body: `Nuclear medicine inverts the usual arrangement: the radiation source is inside the patient and the equipment only listens. That changes the regulations, the hazards, and the boundary between your work and someone else's.
 
 ## The radiopharmaceutical
-A **radiopharmaceutical** is a radioactive atom attached to something the body handles in a known way, so the tracer collects where the physiology takes it. **Tc-99m** is the workhorse: it decays to technetium-99 emitting a gamma ray of about **140 keV**, which is the energy window the camera is tuned to. Activity falls by **half-life**: after each such period, half of whatever was there is left, so a tracer fades on its own clock. The length of the period belongs to the agent, and imaging favors short ones, which is why doses are assayed and used on a schedule rather than stored.
+Atoms of one element that carry different numbers of neutrons are **isotopes**, and an isotope with an unstable nucleus is a **radioisotope**: it reaches stability by throwing out radiation, which is **radioactivity**. A **radiopharmaceutical** is such an atom attached to something the body handles in a known way, so the tracer collects where the physiology takes it. **Tc-99m** is the workhorse: it decays to technetium-99 emitting a gamma ray of about **140 keV**, which is the energy window the camera is tuned to. Activity falls by **half-life**: after each such period, half of whatever was there is left, so a tracer fades on its own clock. The length of the period belongs to the agent, and imaging favors short ones, which is why doses are assayed and used on a schedule rather than stored.
 
 ## The gamma camera chain
 1. A **collimator** of lead holes bolted to the face of the detector accepts only gamma rays arriving along the hole axis. Without it there would be no image at all, and collimators are heavy, interchangeable, and easily damaged.
@@ -522,7 +550,7 @@ A **radiopharmaceutical** is a radioactive atom attached to something the body h
 4. **Position and energy circuits** compare the pulse sizes across the array to locate the event and to accept only events inside the energy window.
 5. The **computer** builds, corrects, and stores the image.
 
-**SPECT** rotates that camera around the patient and reconstructs slices, which adds gantry motion, uniformity, and center-of-rotation calibrations to the list. **PET** uses tracers such as **fluorine-18** that emit positrons; each positron meets an electron and annihilates, sending out two photons of about **0.51 MeV** in opposite directions, and a ring of detectors accepts only pairs that arrive together, which is **coincidence** detection. **SPECT/CT** and **PET/CT** add a scanner for anatomy and attenuation correction, so everything from unit 6 comes with them.
+**SPECT** rotates that camera around the patient and reconstructs slices, which adds gantry motion, uniformity, and center-of-rotation calibrations to the list. **PET** uses tracers such as **fluorine-18** that emit positrons; each positron meets an electron and annihilates, and the mass of both particles becomes photon energy, which is **energy equivalence** in plain sight: two photons of about **0.51 MeV** leave in opposite directions, and a ring of detectors accepts only pairs that arrive together, which is **coincidence** detection. **SPECT/CT** and **PET/CT** add a scanner for anatomy and attenuation correction, so everything from unit 6 comes with them.
 
 ## Instruments and the hot lab
 Doses are measured in a **dose calibrator** before they are given, and contamination is found with survey meters. Both are calibrated and logged. The hot lab works behind shielding, with syringe shields, gloves, labeled containers, decay storage for waste, and surveys, all under a materials license held by the facility rather than by you.
@@ -588,7 +616,7 @@ FRA.units.push({
   lessons: [
     {
       id: "u8l1", title: "What an Imaging PM Requires, and QC by Modality", domain: 4, obj: "FUN-C", minutes: 11,
-      body: `A **PM** visit on imaging equipment is not a cleaning round. It is a set of measurements against stated tolerances, and the record of those measurements is what the department shows a surveyor. Two sources set the content: the manufacturer's manual and the regulations that apply to that modality.
+      body: `A **PM** visit on imaging equipment is not a cleaning round. It is a set of measurements against stated tolerances, and the record of those measurements is what the department shows a surveyor. Two sources set the content: the manufacturer's manual and the regulations that apply to that modality. Two kinds of work fill the schedule, and a surveyor expects to see them counted separately: **preventive maintenance**, the scheduled measurements this lesson is about, and **corrective maintenance**, the repair work unit 9 covers. The ratio between them is a health number for the whole program, because a room that needs constant correction is telling you its prevention is not working.
 
 ## What every imaging PM covers
 \`\`\`
@@ -639,7 +667,7 @@ Add one rule to all of it: repeat the affected tests after any major repair to t
 - **CT**: your side is table, alignment, covers, cooling, and the air and water calibrations on schedule; the physicist's annual survey covers dose indices, image quality, and the radiation profile.
 
 ## The technician's QC and the physicist's survey
-They are different jobs. Your measurements prove that the equipment still performs within tolerance and are made on a repeating schedule with repeating methods. The medical physicist's annual survey is an independent evaluation, with dose measurements, shielding, and image quality assessed against the standards the facility is accredited to, and it produces a report with findings that someone has to close. Both records are asked for, and they are expected to agree.
+They are different jobs, and so are the two words people use for them. **Quality control** is the measuring: fixed tests, stated tolerances, recorded results. **Quality assurance** is the program around the measuring: the policies, the schedule, the training, the review of results, and the corrective action when something fails. A surveyor asks for both, and a binder of readings nobody reviewed is quality control without quality assurance. Your measurements prove that the equipment still performs within tolerance and are made on a repeating schedule with repeating methods. The medical physicist's annual survey is an independent evaluation, with dose measurements, shielding, and image quality assessed against the standards the facility is accredited to, and it produces a report with findings that someone has to close. Both records are asked for, and they are expected to agree.
 
 > Exam tip: a PM is mechanical, electrical safety, interlocks, output, image quality, logs, environment, documentation; radiographic tolerances are kVp 10 percent, timer 5 percent above 10 ms and 20 percent below, linearity 10 percent, reproducibility 5 percent, collimation 2 percent of the SID, focal spot 50 percent, filtration 2.5 mm Al; retest after any major repair; and the physicist's annual survey is independent of your scheduled QC.`,
       hook: "An imaging preventive maintenance visit must cover mechanical items, electrical safety with an analyzer, every interlock proven, radiation output, image quality against a filed baseline, error logs and firmware, environment, and documentation of the measured value with its tolerance; radiographic tolerances are total filtration at least 2.5 mm Al, collimation and alignment within 2 percent of the SID, focal spot within 50 percent of nominal, kVp within 10 percent, timer within 5 percent above 10 ms and 20 percent at or below, linearity within 10 percent between adjacent stations, and reproducibility within 5 percent, all repeated after major repair; fluoroscopy, mammography, ultrasound, and computed tomography each add their own list; and the physicist's annual survey is an independent evaluation rather than a substitute for your schedule."
@@ -662,10 +690,15 @@ Solid-state detector     a semiconductor detector, compact and fast, used for ou
 Electrometer             the meter that measures the tiny charge a chamber collects
 DAP meter                a flat transmission chamber on the collimator, reading dose
                          multiplied by field area as the case runs
+Geiger-Muller counter    a gas detector run at a high enough voltage that every event
+                         gives the same large pulse; fast and sensitive for finding
+                         contamination and low-level radiation, poor at measuring dose
 Survey meter             finds scatter and leakage around a room, in mR/h
 Staff dosimeters         TLD and OSL badges read by a service, plus direct-reading
                          electronic dosimeters
 \`\`\`
+
+What separates those gas detectors is the voltage across them. Too low and the ion pairs find each other and recombine before they can be collected, which is the **recombination** region and is useless for measurement. At the working voltage of a dosimeter every pair is collected and the reading is proportional to the radiation, which is the ionization region. Far higher and a single event avalanches into one full-sized pulse, which is the Geiger-Muller region: excellent for hearing that radiation is present, no good for saying how much.
 
 ## Placing the meter so the number means something
 Put the detector at a stated distance on the central ray, with nothing in the beam that is not supposed to be there, collimated to the detector and no smaller. Hold the geometry constant between exposures, because the inverse square law will swamp any effect you are trying to measure if the distance moves. Record what you set, what you measured, and where the detector was.

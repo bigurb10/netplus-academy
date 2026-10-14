@@ -18,6 +18,20 @@ FRA.units.push({
 3. **Isolate.** Split the system into blocks and prove which side of each split is good, so every measurement halves what is left.
 4. **Verify.** Run the test that would have caught the fault, which usually means a test exposure and a phantom image, record the number against its tolerance, and tell the room what you proved.
 
+## Every imaging system is a biometric instrument
+A **biometric instrument** is one built to measure something about the human body, and an imaging system is exactly that: it measures how much radiation, sound, or signal came back out of a patient and draws the answer. Seen that way, every modality in the department has the same four stages, which is what makes one method work on all of them: a detector that senses, signal conditioning that amplifies and shapes, a display that presents, and a recording stage that stores. Isolating a fault is deciding which of those four stages it lives in.
+The same framing names what a good instrument has to be, and a complaint is usually one of these words in plain language:
+\`\`\`
+Accuracy             how close the reading is to the truth; drifts with components,
+                     mechanical wear, and temperature
+Sensitivity          how small a difference it can detect at all
+Frequency response   how evenly it responds across its measuring range
+Stability            whether it gives the same answer tomorrow without adjustment
+Simplicity           simple operation produces fewer use errors, which is a design
+                     goal rather than an accident
+\`\`\`
+Instruments also get used for different purposes, and the purpose decides how hard a fault bites: **information gathering** for research, diagnostic for finding a problem, monitoring for watching one, and control or therapeutic where the machine acts on the patient. Imaging is diagnostic, which is why a wrong image is a clinical risk even though the machine never touched anybody.
+
 ## Isolating by halves
 \`\`\`
 Block          Prove it with
@@ -283,7 +297,7 @@ A unit used in an isolation room is cleaned with the facility's approved product
 Lead with what the clinicians in front of you need: what works now, what does not, and when the room comes back. Translate into their world rather than yours. "The high-voltage cable termination was arcing" becomes "the snapping noise and the dark images came from a cable connection; it is replaced, the output measures correct, and the room is yours." Give a time you can keep, update it when it slips, and tell the lead technologist first so the schedule can move.
 
 ## Explaining a use error without blame
-When the fault is workflow, make the demonstration the fix. Show the behavior on the machine, show the setting that produces it, and show the one that does not. Say "this console does that when the outer chamber is selected on a small patient" rather than anything beginning with "you". Offer applications training through the vendor or the superuser, document the conversation in the work order as you would any other corrective action, and watch for the same call returning, because a repeat means the training did not take.
+When the fault is workflow, make the demonstration the fix. Show the behavior on the machine, show the setting that produces it, and show the one that does not. Say "this console does that when the outer chamber is selected on a small patient" rather than anything beginning with "you". Offer applications training through the vendor or the superuser, document the conversation in the work order as you would any other corrective action, and watch for the same call returning, because a repeat means the training did not take. **User training** is the repair here, so it gets planned like one: who needs it, who delivers it, when, and how you will know it worked.
 
 ## Escalating to the manufacturer
 \`\`\`
@@ -338,7 +352,7 @@ VLAN      a logical network on shared switches  a good cable in the wrong port
 Imaging sits on its own VLAN for three reasons: the traffic is heavy enough to crowd other users, the access rules it needs are narrow and specific, and many modalities run operating systems that cannot be patched on anybody's schedule, so they are kept where only what they need can reach them. Keep an imaging network diagram with the equipment records: every modality with its address and subnet, the jack it uses, the switch port and VLAN behind that jack, and the archive and worklist nodes it talks to. Half the calls in this unit are answered by reading it.
 
 ## Bandwidth, and what a study actually weighs
-Image file size is the matrix size multiplied by the grayscale bit depth, so a 4096 x 4096 image at 12 bits is about 25 megabytes before anything else is added.
+Image file size is the matrix size multiplied by the grayscale bit depth, so a 4096 x 4096 image at 12 bits is about 25 megabytes before anything else is added. Two **numbering systems** turn up when you read those figures: computers count in **binary**, ones and zeros, where 8 bits make one **byte** and a 12-bit depth gives 4096 possible gray levels, and the same values are printed in **hexadecimal**, base sixteen, whenever you read a MAC address or a memory location.
 \`\`\`
 Per image, approximately   Nuclear medicine 2 MB      MRI 5 MB
                            CT 10 MB                   CR and DR 20 MB
@@ -396,7 +410,7 @@ Deep archive     older studies, slower retrieval  a long wait for an old study
 RAID set         redundancy inside one array      degraded array, still running
 Backup copy      a restorable copy off the box    nothing, until you need it
 \`\`\`
-A RAID set survives a drive failure and warns you; a degraded array is a failure already in progress, not a spare. Solid-state storage has no moving parts and fails differently from a spinning disk, usually without the warning noises. None of that is a backup: a backup is a copy somewhere else that somebody has restored. Test restores on a schedule, and export each modality's configuration so a replacement console can be set up identically instead of rebuilt from memory.
+A RAID set survives a drive failure and warns you; a degraded array is a failure already in progress, not a spare. Solid-state storage has no moving parts and fails differently from a spinning disk, usually without the warning noises. None of that is a backup: a backup is a copy somewhere else that somebody has restored. Test restores on a schedule. Keep two records for every system: its **hardware configuration**, meaning the boards, drives, memory, panels, and probes actually fitted, and its **software configuration**, exported from the machine, holding addresses, application entity titles, protocols, presets, and service settings. With both on file a replacement console is set up identically in an hour instead of rebuilt from memory over a week.
 
 ## Virtual servers and the cloud, at recognition level
 One physical host can run many virtual servers under a hypervisor, which is how archives, brokers, and management systems are deployed now. The benefits are fewer boxes, quick provisioning, and snapshots; the risk is that one host failure takes every server on it, so clusters and backups still matter. Cloud services are somebody else's servers reached over the internet, which brings a written agreement covering patient data, encryption both on the wire and on the disk, and an internet link whose outage is now a clinical outage.
@@ -489,6 +503,8 @@ Every object carries a header of tagged fields: patient name and identifier, acc
 - The **EMR**, the electronic medical record, is where the order starts and where the report has to land, and the **EHR** is what clinicians read.
 - The **interface engine**, sometimes called the broker, receives messages from one system, translates them into what the next system expects, and routes them, keeping a queue and a log. Its queue is where stuck messages pile up, and its log is the first place to look when text stops flowing.
 
+Each of those is a **health information system**: a database of record that other systems feed, query, and read. That is why a change inside one of them is felt in all the others, and why nobody gets to upgrade one on their own.
+
 ## HL7 messages worth knowing by name
 \`\`\`
 ADT  admit, discharge, transfer: tells every system who the patient is
@@ -523,7 +539,7 @@ Modern systems produce a structured dose record for each study and send it the s
     },
     {
       id: "u10l7", title: "Application Interdependence: Worklist, MPPS, Dose Reporting, and What Breaks Downstream", domain: 6, obj: "HIT-D", minutes: 9,
-      body: `Imaging applications lean on each other, so the most useful first question in an informatics call is not what is broken but **how wide the fault is**. The answer tells you where to look and who to call before you have touched anything.
+      body: `Imaging applications are **interrelated**: each one leans on the others, and the ones that matter most are the ones nobody notices until they stop. So the most useful first question in an informatics call is not what is broken but **how wide the fault is**. The answer tells you where to look and who to call before you have touched anything.
 
 ## How wide is it
 \`\`\`
@@ -557,7 +573,7 @@ Every department needs a written downtime procedure: how patients are identified
     },
     {
       id: "u10l8", title: "Imaging Network Security: HIPAA, Access Control, Patching, Encryption, Device Cybersecurity", domain: 6, obj: "HIT-A", minutes: 10,
-      body: `Every modality is a computer holding patient data, and imaging holds more of it than most: images, demographics, dose reports, local caches, and service logs. Security is therefore part of the service job, not a separate department's problem.
+      body: `Every modality is a computer holding patient data, and imaging holds more of it than most: images, demographics, dose reports, local caches, and service logs. Security is therefore part of the service job, not a separate department's problem. It comes in two halves that are easy to confuse: **system security** is the modality itself, meaning its accounts, its patches, its disks, and its physical access, while network security is everything around it, meaning segmentation, firewall rules, and encryption on the wire. A modality can be perfectly segmented and still be wide open at the console.
 
 ## PHI and the law in plain words
 **PHI** is any health information that can be traced back to a named person, and in imaging it lives in more places than people expect: the console's local study list, the detector's cache, dose reports, exported test images, and the service logs you email to a vendor. **HIPAA** protects it through privacy, security, and breach rules, and **HITECH** strengthened enforcement, added breach notification, and bound service vendors to the same duties. The security rule asks for three kinds of safeguard, and the exam likes the three names: **administrative** (policies, training, access reviews), **physical** (locked rooms, screens turned away, controlled media), and **technical** (accounts, encryption, audit logs).
@@ -702,10 +718,10 @@ Geometric distortion               about 2 percent for a primary diagnostic clas
 Luminance meter range              about 0.05 to 1000 cd/m2, better than 5 percent
                                    accuracy, traceable to the national standard
 Reading room ambient light         about 1 footcandle, which is about 10.8 lux
-Film illuminator, where still used at least 1500 cd/m2, varying no more than
+Film illuminator or viewbox        at least 1500 cd/m2, varying no more than
                                    plus or minus 10 percent across the surface
 \`\`\`
-Ambient light matters as much as the display: reflected room light adds to every dark pixel and destroys low-contrast visibility, which is why a reading room is dim and why a low-contrast test pattern should look the same with the lights as it does in the dark. A standard test pattern with light and dark patches, evaluated at about 30 cm, is the daily visual check that any technologist can do.
+Ambient **illumination** matters as much as the display: reflected room light adds to every dark pixel and destroys low-contrast visibility, which is why a reading room is dim and why a low-contrast test pattern should look the same with the lights as it does in the dark. The visual check any technologist can do is a standard test pattern with light and dark patches, evaluated at about 30 cm. Two families of pattern are used for it: the older **SMPTE** pattern, whose 5 percent and 95 percent luminance patches show up any gross error in the brightness adjustment, and the **AAPM** display test patterns, which add low-contrast, uniformity, resolution, and distortion targets built for digital displays. Whichever the department uses, the same pattern is used every time, because the point is the comparison.
 
 ## Display faults
 Dim overall is the backlight or an aged panel, and it is measured rather than argued about. Uneven brightness is uniformity, which calibration can correct up to a point and then cannot. Dead pixels are a panel defect and are counted against the maker's specification. Flicker, color tint, dropouts, and lines are the cable, the connector, or the graphics path first, so swap the cable and try another output before condemning a display. A display that reads out of tolerance and cannot be brought back is retired from diagnostic use, and the reading moves to a qualified station until it is replaced.

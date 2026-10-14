@@ -10,13 +10,13 @@ FRA.units.push({
   lessons: [
     {
       id: "u1l1", title: "Body Organization, Planes, Habitus, and Positional Terminology", domain: 1, obj: "A&P-D", minutes: 9,
-      body: `Service calls in radiology arrive in the radiographer's language: the table will not reach the lateral decubitus detent, the tube column cannot clear a hypersthenic patient, the manual says to level the detector to the midcoronal plane. You will never position a patient, but you cannot move the equipment to the right place until you know what those words mean.
+      body: `Service calls in radiology arrive in the radiographer's language: the table will not reach the lateral decubitus detent, the tube column cannot clear a hypersthenic patient, the manual says to level the detector to the midcoronal plane. You will never position a patient, but you cannot move the equipment to the right place until you know what those words mean. This is the **medical terminology** half of the first domain: the words for parts, planes, directions, and positions that a requisition, a protocol, and a service manual all assume you already own.
 
 ## From cells to systems
 **Cells** are the smallest living units. Cells of one kind form **tissues**: epithelial (linings), connective (support), muscle, and nervous. Tissues build **organs** such as the heart, lungs, liver, and kidneys, and organs that work together form **systems**: circulatory, respiratory, gastrointestinal, urinary, musculoskeletal, nervous, endocrine, and lymphatic. Every room in the department exists to image one of those systems, and that is the depth the exam asks for.
 
 ## The planes the equipment is aligned to
-- **Sagittal** planes divide the body vertically into left and right parts. The **midsagittal** plane, also called the median plane, divides it into equal halves, and it is the line a tube column, table centerline, and laser aimer are set to.
+- **Sagittal** planes divide the body vertically into left and right parts. The **midsagittal** plane, also called the median plane or the **median sagittal plane**, divides it into equal halves, and it is the line a tube column, table centerline, and laser aimer are set to.
 - **Coronal** planes divide the body vertically into front and back parts; the **midcoronal** plane runs through the middle of that split and is the reference a manual uses for detector height.
 - **Transverse** planes, also called **axial** planes, cut horizontally into upper and lower parts. Cross-sectional systems reconstruct in this plane, which is why a computed tomography service manual talks about axial slices and table increments.
 
@@ -26,10 +26,12 @@ anterior / posterior   front / back               the sternum is anterior, the s
 superior / inferior    toward head / toward feet  the lungs are superior to the liver
 medial / lateral       toward / away from midline the sternum is medial, the ribs lateral
 proximal / distal      near / far from the trunk  the knee is proximal to the ankle
+cephalic / caudal      toward head / toward feet  tube angles are named this way
+cranial / caudal       toward skull / toward tail the same pair used of anatomy
 supine / prone         face up / face down        bedside work is mostly supine
 erect / recumbent      upright / lying down       chest work is erect when the patient can stand
 \`\`\`
-A **decubitus** position means the patient is lying down and the beam runs horizontally, which is how free air and fluid levels show. **Lateral decubitus** is lying on a side, named for the side that is down. **Dorsal decubitus** is on the back and **ventral decubitus** is face down, both with the beam crossing side to side. To the equipment that means a horizontal tube, a vertical detector, and locks that actually hold.
+A **decubitus** position means the patient is lying down and the beam runs horizontally, which is how free air and fluid levels show. **Lateral decubitus** is lying on a side, named for the side that is down. **Dorsal decubitus** is on the back and **ventral decubitus** is face down, both with the beam crossing side to side. Recumbent positions without the horizontal beam are named the same way: **dorsal recumbent** is on the back, **ventral recumbent** is face down, and **left lateral recumbent** or **right lateral recumbent** is on the named side, so a **left or right lateral decubitus** is simply that position with the beam turned horizontal. To the equipment that means a horizontal tube, a vertical detector, and locks that actually hold.
 
 ## Body habitus
 Build decides where the organs sit, so it decides where the beam is centered and how much exposure the part needs.
@@ -51,7 +53,7 @@ Between the extremes those organs move 6 to 8 inches, which is more than the col
       body: `Three quarters of the volume a general radiographic room produces is chest, abdomen, and pelvis. Knowing what those images are meant to show tells you when a complaint is a fault and when it is a technique choice.
 
 ## The heart and the chest image
-The heart is a four-chamber pump: the right side sends blood to the lungs, the left side sends it to the body. On a chest image it appears as a **silhouette** against air-filled lung, and its width compared with the chest is one of the first things read, so geometry matters: a posteroanterior projection at the long distance keeps the heart close to the detector and near its true size, while an anteroposterior portable at a short distance magnifies it. A radiologist complaining that hearts look large on one room is making a distance and projection comment, which is yours to check.
+The heart is a four-chamber pump: the right side sends blood to the lungs, the left side sends it to the body. Blood leaves the right side through the **pulmonary artery** to the lungs and returns through the **pulmonary vein** to the left side, which pushes it out through arteries, then **arterioles**, then capillaries, and back through **venules** and veins; the heart with those vessels is the **cardiovascular system**, the circulatory system the outline names. On a chest image the heart appears as a **silhouette** against air-filled lung, and its width compared with the chest is one of the first things read, so geometry matters: a posteroanterior projection at the long distance keeps the heart close to the detector and near its true size, while an anteroposterior portable at a short distance magnifies it. A radiologist complaining that hearts look large on one room is making a distance and projection comment, which is yours to check.
 
 ## Lungs, airway, diaphragm, and pleura
 Air enters through the trachea, divides into the bronchi, and ends in the alveoli where gas is exchanged. The **diaphragm** is the muscle below the lungs that drives breathing, and the **pleura** is the double membrane around each lung. Images are taken on full **inspiration** because the lungs are then largest and the diaphragm lowest; an expiration image looks crowded and underexposed and is a repeat. Pathologies the chest is ordered for, at recognition level, are pneumonia (fluid and consolidation), pneumothorax (air outside the lung), pleural effusion (fluid in the space), and heart enlargement.
@@ -83,7 +85,7 @@ Sensitivity           Always checked before administration, so reaction supplies
       body: `Most plain-film volume is bones, and bone is what drives technique: it is dense, it varies hugely in thickness from a finger to a hip, and it is what the radiographer blames when an image looks flat.
 
 ## Axial and appendicular
-The **axial skeleton** is the center of the body: skull, vertebral column, ribs, and sternum. The **appendicular skeleton** is the limbs and the girdles that hang them on: shoulders, arms, hands, pelvis, legs, feet. There are five primary bone types: **long bones** such as the femur, **short bones** such as the carpals of the wrist, **flat bones** such as the ribs, **sesamoid bones** such as the patella, and **irregular bones** such as the vertebrae. Marrow inside bone makes blood cells, which is also why bone marrow is one of the most radiosensitive tissues in the body.
+The **skeletal system** divides in two. The **axial skeleton** is the center of the body: skull, vertebral column, ribs, and sternum. The **appendicular skeleton** is the limbs and the girdles that hang them on: shoulders, arms, hands, pelvis, legs, feet. There are five primary bone types: **long bones** such as the femur, **short bones** such as the carpals of the wrist, **flat bones** such as the ribs, **sesamoid bones** such as the patella, and **irregular bones** such as the vertebrae. Marrow inside bone makes blood cells, which is also why bone marrow is one of the most radiosensitive tissues in the body.
 
 ## The vertebral column
 \`\`\`
@@ -132,7 +134,7 @@ T1                      about 2 inches above the sternal notch
 T2 to T3                the sternal notch; T4 to T5 the sternal angle
 T6 to T7                the lower end of the scapula; T10 the xiphoid tip
 \`\`\`
-Those lines are how a skull manual tells you to set tube and table angles, so an angle readout that is out by a few degrees becomes a positioning complaint.
+Those points are the body's surface **topography**, the bony landmarks a radiographer finds by feel, and **spinal topography** is the same idea along the vertebral column, which is how a chart says where to center. The skull lines are how a manual tells you to set tube and table angles, so an angle readout that is out by a few degrees becomes a positioning complaint.
 
 ## The requisition and the identifying markers
 A requisition carries the patient identifiers, the exam requested, the side, the relevant history, and pregnancy status. Every image must carry the patient's full name, a unique identifier, date of birth, the date it was made, anatomic markers for right and left, the patient's orientation, any time interval used, whether a chest was made on inspiration or expiration, and sequence markers when it belongs to a series. When a console loses that overlay after a software change, you have a compliance problem, not a cosmetic one.
@@ -184,10 +186,10 @@ Generators hold energy after the disconnect is open. Capacitors and capacitor-di
 4. Restore interlocks and covers before the first exposure, and retest safety afterward.
 
 ## Mechanical hazards
-Tube stands, overhead cranes and rails, table drives, tilt mechanisms, and ceiling-mounted monitors all store energy or carry weight. Watch the pinch points at columns and detector carriages, keep brakes, locks, and detents adjusted, and never defeat a collision sensor to finish a case. Counterweights and their cables are a drop hazard, so inspect cables, chains, stops, and the overhead mounting on every visit; ceiling-mounted equipment has its own documented inspection because the failure mode is fatal.
+Tube stands, overhead cranes and rails, table drives, tilt mechanisms, and ceiling-mounted monitors all store energy or carry weight. Watch the pinch points at columns and detector carriages, keep brakes, locks, and detents adjusted, and never defeat a collision sensor to finish a case. Counterweights and their cables are a drop hazard, so inspect cables, chains, stops, and the overhead mounting on every visit; ceiling-mounted equipment has its own documented inspection because the failure mode is fatal. Newton's laws are not an abstraction in a corridor: a loaded portable unit has **momentum**, and whatever **acceleration** a ramp or a sudden stop adds has to be absorbed by a brake, a caster, or you. Push from the handles, keep the speed walkable, and never stop a rolling unit with your body.
 
 ## Moving patients, and everyone else in the room
-Good **body mechanics** means using your legs and not your back, getting help rather than lifting alone, and using slide boards, lifts, and a log roll for a patient who must stay in line, and never leave a patient on an unlocked or tilted table. Restraints and immobilization are used only as policy allows and with proper consent. During a procedure, visitors and staff who must stay get an apron and a position behind a barrier or at a distance, and anyone who does not need to be there leaves.
+Good **body mechanics** means using your legs and not your back, getting help rather than lifting alone, and using slide boards, lifts, and a log roll for a patient who must stay in line, and never leave a patient on an unlocked or tilted table. Restraints and immobilization are used only as policy allows and with proper consent. Infection control applies to you as much as to clinical staff: standard precautions with every patient, contact precautions and dedicated or wiped-down tools for an isolation room, and **airborne** precautions with the fitted respirator the facility specifies when the posting calls for one. Clean and disinfect what you touched, with a product approved for that surface, before the room takes the next patient. During a procedure, visitors and staff who must stay get an apron and a position behind a barrier or at a distance, and anyone who does not need to be there leaves.
 
 > Exam tip: 1 mA perception, 10 to 20 mA let-go, 100 to 300 mA fibrillation, 10 microamps microshock. Ground 0.5 ohm and chassis leakage 500 microamps are NFPA 99; the 100 / 500 and 10 / 50 microamp patient limits are IEC 60601-1. Lock out, discharge, and verify before any hand enters a high-voltage cabinet.`,
       hook: "1 mA is perception, 5 mA the accepted harmless maximum, 10 to 20 mA let-go, 50 mA respiratory arrest, 100 to 300 mA fibrillation, 6 A sustained contraction, and 10 microamps straight to the heart is microshock; NFPA 99 sets ground resistance at 0.5 ohm and chassis leakage at 500 microamps inside a patient care vicinity of 6 feet and 7.5 feet while IEC 60601-1 sets touch current at 100 and 500 microamps and type CF patient leakage at 10 and 50; and no hand enters a high-voltage cabinet before lockout, discharge, and a meter reading."
@@ -197,10 +199,12 @@ Good **body mechanics** means using your legs and not your back, getting help ra
       body: `Every protective feature you maintain exists because x-rays ionize tissue. This lesson is the vocabulary and the numbers behind all of it, and it is where the unit-conversion questions come from.
 
 ## Ionization and what it damages
-An x-ray photon with enough energy knocks an electron off an atom, leaving an ion pair. That is **ionization**, and it is the difference between x-rays and the radio waves a wireless access point puts out. Damage happens two ways: the **direct effect** is a photon hitting a critical molecule such as DNA, and the **indirect effect** is a photon splitting water into reactive fragments that then attack the molecule. Because the body is mostly water, the indirect effect does most of the harm.
+An x-ray photon with enough energy knocks an electron off an atom, leaving an ion pair. That is **ionization**, and it is the difference between x-rays and the radio waves a wireless access point puts out. X-rays and gamma rays are electromagnetic radiation; alpha particles, beta particles, and neutrons are **particulate radiation**, which carries mass, gives up its energy over a very short distance, and is what a nuclear medicine source emits inside the patient. Damage happens two ways: the **direct effect** is a photon hitting a critical molecule such as DNA, and the **indirect effect** is a photon splitting water into reactive fragments that then attack the molecule. Because the body is mostly water, the indirect effect does most of the harm.
 - **Somatic** damage is to the exposed person's own tissues; **genetic** damage is to the reproductive cells and so to descendants.
 - Dividing cells are the most sensitive, which is why bone marrow, the gonads, and children matter most.
 - Dose rate matters: the same total dose delivered slowly does less harm than the same dose all at once, because repair has time to work.
+
+Two kinds of effect sit behind every limit in this course. **Stochastic effects**, such as **cancer** and genetic change, have no threshold: any dose carries some probability of them, and the probability rises with dose while the severity does not. **Deterministic effects**, such as skin reddening, hair loss, and cataract, need a threshold dose before they appear at all, and above it they get worse as dose rises. Occupational and public limits exist to keep stochastic risk small; the dose alerts on a long fluoroscopic case exist to keep deterministic injury from happening at all.
 
 ## Quantities and units
 \`\`\`
@@ -227,7 +231,7 @@ Education and training under 18 1 mSv per year
 A worked example: a badge reporting 0.4 mSv in a quarter projects to about 1.6 mSv a year, which is a few percent of the occupational limit and is a normal result for a radiographer; the same reading on a badge that never leaves the booth says something is wrong with the badge or the room.
 
 ## Personnel monitoring
-Badges are thermoluminescent or optically stimulated detectors read by a service, usually quarterly, and worn at the collar outside the apron so they read what reaches the unprotected neck and head. In pregnancy a second badge goes at the waist under the apron. The reports go to the radiation safety officer and the committee, who look for trends, for a badge left in the room, and for anyone approaching an investigation level. If you move a badge rack or leave your own badge on a cabinet, you have corrupted the record.
+Badges are thermoluminescent or optically stimulated detectors read by a service, usually quarterly, and worn at the collar outside the apron so they read what reaches the unprotected neck and head. A thermoluminescent badge stores the energy it absorbs in a crystal and gives it back as light when the reader heats it, which is **thermoluminescence**; the **properties** of the crystal are the reason it is used, because lithium fluoride absorbs radiation much the way tissue does. In pregnancy a second badge goes at the waist under the apron. The reports go to the radiation safety officer and the committee, who look for trends, for a badge left in the room, and for anyone approaching an investigation level. If you move a badge rack or leave your own badge on a cabinet, you have corrupted the record.
 
 > Exam tip: 1 Gy = 100 rad and 1 Sv = 100 rem, so divide rem by 100 to get sieverts. Occupational 50 mSv a year, cumulative 10 mSv times age, lens 150, extremities and skin 500, public 1, declared pregnancy 0.5 mSv a month. Background is about 3 mSv a year.`,
       hook: "X-rays ionize, the indirect effect through water does most of the damage, somatic harm is to you and genetic harm to descendants, and dividing cells are the most sensitive; 1 Gy is 100 rad and 1 Sv is 100 rem; background runs about 3 mSv a year; and the limits are occupational 50 mSv a year with a cumulative 10 mSv times age, lens 150 mSv, skin and extremities 500 mSv, public 1 mSv frequent and 5 mSv infrequent, a declared embryo or fetus 0.5 mSv a month, and trainees under 18 at 1 mSv."
@@ -237,8 +241,8 @@ Badges are thermoluminescent or optically stimulated detectors read by a service
       body: `Three rules protect everyone in the room, and one formula decides how well. This lesson is the arithmetic a technician is expected to do standing in the suite.
 
 ## The three cardinal rules
-- **Time**: dose is proportional to beam-on time, so pulsed fluoroscopy and short exposures cut it directly.
-- **Distance**: the strongest control there is, and free. One step back beats any apron.
+- **Time**: dose is proportional to beam-on time, so **minimize time**; pulsed fluoroscopy and short exposures cut it directly.
+- **Distance**: **maximize distance**, because it is the strongest control there is and it is free. One step back beats any apron.
 - **Shielding**: aprons, thyroid shields, mobile barriers, the control booth, and the lead in the walls, used after time and distance rather than instead of them.
 
 ## The inverse square law
@@ -252,7 +256,7 @@ Example 2: 2 mGy/h at 2 m. At 1 m: 2 x (2/1) squared = 8 mGy/h. Half the distanc
 The same law runs the other way in fluoroscopy: halving the source-to-skin distance from 40 cm to 20 cm raises entrance exposure about four times, which is why the spacer that enforces the minimum distance is never removed.
 
 ## ALARA as a program, not a slogan
-**ALARA** means as low as reasonably achievable, and an inspector looks for it in three forms: written policies that set it as the facility's goal, procedures that implement it (protocols by size, pediatric technique charts, pulsed defaults, collimation rules), and physical actions you can point to (shields on the walls, barriers in the room, apparel inspected, interlocks proved). Your part is the physical and the recorded part: a collimator lamp that works, a pulsed mode that still defaults correctly after a software update, and a service record that says you verified it.
+**ALARA** means as low as reasonably achievable, and an inspector looks for it in three forms: written policies that set it as the facility's goal, procedures that implement it (protocols by size, pediatric technique charts, pulsed defaults, collimation rules), and physical actions you can point to (shields on the walls, barriers in the room, apparel inspected, interlocks proved). Your part is the physical and the recorded part: a collimator lamp that works, a pulsed mode that still defaults correctly after a software update, and a service record that says you verified it. What the program is chasing is **dose reduction**, and what it is removing is every **unnecessary** exposure: a field wider than the anatomy, a repeat, a magnification mode left engaged, a study already done down the hall.
 
 ## Fluoroscopy practice
 - Use **pulsed mode** rather than continuous, and let **last-image hold** replace a second look.
@@ -288,7 +292,7 @@ Hang garments on racks, never fold them, because a fold cracks the lead and the 
 
 ## Barriers
 - A **primary barrier** intercepts the useful beam. The fluoroscopic receptor assembly is one, at least 2 mm lead equivalent, interlocked so the tube cannot energize while it is parked out of position.
-- A **secondary barrier** intercepts scatter and leakage: the control booth, the lead glass window, and the upper walls. A booth barrier is about 1/16 inch lead equivalent.
+- A **secondary barrier** intercepts scatter and leakage: the control booth, the lead glass window, and the upper walls. A booth barrier is about 1/16 inch lead equivalent, and the booth **partition** has to be placed and sized so that nothing but scattered radiation can reach the operator behind it.
 - Mobile shields fill the gap in rooms where staff must stand at the table, and a mobile exposure switch must reach 2 m from the tube.
 
 ## Room design, at recognition level
@@ -357,7 +361,7 @@ Fluoroscopy               10 R/min tabletop, 20 R/min with high-level control; d
 The standard binds the manufacturer and anyone who **modifies** a system, and that includes you. Swap a collimator, recalibrate an automatic exposure control, or replace a high-voltage component and the room must still meet every one of those numbers when you leave, with the measurement in the record to prove it.
 
 ## State radiation control programs
-States, not the federal government, register and inspect the machines in use. A state program registers every tube, inspects rooms on its own schedule, sets who may operate a system and what must be posted, and can shut a room down. Their rules differ from state to state but most are built from the shared suggested regulations that state program directors write together through **CRCPD**, which is why registration, survey intervals, and operator rules look similar everywhere without being identical. A new or relocated tube is a registration event: your paperwork feeds it.
+States, not the federal government, register and inspect the machines in use. A state program registers every tube, inspects rooms on its own schedule, licenses or certifies the **radiologic technologist** who may operate a system, sets what must be posted, and can shut a room down. Their rules differ from state to state but most are built from the shared suggested regulations that state program directors write together through **CRCPD**, which is why registration, survey intervals, and operator rules look similar everywhere without being identical. A new or relocated tube is a registration event: your paperwork feeds it.
 
 ## CMS and the survey
 **CMS** sets the conditions of participation a hospital must meet to be paid, may survey directly, and otherwise accepts the survey of an accrediting organization it has granted deeming authority. Equipment maintenance is in those conditions, which is why a maintenance strategy that departs from the manufacturer's recommendation has to be written down and justified rather than simply adopted.
@@ -387,10 +391,10 @@ Quarterly      repeat analysis, or every 250 patients
 Semiannual     compression force, and the other semiannual tests the program lists
 Annual         full medical physicist survey, or sooner after a major component change
 \`\`\`
-Those intervals are examinable. A technologist does the daily, weekly, and monthly work; the physicist does the annual survey; you make the equipment able to pass both.
+Those intervals are examinable. The **mammographer**, the technologist who performs the exams, does the daily, weekly, and monthly work; the medical physicist does the annual survey; you make the equipment able to pass both.
 
 ## The phantom and its score
-The **ACR** test object holds fibers, speck groups, and masses of decreasing size, imaged at clinical technique, and its scoring runs from largest to smallest until an object can no longer be seen. The minimum to pass accreditation is **four fibers, three speck groups, and three masses**, and a score must not fall more than **0.5** from the previous image. A falling score is the single most useful early warning the modality has: stop, and look at detector calibration, target and filter selection, compression, and automatic exposure control before anyone changes technique.
+The **ACR** test object holds fibers, speck groups, and masses of decreasing size, imaged at the same clinical technique a **mammogram** is taken with, and its scoring runs from largest to smallest until an object can no longer be seen. The minimum to pass accreditation is **four fibers, three speck groups, and three masses**, and a score must not fall more than **0.5** from the previous image. A falling score is the single most useful early warning the modality has: stop, and look at detector calibration, target and filter selection, compression, and automatic exposure control before anyone changes technique.
 
 ## What your service visit must leave behind
 After any work on a mammography unit the compliance state has to be restored and proven.
@@ -427,7 +431,7 @@ NEMA        the equipment        manufacturer standards, such as focal spot tole
 
 ## OSHA
 **OSHA** regulates your safety rather than the patient's.
-- **Hazard communication**: every chemical you use has a label and an **SDS**, available where the work happens, with training on both.
+- **Hazard communication**: every chemical you use has a label and an **SDS**, available where the work happens, with training on both. **Hazardous materials** disposal is the other end of the same rule: processor chemistry, cleaning and disinfecting agents, spent batteries, and the lead in a retired apron are regulated waste rather than trash, and the facility's waste procedure says where each one goes.
 - **PPE**: the employer supplies, trains on, and maintains it, radiation apparel included.
 - **Bloodborne pathogens**: an exposure control plan, sharps handling, and treating every patient as potentially infectious, which matters when you service a table, a probe, or a cassette.
 - **Lockout and tagout**: energy isolated, locked, tagged, and verified before service, and only the person who applied a lock removes it.
@@ -493,10 +497,14 @@ FRA.units.push({
 
 ## The four quantities
 - **Charge** is the quantity of electricity; current is charge in motion.
-- **Current** (I), in **amperes**, is the flow. Tube current is in milliamperes and filament current in amperes.
-- **Voltage** (V), in **volts**, is the pressure that pushes the flow. Tube potential is in kilovolts.
-- **Resistance** (R), in **ohms**, opposes the flow.
+- **Current** (I), in **amperes**, is **electric current**: charge in motion. Tube current is in milliamperes and filament current in amperes.
+- **Voltage** (V), in **volts**, is the pressure that pushes the flow, and its older name, **electromotive force**, says exactly what it does. Tube potential is in kilovolts.
+- **Resistance** (R), in **ohms**, opposes the flow, and **electric resistance** in a wire, a contact, or a winding is where unwanted heat comes from.
 The water analogy holds: voltage is pressure, current is the flow rate, resistance is the narrowness of the pipe, and power is the work the water does when it arrives.
+
+## Energy and charge, before the law
+**Energy** is the ability to do work, and the **law of conservation** says it changes form rather than disappearing. On a service call you meet it as **potential energy** in a raised table or a charged capacitor, kinetic energy in a moving gantry, **thermal energy** in an anode, **electrical energy** in every circuit you measure, **chemical energy** in a battery pack, and **nuclear energy** in the tracer a gamma camera watches.
+**Electrostatics** is charge at rest. Three **laws of electrostatics** are worth carrying: unlike charges attract and like charges repel, charge on a conductor sits on its outer surface, and the force between two charges falls with the square of the distance between them. **Electrification** is how an object gains that charge, and the **methods of electrification** are friction, contact, and induction, which is why a plastic cover attracts dust to a detector and why you ground yourself before handling a board. **Electrodynamics** is the same charge in motion, and that is the rest of this unit.
 
 ## Ohm's law and power
 \`\`\`
@@ -507,10 +515,11 @@ Imaging power    (mA x kVp) / 1000 = kW, and multiply by 0.7 for a single-phase 
 Worked: 24 V across 8 ohms draws 3 A and dissipates 72 W. A 1,000 mA station at 120 kVp is (1000 x 120) / 1000 = 120 kW, which is why the room needs a feeder of its own.
 
 ## Series and parallel
+Two **electric circuits** cover nearly everything in a generator cabinet, and telling them apart decides what a measurement means.
 - **Series** is one path. The same current flows through every element, the voltage drops add up to the source, and resistances add: R total = R1 + R2 + R3. One open element stops everything, which is exactly how a fuse and an interlock chain work.
 - **Parallel** is several paths across the same two points. Every branch sees the same voltage, the branch currents add, and the reciprocals add: 1 / R total = 1/R1 + 1/R2. Total resistance is always less than the smallest branch, so two 100 ohm elements in parallel measure 50 ohms. Receptacles, cabinet fans, and the low-voltage loads inside a generator are parallel, which is why one can fail without the others noticing.
 
-## Prefixes you have to read without thinking
+## The numeric prefixes you have to read without thinking
 \`\`\`
 kilo  x 1000        kV (tube potential), kW (power), kohm (resistance)
 milli x 0.001       mA (tube current), ms (exposure time), mSv (dose)
@@ -534,7 +543,7 @@ Never put a meter rated for the bench across a high-voltage section, and never t
     },
     {
       id: "u4l2", title: "Components in a Circuit: Passive, Active, Rectifiers, and Reading the Schematic", domain: 3, obj: "E&E-B", minutes: 10,
-      body: `Open an imaging generator and you see the same two dozen parts over and over. Knowing what each one does, and what each one does when it fails, is most of electronic troubleshooting.
+      body: `Open an imaging generator and you see the same two dozen **electronic components** over and over. Knowing what each one does, and what each one does when it fails, is most of electronic troubleshooting.
 
 ## Passive components
 - **Resistors** limit current and drop voltage. In the filament circuit they set the milliampere stations, so a drifted resistor or a dirty tap is a linearity problem.
@@ -554,6 +563,8 @@ SCR          a gate-triggered AC switch; the usual exposure and rotor switching 
 Relay        a small coil current switching a large load; a contactor is a heavy-duty relay
 Fuse, breaker opens on overcurrent; a repeat trip is a fault, never a nuisance
 \`\`\`
+Relays, contactors, solenoids, brakes, and motors are the **electromechanical devices** in the cabinet: current moving metal. They fail mechanically rather than electrically, so they are the parts you expect to find pitted, burned, or sticking, and they are the ones a nose and a finger diagnose faster than a meter.
+
 Rectification matters because the tube needs one-way current. Without it the negative half-cycle would drive electrons the wrong way and destroy the tube; with it, ripple falls as pulses per cycle rise, from 100 percent on single-phase to about 14 percent on six-pulse three-phase, 4 percent on twelve-pulse, and about 1 percent on a high-frequency generator.
 
 ## Interlocks and indicators
@@ -574,10 +585,10 @@ Learn the schematic symbols first, because a drawing is unreadable without them:
       body: `An x-ray generator is a machine for turning a modest building voltage into tens of kilovolts, and it does that with nothing but coils of wire and the relationship between electricity and magnetism.
 
 ## Magnetism and electromagnetism
-Every moving charge makes a magnetic field around it, and a coil concentrates that field into something usable. Run current through a coil wound on iron and you have an electromagnet: brakes, relays, contactors, stator windings, and the gradient coils of a scanner are all this idea.
+Every magnet has two **magnetic poles**, north and south, that cannot be separated, and like poles repel while unlike poles attract, which is the whole of the laws of magnetism you need. Every moving charge makes a magnetic field around it, and a coil concentrates that field into something usable. Run current through a coil wound on iron and you have an electromagnet: brakes, relays, contactors, stator windings, and the gradient coils of a scanner are all this idea.
 
 ## Induction
-**Faraday** found the other half: a changing magnetic field through a conductor induces a voltage in it. The field has to be changing, which is why transformers work on alternating current and do nothing on direct current.
+**Faraday** found the other half, **electromagnetic induction**: a changing magnetic field through a conductor induces a voltage in it. The field has to be changing, which is why transformers work on alternating current, whose voltage rises and falls as a **sine wave**, and do nothing on steady direct current.
 - **Self-induction** is a coil inducing a voltage in itself as its own current changes, which is what an inductor is.
 - **Mutual induction** is a changing current in one coil inducing a voltage in a second coil beside it. That is a transformer.
 
@@ -596,10 +607,10 @@ Worked: 120 V into a 750:1 step-up gives 90,000 V, which is 90 kVp at the tube. 
 radio -> microwave -> infrared -> visible light -> ultraviolet -> x-ray -> gamma ray
 longer wavelength, lower frequency, lower energy   ->   shorter, higher, higher
 \`\`\`
-All of it travels at the speed of light; what changes is wavelength and frequency, and they are inversely related, so a shorter wavelength means a higher frequency and a higher photon energy. X-rays and gamma rays sit at the energetic end, where a single photon carries enough energy to tear an electron off an atom. That is why they **ionize** and radio waves do not, and it is the whole reason the rest of this course has dose limits in it. X-rays and gamma rays differ only in origin: x-rays come from the tube's electron interactions, gamma rays from inside a nucleus.
+All of it travels at the speed of light; what changes is wavelength and frequency, and they are inversely related, so a shorter wavelength means a higher frequency and a higher photon energy. The energy one photon carries is its frequency times Planck's constant, and that **photonic energy** is what decides whether a photon can ionize. The same radiation behaves as a wave when you measure wavelength and as a particle when you count photons, which is **wave-particle duality**. X-rays and gamma rays sit at the energetic end, where a single photon carries enough energy to tear an electron off an atom. That is why they **ionize** and radio waves do not, and it is the whole reason the rest of this course has dose limits in it. X-rays and gamma rays differ only in origin: x-rays come from the tube's electron interactions, gamma rays from inside a nucleus.
 
 ## The induction motor that spins the anode
-The anode is inside a sealed vacuum envelope, so nothing mechanical can reach it. Instead, **stator** windings outside the glass produce a rotating magnetic field that induces currents in the rotor on the anode stem and drags it around: about 3,400 rpm standard and about 10,000 rpm on high-speed tubes. Reversing the stator field brakes it. A rotor that will not spin, runs up slowly, or sounds rough is the stator drive, its capacitor, or worn bearings, and the last of those means the tube is near its end.
+The anode is inside a sealed vacuum envelope, so nothing mechanical can reach it. An **electric motor** turns current into motion and an **electric generator** turns motion into current, and the stator and rotor here are an **electric motor** built around the glass. **Stator** windings outside the envelope produce a rotating magnetic field that induces currents in the rotor on the anode stem and drags it around: about 3,400 rpm standard and about 10,000 rpm on high-speed tubes. Reversing the stator field brakes it. A rotor that will not spin, runs up slowly, or sounds rough is the stator drive, its capacitor, or worn bearings, and the last of those means the tube is near its end.
 
 > Exam tip: induction needs a changing field, so transformers need alternating current. Secondary voltage follows the turns ratio and current goes inversely. Step-up makes kilovolts, step-down heats the filament, the autotransformer selects kVp. Shorter wavelength means higher frequency and higher energy, and only the energetic end ionizes. The anode is spun by an induction motor through the glass.`,
       hook: "A moving charge makes a magnetic field and a changing field induces a voltage, which is Faraday's induction and why transformers need alternating current; mutual induction gives the transformer law where secondary voltage follows the turns ratio and current runs inversely, so a 750 to 1 step-up turns 120 V into 90 kVp while a step-down supplies about 4 A to the filament and a tapped autotransformer adjustable from about 100 to 400 V selects the station; losses become heat so the high-voltage section lives in oil; the spectrum runs radio, microwave, infrared, visible, ultraviolet, x-ray, and gamma with shorter wavelength meaning higher frequency and energy and only the top end ionizing; and stator windings spin the anode by induction at about 3,400 or 10,000 rpm."
@@ -658,6 +669,7 @@ What a UPS protects in an imaging room is the console, the acquisition and recon
 2. **Low-voltage supplies** make the direct current rails for the console, logic and interlock boards, the detector, and the collimator and lamp.
 3. The **high-voltage section** takes the compensated supply through the autotransformer to the step-up transformer, the rectifier set, and out through the high-voltage cables to the tube. Those cables end in potted terminations that must be clean, greased as the manual says, and seated; a dirty or loose termination arcs, and arcing is a fault code and a dead room.
 4. **Interlocks and the emergency off chain** sit in series across all of it, so an open contact anywhere looks like a power failure.
+Those four stages are the system's **internal system distribution**, and the manual's block diagram names every one of them with a test point and an expected value. Learn that diagram for the rooms you cover and you will stop opening cabinets to find out where the power stopped.
 
 ## How a failed supply announces itself
 - **Console dead, breaker holding**: the low-voltage supply feeding the console, or the contactor that should have closed.
