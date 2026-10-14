@@ -44,13 +44,12 @@ About 99 percent of the energy delivered to the target becomes heat, in a spot a
 
 ## Worked heat unit examples
 \`\`\`
-Case                                                Arithmetic                   Result
-Lumbar spine, single phase, 98 kVp, 120 mAs         98 x 120                     11,760 HU
-Fluoroscopy, single phase, 76 kVp, 1.5 mA, 3.5 min  76 x 1.5 x (3.5 x 60)        23,940 HU
-Skull series, three phase, 82 kVp, 120 mAs          1.4 x 82 x 120               13,776 HU
-The same series, six films                          6 x 13,776                   82,656 HU
-Mammographic exposure, 25 kVp, 200 mAs              25 x 200 = 5,000 HU,
-                                                    then x 1.4 J per HU          about 7 kJ
+Case                                                Arithmetic                 Result
+AP pelvis, single phase, 75 kVp, 80 mAs             75 x 80                    6,000 HU
+Fluoroscopic run, single phase, 85 kVp, 3 mA, 5 min 85 x 3 x (5 x 60)          76,500 HU
+Cervical spine, three phase, 70 kVp, 50 mAs         1.4 x 70 x 50              4,900 HU
+Four exposures in that series                       4 x 4,900                  19,600 HU
+Any exposure totalling 10,000 HU, put into joules   10,000 x 1.4 J per HU      14,000 J, or 14 kJ
 \`\`\`
 Two habits keep these right. Convert minutes to seconds before anything else, because fluoroscopic questions are written in minutes and the formula wants seconds. And read the waveform in the stem: the 1.4 factor applies to three-phase and high-frequency equipment, because low ripple keeps the tube near peak voltage for more of the cycle and therefore makes more heat for the same settings.
 
@@ -61,7 +60,7 @@ A radiographic rating chart is one family of curves, one per mA station, with kV
 3. Drop to the time axis. That is the longest exposure the tube will accept. Anything shorter is safe; anything longer is not.
 4. Check which chart you are holding. The small focal spot and the low anode speed each have their own, and both are more restrictive.
 
-The cooling curves answer the next question instead. An anode carrying 50,000 heat units sits about 6 minutes along a curve that reaches zero at 15 minutes, so about 9 more minutes brings it all the way down, and much less than that is enough to drop back under a safe level for the next series. The housing curve has the same shape and a far longer clock.
+The cooling curves answer the next question instead. Find the heat the anode now holds on the curve, read the time at that point, then read the time where the same curve reaches zero: the difference is the wait. If a chart puts 60,000 heat units at about the four-minute mark and comes to zero at twelve minutes, another eight minutes clears it completely, and far less than that is enough to drop back under a safe level for the next series. The housing curve has the same shape and a far longer clock.
 
 ## Failure, and the service judgment
 \`\`\`
@@ -92,7 +91,7 @@ Three phase, six pulse       6                  14%     about 86% of peak
 Three phase, twelve pulse   12                   4%     about 96% of peak
 High frequency              effectively steady   1%     about 99% of peak
 \`\`\`
-Low ripple means the tube spends more of the exposure near peak voltage, so for the same kVp and mAs you get more photons and harder ones. Three consequences follow. Technique charts do not transfer between waveforms, and moving from single phase to three phase can mean as much as 10 kVp less for the same receptor exposure. Heat units carry the 1.4 factor on three-phase and high-frequency equipment. And the power rating of a generator is quoted at 100 kVp and 100 ms: for low-ripple equipment it is simply tube current times kilovoltage, so 800 mA at 100 kVp is 80 kW, while a single-phase unit is rated at about 0.7 of that product, which puts 500 mA at 120 kVp near 42 kW.
+Low ripple means the tube spends more of the exposure near peak voltage, so for the same kVp and mAs you get more photons and harder ones. Three consequences follow. Technique charts do not transfer between waveforms, and moving from single phase to three phase can mean as much as 10 kVp less for the same receptor exposure. Heat units carry the 1.4 factor on three-phase and high-frequency equipment. And the power rating of a generator is quoted at 100 kVp and 100 ms: for low-ripple equipment it is simply tube current times kilovoltage, so 600 mA at 100 kVp is 60 kW, while a single-phase unit is rated at about 0.7 of that product, which puts 400 mA at 100 kVp near 28 kW.
 
 ## Rectification, told as a fault
 Unrectified high voltage is an alternating wave. The positive half drives electrons from filament to target as intended. The negative half tries to drive them backward from a target that is not built to emit, and the inverse voltage that results is what kills tubes. Half-wave rectification throws the negative half away: the tube is idle half the time, so exposures are long. Full-wave rectification flips the negative half up and uses it, doubling the pulse rate at the same peak. One failed element in a full-wave bank does not kill the room; it halves the output and raises ripple, which reads as a room that suddenly needs more technique. Measure, do not assume.
@@ -122,8 +121,9 @@ When radiology says a room runs dark, you are being handed a calibration questio
 ## Testing it the way the standard asks
 \`\`\`
 Test                     Method                              Pass
-Density consistency      expose through 4, 8, 16 cm of       image density constant
-                         acrylic or aluminum                  across all thicknesses
+Density consistency      expose through a thin, a medium,     image density constant
+                         and a thick absorber of acrylic      whatever the thickness
+                         or aluminum
 Cell selection           lead over the selected cell          exposure runs to backup
 Backup termination       lead in the beam, chamber starved    ends at 6 s or 600 mAs
 Density steps            step up and down one notch           density moves by about
@@ -481,7 +481,7 @@ Injector               delivers contrast on cue             interface, calibrati
 \`\`\`
 
 ## Pitch, worked
-Pitch is couch travel per rotation divided by beam width. If the couch advances 8 mm per 360 deg rotation and the beam is 5 mm wide, the pitch is 8 / 5 = 1.6:1. Pitch above 1.0 stretches the helix, so a given length of patient is covered faster and with less dose; below 1.0 the turns overlap, which adds data and dose. Pitch is a protocol parameter rather than a service adjustment, but it is the first thing to ask about when a department reports that dose or coverage changed with no hardware work.
+Pitch is couch travel per rotation divided by beam width. If the couch advances 12 mm per 360 deg rotation and the beam is 10 mm wide, the pitch is 12 / 10 = 1.2:1. Pitch above 1.0 stretches the helix, so a given length of patient is covered faster and with less dose; below 1.0 the turns overlap, which adds data and dose. Pitch is a protocol parameter rather than a service adjustment, but it is the first thing to ask about when a department reports that dose or coverage changed with no hardware work.
 
 ## Hounsfield units, and why water matters
 \`\`\`
@@ -621,7 +621,7 @@ Gantry and table       rotate the heads, position       motion faults, collision
 \`\`\`
 
 ## Tracers, energy windows, and half-life
-A radiopharmaceutical joins a radioactive atom to a carrier the body treats predictably, so the tracer concentrates where the physiology takes it. Technetium-99m is the common one, giving a gamma ray of about 140 keV, and the camera's energy window is set around that so scattered and unrelated photons are rejected. Activity falls by half-life, the interval in which activity halves, and the value depends entirely on the agent: iodine-131, for example, halves in about 8 days. That is why doses are assayed in a dose calibrator immediately before use and why waste is held for decay rather than simply discarded.
+A radiopharmaceutical joins a radioactive atom to a carrier the body treats predictably, so the tracer concentrates where the physiology takes it. Technetium-99m is the common one, giving a gamma ray of about 140 keV, and the camera's energy window is set around that so scattered and unrelated photons are rejected. Activity falls by half-life: in each successive period half of whatever activity remains is gone, so the dose in the syringe is weaker than the dose that was drawn an hour earlier. The length of that period belongs to the agent, and imaging agents are deliberately short-lived so a patient is not left radioactive for weeks. That is why doses are assayed in a dose calibrator immediately before use and why waste is held for decay rather than simply discarded.
 
 Positron imaging works differently. Agents such as fluorine-18 emit positrons; each positron annihilates with an electron and produces two photons of about 0.51 MeV flying in opposite directions, and the detector ring accepts only pairs arriving in coincidence, which is what locates the event without a collimator. Hybrid units, single photon or positron tomography combined with a scanner, add attenuation correction and anatomy, and they also add every mechanical, thermal, and computing item of the scanner to your list.
 

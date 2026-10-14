@@ -395,13 +395,13 @@ The service items that recur are compression force calibration and the compressi
 - The **detector array** is thousands of solid-state scintillation elements with their photodiodes and acquisition electronics, read thousands of times per rotation.
 - The **collimator and filters** shape the beam into the slice profile the protocol asked for.
 
-Recognize the direction the technology moved, because older equipment is still in service: gas-filled detectors gave way to solid-state scintillation detectors, the earliest of which used **NaI** before better crystals replaced it, and single-slice scanners gave way to multislice arrays, 16 slices in 2002, 64 in 2004, dual-source designs the year after, and today as many as 256.
+Recognize the direction the technology moved, because older equipment is still in service: gas-filled detectors gave way to solid-state scintillation detectors, the earliest of which used **NaI** before better crystals replaced it, and single-slice scanners gave way to multislice arrays, 16 slices in 2002, 64 in 2004, dual-source designs the year after, and 320 by 2007.
 
 ## Helical scanning and pitch
 The couch moves while the gantry turns, so the beam traces a spiral through the patient.
 \`\`\`
 Pitch = couch travel per 360 deg rotation / beam width
-Example: 8 mm of travel with a 5 mm beam width is a pitch of 1.6:1
+Example: 12 mm of travel with a 10 mm beam width is a pitch of 1.2:1
 Above 1.0   the spiral stretches: faster coverage, lower dose, less overlap
 Below 1.0   the spiral overlaps: more data, more dose
 \`\`\`
@@ -513,7 +513,7 @@ Probe damaged after cleaning     the wrong chemical, soaking past the line, or a
       body: `Nuclear medicine inverts the usual arrangement: the radiation source is inside the patient and the equipment only listens. That changes the regulations, the hazards, and the boundary between your work and someone else's.
 
 ## The radiopharmaceutical
-A **radiopharmaceutical** is a radioactive atom attached to something the body handles in a known way, so the tracer collects where the physiology takes it. **Tc-99m** is the workhorse: it decays to technetium-99 emitting a gamma ray of about **140 keV**, which is the energy window the camera is tuned to. Activity falls by **half-life**, the time for the activity to halve, which differs enormously by agent; iodine-131, for example, halves in about 8 days. That is why doses are assayed and used on a schedule rather than stored.
+A **radiopharmaceutical** is a radioactive atom attached to something the body handles in a known way, so the tracer collects where the physiology takes it. **Tc-99m** is the workhorse: it decays to technetium-99 emitting a gamma ray of about **140 keV**, which is the energy window the camera is tuned to. Activity falls by **half-life**: after each such period, half of whatever was there is left, so a tracer fades on its own clock. The length of the period belongs to the agent, and imaging favors short ones, which is why doses are assayed and used on a schedule rather than stored.
 
 ## The gamma camera chain
 1. A **collimator** of lead holes bolted to the face of the detector accepts only gamma rays arriving along the hole axis. Without it there would be no image at all, and collimators are heavy, interchangeable, and easily damaged.
