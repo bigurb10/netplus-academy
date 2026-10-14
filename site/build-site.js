@@ -617,7 +617,9 @@ function buildAll(opts) {
     writePage(out, '/guides/', guidesIndex(guides, origin)); guideUrls.push('/guides/');
     for (const g of guides) { writePage(out, `/guides/${g.slug}/`, guidePage(g, models, origin)); guideUrls.push(`/guides/${g.slug}/`); }
   }
-  const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls);
+  const sfData = path.join(__dirname, 'data', 'serviceforge.json.gz');
+  const sfUrls = (opts.serviceforge === false || !fs.existsSync(sfData)) ? [] : require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls;
+  const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls).concat(sfUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
   fs.writeFileSync(path.join(out, '404.html'), notFoundPage(models, origin), 'utf8');
@@ -626,6 +628,12 @@ function buildAll(opts) {
   return { out, urls, courses: results };
 }
 
+// module.exports runs before the require.main block below: buildAll() lazily requires
+// ./build-serviceforge, which requires ./build-site back (circular) -- if exports were not
+// set yet when `node site/build-site.js` is run directly, that circular require would see
+// an empty exports object and crash on shell/crumbs/slugify being undefined.
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, ORIGIN, BRAND, shell, crumbs, breadcrumbLd, org, DESC_MAX };
+
 if (require.main === module) {
   const wanted = process.argv.slice(2);
   const dirs = wanted.length ? wanted.map(id => path.join(ROOT, 'courses', id)) : undefined;
@@ -633,5 +641,3 @@ if (require.main === module) {
   for (const r of res.courses) console.log(`[${r.course}] ${r.pages.length - 1} pages written`);
   console.log(`sitemap: ${res.urls.length} URLs; output ${path.relative(ROOT, res.out)}/`);
 }
-
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, ORIGIN, BRAND };

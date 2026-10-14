@@ -125,3 +125,11 @@ main section h3 { font-size: 1.05rem; margin: 22px 0 4px; }
 .quiz .opts { margin: 8px 0 10px 18px; }
 .quiz details summary { cursor: pointer; font-weight: 600; }
 .quiz details p { margin: 8px 0 0; }
+
+/* ServiceForge pages */
+.symptom { margin: 18px 0 26px; padding-top: 10px; border-top: 1px solid var(--line, #e3e3e3); }
+.causes .rank { font-weight: 600; }
+.step { background: var(--panel, #f6f6f6); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+.step dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 6px 0 0; }
+.step dt { font-weight: 600; }
+.rest { margin-top: 10px; }
