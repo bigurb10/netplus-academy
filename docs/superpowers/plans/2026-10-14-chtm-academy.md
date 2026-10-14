@@ -891,4 +891,18 @@ The merge to `main`, the branch deletion, and the hand-off (Blake pushes, runs `
 - Gaps fixed: 19 entries in 16 content edits across u3l2, u3l6, u3l7, u3l9, u4l2, u4l3, u4l6, u4l9, u5l2, u5l4, u6l1, u6l5, u8l4, u8l7 and the u4l2, u4l9, u5l2 deep dives; `ID` added to the acronym ignore list. The review (`.superpowers/sdd/chtm-task-7-review.md`) reproduced every count, reclassified none of the 57 out-of-scope entries, and found the edits original; one unsourced cadence ("once a year") was removed by the controller afterwards.
 - Pack tools after the fixes: packcheck OK (8 units, 60 lessons, 60 deep dives, 324 questions), acronyms 72 keys OK, gen-smoke 0 problems. `npm test`, `python build.py chtm`, and `node site/build-site.js` wait for Task 6, which runs after the CRES branch merges and this branch rebases.
 
-(Task 8 adds the stage results)
+### Task 6: wiring and the first build (2026-10-14, commit ced6d9a)
+
+- `courses/chtm/course.js` and `chtm/index.html` (engine list identical to the other seven shells), the catalog card after CRES, the ItemList entry at position 4, both description metas, `CATALOG_ORDER`, `scripts/stage.sh` (eight bundles), README, and the four test lists; the CBET glossary's ACI entry reworded to "the healthcare technology manager credential".
+- `seo.intro` carries every `seo.phrases` entry because `tests/site.js` requires each phrase on the rendered landing page; no fact or number was added.
+- The landing page names CBET Academy and CRES Academy in the eligibility FAQ as plain text. The static generator escapes FAQ answers, so the links to `/cbet/` and `/cres/` this plan expected in Step 6 do not exist on any course landing page; a manifest-driven related-courses block is a follow-up for main after the merge.
+- `npm test` 1169 pass; `dist/chtm.html` self-contained; sitemap 1059 URLs with 19 under `/chtm/`; cheat sheet PDF 20 pages (CBET 24, NetPlus 21, CRES 20), accepted as in-family; this plan's 12-to-15 estimate was low.
+- Review (`.superpowers/sdd/chtm-task-6-review.md`): spec PASS on every item, APPROVED.
+
+### Task 8: local stage (2026-10-14)
+
+- `bash scripts/stage.sh --local`: 1,078 files in `dist/stage`, with `chtm/index.html` (the landing page, five pathways present), `chtm/app/index.html`, `chtm/practice-test/`, `chtm/lessons/` (index plus fifteen free lessons), and `chtm/cheatsheet/`. The `grep -c "/cres/"` check in Step 1 returns 0 for the reason recorded under Task 6.
+- `node tests/selftest.js`: `[PASS] chtm`; `node tests/site.js`: ALL PASS; `npm test` 1169 pass at ced6d9a.
+- Pack as shipped: 60 lessons in 8 units, 60 deep dives, 324 questions (keys balanced), 5 generators, 72 glossary keys, a 549-line cheat sheet printing to 20 pages.
+- Every task reviewed by an independent subagent with fixes before approval; the briefs, reports, and reviews are in the worktree's `.superpowers/sdd/` (gitignored) under `chtm-task-N-*.md`.
+- Merge, branch deletion, worktree removal, and the deploy hand-off follow the final whole-branch review.
