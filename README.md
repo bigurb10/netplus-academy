@@ -2,7 +2,7 @@
 
 Self-paced certification courses in a single web page each: a printable memorization sheet, a short starter test that builds a personalized tutorial, a full-length test that builds a retraining tutorial from your misses, and practice tests until you score above the bar three times in a row. All content and questions are original.
 
-Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses: **BMET Academy** (AAMI/ACI CABT, 53 lessons and 13 labs), **NetPlus Academy** (CompTIA Network+ N10-009, 49 lessons), **SecPlus Academy** (CompTIA Security+ SY0-701, 54 lessons), **CBET Academy** (AAMI Certified Biomedical Equipment Technician, 60 lessons), **CRES Academy** (AAMI Certified Radiology Equipment Specialist, 60 lessons), **APlus Academy Core 1** (CompTIA A+ 220-1201, 41 lessons), and **APlus Academy Core 2** (CompTIA A+ 220-1202, 41 lessons).
+Courses live in `courses/<id>/` and share one engine in `engine/`. Live courses: **BMET Academy** (AAMI/ACI CABT, 53 lessons and 13 labs), **NetPlus Academy** (CompTIA Network+ N10-009, 49 lessons), **SecPlus Academy** (CompTIA Security+ SY0-701, 54 lessons), **CBET Academy** (AAMI Certified Biomedical Equipment Technician, 60 lessons), **CRES Academy** (AAMI Certified Radiology Equipment Specialist, 60 lessons), **CHTM Academy** (AAMI Certified Healthcare Technology Manager, 60 lessons), **APlus Academy Core 1** (CompTIA A+ 220-1201, 41 lessons), and **APlus Academy Core 2** (CompTIA A+ 220-1202, 41 lessons).
 
 ## Run it
 

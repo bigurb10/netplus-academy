@@ -11,7 +11,7 @@ const ROOT = path.resolve(__dirname, '..');
 const fails = [];
 const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== undefined ? '  [' + x + ']' : ''}`); if (!ok) fails.push(n); };
 
-const SHELLS = ['bmet', 'netplus', 'secplus', 'cbet', 'cres', 'aplus1', 'aplus2'];
+const SHELLS = ['bmet', 'netplus', 'secplus', 'cbet', 'cres', 'chtm', 'aplus1', 'aplus2'];
 // Everything engine/app.js depends on at load time. app.js must come after all of them:
 // each sets a window global (FRAMerge, FRAAuth, FRASync) that app.js's boot IIFE reads.
 const BEFORE_APP = ['merge.js', 'strength.js', 'auth.js', 'sync.js', 'instruments.js'];
