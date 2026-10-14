@@ -101,6 +101,11 @@ A hand and a hip are both bone, and the exposure one needs is nothing like the o
 \`\`\`
 Axial skeleton          skull, vertebral column, ribs, sternum
 Appendicular skeleton   shoulders and arms, hands, pelvis, legs, feet
+Upper limb, by name     clavicle and scapula at the girdle, then humerus, then
+                        radius and ulna, then carpals, metacarpals, phalanges
+Lower limb, by name     pelvis at the girdle, femur with the patella at the knee,
+                        tibia and fibula below it, then tarsals, metatarsals,
+                        and phalanges
 Five bone types         long (femur), short (carpals), flat (ribs),
                         sesamoid (patella), irregular (vertebrae)
 Marrow                  inside bone, makes blood cells, and is one of the most
@@ -130,7 +135,7 @@ The brain and spinal cord are the central nervous system; the nerves branching o
 Fractures and dislocations, degenerative joint disease with narrowed joint spaces, bone infection, and tumors. You do not read them, but you should know that all four are judged on fine detail at the cortex and the joint space, which tells you which image quality factors are clinically load-bearing: focal spot size, object-to-image distance, and motion.
 
 ## What to memorize
-- Axial is skull, column, ribs, sternum; appendicular is limbs and girdles.
+- Axial is skull, column, ribs, sternum; appendicular is limbs and girdles, named clavicle, scapula, humerus, radius, ulna, carpals, metacarpals, and phalanges in the arm, and pelvis, femur, patella, tibia, fibula, tarsals, metatarsals, and phalanges in the leg.
 - Five bone types: long, short, flat, sesamoid, irregular. Marrow is highly radiosensitive.
 - Column 7, 12, 5, 5, and a coccyx, 33 bones in all.
 - Joints fibrous, cartilaginous, synovial. Thickness and density decide kilovoltage and whether a grid is used.`,

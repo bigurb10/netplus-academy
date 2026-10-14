@@ -87,6 +87,8 @@ Sensitivity           Always checked before administration, so reaction supplies
 ## Axial and appendicular
 The **skeletal system** divides in two. The **axial skeleton** is the center of the body: skull, vertebral column, ribs, and sternum. The **appendicular skeleton** is the limbs and the girdles that hang them on: shoulders, arms, hands, pelvis, legs, feet. There are five primary bone types: **long bones** such as the femur, **short bones** such as the carpals of the wrist, **flat bones** such as the ribs, **sesamoid bones** such as the patella, and **irregular bones** such as the vertebrae. Marrow inside bone makes blood cells, which is also why bone marrow is one of the most radiosensitive tissues in the body.
 
+A requisition names the bone and not the region, so learn the limb list as it runs outward from the trunk. At the shoulder, the girdle is the **clavicle** in front and the **scapula** behind; the upper arm includes the **humerus**; the forearm carries two bones, the **radius** under the thumb and the **ulna** under the little finger; and the hand is **carpals** at the wrist, **metacarpals** across the palm, and **phalanges** in the fingers. The lower limb mirrors it: the **pelvis** with its hip socket, the **femur** down to the knee with the **patella** in front of it, then the weight-bearing **tibia** beside the slimmer **fibula**, and the foot as **tarsals** at the ankle, **metatarsals** through the arch, and **phalanges** again in the toes. Every step outward is thinner than the one before it, which is why no single extremity technique serves a shoulder and a finger.
+
 ## The vertebral column
 \`\`\`
 Cervical    7    neck; the atlas and axis at the top carry the skull
