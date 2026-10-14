@@ -20,10 +20,14 @@ note's draft outline.
 - **References on disk:** the AAMI *CHTM Study Guide* (Lynch, 2016; `E:\CERT GUIDES\CHTM\AAMI CHTM
   Study Guide (Lynch, 2016).pdf`, 58 pages with a text layer, the exam sponsor's own guide), the
   ACI handbook (`E:\CERT GUIDES\BMET\ACI-Certification-Handbook-090926.pdf`, CHTM on pages 20 to
-  24), the CBET-era books under `E:\CERT GUIDES\CBET\`, and, when Blake adds it, Wang's *Medical
-  Equipment Maintenance: Management and Oversight* (Springer eBook) under `E:\CERT GUIDES\CHTM\`.
-  Blake chose "AAMI guide + handbook + CBET books, add Wang". Where the 2016 guide and the 2026
-  outline differ in wording, the outline governs.
+  24), the CBET-era books under `E:\CERT GUIDES\CBET\`, and two public documents downloaded on
+  2026-10-14 in place of Wang's *Medical Equipment Maintenance: Management and Oversight*, which
+  Blake could not obtain: the CMS survey-and-certification memo S&C 14-07 on equipment maintenance
+  (`E:\CERT GUIDES\CHTM\CMS S&C 14-07 Equipment Maintenance memo.pdf`) and the medical device
+  reporting regulation (`E:\CERT GUIDES\CHTM\21 CFR Part 803 Medical Device Reporting.pdf`).
+  Blake chose "AAMI guide + handbook + CBET books, add Wang"; the substitution keeps the operations
+  rules and reporting duties Wang would have supplied. Where the 2016 guide and the 2026 outline
+  differ in wording, the outline governs.
 - **Lessons follow the exam weights** (Blake: "Grow to 60 lessons"): Financial 12, Risk 10,
   Operations 24, Education 7, Human Resources 7. Question quotas follow the weights too.
 - **Pass bar 70 percent** on the official-format test, stated as an assumption in `realExamNote`,
@@ -177,8 +181,9 @@ guide's wording. The term check runs three ways, in a sibling of the CRES checke
    reporting, the medical equipment management plan, inventory, and the operations, education, and
    human resources headings through pay equity and legal aspects of employment) must each appear
    in some lesson, deep dive, or cheat-sheet text, stemmed.
-2. **Wang** (when on disk): chapter and section headings from the eBook's table of contents, at
-   heading level, for the operations and risk units.
+2. **The supplementary public documents** beside the guide: the CMS memo's headings (the
+   alternative equipment maintenance rules and their evidence) and the section titles of 21 CFR
+   Part 803 (user facility reporting duties, deadlines, records), plus any PDF added later.
 3. **The handbook outline**: every lettered objective's named examples must appear in at least one
    lesson: business justification, return on investment, general ledger, supplies, payroll, parts,
    consumables, contracts, training, financial statements, business activity reports, forecasts,
@@ -266,7 +271,7 @@ recorded in the plan's Status with their counts before the pack is called done.
 
 - The 70 percent pass bar is an assumption; ACI publishes no cut score.
 - The 2016 guide predates the 2026 outline; the outline governs wording and scope.
-- Wang joins check 2 when Blake adds it; the pack does not wait for it to start.
+- Wang could not be obtained; the CMS memo and 21 CFR Part 803 stand in for it in check 2.
 - No labs, no certificate, no untested domain, no aesthetic pass, no competitor-style pages, no
   CCE or CISS course; each is its own project later.
 - Pricing stays free (`freeCourse: true`).
@@ -277,6 +282,7 @@ recorded in the plan's Status with their counts before the pack is called done.
 | File | What it is | Used for |
 |---|---|---|
 | `E:\CERT GUIDES\CHTM\AAMI CHTM Study Guide (Lynch, 2016).pdf` | AAMI's official CHTM study guide, 58 pages, text layer | check 1, numbers |
-| `E:\CERT GUIDES\CHTM\` (Wang, pending) | Wang, Medical Equipment Maintenance: Management and Oversight, Springer eBook | check 2 when added |
+| `E:\CERT GUIDES\CHTM\CMS S&C 14-07 Equipment Maintenance memo.pdf` | CMS survey-and-certification memo on hospital equipment maintenance and alternative equipment maintenance programs (public) | check 2, operations rules |
+| `E:\CERT GUIDES\CHTM\21 CFR Part 803 Medical Device Reporting.pdf` | the medical device reporting regulation, user facility duties and deadlines (public) | check 2, reporting numbers |
 | `E:\CERT GUIDES\BMET\ACI-Certification-Handbook-090926.pdf` | ACI handbook 2026, CHTM on pages 20 to 24, fees page 33 | check 3, exam facts |
 | `E:\CERT GUIDES\CBET\` | the CBET pack's references | risk and operations lessons |
