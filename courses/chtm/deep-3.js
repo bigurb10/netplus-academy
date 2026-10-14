@@ -23,7 +23,7 @@ Soft skills, whole        n/a   $3,500    not costed   n/a     3, answers the
 shop, 1 day                                                    survey scores
 Total                           $60,160
 \`\`\`
-Rank in four bands. Anything a regulator, a licence, or an accreditation checklist requires goes first and is not scored on return at all. Anything that removes a single point of failure goes next, because one trained person on a critical fleet has a resignation date you cannot predict. Then the requests with the shortest payback. Then the ones with no cash return but a measurable effect on a number you already report.
+Rank in four bands. Anything a regulator, a license, or an accreditation checklist requires goes first and is not scored on return at all. Anything that removes a single point of failure goes next, because one trained person on a critical fleet has a resignation date you cannot predict. Then the requests with the shortest payback. Then the ones with no cash return but a measurable effect on a number you already report.
 
 ## The return, in full
 \`\`\`
@@ -48,6 +48,7 @@ Two honesty rules make that calculation survive a finance review. Count your own
 Training is a one-time expense, high in year one and close to zero afterwards. Judged on year one alone it barely breaks even; judged across the life of the fleet it is one of the best returns a department can produce.
 \`\`\`
 Year   Training spent   Contract avoided   Net position
+       cumulative       cumulative         cumulative
 1          $18,060           $25,480          +$7,420
 2          $18,060           $50,960         +$32,900
 3          $18,060           $76,440         +$58,380
@@ -55,6 +56,8 @@ Year   Training spent   Contract avoided   Net position
 5          $18,060          $127,400        +$109,340
 6          $18,060          $152,880        +$134,820
 \`\`\`
+Every column is a running total to the end of that year. The training column holds at $18,060 because it was paid once, in year one, while the avoided column keeps adding another $25,480.
+
 Present the accumulated position at years four, five, and six. That is the view in which the crossover is obvious and administration has something to approve rather than an expense to decline.
 
 ## The development that costs nothing
@@ -244,7 +247,7 @@ Customer service       a 90-minute repair remembered      the same, plus
                        anything                           the manager
 Conflict handling      one soured unit relationship       a course, and
                        that turns every future call       the manager
-                       into an escalation                  modelling it
+                       into an escalation                 modeling it
 Written work           a service report nobody can        review real
                        follow four years later, in the    closed records
                        one case that matters              together

@@ -26,7 +26,7 @@ Operations             which backlog, response time, or completion
 Customer requirements  what the clinical departments have asked for,
                        and what they will stop calling the vendor about
 Regulatory             training the accreditor, a condition of
-                       participation, or a licence requires anyway
+                       participation, or a license requires anyway
 Technical              what the equipment demands: service software,
                        service keys, calibration tools, a certificate
 Resources              whether the tools, test equipment, manuals, and
@@ -57,7 +57,7 @@ Five-year ROI  (127,400 - 18,060) / 18,060 x 100 = about 605 percent
 Training is a one-time cost. It is high in year one and close to zero afterward, which is why a single-year view kills almost every school worth attending. Show the accumulated position at years four, five, and six, where in-house cost crosses under contract cost, and administration has something it can approve.
 
 ## Prioritizing, and the plan that gets funded
-Rank the year's requests: anything a regulator or a licence requires, then anything that closes a safety or single-point-of-failure gap, then the requests with the shortest payback, then development that costs nothing at all. That last group is larger than most managers think. Free trade publications, association and vendor webinars, the online discussion lists where managers put questions to each other, open courseware from universities, and planned cross-training inside your own shop all build skill without a purchase order, and they all earn continuing education units toward the credentials your staff hold.
+Rank the year's requests: anything a regulator or a license requires, then anything that closes a safety or single-point-of-failure gap, then the requests with the shortest payback, then development that costs nothing at all. That last group is larger than most managers think. Free trade publications, association and vendor webinars, the online discussion lists where managers put questions to each other, open courseware from universities, and planned cross-training inside your own shop all build skill without a purchase order, and they all earn continuing education units toward the credentials your staff hold.
 
 Then write the year as one document rather than four arguments: equipment type, who goes, the cost, what it avoids, and the reason, with a total that matches the education line in your operating budget. It goes where the capital plan goes, to your director and to finance, and it is reviewed every quarter as fleets, contracts, and people change.
 
@@ -96,10 +96,10 @@ On-site delivery for six      $26,000        6       $4,333
 The on-site class costs more in total and less than half as much per person, and the trade is instructor quality and content. Ask one question before you sign: is this the same class the manufacturer's own service staff sit in, or a shorter version built for customers? Check with managers whose people have actually attended, rather than assuming that the maker's own school is automatically the better or cheaper one.
 
 ## Documenting it, and deciding what happens next
-The result belongs in three places: the employee's training record, the competency record against the model in the **CMMS**, and your annual education report to the environment of care committee, next to completion and repair-time trends the committee already follows. Then make a decision in writing. Repeat the program, change the provider, change the delivery from travel to on-site, extend it to a second person so the skill has a backup, or stop buying it. A program nobody ever evaluated gets renewed by habit and cancelled by a budget cut, and neither of those is a management decision.
+The result belongs in three places: the employee's training record, the competency record against the model in the **CMMS**, and your annual education report to the environment of care committee, next to completion and repair-time trends the committee already follows. Then make a decision in writing. Repeat the program, change the provider, change the delivery from travel to on-site, extend it to a second person so the skill has a backup, or stop buying it. A program nobody ever evaluated gets renewed by habit and canceled by a budget cut, and neither of those is a management decision.
 
 > Exam tip: evaluate training on cost, failure rates and repeat repairs, total time to repair, staff competencies and skill set, and user satisfaction, measured before and after. Cost per trained technician is what decides factory travel against on-site delivery, and the baseline has to be captured before the training happens.`,
-      hook: "Training effectiveness is proved by comparing failure rates, repeat repairs, total time to repair, documented competencies, vendor cost, and user satisfaction against a baseline captured before anyone travelled."
+      hook: "Training effectiveness is proved by comparing failure rates, repeat repairs, total time to repair, documented competencies, vendor cost, and user satisfaction against a baseline captured before anyone traveled."
     },
     {
       id: "u7l3", title: "Technical Training: Model-Specific, Manufacturer-Provided, Negotiated Into the Purchase", domain: 4, obj: "EDU-C", minutes: 9,
@@ -212,9 +212,9 @@ Three things, in this order: that a required topic exists for the role, that eac
 ## What the orientation plan contains
 \`\`\`
 Element                     What it covers
-Facility orientation        the hospital's own programme: codes, fire
+Facility orientation        the hospital's own program: codes, fire
                             response, privacy, infection control,
-                            badge, parking, payroll
+                            badge, parking, and payroll
 Department orientation      the scope of service, who the customers
                             are, the on-call rules, escalation, how a
                             call reaches the shop
@@ -688,7 +688,7 @@ Fully loaded cost to the hospital              at most about $72 an hour
 First year only
   Tools and test equipment                     one-time
   Model-specific training                      one-time
-  Uniforms, radio, and licences                one-time
+  Uniforms, radio, and licenses                one-time
 \`\`\`
 Fully loaded means the whole overhead that arrives with a person: benefits, supervision, and the hours nobody produces work in. That figure is the whole argument. It sits below any outside hourly rate and below the labor built into most service contracts, which means a hospital is usually better off holding more of the cheap resource than buying more of the expensive one. Write the request that way: name the contract you will decline or the vendor labor you will stop buying, put the loaded cost of the position beside it, and leave deliberate slack in the new role so it also absorbs backlog.
 
