@@ -553,14 +553,14 @@ Backup availability        whether an alternative or backup device is available
 ## Scoring models and their thresholds
 A scoring model turns those inputs into one number, usually by scoring each input on a short scale and combining them with a published formula. The bands that separate high, medium, and low are set by the hospital in its own written methodology; there is no national threshold to look up, and a manager who quotes one is quoting nothing. What matters for the exam and for a surveyor is that the scale, the formula, and the bands are written down before the scoring starts, applied the same way to every device type, and approved by whoever owns the equipment management plan.
 
-Worked, with this course's own scale of 1 to 5 on each input:
+Worked, on this course's own model: all six inputs, each scored 1 to 5, added into one number. The deep dive scores more devices on exactly this model and the same bands.
 \`\`\`
-Device            Function  Physical  Likelihood  Maintenance  Score  Band
-Ventilator            5         5          3            4        17   high
-Infusion pump         4         4          3            3        14   high
-Diagnostic ECG        3         3          2            3        11   medium
-Exam light            1         1          2            1         5   low
-Bands in this example: 13 and above high, 8 to 12 medium, 7 and below low
+Device           Func  Phys  Like  Maint  Inc  Back  Score  Band
+Ventilator         5     5     3     5      3    5      26  high
+Infusion pump      4     4     3     3      3    1      18  high
+Diagnostic ECG     3     3     2     3      1    1      13  medium
+Exam light         1     1     3     1      1    1       8  low
+Bands in this example: 18 and above high, 11 to 17 medium, 10 and below low
 \`\`\`
 
 ## What each band gets
@@ -734,7 +734,7 @@ report
 \`\`\`
 A **serious injury** is one that is life-threatening, or causes permanent impairment of a body function or permanent damage to a body structure, or requires medical or surgical intervention to prevent that permanent harm. Copying the agency on every suspected serious injury is recommended practice even where only the manufacturer must be told. Where the manufacturer of a device involved in a death cannot be identified, the report goes to the agency alone.
 
-Two housekeeping duties sit behind the deadlines. A user facility must keep written reporting procedures, so the duty does not depend on one person's memory. And it must retain the event file, for at least 2 years from the date the record went into the file, or for the device's expected life where that is longer, available to an agency investigator.
+Two housekeeping duties sit behind the deadlines. A user facility must develop, maintain, and follow written reporting procedures, so the duty does not depend on one person's memory. And it must establish, clearly identify, and keep the event file for 2 years from the date of the event, available to an agency investigator at any reasonable time. Learn that period as a flat 2 years from the event: the longer rule you may have heard, 2 years or the device's expected life if that is greater, is the manufacturer's and the importer's obligation, not the hospital's.
 
 ## The forms and the database
 Mandatory reports from a facility go in on Form FDA 3500A, through the MedWatch program. Form FDA 3500 is the voluntary form, used by clinicians and the public. **MAUDE** is the public database those reports feed, and a manager uses it twice: before buying a model, to see what other facilities have already reported, and during an investigation, to see whether the failure in front of you has a history. An **MDR** obligation is triggered by what you became aware of, not by what the investigation later concludes, so file on time and supplement afterward rather than missing the deadline while you wait for certainty.

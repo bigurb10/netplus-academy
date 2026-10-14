@@ -1138,7 +1138,7 @@ Exam light           1    1    3     1    1    1      8  low    run to failure,
                                                                  documented
 Bands: 18 and above high, 11 to 17 medium, 10 and below low
 \`\`\`
-The bands are this methodology's own, published before the scoring and applied to every device type the same way. That is the defensible part. A surveyor is not checking your arithmetic against a national table; there is no national table. A surveyor is checking that a written method, approved by whoever owns the equipment management plan, was applied by qualified people and then followed.
+This is the same model and the same bands the lesson works, extended to six device types. The bands are this methodology's own, published before the scoring and applied to every device type the same way. That is the defensible part. A surveyor is not checking your arithmetic against a national table; there is no national table. A surveyor is checking that a written method, approved by whoever owns the equipment management plan, was applied by qualified people and then followed.
 
 ## What the alternative program may and may not hold
 \`\`\`
@@ -1558,16 +1558,36 @@ or member of the                                  3500
 public wants to report
 \`\`\`
 \`\`\`
-Behind the deadlines
-Written procedures    a user facility must keep written reporting procedures,
-                      so the obligation does not live in one person's head
-Event file            retained at least 2 years from the date the record went
-retention             into the file, or the device's expected life if that is
-                      longer, and available to an agency investigator
-Electronic files      backed up
+Behind the deadlines, for a user facility
+Written procedures    develop, maintain, and follow written reporting
+                      procedures, so the obligation does not live in one
+                      person's head. They must cover how an event is
+                      identified and evaluated, how reportability is decided,
+                      how the report is transmitted, and what is documented
+Event file            establish it, identify it clearly, keep it where it can
+                      be reached quickly, and hold the deliberations, the
+                      reportability decision, the reports filed, and the
+                      agency's electronic acknowledgments
+Retention             a flat two years, measured from the event itself, with
+                      no exception. The next table says why that matters
+Access                an authorized agency employee may access, copy, and
+                      verify the records at any reasonable time
 What triggers the     what you became aware of, not what the investigation
 clock                 later concludes; file on time and supplement afterward
 \`\`\`
+\`\`\`
+Retention, by who you are
+User facility                 2 years from the date of the event
+Manufacturer or importer      2 years from the date of the event, or a period
+                              equal to the device's expected life, whichever
+                              is greater
+Device distributor            a different duty entirely: complaint records
+                              rather than MDR event files, kept 2 years from
+                              the date the record went into the file or the
+                              device's expected life, whichever is greater,
+                              with electronic files backed up
+\`\`\`
+A hospital is a user facility, so the only number a CHTM candidate needs cold is that flat two-year period counted from the event itself. The longer rule belongs to the manufacturer and the importer, and the backup duty belongs to the distributor. Backing up an electronic event file is good practice in any hospital, and it is practice rather than a requirement that reaches a user facility.
 
 ## Serious injury, defined, with examples
 \`\`\`
@@ -1632,7 +1652,9 @@ Serious injury    to the manufacturer within 10 work days, or to the agency
                   where the manufacturer cannot be identified
 Annual report     Form FDA 3419, by January 1
 Mandatory form    Form FDA 3500A, through MedWatch; Form FDA 3500 is voluntary
-Event file        at least 2 years, or the device's expected life if longer
+Event file        a user facility keeps it 2 years from the date of the
+                  event; the longer rule is the manufacturer's and the
+                  importer's, not the hospital's
 MAUDE             the public database; search before buying and during an
                   investigation
 Sentinel event    reaches a patient; death, permanent harm, or severe
