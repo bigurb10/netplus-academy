@@ -17,7 +17,9 @@ const SUMMARY = 'A teaching summary of the record, not a service manual.';
 const connect = text => `<a class="btn primary" href="/serviceforge/#connect" data-sf="connect">${esc(text || 'Connect ServiceForge to your AI')}</a>`;
 const CLICK = `<script>document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-sf="connect"]');if(a&&window.gtag)gtag('event','sf_connect_click',{page_path:location.pathname});});</script>`;
 const hasKnowledge = m => (m.symptoms || []).filter(s => (s.causes || []).length).length >= 2;
-const safety = k => ({ patient_safety: 'patient safety', high_voltage: 'high voltage', radiation: 'radiation', caution: 'caution', none: '' }[k] || esc(k || ''));
+// Known safety classes map to a label ('none' to no badge at all); anything new shows as written.
+const SAFETY = { patient_safety: 'patient safety', high_voltage: 'high voltage', radiation: 'radiation', mri: 'MRI environment', caution: 'caution', none: '' };
+const safety = k => (SAFETY[k] !== undefined ? SAFETY[k] : esc(k || ''));
 const SYMPTOM_CAP = 60;
 
 function slugModels(models) {
