@@ -631,7 +631,7 @@ A hospital may adjust its maintenance, inspection, and testing frequency and act
       body: `A vendor arrives to install a wireless system, the nuclear medicine manager asks you to service a camera that handles radioactive sources, and a laptop holding test results from forty patients goes missing from the shop, all in the same week. Four different federal regimes just became your problem, and they do not share a point of contact.
 
 ## The device regulator
-The **FDA** regulates medical devices from market clearance through performance, reporting, and recall, and its device center, **CDRH**, is the part that issues the notices you receive. Three touchpoints matter to a manager. Device classification sorts devices by the control needed to give reasonable assurance of safety and effectiveness, which is why two superficially similar devices can face very different requirements. Medical device reporting puts a mandatory duty on the hospital as a device user facility, with written procedures, event files, and deadlines of its own. And recalls, corrections, and removals arrive with a hazard classification that sets your urgency. There is a fourth touchpoint worth recognizing: anyone who remanufactures or refurbishes devices for sale operates under the agency's quality system requirements, which is a reasonable question to ask a third-party refurbisher before you buy from one.
+The **FDA** regulates medical devices from market clearance through performance, reporting, and recall, and its device center, **CDRH**, is the part that issues the notices you receive. Three touchpoints matter to a manager. Device classification sorts devices by the control needed to give reasonable assurance of safety and effectiveness, which is why two superficially similar devices can face very different requirements. Medical device reporting puts a mandatory duty on the hospital as a device user facility, with written procedures, event files, and deadlines of its own. And recalls, corrections, and removals arrive with a hazard classification that sets your urgency. There is a fourth touchpoint worth recognizing. A company that rebuilds a finished device so that its performance or safety specifications, or its intended use, are significantly changed is remanufacturing it, and a remanufacturer counts as a manufacturer under the agency's quality system requirements. Work that changes none of those three things is servicing, not remanufacturing, so the question to put to a third-party refurbisher before you buy is what it actually changed.
 \`\`\`
 Obligation                      Where it lands in the department
 Reportable events               written reporting procedures, an event
@@ -640,8 +640,9 @@ Recalls and advisories          matched to assets by model and serial
                                 range, documented per unit, closed
 Device history for an           complete records, preserved, available to
 investigation                   an authorized agency employee
-Refurbished purchases           ask who holds the quality system and what
-                                the device's rebuild history is
+Refurbished purchases           ask what was changed, whether that makes
+                                them a remanufacturer, and what rebuild
+                                history the device carries
 \`\`\`
 
 ## Spectrum

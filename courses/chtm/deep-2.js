@@ -301,7 +301,7 @@ Completion rate alone   can be met by deferring everything inconvenient,
 Cost per device         meaningless across devices worth $200 and
                         $2,000,000, which is why the ratio exists
 \`\`\`
-The general defence is to pair every efficiency measure with a quality measure. Completion rate with the exception list. Repair speed with repeat repairs. Cost reduction with uptime and satisfaction. A measure that cannot be improved at the expense of something else does not exist.
+The general defense is to pair every efficiency measure with a quality measure. Completion rate with the exception list. Repair speed with repeat repairs. Cost reduction with uptime and satisfaction. A measure that cannot be improved at the expense of something else does not exist.
 
 ## Competency, as a document you can produce
 \`\`\`
@@ -430,7 +430,7 @@ equipment
 Imaging (in-house work)     22       6.0       132       260      392
 SUBTOTAL                                     1,527     3,195    4,722
 \`\`\`
-The scheduled hours come from your own procedure times, not from a catalogue. The unscheduled hours come from the last two or three years of recorded repair hours by equipment type, which is the single strongest argument for complete documentation: without it this column is a guess and the request dies.
+The scheduled hours come from your own procedure times, not from a published catalog. The unscheduled hours come from the last two or three years of recorded repair hours by equipment type, which is the single strongest argument for complete documentation: without it this column is a guess and the request dies.
 
 \`\`\`
 Then add the work that is not on a device
@@ -1259,7 +1259,7 @@ security rules       data, and what happened to     media destruction or wipe
 \`\`\`
 
 ## The device agency, in a manager's terms
-Device classification sorts devices by the degree of control needed to give reasonable assurance of safety and effectiveness, which is why two devices that look similar can face very different requirements, and why a question about classification is really a question about what evidence the manufacturer had to produce. Medical device reporting puts a mandatory duty on the hospital as a device user facility: written procedures that identify, evaluate, and transmit reportable events on time; an event file per event holding the information you evaluated, your deliberations about whether it was reportable, copies of what you submitted, and the agency's acknowledgments; and the file available to an authorized agency employee at any reasonable time. Recalls, corrections, and removals arrive with a hazard classification that sets your urgency and ends in a documented action for every affected unit. And anyone who remanufactures or refurbishes devices for resale works under the agency's quality system requirements, which is a fair question to ask a third-party refurbisher before you buy a rebuilt device from one.
+Device classification sorts devices by the degree of control needed to give reasonable assurance of safety and effectiveness, which is why two devices that look similar can face very different requirements, and why a question about classification is really a question about what evidence the manufacturer had to produce. Medical device reporting puts a mandatory duty on the hospital as a device user facility: written procedures that identify, evaluate, and transmit reportable events on time; an event file per event holding the information you evaluated, your deliberations about whether it was reportable, copies of what you submitted, and the agency's acknowledgments; and the file available to an authorized agency employee at any reasonable time. Recalls, corrections, and removals arrive with a hazard classification that sets your urgency and ends in a documented action for every affected unit. And a company that rebuilds a finished device so that its performance or safety specifications, or its intended use, are significantly changed is remanufacturing it, which makes it a manufacturer under the agency's quality system requirements; rebuilding that changes none of the three is servicing instead. That distinction is the reason the question to a third-party refurbisher is what it changed rather than what it calls itself.
 
 ## Spectrum, as a register you keep
 \`\`\`
@@ -1923,7 +1923,7 @@ Network and interface                    a known value traced into the
                                          correct units and time stamp
 Site requirements met                    confirmed against the signed
                                          survey
-Device labelled and tagged               asset number applied
+Device labeled and tagged               asset number applied
 Accepted for clinical use                not yet: accepted once the two
                                          accessories and the software
                                          key arrive
@@ -2107,7 +2107,7 @@ Area        Devices affected        Battery runtime   Plan
                                                        four spares staged
 3 East      6 bedside monitors      central station    monitors on the
                                     unaffected         emergency branch;
-                                                       outlets labelled
+                                                       outlets labeled
                                                        and confirmed
 3 East      1 ventilator            internal battery   patient moved to a
                                     documented         room on the
@@ -2259,7 +2259,7 @@ Unit       Date   What they told me            What I did
                                                 replaced, told the charge
                                                 nurse
 Emergency  the    monitors stored in the        reorganized the storage
-           6th    corridor, cables tangled      bay with them, labelled
+           6th    corridor, cables tangled      bay with them, labeled
                                                 the shelf
 Operating  the    new staff unsure of the       scheduled a 15 minute
 rooms      7th    warmer controls               in-service on all three
