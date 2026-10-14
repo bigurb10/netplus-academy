@@ -181,6 +181,7 @@ def build(course_id):
                + read(os.path.join(ENGINE, "auth.js")) + "\n"
                + read(os.path.join(ENGINE, "sync.js")) + "\n"
                + read(os.path.join(ENGINE, "instruments.js")) + "\n"
+               + read(os.path.join(ENGINE, "pbq.js")) + "\n"
                + read(os.path.join(ENGINE, "app.js")))
     # Guard against accidental script-closing sequences inside inline code
     scripts = scripts.replace("</script", "<\\/script")

@@ -14,7 +14,7 @@ const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== 
 const SHELLS = ['bmet', 'netplus', 'secplus', 'cbet', 'cres', 'chtm', 'aplus1', 'aplus2'];
 // Everything engine/app.js depends on at load time. app.js must come after all of them:
 // each sets a window global (FRAMerge, FRAAuth, FRASync) that app.js's boot IIFE reads.
-const BEFORE_APP = ['merge.js', 'strength.js', 'auth.js', 'sync.js', 'instruments.js'];
+const BEFORE_APP = ['merge.js', 'strength.js', 'auth.js', 'sync.js', 'instruments.js', 'pbq.js'];
 
 // The three spellings this repo actually uses to name an engine file: "../engine/sync.js"
 // in the shells, os.path.join(ENGINE, "sync.js") in build.py, and
