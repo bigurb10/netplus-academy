@@ -54,7 +54,7 @@ carry `expect` (accepted values) and a `normalize` of `ip`, `cidr`, `text`, or `
 `command` carries `expect` and optional `alt`; grading lowercases, collapses spaces, strips a
 trailing period, and, when `flagOrder` is false, treats flags in any order as equal. A `multiselect` task may carry `shuffle: false` to keep its options in pack order (log,
 configuration, or command-output lines whose order carries meaning); every other task shuffles
-for display (added 2026-10-14 after the Task 4 review).
+for display (added 2026-10-14 after the Task 4 review). The pack self-test validates every `expect`: an `order` expect is a permutation of its items, a `match` expect pairs every left item with a distinct right slot (no `null`, no shared slot), a `multiselect` expect is a non-empty set of option indexes, a `form` field has a non-empty expect list and one of the four normalizers, a `command` expect is a non-empty list of strings, a `choice` expect is an option index (added 2026-10-15 after the final review).
 
 ### Grading
 
