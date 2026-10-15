@@ -161,6 +161,9 @@ check('flashcards: the description and the FAQ count the decks with their names 
 check('flashcards: every storage access is inside a try',!/localStorage/.test(fc.replace(/try\{[^}]*localStorage[^}]*\}/g, '')));
 check('flashcards page is plain ASCII with no undefined or [object leaks', /^[\x00-\x7f]*$/.test(fc) && !/undefined|\[object /.test(fc));
 check('landing has a Flashcards section linking the page with the count', landing.includes('<section id="flashcards">') && landing.includes(`href="/mini/flashcards/"`) && landing.includes(`${m.flashcards.total} cards`));
+check('landing Flashcards section lists the decks as written, separated by semicolons', landing.includes(`cards from the cheat sheet and glossary: ${m.flashcards.decks[0].cards.length} ${esc(m.flashcards.decks[0].name)}`) && /[A-Z]/.test(m.flashcards.decks[0].name[0]) && (m.flashcards.decks.length < 2 || landing.includes(`${esc(m.flashcards.decks[0].name)}; ${m.flashcards.decks[1].cards.length} ${esc(m.flashcards.decks[1].name)}`)));
+check('site.css lets the deck picker shrink to a phone (label and select capped at max-width 100%)', /\.fc-viewer label \{[^}]*max-width: 100%/.test(fs.readFileSync(path.join(ROOT, 'site', 'site.css'), 'utf8')) && /\.fc-viewer select \{[^}]*min-width: 0[^}]*max-width: 100%/.test(fs.readFileSync(path.join(ROOT, 'site', 'site.css'), 'utf8')));
+check('exam facts table labels the domain rows before the first domain', landing.includes('<th scope="row">Exam domains</th><td>share of the questions</td></tr><tr><th scope="row">' + esc(m.c.domains[0].name) + '</th>'));
 const ctaOf = h => (h.match(/<aside class="card cta stack">[\s\S]*?<\/aside>/) || [''])[0];
 check('practice and PBQ closing cards link the flashcards', ctaOf(read('mini/practice-test/index.html')).includes('href="/mini/flashcards/"') && ctaOf(pb).includes('href="/mini/flashcards/"'));
 check('the closing-card check sees only the aside, not the nav', !ctaOf(pb.replace(/<aside class="card cta stack">[\s\S]*?<\/aside>/, '<aside class="card cta stack"></aside>')).includes('href="/mini/flashcards/"'));
@@ -219,6 +222,12 @@ check('the closing-card check sees only the aside, not the nav', !ctaOf(pb.repla
     const onBody = space(d.body) && $('fc-front').hidden && !$('fc-back').hidden;
     const onLink = !space(link) && $('fc-front').hidden; const onButton = !space($('fc-next')) && $('fc-front').hidden;
     check('flashcards viewer: Space flips from the body, and leaves links and other buttons alone', onBody && onLink && onButton, `${onBody}/${onLink}/${onButton}`);
+    // Arrow keys follow the same rules: from the body or inside the viewer they move, from a link they do not.
+    const arrow = (el, key) => { const e = new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); el.dispatchEvent(e); };
+    const before = text('fc-front'); arrow(link, 'ArrowRight'); const linkIdle = text('fc-front') === before;
+    arrow(d.body, 'ArrowRight'); const bodyMoved = text('fc-front') !== before; arrow($('fc-card'), 'ArrowLeft'); const cardBack = text('fc-front') === before;
+    check('flashcards viewer: arrow keys move from the body and the viewer, and leave links alone', linkIdle && bodyMoved && cardBack, `${linkIdle}/${bodyMoved}/${cardBack}`);
+    check('flashcards viewer: aria-live is on the count, not on the flip button', $('fc-count').getAttribute('aria-live') === 'polite' && !$('fc-card').hasAttribute('aria-live'));
     dom.window.close();
     // Marks follow the card's content, so an old position key marks nothing; corrupt values count as empty.
     const countWith = preset => { const w = open(preset).window; const out = w.document.getElementById('fc-count').textContent; w.close(); return out; };

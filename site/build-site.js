@@ -434,7 +434,7 @@ function landingPage(m, R, origin, guides, siblings) {
     ['Format', hasPbq ? 'Multiple choice plus performance-based questions' : 'Multiple choice'],
     c.realExamNote ? ['Passing', c.realExamNote] : (ex.passPct ? ['Passing', `${ex.passPct}%`] : null),
     ex.fee ? ['Fee', ex.fee] : null
-  ].filter(Boolean).concat((c.domains || []).map(d => [d.name, `${d.pct}%`]));
+  ].filter(Boolean).concat((c.domains || []).length ? [['Exam domains', 'share of the questions']] : []).concat((c.domains || []).map(d => [d.name, `${d.pct}%`]));
   const courseFacts = [
     ['Lessons', `${m.lessons.length} across ${m.units.length} units${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
     labs.length ? ['Labs', `${labs.length}`] : null,
@@ -468,7 +468,7 @@ function landingPage(m, R, origin, guides, siblings) {
 </section>
 ${m.flashcards && m.flashcards.total ? `<section id="flashcards">
   <h2>Flashcards</h2>
-  <p class="ink2">${m.flashcards.total} cards from the cheat sheet and glossary: ${m.flashcards.decks.map(d => `${d.cards.length} ${esc(d.name.toLowerCase())}`).join(', ')}. Flip, shuffle, mark what you know.</p>
+  <p class="ink2">${m.flashcards.total} cards from the cheat sheet and glossary: ${m.flashcards.decks.map(d => `${d.cards.length} ${esc(d.name)}`).join('; ')}. Flip, shuffle, mark what you know.</p>
   <p><a class="btn" href="${m.urls.flashcards}">Drill the flashcards</a></p>
 </section>` : ''}
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
@@ -633,8 +633,8 @@ function flashcardsPage(m, R, origin) {
   <h1>${esc(h1)}</h1>
   <p class="lede ink2">${total} free ${esc(exam)} flashcards from the course's cheat sheet and glossary. Tap a card to flip it. Mark the ones you know and they drop out of the deck; the rest keep coming back.</p>
   <div class="card fc-viewer" id="fc-viewer" hidden>
-    <div class="row spread" style="flex-wrap:wrap;gap:8px"><label class="muted">Deck <select id="fc-deck">${decks.map(d => `<option value="${esc(d.slug)}">${esc(d.name)} (${d.cards.length})</option>`).join('')}</select></label><span class="muted" id="fc-count"></span></div>
-    <button class="fc-card" id="fc-card" type="button" aria-live="polite"><span class="fc-face" id="fc-front"></span><span class="fc-face fc-back" id="fc-back" hidden></span></button>
+    <div class="row spread" style="flex-wrap:wrap;gap:8px"><label class="muted">Deck <select id="fc-deck">${decks.map(d => `<option value="${esc(d.slug)}">${esc(d.name)} (${d.cards.length})</option>`).join('')}</select></label><span class="muted" id="fc-count" aria-live="polite"></span></div>
+    <button class="fc-card" id="fc-card" type="button"><span class="fc-face" id="fc-front"></span><span class="fc-face fc-back" id="fc-back" hidden></span></button>
     <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn" type="button" id="fc-prev">Previous</button><button class="btn" type="button" id="fc-next">Next</button><button class="btn" type="button" id="fc-shuffle">Shuffle</button><button class="btn primary" type="button" id="fc-know">Got it</button><button class="btn" type="button" id="fc-again">Again</button><button class="btn ghost" type="button" id="fc-reset">Reset this deck</button></div>
     <p class="muted" style="font-size:.9rem">Space flips, arrow keys move. Known cards are remembered in this browser.</p>
   </div>
@@ -674,7 +674,7 @@ function flashcardsPage(m, R, origin) {
   document.getElementById('fc-again').addEventListener('click',function(){move(1);});
   document.getElementById('fc-reset').addEventListener('click',function(){delete known[deck];store();load();});
   // Space on the card button flips through its own click; otherwise only from the page body, while the viewer is on screen.
-  document.addEventListener('keydown',function(e){var t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA'||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key===' '){if(e.target!==v&&e.target!==document.body&&e.target!==document.documentElement)return;var r=v.getBoundingClientRect();if(r.bottom<0||r.top>window.innerHeight)return;e.preventDefault();flip();}else if(e.key==='ArrowRight'){move(1);}else if(e.key==='ArrowLeft'){move(-1);}});
+  document.addEventListener('keydown',function(e){var t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA'||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key===' '){if(e.target!==v&&e.target!==document.body&&e.target!==document.documentElement)return;var r=v.getBoundingClientRect();if(r.bottom<0||r.top>window.innerHeight)return;e.preventDefault();flip();}else if(e.key==='ArrowRight'||e.key==='ArrowLeft'){if(!v.contains(e.target)&&e.target!==document.body&&e.target!==document.documentElement)return;var q=v.getBoundingClientRect();if(q.bottom<0||q.top>window.innerHeight)return;move(e.key==='ArrowRight'?1:-1);}});
   v.hidden=false;load();
 })();
 </script>`;
