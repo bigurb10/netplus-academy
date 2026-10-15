@@ -458,7 +458,7 @@ FRA.course = {
   short: "BM",
   brand: "FieldReady Academy",
   catalogUrl: "/",
-  exam: { vendor: "AAMI / ACI", title: "Certified Associate in Biomedical Technology", code: "CABT", questions: 100, minutes: 120, passPct: 70 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Associate in Biomedical Technology", code: "CABT", questions: 100, minutes: 120, passPct: 70, fee: "2026: $220 AAMI member, $270 non-member; retake $190 or $240" },
   description: "Biomed basic training for the AAMI/ACI CABT: 53 lessons, 13 hands-on labs on virtual instruments, a printable memorization sheet, adaptive tutorials, and practice exams.",
   seo: {
     title: "BMET Training Course for the AAMI CABT | BMET Academy",
@@ -10151,7 +10151,7 @@ window.FRAPbq = (function () {
     const cs = FRA.cheatsheet; if (!cs) return '<div class="content"><p>No cheat sheet loaded.</p></div>';
     const intro = S.view.arg === 'intro';
     if (!S.seen.cheat) { S.seen.cheat = true; save(); }
-    const printBtn = `<button class="btn primary" data-act="print-cheat">Print or save as PDF</button>`;
+    const printBtn = `<a class="btn" href="/${esc(course.id)}/flashcards/">Flashcards</a><button class="btn primary" data-act="print-cheat">Print or save as PDF</button>`;
     return `<div class="wide cs stack" style="gap:16px">
       <div class="no-print row spread" style="align-items:flex-start">
         <div><div class="eyebrow">Cheat sheet</div><h1>${esc(cs.title)}</h1><p class="ink2" style="margin-top:6px;max-width:720px">${esc(cs.intro)}</p></div>

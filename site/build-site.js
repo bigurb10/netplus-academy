@@ -466,6 +466,11 @@ function landingPage(m, R, origin, guides, siblings) {
   <ol class="lesson-list">${m.freeLessons.map(l => `<li><a href="${m.urls.lesson(l)}">${esc(l.title)}</a> <span class="muted">${l.minutes} min</span></li>`).join('')}</ol>
   <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
 </section>
+${m.flashcards && m.flashcards.total ? `<section id="flashcards">
+  <h2>Flashcards</h2>
+  <p class="ink2">${m.flashcards.total} cards from the cheat sheet and glossary: ${m.flashcards.decks.map(d => `${d.cards.length} ${esc(d.name.toLowerCase())}`).join(', ')}. Flip, shuffle, mark what you know.</p>
+  <p><a class="btn" href="${m.urls.flashcards}">Drill the flashcards</a></p>
+</section>` : ''}
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
 ${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
@@ -538,7 +543,7 @@ function practicePage(m, R, origin) {
   <div class="eyebrow">That was ${items.length} of ${m.questions.length}</div>
   <h2>Every question in the course is explained like this</h2>
   <p class="ink2">Start with the short starter test and the course builds your tutorial from what you miss. Free while we launch.</p>
-  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a>${m.flashcards && m.flashcards.total ? ` <a class="btn" href="${m.urls.flashcards}">Flashcards</a>` : ''}</p>
 </aside>`;
   return shell({
     origin, path: m.urls.practice, type: 'article',
@@ -592,7 +597,7 @@ function pbqPage(m, R, origin) {
   <div class="eyebrow">That was ${ids.length} of ${Object.keys(m.pbqs).length}</div>
   <h2>Practice all ${Object.keys(m.pbqs).length} PBQs in the course</h2>
   <p class="ink2">Interactive, graded task by task, with the why for each. Free while we launch.</p>
-  <p><a class="btn primary" href="${m.urls.app}#pbq">Practice all ${Object.keys(m.pbqs).length} PBQs</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a> <a class="btn" href="${m.urls.landing}">About the course</a></p>
+  <p><a class="btn primary" href="${m.urls.app}#pbq">Practice all ${Object.keys(m.pbqs).length} PBQs</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a> <a class="btn" href="${m.urls.landing}">About the course</a>${m.flashcards && m.flashcards.total ? ` <a class="btn" href="${m.urls.flashcards}">Flashcards</a>` : ''}</p>
 </aside>`;
   return shell({
     origin, path: m.urls.pbq, type: 'article',

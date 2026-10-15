@@ -331,3 +331,7 @@ Done <date>: exam facts (two tables, domain weights, ACI fees) and FAQ entries o
 git add -A
 git commit -m "feat(site,engine): flashcards linked from the landing, practice, PBQ pages and the app; README; rebuilt bundles and site"
 ```
+
+## Status
+
+Done 2026-10-15: exam facts (two tables, domain weights, ACI fees) and FAQ entries on every landing page; eight /<id>/flashcards/ pages (card counts: aplus1 455, aplus2 405, bmet 225, cbet 557, chtm 392, cres 423, netplus 434, secplus 369); nav, landing, practice, PBQ, and app links; sitemap 1071 URLs; npm test green.
