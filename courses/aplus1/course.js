@@ -13,6 +13,7 @@ FRA.course = {
     h1: "A+ Core 1 220-1201 Practice Test and Study Guide",
     intro: "APlus Academy Core 1 is a free A+ Core 1 220-1201 practice test and study guide course: forty-one lessons on mobile devices, networking, hardware, virtualization, cloud, and troubleshooting, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests. Use it as an A+ 220-1201 study guide on its own, or work through the CompTIA A+ practice questions bank lesson by lesson.",
     phrases: ["A+ Core 1 220-1201 practice test", "A+ 220-1201 study guide", "CompTIA A+ practice questions"],
+    pbqPhrases: ["A+ Core 1 PBQs", "220-1201 performance-based questions", "A+ PBQ practice"],
     faq: [
       { q: "How many questions are on the A+ Core 1 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 675 on a scale of 100 to 900." },
       { q: "Do I need both A+ exams?", a: "Yes. The A+ certification needs Core 1 (220-1201) and Core 2 (220-1202); this course covers Core 1 and its sister course covers Core 2." },
@@ -28,7 +29,7 @@ FRA.course = {
     { id: 5, name: "Hardware and Network Troubleshooting", short: "Troubleshooting", pct: 28, quota: 14 }
   ],
   // Practice tests pass at 80%; the official-format test uses 75%, the real exam's 675 of 900.
-  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3, pbqInTest: 2 },
   starterPool: {
     1: ["u1l1", "u1l3", "u1l2", "u1l4"],
     2: ["u2l2", "u3l1", "u2l3", "u3l3", "u2l4", "u3l4", "u2l5", "u3l6", "u2l1", "u3l2", "u3l5"],
