@@ -124,5 +124,52 @@ check('KINDS lists the six kinds', JSON.stringify(P.KINDS) === JSON.stringify(['
   check('render: the display order survives a re-render', [...host.querySelectorAll('.pbq-task[data-task="steps"] [data-pbq="order-item"]')].map(e => e.textContent.trim()).join('|') === before);
 }
 
+// ----- shuffle: false keeps a line-based multiselect task in pack order; everything else still shuffles -----
+{
+  const w3 = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
+  w3.eval(fs.readFileSync(path.join(ROOT, 'engine', 'pbq.js'), 'utf8'));
+  w3.eval(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'mini', 'pbqs.js'), 'utf8'));
+  const P3 = w3.FRAPbq; const pbq3 = w3.FRA.pbqs['mini-net']; const host3 = w3.document.getElementById('host');
+  const helpers3 = { esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])), inline: s => String(s) };
+  let allInOrder = true;
+  for (let i = 0; i < 10; i++) {
+    P3.render(host3, pbq3, { order: {}, answers: {}, sel: {}, checked: false }, helpers3);
+    const opts = [...host3.querySelectorAll('.pbq-task[data-task="lines"] [data-pbq="ms-opt"]')].map(e => Number(e.dataset.index));
+    if (JSON.stringify(opts) !== JSON.stringify([0, 1, 2])) allInOrder = false;
+  }
+  check('shuffle: false keeps the lines multiselect options in pack order across 10 renders', allInOrder);
+
+  // No shuffle flag on a multiselect task: still shuffled. Six options and twenty renders make the
+  // chance of twenty identity draws by pure luck negligible (1 in 6! each time).
+  const freeTask = { id: 'free', kind: 'multiselect', prompt: 'Pick', options: ['a', 'b', 'c', 'd', 'e', 'f'], expect: [0, 2] };
+  let sawShuffled = false;
+  for (let i = 0; i < 20; i++) {
+    P3.render(host3, { tasks: [freeTask] }, { order: {}, answers: {}, sel: {}, checked: false }, helpers3);
+    const opts = [...host3.querySelectorAll('[data-pbq="ms-opt"]')].map(e => Number(e.dataset.index));
+    if (JSON.stringify(opts) !== JSON.stringify([0, 1, 2, 3, 4, 5])) sawShuffled = true;
+  }
+  check('a multiselect task without shuffle: false is shuffled at least once in 20 renders', sawShuffled);
+}
+
+// ----- keyboard focus follows a placed match chip: Enter must not drop focus to the body -----
+{
+  const w4 = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
+  w4.eval(fs.readFileSync(path.join(ROOT, 'engine', 'pbq.js'), 'utf8'));
+  w4.eval(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'mini', 'pbqs.js'), 'utf8'));
+  const P4 = w4.FRAPbq; const pbq4 = w4.FRA.pbqs['mini-net']; const host4 = w4.document.getElementById('host');
+  const helpers4 = { esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])), inline: s => String(s) };
+  const ui4 = { order: {}, answers: {}, sel: {}, checked: false };
+  P4.render(host4, pbq4, ui4, helpers4);
+  const matchCard = host4.querySelector('.pbq-task[data-task="pairs"]');
+  const chip = matchCard.querySelector('[data-pbq="match-item"]');
+  // jsdom does not turn a button's Enter keydown into a click the way a real browser does, so focus
+  // the chip and click() it: the same click event a real Enter key press on a button would fire.
+  chip.focus(); chip.click();
+  // Arrow (tab) to a slot, then press Enter to place the selected chip there.
+  const slot = matchCard.querySelectorAll('[data-pbq="match-slot"]')[1]; slot.focus();
+  slot.dispatchEvent(new w4.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  check('keyboard focus follows the placed chip after Enter on a match slot', matchCard.contains(w4.document.activeElement) && w4.document.activeElement !== w4.document.body);
+}
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); }
 console.log('\nAll PBQ tests passed.');

@@ -915,8 +915,10 @@
     const { scores, frac } = pbqScore(p, ui.answers); const ps = pbqStat(p.id);
     ps.tasks = scores; ps.best = Math.max(ps.best || 0, frac); ps.at = Date.now();
     const wasDone = ps.done; ps.done = ps.done || frac === 1;
-    // Each task feeds the topic record like a question, so weak-topic lists and drills see PBQ misses.
-    p.tasks.forEach(t => { recordAnswer(pbqPseudoQ(p, t), scores[t.id] === 1 ? 0 : -1, scores[t.id] === 1 ? 4 : 3); });
+    // Check writes S.pbqs only; it records no lesson attempt. A per-task recordAnswer loop here
+    // would let one Check master the PBQ's lesson in one shot (a streak of 3 at confidence 4), the
+    // same way labs record nothing. The official-format test (Task 5) is where a PBQ task counts
+    // as a question; pbqPseudoQ stays defined below for that.
     save(); if (!wasDone && ps.done) { if (window.FRASync) FRASync.pushNow(); toast('PBQ done'); }
   }
   // A PBQ task as an inline question record: results pages, retraining, and the strength chart read

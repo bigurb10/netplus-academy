@@ -950,9 +950,12 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     wp.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
     wp.click(wp.$('.pbq-task[data-task="lines"] [data-pbq="ms-opt"][data-index="0"]'));
     wp.click(wp.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
+    const attemptsBefore = (stateM().topics.u1l2 || { attempts: 0 }).attempts;
     act(wp, 'pbq-check', 'mini-net');
     const ps = stateM().pbqs['mini-net'];
     check('Check writes the PBQ state with per-task scores and a timestamp', ps && ps.at > 0 && ps.tasks.cfg === 1 && ps.tasks.cmd === 1 && ps.tasks.lines === 1 && ps.tasks.cable === 1 && typeof ps.tasks.steps === 'number');
+    check('Check writes state only: no lesson attempt is recorded for the PBQ\'s topic', stateM().topics.u1l2 === undefined || stateM().topics.u1l2.attempts === attemptsBefore);
+    check('Check writes state only: pbqs[id].at is still a real timestamp', typeof ps.at === 'number' && ps.at > 0);
     check('Check shows a why for every task and the expected answer for a miss', wp.$$('.pbq-why').length === 6);
     check('best score is the fraction of tasks fully right', Math.abs(ps.best - (Object.values(ps.tasks).filter(s => s === 1).length / 6)) < 0.001);
     act(wp, 'pbq-retry', 'mini-net');

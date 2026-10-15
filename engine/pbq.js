@@ -100,9 +100,13 @@ window.FRAPbq = (function () {
   // Display order is chosen once per task (shuffled) and kept in ui.order so re-renders are stable;
   // answers are always in pack indexes. Controls carry data-pbq, never data-act.
   const shuffled = n => { const a = Array.from({ length: n }, (_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const identity = n => Array.from({ length: n }, (_, i) => i);
   function orderFor(ui, task, n, key) {
     ui.order = ui.order || {}; const k = key || task.id;
-    if (!ui.order[k] || ui.order[k].length !== n) ui.order[k] = shuffled(n);
+    // A multiselect task over consecutive lines (a log, a running-config excerpt) can opt out of the
+    // shuffle with shuffle: false so the order a learner reads stays the order the pack wrote.
+    const keepOrder = task.kind === 'multiselect' && task.shuffle === false;
+    if (!ui.order[k] || ui.order[k].length !== n) ui.order[k] = keepOrder ? identity(n) : shuffled(n);
     return ui.order[k];
   }
   const answerOf = (ui, task) => ui.answers[task.id] != null ? ui.answers[task.id] : emptyAnswer(task);
@@ -166,6 +170,10 @@ window.FRAPbq = (function () {
     const swapOrder = (ui, t, i, j) => { const seq = seqOf(ui, t); [seq[i], seq[j]] = [seq[j], seq[i]]; ui.answers[t.id] = seq; ui.order[t.id] = seq.slice(); };
     const place = (ui, t, li, ri) => { const a = Array.isArray(ui.answers[t.id]) ? ui.answers[t.id].slice() : emptyAnswer(t); const prev = a.indexOf(ri); if (prev >= 0) a[prev] = null; a[li] = ri; ui.answers[t.id] = a; };
     const unplace = (ui, t, li) => { const a = Array.isArray(ui.answers[t.id]) ? ui.answers[t.id].slice() : emptyAnswer(t); a[li] = null; ui.answers[t.id] = a; };
+    // rerender(t.id) replaces the card's children, so the focused node is gone even when the same
+    // chip reappears at the same spot. Re-query by data-pbq/data-index and refocus, same pattern as
+    // the order-item ArrowUp/ArrowDown handler below, so a keyboard user can keep going with arrows.
+    const focusMatch = (t, kind, idx) => { const el = container.querySelector(`.pbq-task[data-task="${t.id}"] [data-pbq="${kind}"][data-index="${idx}"]`); if (el) el.focus(); };
     container.addEventListener('click', e => {
       const el = e.target.closest('[data-pbq]'); if (!el || el.disabled) return; const { ui } = ctx(); if (!ui || ui.checked) return;
       const t = taskOf(el); if (!t) return; const kind = el.dataset.pbq; const idx = Number(el.dataset.index);
@@ -177,9 +185,9 @@ window.FRAPbq = (function () {
       if (kind === 'match-item') {
         const a = ui.answers[t.id]; const placed = Array.isArray(a) && a[idx] != null;
         if (placed) { unplace(ui, t, idx); delete ui.sel[t.id]; } else if (ui.sel[t.id] === idx) { delete ui.sel[t.id]; } else { ui.sel[t.id] = idx; }
-        rerender(t.id); return;
+        rerender(t.id); focusMatch(t, 'match-item', idx); return;
       }
-      if (kind === 'match-slot') { if (ui.sel[t.id] != null) { place(ui, t, ui.sel[t.id], idx); delete ui.sel[t.id]; rerender(t.id); } return; }
+      if (kind === 'match-slot') { if (ui.sel[t.id] != null) { const li = ui.sel[t.id]; place(ui, t, li, idx); delete ui.sel[t.id]; rerender(t.id); focusMatch(t, 'match-item', li); } return; }
       if (kind === 'ms-opt') { const a = new Set(Array.isArray(ui.answers[t.id]) ? ui.answers[t.id] : []); if (a.has(idx)) a.delete(idx); else a.add(idx); ui.answers[t.id] = Array.from(a); rerender(t.id); return; }
       if (kind === 'choice') { ui.answers[t.id] = idx; rerender(t.id); return; }
     });
@@ -191,7 +199,7 @@ window.FRAPbq = (function () {
         if (to < 0 || to >= seq.length) return; e.preventDefault(); moveOrder(ui, t, pos, to); rerender(t.id);
         const again = container.querySelector(`.pbq-task[data-task="${t.id}"] [data-pbq="order-item"][data-index="${idx}"]`); if (again) again.focus(); return;
       }
-      if (kind === 'match-slot' && (e.key === 'Enter' || e.key === ' ')) { if (ui.sel[t.id] != null) { e.preventDefault(); place(ui, t, ui.sel[t.id], idx); delete ui.sel[t.id]; rerender(t.id); } }
+      if (kind === 'match-slot' && (e.key === 'Enter' || e.key === ' ')) { if (ui.sel[t.id] != null) { e.preventDefault(); const li = ui.sel[t.id]; place(ui, t, li, idx); delete ui.sel[t.id]; rerender(t.id); focusMatch(t, 'match-item', li); } }
     });
     // Typing lands in ui.answers as it happens, with no re-render to steal the caret, so a repaint
     // of the whole view keeps what the learner typed. collect still reads the fields from the DOM.

@@ -8,7 +8,7 @@ FRA.pbqs["mini-net"] = {
   tasks: [
     { id: "steps", kind: "order", prompt: "Put the troubleshooting steps in order.", items: ["Identify the problem", "Establish a theory", "Test the theory", "Establish a plan"], expect: [0, 1, 2, 3] },
     { id: "pairs", kind: "match", prompt: "Match each device to its layer.", left: ["Switch", "Router"], right: ["Layer 2", "Layer 3", "Layer 7"], expect: [0, 1] },
-    { id: "lines", kind: "multiselect", prompt: "Pick every line that shows a problem.", options: ["Port Gi1/0/7: notconnect", "VLAN 10: active", "speed auto duplex auto"], expect: [0] },
+    { id: "lines", kind: "multiselect", prompt: "Pick every line that shows a problem.", options: ["Port Gi1/0/7: notconnect", "VLAN 10: active", "speed auto duplex auto"], expect: [0], shuffle: false },
     { id: "cfg", kind: "form", prompt: "Give the printer a valid address.", fields: [{ id: "ip", label: "IP address", expect: ["192.168.10.10"], normalize: "ip" }, { id: "mask", label: "Subnet mask", expect: ["255.255.255.192", "/26"], normalize: "cidr" }] },
     { id: "cmd", kind: "command", prompt: "Type the command that shows the full IP configuration on the Windows workstation.", expect: ["ipconfig /all"], alt: ["ipconfig -all"], flagOrder: false },
     { id: "cable", kind: "choice", prompt: "The port shows no link. What do you check first?", options: ["The patch cable and the port light", "The DNS server", "The printer's toner"], expect: 0 }
