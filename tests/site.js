@@ -95,7 +95,7 @@ check('a manifest that already asks a cost question does not get a second one', 
 check('landing carries og:image and is indexable', landing.includes('property="og:image" content="https://example.test/og-image.png"') && !landing.includes('name="robots"'));
 
 const cu = site.courseUrls(m);
-check('courseUrls lists the landing, practice, lessons index, cheat sheet, the PBQ page and every free lesson, landing first', cu.length === 5 + m.freeLessons.length && cu[0] === m.urls.landing && cu.includes(m.urls.practice) && cu.includes(m.urls.course) && cu.includes(m.urls.cheat) && cu.includes(m.urls.pbq) && m.freeLessons.every(l => cu.includes(m.urls.lesson(l))), cu.length);
+check('courseUrls lists the landing, practice, lessons index, cheat sheet, the PBQ page, the flashcards page and every free lesson, landing first', cu.length === 6 + m.freeLessons.length && cu[0] === m.urls.landing && cu.includes(m.urls.practice) && cu.includes(m.urls.course) && cu.includes(m.urls.cheat) && cu.includes(m.urls.pbq) && cu.includes(m.urls.flashcards) && m.freeLessons.every(l => cu.includes(m.urls.lesson(l))), cu.length);
 
 check('apportion: twenty across 40/30/30 is 8/6/6', JSON.stringify(site.apportionN(20, { 1: 40, 2: 30, 3: 30 })) === JSON.stringify({ 1: 8, 2: 6, 3: 6 }));
 check('apportion: remainders go to the largest fractions, ties to the larger weight', JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 3, 3: 2 }) || JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 2, 3: 3 }));
@@ -133,11 +133,56 @@ check('practice page links the PBQ page', pt.includes('href="/mini/pbq/"'));
 check('sitemap lists the pbq page', read('sitemap.xml').includes('/mini/pbq/</loc>'));
 check('courseUrls omits pbq for a course without PBQs', !site.courseUrls(Object.assign({}, m, { pbqs: {} })).includes('/mini/pbq/'));
 
+check('flashcards page written at the course URL', exists('mini/flashcards/index.html'));
+const fc = read('mini/flashcards/index.html');
+const acrCount = Object.keys(FRA.acronyms || {}).length;
+check('flashcards: every acronym is a card in the acronyms deck', acrCount === 0 ? !fc.includes('data-deck="acronyms"') : fc.includes('<section class="deck" data-deck="acronyms">') && Object.keys(FRA.acronyms).every(k => fc.includes(`<dt>${esc(k)}</dt>`)));
+const twoCol = m.cheatsheet.sections.flatMap(s => s.blocks.filter(b => b.type === 'table' && b.cols.length === 2).flatMap(b => b.rows.filter(r => String(r[0]).length <= 80)));
+const wideRows = m.cheatsheet.sections.flatMap(s => s.blocks.filter(b => b.type === 'table' && b.cols.length > 2).flatMap(b => b.rows));
+check('flashcards: every two-column cheat sheet row is a card', twoCol.length > 0 && twoCol.every(r => fc.includes(`<dt>${esc(String(r[0]))}</dt>`)));
+check('flashcards: rows of wider tables are not cards', wideRows.every(r => !fc.includes(`<dt>${esc(String(r[0]))}</dt>`)));
+check('flashcards: the title carries the card count and the viewer is inlined', fc.includes(`Flashcards: ${acrCount + twoCol.length} cards`) && fc.includes("var KEY='fra.mini.flashcards'"));
+const fld = [...fc.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
+check('flashcards JSON-LD: a LearningResource, an FAQPage, and a BreadcrumbList (no DefinedTermSet without acronyms)', fld.map(x => x['@type']).join(',') === (acrCount ? 'LearningResource,DefinedTermSet,FAQPage,BreadcrumbList' : 'LearningResource,FAQPage,BreadcrumbList'), fld.map(x => x['@type']).join(','));
+check('nav and sitemap carry the flashcards URL', fc.includes('href="/mini/flashcards/" aria-current="page"') && read('sitemap.xml').includes('/mini/flashcards/</loc>') && landing.includes('href="/mini/flashcards/"'));
+check('flashcards: the viewer is hidden until its script runs, so the page reads without JavaScript', fc.includes('<div class="card fc-viewer" id="fc-viewer" hidden>') && (fc.match(/<div class="fc"><dt>/g) || []).length === acrCount + twoCol.length);
+check('flashcards: every storage access is inside a try', !/localStorage/.test(fc.replace(/try\{[^}]*localStorage[^}]*\}/g, '')));
+check('flashcards page is plain ASCII with no undefined or [object leaks', /^[\x00-\x7f]*$/.test(fc) && !/undefined|\[object /.test(fc));
+{
+  // The mini fixture has no glossary and one small table, so the deck rules run on a widened copy:
+  // an acronym deck, a three-column table, and a first cell over 80 characters.
+  const ACR = site.loadPack(mini);
+  ACR.acronyms = { SSH: { full: 'Secure Shell', tip: 'Encrypted remote login.' }, 'A&B': { full: 'Ampersand test' } };
+  ACR.cheatsheet = { title: 'S', intro: 'I', sections: [
+    { id: 'pairs', title: 'Pairs', blocks: [{ type: 'table', cols: ['Term', 'Meaning'], rows: [['Short', 'ok'], ['x'.repeat(81), 'too long'], ['x'.repeat(80), 'just fits']] }, { type: 'table', cols: ['A', 'B', 'C'], rows: [['WideOnly', 'b', 'c']] }] },
+    { id: 'wide', title: 'Wide', blocks: [{ type: 'table', cols: ['A', 'B', 'C'], rows: [['AlsoWide', 'b', 'c']] }, { type: 'note', text: 'n' }] }
+  ] };
+  const am = site.model(ACR); const fd = site.flashcardDecks(am);
+  check('flashcardDecks: acronyms first, sorted, back is full then tip', fd.decks[0].slug === 'acronyms' && fd.decks[0].cards.map(x => x.front).join(',') === 'A&B,SSH' && fd.decks[0].cards[1].back === 'Secure Shell. Encrypted remote login.' && fd.decks[0].cards[0].back === 'Ampersand test');
+  check('flashcardDecks: a two-column table is a deck named for its section, the 81-character row is skipped, the 80-character row kept', fd.decks.length === 2 && fd.decks[1].slug === 'pairs' && fd.decks[1].name === 'Pairs' && fd.decks[1].cards.map(x => x.back).join(',') === 'ok,just fits', JSON.stringify(fd.decks.map(d => d.slug)));
+  check('flashcardDecks: wider tables are never cards and a section with only wide tables is no deck', !fd.decks.some(d => d.cards.some(x => /Wide/.test(x.front))) && !fd.decks.some(d => d.slug === 'wide') && fd.total === 4 && am.flashcards.total === 4);
+  const afc = site.flashcardsPage(am, makeRenderer(ACR.acronyms), 'https://example.test');
+  check('flashcards page with acronyms: the acronyms deck escapes its keys and the JSON-LD has a DefinedTermSet', afc.includes('<section class="deck" data-deck="acronyms">') && afc.includes('<dt>A&amp;B</dt>') && afc.includes('"LearningResource"') && afc.includes('"DefinedTermSet"') && afc.includes('Flashcards: 4 cards'));
+  {
+    // The inline viewer, run in jsdom: it shows, flips, and stores "Got it" under fra.<id>.flashcards.
+    const { JSDOM } = require('jsdom');
+    const dom = new JSDOM(afc, { runScripts: 'dangerously', url: 'https://example.test/mini/flashcards/' });
+    const d = dom.window.document; const $ = id => d.getElementById(id);
+    const shown = !$('fc-viewer').hidden && $('fc-front').textContent === 'A&B' && $('fc-back').hidden;
+    $('fc-card').click(); const flipped = $('fc-front').hidden && !$('fc-back').hidden && $('fc-back').textContent === 'Ampersand test';
+    $('fc-know').click(); const stored = JSON.parse(dom.window.localStorage.getItem('fra.mini.flashcards') || '{}');
+    check('flashcards viewer: shows the first card, flips it, and remembers Got it in fra.mini.flashcards', shown && flipped && stored.acronyms && stored.acronyms[0] === 1 && $('fc-front').textContent === 'SSH' && $('fc-count').textContent === '1 of 1 left, 1 known', $('fc-count').textContent);
+    dom.window.close();
+  }
+  const none = site.model(Object.assign({}, ACR, { acronyms: {}, cheatsheet: { title: 'S', intro: 'I', sections: [{ id: 'w', title: 'W', blocks: [{ type: 'table', cols: ['A', 'B', 'C'], rows: [['1', '2', '3']] }] }] } }));
+  check('a course with no cards gets no flashcards URL and no nav link', none.flashcards.total === 0 && !site.courseUrls(none).includes(none.urls.flashcards) && !site.landingPage(none, R, 'https://example.test', []).includes('/flashcards/'));
+}
+
 check('site.css, robots.txt and sitemap.xml written at the root', exists('site.css') && exists('robots.txt') && exists('sitemap.xml'));
 
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
-const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/mini/pbq/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
+const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/mini/pbq/', 'https://example.test/mini/flashcards/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
 check('sitemap lists home, the app, the landing page, the cheat sheet, the PBQ page and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 check('sitemap entries carry a lastmod date', /<url><loc>[^<]+<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/.test(sm) && (sm.match(/<lastmod>/g) || []).length === locs.length);
