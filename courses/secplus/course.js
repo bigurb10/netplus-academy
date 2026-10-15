@@ -13,6 +13,7 @@ FRA.course = {
     h1: "Security+ SY0-701 Practice Questions and Study Guide",
     intro: "SecPlus Academy is a free Security+ SY0-701 practice question and study guide course: fifty-four lessons across the five exam domains, a printable memorization sheet of controls, attacks, and protocols, tutorials built from your misses, and unlimited practice tests. Use it as a Security+ study guide on its own, or take an SY0-701 practice test after every lesson.",
     phrases: ["Security+ SY0-701 practice questions", "Security+ study guide", "SY0-701 practice test"],
+    pbqPhrases: ["Security+ PBQs", "SY0-701 performance-based questions", "Security+ PBQ practice"],
     faq: [
       { q: "How many questions are on the Security+ SY0-701 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 750 on a scale of 100 to 900." },
       { q: "What are the SY0-701 domains?", a: "General security concepts, threats, vulnerabilities and mitigations, security architecture, security operations, and security program management and oversight." },
@@ -29,7 +30,7 @@ FRA.course = {
     { id: 5, name: "Security Program Management and Oversight", short: "Governance", pct: 20, quota: 10 }
   ],
   // Practice tests pass at 80%; the official-format test uses 83%, the real exam's 750 of 900.
-  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3, pbqInTest: 3 },
   starterPool: {
     1: ["u1l1", "u1l3", "u2l2", "u2l4", "u1l2", "u2l3"],
     2: ["u3l1", "u3l3", "u5l1", "u5l2", "u4l2", "u5l5"],

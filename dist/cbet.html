@@ -12584,12 +12584,18 @@ window.FRAPbq = (function () {
     if (!ex.noConf || $('.confidence')) throw new Error('standard test still shows the confidence chips');
     // The official-format test opens with its PBQs when the pack ships them: the whole PBQ submits at
     // once, with no option to pick and no sureness to rate, and each of its tasks counts as a question.
+    // Every leading PBQ is submitted in turn; they must sit together at the front.
     if (isPbqItem(ex.items[0])) {
       if (!$('#pbq') || !document.querySelectorAll('.pbq-task').length) throw new Error('the official-format test did not render its PBQ tasks');
       const want = Math.min(T.pbqInTest, pbqIds.length), got = ex.items.filter(isPbqItem).length;
       if (got !== want) throw new Error(`expected ${want} PBQs in the official-format test, got ${got}`);
-      $('[data-act="submit"]').click();
-      if (ex.i !== 1 || !ex.answers[0] || ex.answers[0].pbq !== ex.items[0].pbq) throw new Error('submitting the PBQ recorded no task answers');
+      while (isPbqItem(ex.items[ex.i])) {
+        const k = ex.i;
+        if (!$('#pbq') || !document.querySelectorAll('.pbq-task').length) throw new Error('PBQ ' + k + ' did not render its tasks');
+        $('[data-act="submit"]').click();
+        if (ex.i !== k + 1 || !ex.answers[k] || ex.answers[k].pbq !== ex.items[k].pbq) throw new Error('submitting PBQ ' + k + ' recorded no task answers');
+      }
+      if (ex.items.slice(ex.i).some(isPbqItem)) throw new Error('the official-format test did not open with all of its PBQs');
     }
     const i0 = ex.i;
     $(`[data-act="opt"][data-arg="${fat(ex.items[i0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');

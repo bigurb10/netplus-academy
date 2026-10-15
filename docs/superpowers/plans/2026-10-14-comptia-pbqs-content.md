@@ -238,4 +238,14 @@ The merge to `main`, the branch deletion, and the hand-off (Blake pushes, stages
 
 ## Status
 
-(filled in by Task 5)
+Plan B complete on branch `pbq-content`; built and staged locally (`dist/stage/`, 1082 files), not pushed.
+
+- netplus (10): net-subnet-plan, net-cables-ports, net-troubleshoot-order, net-wap-config, net-switch-lines, net-diagram-ips, net-osi-match, net-firewall-order, net-ipconfig-ping, net-dhcp-dns-form
+- secplus (10): sec-log-attack, sec-ir-order, sec-attack-match, sec-firewall-acl, sec-wifi-config, sec-harden-server, sec-pki-match, sec-access-matrix, sec-commands, sec-risk-register
+- aplus1 (10): ap1-cables-match, ap1-build-form, ap1-laser-order, ap1-mobile-form, ap1-cloud-match, ap1-display-ms, ap1-bios-form, ap1-laptop-diagram, ap1-net-commands, ap1-virt-ms
+- aplus2 (10): ap2-win-commands, ap2-permissions-form, ap2-malware-order, ap2-os-install-order, ap2-harden-ms, ap2-script-match, ap2-backup-form, ap2-slow-pc-order, ap2-linux-commands, ap2-safety-match
+- The twelve `seo: true` ids: net-subnet-plan, net-troubleshoot-order, net-diagram-ips; sec-log-attack, sec-ir-order, sec-pki-match; ap1-cables-match, ap1-mobile-form, ap1-net-commands; ap2-win-commands, ap2-malware-order, ap2-slow-pc-order
+- Bundle sizes (`dist/<id>.html`, bytes): netplus 970058, secplus 1046391, aplus1 1032899, aplus2 1018344; each carries ten `FRA.pbqs["..."]` entries
+- Sitemap: `dist/site/sitemap.xml` (1063 URLs) holds four `/pbq/` URLs; `dist/stage/{netplus,secplus,aplus1,aplus2}/pbq/index.html` staged
+- Task 1 carried a self-test fix in `engine/app.js` (the official-format block now submits every leading PBQ), and `tests/engine.js` boots cbet for its no-PBQs-tab check.
+- Final review fix: net-dhcp-dns-form scope accepts only .21 and .254 (the scenario pins the pool); lease field accepts unit forms.

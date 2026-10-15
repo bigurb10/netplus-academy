@@ -90,6 +90,9 @@ function run(token) {
     check('every category has a one-line lede', [...d.querySelectorAll('main section.cat')].every(s => s.querySelector('p.cat-lede') && s.querySelector('p.cat-lede').textContent.trim().length > 20));
     check('How every course works is still on the page', /How every course works/.test(d.querySelector('main').textContent));
     check('the catalog header links the guides', !!d.querySelector('header .top-links a[href="/guides/"]'));
+    const pbqCards = ['netplus/', 'secplus/', 'aplus1/', 'aplus2/'];
+    check('every CompTIA card links its PBQ page', pbqCards.every(id => !!d.querySelector(`.card .links a[href="${id}pbq/"]`)), pbqCards.filter(id => !d.querySelector(`.card .links a[href="${id}pbq/"]`)).join(','));
+    check('no non-CompTIA card links a PBQ page', !d.querySelector('.card .links a[href="bmet/pbq/"], .card .links a[href="cbet/pbq/"], .card .links a[href="cres/pbq/"], .card .links a[href="chtm/pbq/"]'));
   }
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All catalog tests passed.');
