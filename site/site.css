@@ -126,6 +126,12 @@ main section h3 { font-size: 1.05rem; margin: 22px 0 4px; }
 .quiz details summary { cursor: pointer; font-weight: 600; }
 .quiz details p { margin: 8px 0 0; }
 
+/* PBQ page */
+.pbq .scenario { margin: 8px 0 12px; }
+.pbq-log { background: #0e1a14; color: #d8ffe6; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+.pbq-tasks { padding-left: 20px; display: grid; gap: 14px; }
+.pbq-task .stem { font-weight: 600; }
+
 /* ServiceForge pages */
 .symptom { margin: 18px 0 26px; padding-top: 10px; border-top: 1px solid var(--line, #e3e3e3); }
 .causes .rank { font-weight: 600; }

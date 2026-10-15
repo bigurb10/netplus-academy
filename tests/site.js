@@ -70,7 +70,7 @@ check('landing FAQ falls back to exam facts when the manifest has none', lld[1].
 check('landing carries og:image and is indexable', landing.includes('property="og:image" content="https://example.test/og-image.png"') && !landing.includes('name="robots"'));
 
 const cu = site.courseUrls(m);
-check('courseUrls lists the landing, practice, lessons index, cheat sheet and every free lesson, landing first', cu.length === 4 + m.freeLessons.length && cu[0] === m.urls.landing && cu.includes(m.urls.practice) && cu.includes(m.urls.course) && cu.includes(m.urls.cheat) && m.freeLessons.every(l => cu.includes(m.urls.lesson(l))), cu.length);
+check('courseUrls lists the landing, practice, lessons index, cheat sheet, the PBQ page and every free lesson, landing first', cu.length === 5 + m.freeLessons.length && cu[0] === m.urls.landing && cu.includes(m.urls.practice) && cu.includes(m.urls.course) && cu.includes(m.urls.cheat) && cu.includes(m.urls.pbq) && m.freeLessons.every(l => cu.includes(m.urls.lesson(l))), cu.length);
 
 check('apportion: twenty across 40/30/30 is 8/6/6', JSON.stringify(site.apportionN(20, { 1: 40, 2: 30, 3: 30 })) === JSON.stringify({ 1: 8, 2: 6, 3: 6 }));
 check('apportion: remainders go to the largest fractions, ties to the larger weight', JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 3, 3: 2 }) || JSON.stringify(site.apportionN(10, { 1: 50, 2: 25, 3: 25 })) === JSON.stringify({ 1: 5, 2: 2, 3: 3 }));
@@ -90,12 +90,26 @@ check('practice JSON-LD: a Quiz about the exam, with twenty practice-problem Que
   qld[1]['@type'] === 'BreadcrumbList');
 check('practice page links the app and the landing page', pt.includes('href="/mini/app/"') && pt.includes('href="/mini/"'));
 
+check('pbq page written for a course with PBQs', exists('mini/pbq/index.html'));
+const pb = read('mini/pbq/index.html');
+check('pbq page h1 and title lead with the exam name and PBQ Practice', pb.includes('<h1>Mini Exam MC-1 PBQ Practice</h1>') && pb.includes('<title>Mini Exam MC-1 PBQ Practice | Mini Course</title>'));
+check('pbq page renders the seo PBQ with scenario, log, every task, the expected answer, and the why', (pb.match(/<section class="pbq">/g) || []).length === 1 && pb.includes('<pre class="pbq-log">') && (pb.match(/<li class="pbq-task">/g) || []).length === 6 && pb.includes('Expected: Identify the problem, Establish a theory, Test the theory, Establish a plan') && pb.includes('notconnect is the only line'));
+const pbqLesson = m.lessons.find(l => l.id === m.pbqs['mini-net'].lesson);
+check('pbq page links the lesson behind the PBQ', pb.includes('From the lesson') && pb.includes(`href="${m.urls.lesson(pbqLesson)}"`));
+check('pbq page carries the phrases, the FAQ, and the app link', pb.includes('Mini Exam PBQs') && pb.includes('MC-1 performance-based questions') && pb.includes('How many PBQs') && pb.includes('href="/mini/app/#pbq"'));
+const pld = [...pb.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
+check('pbq JSON-LD: a Quiz with one Question per task, an FAQPage, and a BreadcrumbList', pld[0]['@type'] === 'Quiz' && pld[0].hasPart.length === 6 && pld[1]['@type'] === 'FAQPage' && pld[2]['@type'] === 'BreadcrumbList', pld.map(x => x['@type']).join(','));
+check('landing page has the PBQ section and link', read('mini/index.html').includes('Performance-based questions') && read('mini/index.html').includes('href="/mini/pbq/"'));
+check('practice page links the PBQ page', pt.includes('href="/mini/pbq/"'));
+check('sitemap lists the pbq page', read('sitemap.xml').includes('/mini/pbq/</loc>'));
+check('courseUrls omits pbq for a course without PBQs', !site.courseUrls(Object.assign({}, m, { pbqs: {} })).includes('/mini/pbq/'));
+
 check('site.css, robots.txt and sitemap.xml written at the root', exists('site.css') && exists('robots.txt') && exists('sitemap.xml'));
 
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
-const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
-check('sitemap lists home, the app, the landing page, the cheat sheet and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
+const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/mini/pbq/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
+check('sitemap lists home, the app, the landing page, the cheat sheet, the PBQ page and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 check('sitemap entries carry a lastmod date', /<url><loc>[^<]+<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/.test(sm) && (sm.match(/<lastmod>/g) || []).length === locs.length);
 {

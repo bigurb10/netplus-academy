@@ -1906,6 +1906,18 @@
       S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} };
       log.push(`labs ${labIds.length} validated; ${lab.id} completes and clears`);
     } else log.push('labs: none in this pack');
+    // PBQs: the boot check above already rejects a malformed entry (its id must be its key, its
+    // lesson must exist, three to six tasks with unique ids and known kinds, a why for each). What
+    // only a whole pack can show is checked here: every PBQ sits in a domain the tests draw from,
+    // and the static page's set is exactly three (or all of them in a pack that ships fewer).
+    if (pbqIds.length) {
+      const offDomain = pbqIds.filter(id => !TESTED_IDS.some(d => String(d) === String(PBQS[id].domain)));
+      if (offDomain.length) throw new Error('pbqs in an untested domain: ' + offDomain.join(', '));
+      const seoIds = pbqIds.filter(id => PBQS[id].seo === true); const wantSeo = Math.min(3, pbqIds.length);
+      if (seoIds.length !== wantSeo) throw new Error(`${seoIds.length} pbqs are marked seo: true, expected ${wantSeo}`);
+      const taskN = pbqIds.reduce((n, id) => n + PBQS[id].tasks.length, 0);
+      log.push(`pbqs ${pbqIds.length} validated; ${taskN} tasks, ${seoIds.length} on the static page`);
+    } else log.push('pbqs: none in this pack');
     // The final gate: enough passes among the last few tests qualify the learner, then only a timed
     // official-format pass at the real exam's score clears them, permanently.
     // A task's model answer is what the pack wrote in expect: the index sequence, the chosen indexes,

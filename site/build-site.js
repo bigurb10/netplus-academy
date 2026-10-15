@@ -60,6 +60,22 @@ function loadPack(dir) {
   return ctx.FRA;
 }
 
+// engine/pbq.js is a browser script that defines window.FRAPbq. The generator needs its
+// expectedText() to print each PBQ task's answer in words on the static page, so it is evaluated
+// the same way a pack is: once, in its own context, and only for a pack that ships PBQs.
+let pbqLib = null;
+function pbqText() {
+  if (!pbqLib) {
+    const file = path.join(ROOT, 'engine', 'pbq.js');
+    const ctx = { console }; ctx.window = ctx; ctx.globalThis = ctx;
+    vm.createContext(ctx);
+    vm.runInContext(fs.readFileSync(file, 'utf8'), ctx, { filename: file });
+    if (!ctx.FRAPbq) throw new Error('engine/pbq.js left no FRAPbq on the window');
+    pbqLib = ctx.FRAPbq;
+  }
+  return pbqLib;
+}
+
 function courseDirs() {
   const dir = path.join(ROOT, 'courses');
   return fs.readdirSync(dir).filter(d => fs.existsSync(path.join(dir, d, 'course.js'))).map(d => path.join(dir, d));
@@ -102,12 +118,16 @@ function model(FRA) {
     cheatsheet: FRA.cheatsheet || null,
     acronyms: FRA.acronyms || {},
     questions: FRA.questions || [], seo: c.seo || null,
+    // A pack without pbqs.js has no PBQ page, no landing section, and no sitemap entry for one.
+    pbqs: FRA.pbqs || {},
+    pbqText: Object.keys(FRA.pbqs || {}).length ? pbqText() : null,
     urls: {
       landing: `/${c.id}/`,
       app: `/${c.id}/app/`,
       practice: `/${c.id}/practice-test/`,
       course: `/${c.id}/lessons/`,
       cheat: `/${c.id}/cheatsheet/`,
+      pbq: `/${c.id}/pbq/`,
       pdf: `/${c.id}/cheatsheet.pdf`,
       lesson: l => `/${c.id}/lessons/${slug(l)}/`,
       inApp: l => `/${c.id}/app/#lesson/${l.id}`
@@ -365,7 +385,7 @@ function landingPage(m, R, origin, guides) {
   <div class="eyebrow">${esc(BRAND)}</div>
   <h1>${esc(h1)}</h1>
   <p class="lede ink2">${esc(intro)}</p>
-  <p class="row"><a class="btn primary lg" href="${m.urls.app}">Start the free course</a> <a class="btn lg" href="${m.urls.practice}">Try a practice test</a> <a class="btn lg" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+  <p class="row"><a class="btn primary lg" href="${m.urls.app}">Start the free course</a> <a class="btn lg" href="${m.urls.practice}">Try a practice test</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn lg" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn lg" href="${m.urls.cheat}">Read the cheat sheet</a></p>
 </div>
 <section>
   <h2>The exam at a glance</h2>
@@ -381,6 +401,7 @@ function landingPage(m, R, origin, guides) {
   <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
 </section>
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
+${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
 <section>
   <h2>Questions people ask</h2>
@@ -450,7 +471,7 @@ function practicePage(m, R, origin) {
   <div class="eyebrow">That was ${items.length} of ${m.questions.length}</div>
   <h2>Every question in the course is explained like this</h2>
   <p class="ink2">Start with the short starter test and the course builds your tutorial from what you miss. Free while we launch.</p>
-  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a> <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a></p>
 </aside>`;
   return shell({
     origin, path: m.urls.practice, type: 'article',
@@ -463,6 +484,54 @@ function practicePage(m, R, origin) {
         about: { '@type': 'Thing', name: examName(c) || c.name }, educationalLevel: 'Beginner', provider: org(),
         hasPart: items.map(q => ({ '@type': 'Question', name: R.plain(q.q), eduQuestionType: 'Multiple choice', learningResourceType: 'Practice problem', text: R.plain(q.q), suggestedAnswer: q.a.filter((o, i) => i !== q.c).map(o => ({ '@type': 'Answer', text: R.plain(o) })), acceptedAnswer: { '@type': 'Answer', text: R.plain(q.a[q.c]) } }))
       },
+      breadcrumbLd(origin, crumbList)
+    ],
+    body
+  });
+}
+
+// The PBQ page: the pack's seo-marked performance-based questions, readable with no JavaScript.
+// Every task shows its prompt, its items or options in pack order, the expected answer in words,
+// and the why. The interactive versions live in the app, behind the page's buttons.
+function pbqPage(m, R, origin) {
+  const c = m.c; const ids = Object.keys(m.pbqs).filter(id => m.pbqs[id].seo); const P = m.pbqText;
+  const phrases = (m.seo && Array.isArray(m.seo.pbqPhrases) && m.seo.pbqPhrases.length) ? m.seo.pbqPhrases : [`${examName(c) || c.name} PBQs`, `${(c.exam && c.exam.code) || c.name} performance-based questions`];
+  const h1 = `${examName(c) || c.name} PBQ Practice`;
+  const description = shorten(`Free ${examName(c) || c.name} performance-based questions with every task answered and explained: ${phrases.join(', ')}. Practice all ${Object.keys(m.pbqs).length} in the course.`, DESC_MAX);
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'PBQ practice', href: m.urls.pbq }];
+  const taskHtml = (p, t) => `<li class="pbq-task"><p class="stem">${R.inline(t.prompt)}</p>${t.kind === 'order' ? `<p class="muted">Items: ${t.items.map(x => R.inline(x)).join('; ')}</p>` : t.kind === 'match' ? `<p class="muted">Items: ${t.left.map(x => R.inline(x)).join('; ')}. Slots: ${t.right.map(x => R.inline(x)).join('; ')}</p>` : (t.kind === 'multiselect' || t.kind === 'choice') ? `<ol class="opts">${t.options.map(o => `<li class="opt">${R.inline(o)}</li>`).join('')}</ol>` : t.kind === 'form' ? `<p class="muted">Fields: ${t.fields.map(f => esc(f.label)).join('; ')}</p>` : ''}<p><strong>Expected: ${esc(P.expectedText(t))}</strong></p><p>${R.inline((p.why || {})[t.id] || '')}</p></li>`;
+  // The lesson a PBQ belongs to, linked on this site when it is free and in the app when it is not,
+  // the same rule the practice-test page uses for a question's lesson.
+  const lessonLink = p => { const l = m.lessons.find(x => x.id === p.lesson); return l ? `<p class="muted">From the lesson <a href="${m.free.has(l.id) ? m.urls.lesson(l) : m.urls.inApp(l)}">${esc(l.title)}</a>.</p>` : ''; };
+  const sections = ids.map(id => { const p = m.pbqs[id]; const sc = p.scenario || {}; return `<section class="pbq"><h2>${esc(p.title)}</h2><div class="scenario">${R.inline(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}<ol class="pbq-tasks">${p.tasks.map(t => taskHtml(p, t)).join('')}</ol>${lessonLink(p)}</section>`; }).join('');
+  const faq = [
+    { q: `How many PBQs are on the ${examName(c) || c.name} exam?`, a: 'CompTIA does not publish the count. Expect a handful at the start of the exam, each worth more than one multiple-choice question in time and often in points.' },
+    { q: 'Can you skip a PBQ and come back to it?', a: 'Yes. Flag it, answer the multiple-choice questions, and return with the time you have left.' },
+    { q: 'Are PBQs weighted more than other questions?', a: 'CompTIA does not disclose its weighting. Treat each task inside a PBQ as a question you can get right or wrong.' },
+    { q: `How does ${c.name} practice PBQs?`, a: `The course has ${Object.keys(m.pbqs).length} interactive PBQs: drag items into order, match terms, pick lines in a log, fill a configuration, type a command. Every task is graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.` }
+  ];
+  const body = `${crumbs(crumbList)}
+<article class="lesson quiz-page">
+  <div class="eyebrow">${esc(examName(c) || c.name)}</div>
+  <h1>${esc(h1)}</h1>
+  <p class="lede ink2">Performance-based questions ask you to do the task, not pick the letter. The real exam opens with a handful. Here are ${ids.length} of the course's ${Object.keys(m.pbqs).length}, with every task answered and explained: ${phrases.map(p => esc(p)).join(', ')}.</p>
+  ${sections}
+  <section><h2>Questions people ask</h2>${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}</section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">That was ${ids.length} of ${Object.keys(m.pbqs).length}</div>
+  <h2>Practice all ${Object.keys(m.pbqs).length} PBQs in the course</h2>
+  <p class="ink2">Interactive, graded task by task, with the why for each. Free while we launch.</p>
+  <p><a class="btn primary" href="${m.urls.app}#pbq">Practice all ${Object.keys(m.pbqs).length} PBQs</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a> <a class="btn" href="${m.urls.landing}">About the course</a></p>
+</aside>`;
+  return shell({
+    origin, path: m.urls.pbq, type: 'article',
+    title: `${h1} | ${c.name}`, ogTitle: h1, description,
+    nav: nav(m, m.urls.pbq),
+    jsonld: [
+      { '@context': 'https://schema.org', '@type': 'Quiz', name: h1, description, url: origin + m.urls.pbq, inLanguage: 'en', isAccessibleForFree: true, about: { '@type': 'Thing', name: examName(c) || c.name }, educationalLevel: 'Intermediate', provider: org(),
+        hasPart: ids.flatMap(id => m.pbqs[id].tasks.map(t => ({ '@type': 'Question', name: R.plain(t.prompt), eduQuestionType: 'Performance-based', learningResourceType: 'Practice problem', text: R.plain(t.prompt), acceptedAnswer: { '@type': 'Answer', text: P.expectedText(t) } }))) },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
       breadcrumbLd(origin, crumbList)
     ],
     body
@@ -571,6 +640,7 @@ function buildCourse(FRA, opts) {
   const pages = [];
   pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin, opts.guides)) });
   pages.push({ url: m.urls.practice, title: 'Practice test', file: writePage(opts.out, m.urls.practice, practicePage(m, R, origin)) });
+  if (Object.keys(m.pbqs).length) pages.push({ url: m.urls.pbq, title: 'PBQ practice', file: writePage(opts.out, m.urls.pbq, pbqPage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
   if (m.cheatsheet) pages.push({ url: m.urls.cheat, title: m.cheatsheet.title, file: writePage(opts.out, m.urls.cheat, cheatPage(m, R, origin)) });
   for (const l of m.freeLessons) pages.push({ url: m.urls.lesson(l), title: l.title, file: writePage(opts.out, m.urls.lesson(l), lessonPage(m, l, R, origin)) });
@@ -582,7 +652,7 @@ function buildCourse(FRA, opts) {
 // course's pages re-rendered after an edit) still needs every course's URLs in the sitemap,
 // so this is computed from a model alone rather than from the pages a build actually wrote.
 function courseUrls(m) {
-  return [m.urls.landing, m.urls.practice, m.urls.course, m.urls.cheat].concat(m.freeLessons.map(l => m.urls.lesson(l)));
+  return [m.urls.landing, m.urls.practice, m.urls.course, m.urls.cheat].concat(Object.keys(m.pbqs || {}).length ? [m.urls.pbq] : []).concat(m.freeLessons.map(l => m.urls.lesson(l)));
 }
 
 function sitemap(origin, urls, lastmod) {
@@ -638,7 +708,7 @@ function buildAll(opts) {
 // ./build-serviceforge, which requires ./build-site back (circular) -- if exports were not
 // set yet when `node site/build-site.js` is run directly, that circular require would see
 // an empty exports object and crash on shell/crumbs/slugify being undefined.
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, ORIGIN, BRAND, shell, crumbs, breadcrumbLd, org, DESC_MAX };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, pbqPage, ORIGIN, BRAND, shell, crumbs, breadcrumbLd, org, DESC_MAX };
 
 if (require.main === module) {
   const wanted = process.argv.slice(2);
