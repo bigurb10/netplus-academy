@@ -1509,7 +1509,7 @@
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
       <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
       ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
-      <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+      <label class="field">What is the issue?<select id="fb-cat">${fb.kind === 'lesson' ? '<option value="">Nothing in particular, just the rating</option>' : ''}${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
       <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;

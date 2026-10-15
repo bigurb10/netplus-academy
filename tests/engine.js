@@ -975,6 +975,11 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('best score is the fraction of tasks fully right', Math.abs(ps.best - (Object.values(ps.tasks).filter(s => s === 1).length / 6)) < 0.001);
     act(wp, 'pbq-retry', 'mini-net');
     check('Retry clears the answers but keeps the best score', !wp.$('.pbq-why') && stateM().pbqs['mini-net'].best === ps.best && wp.$('.pbq-task[data-task="cmd"] input').value === '');
+    // Rating a lesson opens the feedback form with no issue preselected, so a rating-only save carries no category.
+    { const b = wp.document.createElement('button'); b.dataset.act = 'rate'; b.dataset.arg = '7'; b.dataset.lesson = 'u1l2'; wp.$('#app').appendChild(b); wp.click(b); }
+    check('rating a lesson opens the feedback form with "just the rating" selected', !!wp.$('#fb-cat') && wp.$('#fb-cat').value === '' && /just the rating/.test(wp.$('#fb-cat option').textContent));
+    act(wp, 'fb-save');
+    { const last = (stateM().feedback || []).slice(-1)[0]; check('a rating-only save stores the rating and an empty category', !!last && last.kind === 'lesson' && last.rating === 7 && last.cat === '' && last.text === '', JSON.stringify(last)); }
     // Home shows the welcome page until the starter test is taken (PBQs are exempt from that gate, Home is not), so take it first.
     wp.click(wp.$('[data-act="go"][data-arg="home"]')); wp.click(wp.$('[data-act="start-exam"][data-arg="starter"]'));
     const QP = {}; wp.FRA.questions.forEach(q => { QP[q.id] = q; }); const fatP = x => typeof x === 'string' ? QP[x] : x;

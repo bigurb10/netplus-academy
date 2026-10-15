@@ -12,7 +12,7 @@ FRA.units.push({
       body: `Buying a firewall is not security; configuring it is. This lesson covers the settings and filters that enterprises actually manage day to day.
 
 ## Firewall configuration
-- **Rules**: each rule permits or denies traffic by source, destination, protocol, and port. Rules are processed top to bottom, the first match wins, and an implicit deny at the end blocks anything not explicitly allowed.
+- **Rules**: each rule permits or denies traffic by source, destination, protocol, and port. Rules are processed top to bottom, the first match wins, and an implicit deny at the end blocks anything not explicitly allowed. A rule for one host or subnet must sit above any broader rule that would otherwise match its traffic first.
 - **Access lists**: the same idea on routers and switches, filtering between internal segments.
 - **Ports and protocols**: allow only what a service needs. A web server needs 443; it does not need 3389 from the internet.
 - **Screened subnets**: the rules that let the internet reach the public servers, let those servers reach exactly the internal systems they need, and nothing more.

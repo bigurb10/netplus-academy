@@ -92,7 +92,8 @@ function run(token) {
     check('the catalog header links the guides', !!d.querySelector('header .top-links a[href="/guides/"]'));
     const pbqCards = ['netplus/', 'secplus/', 'aplus1/', 'aplus2/'];
     check('every CompTIA card links its PBQ page', pbqCards.every(id => !!d.querySelector(`.card .links a[href="${id}pbq/"]`)), pbqCards.filter(id => !d.querySelector(`.card .links a[href="${id}pbq/"]`)).join(','));
-    check('no non-CompTIA card links a PBQ page', !d.querySelector('.card .links a[href="bmet/pbq/"], .card .links a[href="cbet/pbq/"], .card .links a[href="cres/pbq/"], .card .links a[href="chtm/pbq/"]'));
+    const comptia = new Set(under('comptia'));
+    check('no non-CompTIA card links a PBQ page', cards.filter(c => !comptia.has(c.querySelector('h3 a').getAttribute('href'))).every(c => !c.querySelector('.links a[href$="pbq/"]')));
   }
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All catalog tests passed.');

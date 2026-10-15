@@ -2431,7 +2431,7 @@ FRA.units.push({
       body: `Buying a firewall is not security; configuring it is. This lesson covers the settings and filters that enterprises actually manage day to day.
 
 ## Firewall configuration
-- **Rules**: each rule permits or denies traffic by source, destination, protocol, and port. Rules are processed top to bottom, the first match wins, and an implicit deny at the end blocks anything not explicitly allowed.
+- **Rules**: each rule permits or denies traffic by source, destination, protocol, and port. Rules are processed top to bottom, the first match wins, and an implicit deny at the end blocks anything not explicitly allowed. A rule for one host or subnet must sit above any broader rule that would otherwise match its traffic first.
 - **Access lists**: the same idea on routers and switches, filtering between internal segments.
 - **Ports and protocols**: allow only what a service needs. A web server needs 443; it does not need 3389 from the internet.
 - **Screened subnets**: the rules that let the internet reach the public servers, let those servers reach exactly the internal systems they need, and nothing more.
@@ -6431,9 +6431,9 @@ FRA.pbqs["sec-attack-match"] = {
 };
 
 FRA.pbqs["sec-firewall-acl"] = {
-  id: "sec-firewall-acl", title: "Write the ACL for the web server's zone", domain: 3, lesson: "u7l2", seo: false,
+  id: "sec-firewall-acl", title: "Write the ACL for the web server's zone", domain: 3, lesson: "u7l2", also: "u11l1", seo: false,
   scenario: {
-    text: "A clinic's public web server, {{172.16.50.10}}, sits in its own zone between the internet and the internal network. Administrators work from a jump host on the admin subnet {{10.0.9.0/24}} and manage the servers in that zone over SSH. Policy: replies to established sessions are allowed; anyone may reach the web server on HTTPS; the admin subnet may reach the zone's servers over SSH; everything else is denied and logged. The team orders allow rules by traffic: established replies are most of it, public HTTPS is next, and admin SSH is occasional.",
+    text: "A clinic's public web server, {{172.16.50.10}}, sits in its own zone between the internet and the internal network. Administrators manage the servers in that zone over SSH from desks across the internal network {{10.0.0.0/16}}; the guest wireless subnet {{10.0.20.0/24}} is part of that range. Policy: replies to established sessions are allowed; anyone may reach the web server on HTTPS; the internal network may reach the zone's servers over SSH, except the guest wireless subnet, which must never reach them; everything else is denied and logged. The team orders permit rules by traffic: established replies are most of it, public HTTPS is next, and SSH is occasional.",
     svg: "<svg viewBox=\"0 0 420 220\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"sans-serif\" font-size=\"11\" fill=\"currentColor\">\n"
       + "<rect x=\"10\" y=\"92\" width=\"90\" height=\"36\" rx=\"4\" fill=\"none\" stroke=\"currentColor\"/>\n"
       + "<text x=\"32\" y=\"114\">Internet</text>\n"
@@ -6446,33 +6446,34 @@ FRA.pbqs["sec-firewall-acl"] = {
       + "<text x=\"302\" y=\"40\">Web server</text>\n"
       + "<text x=\"302\" y=\"58\">172.16.50.10</text>\n"
       + "<rect x=\"290\" y=\"150\" width=\"120\" height=\"50\" rx=\"4\" fill=\"none\" stroke=\"currentColor\"/>\n"
-      + "<text x=\"302\" y=\"170\">Admin subnet</text>\n"
-      + "<text x=\"302\" y=\"188\">10.0.9.0/24, jump host</text>\n"
+      + "<text x=\"302\" y=\"170\">Internal 10.0.0.0/16</text>\n"
+      + "<text x=\"302\" y=\"188\">guest Wi-Fi 10.0.20.0/24</text>\n"
       + "</svg>"
   },
   tasks: [
     { id: "rules", kind: "order", prompt: "Put the rules in the order the firewall should process them, top to bottom.", items: [
       "Permit replies to established sessions",
       "Permit any source to 172.16.50.10 on HTTPS",
-      "Permit 10.0.9.0/24 to the web server's zone on SSH",
+      "Deny 10.0.20.0/24 to the web server's zone on SSH",
+      "Permit 10.0.0.0/16 to the web server's zone on SSH",
       "Deny any source to any destination, and log it"
-    ], expect: [0, 1, 2, 3] },
+    ], expect: [0, 1, 2, 3, 4] },
     { id: "fill", kind: "form", prompt: "Fill in the two service ports and the name of the web server's zone.", fields: [
       { id: "https", label: "HTTPS port", expect: ["443"], normalize: "number" },
       { id: "ssh", label: "SSH port", expect: ["22"], normalize: "number" },
       { id: "zone", label: "The zone between the internet and the internal network that holds the web server", expect: ["screened subnet", "DMZ", "demilitarized zone"], normalize: "text" }
     ] },
-    { id: "deny", kind: "choice", prompt: "Where in the rule list does the explicit deny rule belong?", options: [
-      "Last, below every permit rule",
-      "First, above every permit rule",
-      "Directly below the established-sessions rule",
-      "Anywhere, because the firewall reads every rule before deciding"
+    { id: "deny", kind: "choice", prompt: "The explicit deny-and-log rule is deleted by mistake. What happens to traffic that matches no permit rule?", options: [
+      "It is still dropped by the implicit deny, but nothing logs it",
+      "It is permitted, because no rule denies it",
+      "It is permitted but logged",
+      "It is held until an administrator reviews it"
     ], expect: 0 }
   ],
   why: {
-    rules: "Firewall rules are processed top to bottom and the first match wins, so the permits go in the order the policy sets, busiest first, and the deny goes last. A deny any any above a permit would block that permit's traffic, because the firewall would never reach it.",
+    rules: "Firewall rules are processed top to bottom and the first match wins, so the permits go busiest first and the deny-everything rule goes last. The guest deny must sit above the broader SSH permit: 10.0.20.0/24 is inside 10.0.0.0/16, so if the permit came first it would match the guest traffic and the deny would never be reached. A deny any any above a permit would block that permit's traffic for the same reason.",
     fill: "HTTPS uses port 443 and SSH uses port 22, the encrypted replacements for HTTP and Telnet. The zone that holds public-facing servers between the internet and the internal network is the screened subnet, still widely called the DMZ (demilitarized zone); all three names are accepted.",
-    deny: "The first match wins, so a deny placed above the permits would block them, and one placed between permits would block every permit below it. The list ends with an implicit deny anyway; the explicit deny any any sits last so the dropped traffic is logged."
+    deny: "Every rule list ends with an implicit deny, so traffic that matches no permit is dropped whether or not the explicit rule exists. The explicit deny any any is there so the dropped traffic is logged; without it the drops are silent, and the analyst loses the record of what was refused."
   }
 };
 
@@ -10484,7 +10485,7 @@ window.FRAPbq = (function () {
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
       <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
       ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
-      <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+      <label class="field">What is the issue?<select id="fb-cat">${fb.kind === 'lesson' ? '<option value="">Nothing in particular, just the rating</option>' : ''}${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
       <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;

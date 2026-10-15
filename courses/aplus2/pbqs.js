@@ -247,9 +247,9 @@ FRA.pbqs["ap2-slow-pc-order"] = {
       "Identify the problem: ask the user what changed a week ago and open Task Manager",
       "Establish a theory: a new startup program or malware is eating resources",
       "Test the theory: do a clean boot and run a full malware scan",
-      "Establish a plan of action: remove the startup item and schedule regular scans",
+      "Establish a plan of action: remove the startup item",
       "Implement the plan",
-      "Verify full functionality: time the boot and have the user confirm the PC is fast again",
+      "Verify full functionality: time the boot, have the user confirm the PC is fast again, and schedule regular scans as a preventive measure",
       "Document the findings, actions, and outcome in the ticket"
     ], expect: [0, 1, 2, 3, 4, 5, 6] },
     { id: "rows", kind: "multiselect", shuffle: false, prompt: "These rows are from the PC's Task Manager. Pick every row that points to the cause.", options: [

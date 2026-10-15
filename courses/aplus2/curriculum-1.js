@@ -127,6 +127,9 @@ Before an in-place upgrade or version change:
 5. Know the **product life cycle**: upgrading to a version near its own EOL only postpones the problem.
 Free space, a charged battery or AC power, and time are the practical requirements.
 
+## After setup finishes
+Setup ends at the desktop, not at a finished machine. Install the vendor's drivers and let Windows Update run, create the user's account and join the domain if the office has one, then restore the backed-up files and open a few to prove the restore worked. On a clean install the applications go back on at this point too.
+
 > Exam tip: PXE is network boot; Autopilot-style zero-touch means nobody touches the device; image deployment makes clones. GPT needs UEFI and allows disks over 2 TB and 128 partitions; MBR is four primaries and 2 TB. Load third-party storage drivers when setup cannot see the disk. Back up before any upgrade.`,
       hook: "Boot: USB, PXE network, SSD or flash, internet recovery, external drive, internal partition, multiboot. Types: clean, upgrade (keeps everything), image deployment (clones), remote network install, zero-touch (self-enrolls), recovery partition (factory), repair install (over itself), third-party storage drivers. GPT: UEFI, 128 partitions, over 2 TB; MBR: BIOS, 4 primaries, 2 TB. Upgrade: back up, app and driver support, hardware compatibility, feature updates, life cycle."
     },

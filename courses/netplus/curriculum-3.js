@@ -448,7 +448,7 @@ Locks, badge readers, cameras, and mantraps protect the rooms. A **honeypot** is
 **NAC** checks a device before allowing it on the network, using **802.1X** for authentication and a **posture assessment** for health: is antivirus current, are patches installed, is the disk encrypted. Compliant devices get their VLAN; noncompliant devices land in a **quarantine or remediation VLAN** with just enough access to fix themselves. Agents on the device or agentless scans do the checking.
 
 ## Filtering
-- **ACLs** (access control lists) on routers and firewalls permit or deny traffic by source, destination, protocol, and port. Processed top down, first match wins, implicit deny at the end.
+- **ACLs** (access control lists) on routers and firewalls permit or deny traffic by source, destination, protocol, and port. Processed top down, first match wins, implicit deny at the end, so a rule for one host or subnet must sit above any broader rule that would otherwise match its traffic first.
 - **URL filtering** blocks sites by address or category. **Content filtering** inspects what is inside: malware, data leakage, inappropriate material.
 - **MAC filtering** and hidden SSIDs are weak controls, easily spoofed.
 

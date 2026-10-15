@@ -1320,6 +1320,9 @@ Before an in-place upgrade or version change:
 5. Know the **product life cycle**: upgrading to a version near its own EOL only postpones the problem.
 Free space, a charged battery or AC power, and time are the practical requirements.
 
+## After setup finishes
+Setup ends at the desktop, not at a finished machine. Install the vendor's drivers and let Windows Update run, create the user's account and join the domain if the office has one, then restore the backed-up files and open a few to prove the restore worked. On a clean install the applications go back on at this point too.
+
 > Exam tip: PXE is network boot; Autopilot-style zero-touch means nobody touches the device; image deployment makes clones. GPT needs UEFI and allows disks over 2 TB and 128 partitions; MBR is four primaries and 2 TB. Load third-party storage drivers when setup cannot see the disk. Back up before any upgrade.`,
       hook: "Boot: USB, PXE network, SSD or flash, internet recovery, external drive, internal partition, multiboot. Types: clean, upgrade (keeps everything), image deployment (clones), remote network install, zero-touch (self-enrolls), recovery partition (factory), repair install (over itself), third-party storage drivers. GPT: UEFI, 128 partitions, over 2 TB; MBR: BIOS, 4 primaries, 2 TB. Upgrade: back up, app and driver support, hardware compatibility, feature updates, life cycle."
     },
@@ -5601,9 +5604,9 @@ FRA.pbqs["ap2-slow-pc-order"] = {
       "Identify the problem: ask the user what changed a week ago and open Task Manager",
       "Establish a theory: a new startup program or malware is eating resources",
       "Test the theory: do a clean boot and run a full malware scan",
-      "Establish a plan of action: remove the startup item and schedule regular scans",
+      "Establish a plan of action: remove the startup item",
       "Implement the plan",
-      "Verify full functionality: time the boot and have the user confirm the PC is fast again",
+      "Verify full functionality: time the boot, have the user confirm the PC is fast again, and schedule regular scans as a preventive measure",
       "Document the findings, actions, and outcome in the ticket"
     ], expect: [0, 1, 2, 3, 4, 5, 6] },
     { id: "rows", kind: "multiselect", shuffle: false, prompt: "These rows are from the PC's Task Manager. Pick every row that points to the cause.", options: [
@@ -9411,7 +9414,7 @@ window.FRAPbq = (function () {
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
       <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
       ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
-      <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+      <label class="field">What is the issue?<select id="fb-cat">${fb.kind === 'lesson' ? '<option value="">Nothing in particular, just the rating</option>' : ''}${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
       <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;

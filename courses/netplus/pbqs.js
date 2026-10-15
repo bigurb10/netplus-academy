@@ -124,7 +124,7 @@ FRA.pbqs["net-switch-lines"] = {
   id: "net-switch-lines", title: "Find the faults in the switch config", domain: 2, lesson: "u6l2", seo: false,
   scenario: {
     text: "A new desk port should put the staff PC on VLAN 10 and be up. The uplink to the core switch should be a trunk carrying VLANs 10 and 20. The core switch's end of the uplink uses the default native VLAN. Read the configuration and find what is wrong.",
-    log: "interface Gi1/0/5\n description Staff desk, VLAN 10\n switchport mode trunk\n switchport access vlan 99\n shutdown\n!\ninterface Gi1/0/48\n description Uplink to core, VLANs 10 and 20\n switchport mode access\n switchport trunk native vlan 1"
+    log: "interface Gi1/0/5\n description Staff desk, VLAN 10\n switchport mode trunk\n switchport access vlan 99\n shutdown\n!\ninterface Gi1/0/48\n description Uplink to core, VLANs 10 and 20\n switchport mode access"
   },
   tasks: [
     { id: "lines", kind: "multiselect", shuffle: false, prompt: "Pick every configuration line that is wrong.", options: [
@@ -135,8 +135,7 @@ FRA.pbqs["net-switch-lines"] = {
       "shutdown",
       "interface Gi1/0/48",
       "description Uplink to core, VLANs 10 and 20",
-      "switchport mode access",
-      "switchport trunk native vlan 1"
+      "switchport mode access"
     ], expect: [2, 3, 4, 7] },
     { id: "native", kind: "form", prompt: "The native VLAN must be the same on both ends of the trunk. Which VLAN is it?", fields: [
       { id: "vlan", label: "Native VLAN", expect: ["1"], normalize: "number" }
@@ -149,7 +148,7 @@ FRA.pbqs["net-switch-lines"] = {
     ], expect: 0 }
   ],
   why: {
-    lines: "The desk port is an access port for one VLAN, so it needs access mode, VLAN 10 rather than 99, and no shutdown. The uplink carries many VLANs, so it must be a trunk; with one end access and the other trunk, only the access VLAN passes. The interface, description, and native VLAN lines are fine.",
+    lines: "The desk port is an access port for one VLAN, so it needs access mode, VLAN 10 rather than 99, and no shutdown. The uplink carries many VLANs, so it must be a trunk; with one end access and the other trunk, only the access VLAN passes. The interface and description lines are fine.",
     native: "The native VLAN is the one VLAN that crosses an 802.1Q trunk untagged. It is VLAN 1 by default, and the core switch uses the default, so this end must be VLAN 1 too.",
     mismatch: "A native VLAN mismatch makes the switches log an error, and untagged traffic from one side lands in a different VLAN on the other, leaking traffic between VLANs. Tagged VLANs still cross, which is why the fault is easy to miss."
   }
@@ -231,15 +230,16 @@ FRA.pbqs["net-osi-match"] = {
 FRA.pbqs["net-firewall-order"] = {
   id: "net-firewall-order", title: "Order the firewall rules", domain: 4, lesson: "u8l9", seo: false,
   scenario: {
-    text: "The edge firewall needs a new rule set. Policy: replies to established sessions are allowed; the public may reach the web server in the screened subnet on HTTPS; the admin subnet may reach the servers over SSH; everything else is denied and logged. Order the allow rules so the busiest traffic matches first: established replies are most of the traffic, public HTTPS is next, and admin SSH is occasional."
+    text: "The edge firewall needs a new rule set. Policy: replies to established sessions are allowed; the public may reach the web server in the screened subnet on HTTPS; the internal network {{10.0.0.0/16}} may reach the servers over SSH, except the guest Wi-Fi subnet {{10.0.20.0/24}} inside that range, which must never reach them; everything else is denied and logged. Order the allow rules so the busiest traffic matches first: established replies are most of the traffic, public HTTPS is next, and SSH is occasional."
   },
   tasks: [
     { id: "rules", kind: "order", prompt: "Put the rules in the order the firewall should process them, top to bottom.", items: [
       "Allow replies to established sessions",
       "Allow any source to the web server on HTTPS",
-      "Allow the admin subnet to the servers on SSH",
+      "Deny 10.0.20.0/24 to the servers on SSH",
+      "Allow 10.0.0.0/16 to the servers on SSH",
       "Deny any source to any destination, and log it"
-    ], expect: [0, 1, 2, 3] },
+    ], expect: [0, 1, 2, 3, 4] },
     { id: "ports", kind: "form", prompt: "Fill in the destination ports for the two service rules.", fields: [
       { id: "https", label: "HTTPS port", expect: ["443"], normalize: "number" },
       { id: "ssh", label: "SSH port", expect: ["22"], normalize: "number" }
@@ -252,7 +252,7 @@ FRA.pbqs["net-firewall-order"] = {
     ], expect: 0 }
   ],
   why: {
-    rules: "ACLs are processed top down and the first match wins, so the allow rules go in order of how much traffic they match and the deny goes last. A deny any any placed above an allow would block that allow's traffic, because the firewall would never reach it.",
+    rules: "ACLs are processed top down and the first match wins, so the allow rules go in order of how much traffic they match and the deny-everything rule goes last. The guest deny must sit above the broader SSH allow: 10.0.20.0/24 is inside 10.0.0.0/16, so if the allow came first it would match the guest traffic and the deny would never be reached. A deny any any above an allow would block that allow's traffic for the same reason.",
     ports: "HTTPS uses TCP 443 and SSH uses TCP 22. They are the secure replacements for HTTP on 80 and Telnet on 23.",
     implicit: "Every ACL ends with an implicit deny: traffic that matches no rule is dropped. The explicit deny rule exists so the dropped traffic is logged, not to make the denial happen."
   }

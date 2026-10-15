@@ -5747,7 +5747,7 @@ FRA.pbqs["ap1-mobile-form"] = {
       { id: "proto", label: "Incoming mail protocol", expect: ["IMAP", "IMAP4", "IMAPS"], normalize: "text" },
       { id: "inport", label: "Incoming port", expect: ["993"], normalize: "number" },
       { id: "outport", label: "Outgoing (SMTP) port", expect: ["587", "465"], normalize: "number" },
-      { id: "enc", label: "Encryption", expect: ["TLS", "SSL/TLS"], normalize: "text" }
+      { id: "enc", label: "Encryption", expect: ["TLS", "SSL/TLS", "TLS/SSL", "SSL", "STARTTLS"], normalize: "text" }
     ] },
     { id: "mdm", kind: "multiselect", prompt: "Pick every MDM setting that meets the policy.", options: [
       "Require a screen lock with a passcode or biometric",
@@ -5763,7 +5763,7 @@ FRA.pbqs["ap1-mobile-form"] = {
     ], expect: 0 }
   ],
   why: {
-    mail: "IMAP keeps mail on the server and syncs it to every device, which is what one set of folders on three devices needs; POP3 downloads mail to one device. The secure IMAP port is 993. Clients submit outgoing mail on 587 with TLS, and some servers instead take submission over implicit TLS on 465, so either is accepted; port 25 is for mail moving between servers and 143 is unencrypted IMAP. The encryption is TLS, which mail clients often label SSL/TLS.",
+    mail: "IMAP keeps mail on the server and syncs it to every device, which is what one set of folders on three devices needs; POP3 downloads mail to one device. The secure IMAP port is 993. Clients submit outgoing mail on 587 with TLS, and some servers instead take submission over implicit TLS on 465, so either is accepted; port 25 is for mail moving between servers and 143 is unencrypted IMAP. The encryption is TLS, which mail clients label SSL/TLS, or STARTTLS on port 587, where the session opens plain and upgrades to TLS before any mail moves.",
     mdm: "MDM policies enforce a passcode or biometric lock, device encryption, and remote lock and wipe, which together keep a lost phone's data unreadable and erasable. Sharing location with every app protects nothing and leaks more data; MDM locates the device itself without opening location to all apps.",
     byod: "On a BYOD phone MDM creates a separate managed work profile, and a selective wipe removes only that work container, leaving her photos and personal apps alone. A full wipe is for corporate-owned devices; MDM can wipe the work data, and the SIM holds the carrier identity, not company data."
   }
@@ -9704,7 +9704,7 @@ window.FRAPbq = (function () {
     return `<div class="modal-back" data-act="fb-cancel"><div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="fb-title">
       <div><div class="eyebrow">Feedback</div><h3 id="fb-title">${esc(fb.title)}</h3>${fb.sub ? `<p class="muted" style="font-size:.9rem;margin-top:4px">${esc(fb.sub)}</p>` : ''}${fb.note ? `<p class="ink2" style="font-size:.9rem;margin-top:4px">${esc(fb.note)}</p>` : ''}</div>
       ${fb.kind === 'lesson' ? `<div class="field">Rate this lesson: 1 is confusing, 10 is great${ratingChips(fb.ref.lesson, fb.rating != null ? fb.rating : null)}</div>` : ''}
-      <label class="field">What is the issue?<select id="fb-cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
+      <label class="field">What is the issue?<select id="fb-cat">${fb.kind === 'lesson' ? '<option value="">Nothing in particular, just the rating</option>' : ''}${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></label>
       <label class="field">Details${fb.kind === 'lesson' ? ' (optional with a rating)' : ''}<textarea id="fb-text" rows="4" placeholder="${fb.kind === 'lesson' ? 'What was unclear, wrong, or missing?' : 'What is wrong, and what should it say instead?'}"></textarea></label>
       <div class="row spread"><span class="muted" style="font-size:.85rem">Saved in this browser. Export it from the Feedback tab.</span><div class="row"><button class="btn ghost" data-act="fb-cancel">Cancel</button><button class="btn primary" data-act="fb-save">Save feedback</button></div></div>
     </div></div>`;
