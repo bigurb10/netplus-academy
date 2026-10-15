@@ -17,6 +17,7 @@ FRA.units.push({
 - **Ports and protocols**: allow only what a service needs. A web server needs 443; it does not need 3389 from the internet.
 - **Screened subnets**: the rules that let the internet reach the public servers, let those servers reach exactly the internal systems they need, and nothing more.
 
+- **Host firewalls from the command line**: on Linux, ufw is the simple front end and iptables the rule table beneath it. sudo ufw insert 1 deny from 198.51.100.7 places a block above every existing allow so it matches first; the same deny appended below an allow for that traffic would never be reached. The iptables form is sudo iptables -I INPUT -s 198.51.100.7 -j DROP, where -I inserts at the top of the INPUT chain.
 ## IDS and IPS
 - **Signatures**: patterns of known attacks. Fast and precise, but blind to anything new. Keep them updated.
 - **Trends**: behavior-based detection that notices unusual patterns, such as a workstation suddenly scanning the network. Catches new attacks at the cost of more false positives.
@@ -326,6 +327,9 @@ The process of identifying, preserving, collecting, and producing electronically
 
 ## Using them together
 An investigation moves across sources. A DLP alert points to a user; the application log shows what they accessed; the endpoint log shows the file being compressed; the firewall log shows the upload; the packet capture shows the contents. Time synchronization across sources is what makes the chain readable.
+
+## From evidence to action
+The authentication log also names the attack. Many failed logins against one account from one address is brute force; one failed login each against many accounts from one address in the same minute is password spraying, and a success from that address right after is the attacker getting in. Once the log names the attacking address, the host firewall is the quickest containment: on a Linux server, sudo ufw insert 1 deny from 198.51.100.7 blocks that address ahead of every existing allow rule, because rules match top to bottom and the first match wins, and sudo iptables -I INPUT -s 198.51.100.7 -j DROP is the same block written for iptables. Record the time you added the rule; containment belongs in the incident timeline.
 
 > Exam tip: "which internal machine had this IP address at 2 p.m." is DHCP or network logs. "What process executed on the endpoint" is endpoint logs. "Exact content of the transmitted data" is a packet capture. Email origin is in the header metadata.`,
       hook: "Firewall for connections, application for actions, endpoint for processes, OS logs for logons, IDS/IPS for signatures, network logs for addresses and names, metadata for origin. Scans, reports, dashboards, and packet captures fill the rest."

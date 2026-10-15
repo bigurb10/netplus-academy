@@ -212,4 +212,4 @@ FRA.acronyms = {
   "XSS": { full: "Cross-site scripting", tip: "An attacker's script runs in other users' browsers because a site echoes untrusted input.", more: "In XSS the attacker stores or reflects script through a web page so that it executes in the victim's browser, stealing sessions or acting as the user. Input validation and output encoding are the defenses." }
 };
 // Uppercase words in the course text that are not acronyms (emphasis, registry key names, model numbers, formula symbols).
-FRA.acronymIgnore = ["BEST","FIRST","LEAST","MOST","MUST","NEXT","NOT","OR"];
+FRA.acronymIgnore = ["BEST","FIRST","LEAST","MOST","MUST","NEXT","NOT","OR","DROP","INPUT","SHA256"];

@@ -472,6 +472,9 @@ FRA.units.push({
 ## Vulnerability scanning
 Automated tools compare systems against a database of known flaws. A **credentialed** scan logs into the system and sees installed software and configurations in detail; a **non-credentialed** scan sees only what is exposed to the network. Credentialed scans find more and produce fewer false positives.
 
+## Tools you may be asked to type
+A port scanner shows what a system exposes before a full vulnerability scan runs. nmap 10.0.0.5 lists the open ports on a host. nmap -sV 10.0.0.5 goes further and reports the service and version behind each port, which is what a vulnerability check needs, because flaws attach to versions. Adding -p- scans all 65,535 TCP ports instead of the common ones. Scan only systems you are authorized to test. Before running any scanner you downloaded, confirm its hash against the vendor's published value with sha256sum on Linux or certutil -hashfile on Windows, as the hashing lesson shows.
+
 ## Application security testing
 - **Static analysis**: examines source code without running it. Finds coding flaws early.
 - **Dynamic analysis**: tests the running application by sending inputs and watching behavior. Finds flaws that only appear at run time.

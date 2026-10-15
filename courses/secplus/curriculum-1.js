@@ -201,6 +201,11 @@ Use **TLS 1.2 or 1.3**. SSL and TLS 1.0 and 1.1 are deprecated.
 - **SHA-256** (and the SHA-2 family): the current standard. **SHA-3**: a newer alternative design.
 A **collision** is two different inputs with the same hash. Strong hashes make collisions computationally impractical.
 
+## Checking a hash yourself
+Vendors publish the SHA-256 hash of a download so you can confirm the file arrived intact. Compute it and compare every character with the published value; any difference at all means the file is not the one the vendor shipped.
+- **Linux**: sha256sum installer.iso prints the hash followed by the file name. shasum -a 256 installer.iso gives the same hash from the shasum tool.
+- **Windows**: certutil -hashfile installer.iso SHA256 prints the hash. The order is fixed: the file name first, then the algorithm name.
+
 ## HMAC
 A hash mixed with a secret key. Only someone with the key can produce the right value, so HMAC proves both integrity and that the sender knew the key. Used in API authentication and in TLS.
 
