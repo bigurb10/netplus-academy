@@ -321,6 +321,27 @@
     }
     return shuffle(items);
   }
+  // PBQs for an official-format test: by domain weight, avoiding the ones the last official attempt used when enough exist.
+  function pickPbqs(n) {
+    const last = S.exams.slice().reverse().find(e => e.setup && e.setup.mode === 'standard'); const used = new Set(((last && last.pbqs) || []));
+    const pool = shuffle(pbqIds.filter(id => !used.has(id))).concat(shuffle(pbqIds.filter(id => used.has(id))));
+    const weights = pctWeights(); const byD = {}; pool.forEach(id => { (byD[PBQS[id].domain] = byD[PBQS[id].domain] || []).push(id); });
+    const want = apportion(Math.min(n, pbqIds.length), weights); const out = [];
+    TESTED_IDS.forEach(d => { (byD[d] || []).slice(0, want[d] || 0).forEach(id => out.push(id)); });
+    let k = 0; while (out.length < Math.min(n, pbqIds.length) && k < pool.length) { if (!out.includes(pool[k])) out.push(pool[k]); k++; }
+    return out.slice(0, n);
+  }
+  // Each PBQ task counts as one question, so the tasks come out of the question quotas one for one:
+  // out of their own PBQ's domain first, then off the largest remaining quota when a domain holds
+  // fewer questions than the PBQ has tasks. Either way the test keeps the exam's question count.
+  function cutQuotas(quotas, picks) {
+    const cut = {}; picks.forEach(id => { const p = PBQS[id]; cut[p.domain] = (cut[p.domain] || 0) + p.tasks.length; });
+    const q2 = Object.assign({}, quotas || {}); let over = 0;
+    TESTED_IDS.forEach(d => { const base = quotas ? (quotas[d] || 0) : DOMAINS[d].quota; const take = Math.min(base, cut[d] || 0); q2[d] = base - take; over += (cut[d] || 0) - take; });
+    let guard = 0;
+    while (over > 0 && guard++ < 1000) { const d = TESTED_IDS.filter(x => q2[x] > 0).sort((x, y) => q2[y] - q2[x] || DOMAINS[y].pct - DOMAINS[x].pct)[0]; if (d == null) break; q2[d]--; over--; }
+    return q2;
+  }
   // ---------- test setup (standard = the real exam's format; custom = the learner's own count, time limit, and domain mix) ----------
   const REAL_N = (course.exam && course.exam.questions) || EXAM_N, REAL_MIN = (course.exam && course.exam.minutes) || EXAM_MINUTES;
   const MAX_N = Math.max(50, bank.length);
@@ -355,6 +376,8 @@
   }
   const slim = q => q.gen ? q : q.id; // generated questions stored inline, bank questions by id
   const fat = x => typeof x === 'string' ? Q[x] : x;
+  // A test item that is a PBQ rather than a question: { pbq: id }. fat() hands it back untouched.
+  const isPbqItem = x => !!(x && typeof x === 'object' && x.pbq);
   // The learner's answer for a stored record, by option text. Answer keys get rebalanced between builds, so an index
   // saved by an older build can point at a different option today; records store the text (pick) and are matched by it.
   // Older records without it fall back to the index, except where that index now lands on the correct answer of a
@@ -791,8 +814,8 @@
     const cp = S.active && S.active.kind === 'checkpoint' && S.active.lesson === id ? S.active : null;
     const callouts = entry ? entry.reasons.filter(r => r.q).map(r => { const q = fat(r.q); if (!q) return ''; const wrong = r.kind === 'wrong' || r.kind === 'wrong-confident';
       return `<div class="callout ${wrong ? 'bad' : 'warn'}"><div class="eyebrow">${wrong ? 'You missed this' : 'You guessed this right'} on the ${r.source === 'starter' ? 'starter test' : 'last test'}${r.conf != null ? ` · confidence ${r.conf}/5` : ''}</div>
-        <div class="stem">${esc(q.q)}</div>
-        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${pickText(q, r, wrong) || 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${letters[q.c]}. ${esc(q.a[q.c])}</span></div>
+        <div class="stem">${q.pbq ? 'PBQ task: ' : ''}${esc(q.q)}</div>
+        <div class="ans">${wrong ? `<span style="color:var(--bad)">You answered ${pickText(q, r, wrong) || 'nothing (skipped)'}.</span> ` : ''}<span style="color:var(--good)">Correct: ${q.pbq ? esc(q.a[0]) : `${letters[q.c]}. ${esc(q.a[q.c])}`}</span></div>
         <div class="ans ink2">${esc(q.e)}</div></div>`; }).join('') : '';
     const domainReason = entry ? entry.reasons.find(r => r.kind === 'domain') : null;
     let quiz;
@@ -894,20 +917,25 @@
       <div class="card stack"><div class="row spread"><h3>${plural(pbqIds.length, 'PBQ')}</h3><span class="muted" style="font-size:.9rem">${pbqsDoneCount()} done</span></div><div class="options">${rows}</div></div>
     </div>`;
   }
+  // The scenario card: the same markup on the PBQs tab and inside a test.
+  function pbqScenarioHtml(p) {
+    const sc = p.scenario || {};
+    return `<div class="card lift stack pbq-scenario"><div class="eyebrow">${esc(DOMAINS[p.domain] ? DOMAINS[p.domain].short : 'Scenario')}</div><h2>${esc(p.title)}</h2><div class="lesson-body">${renderBody(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}</div>`;
+  }
   function viewPbqOne(p) {
     const ui = pbqUi(p.id); const st = S.pbqs[p.id];
-    const sc = p.scenario || {};
-    const scenario = `<div class="card lift stack pbq-scenario"><div class="eyebrow">${esc(DOMAINS[p.domain] ? DOMAINS[p.domain].short : 'Scenario')}</div><h2>${esc(p.title)}</h2><div class="lesson-body">${renderBody(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}</div>`;
+    const scenario = pbqScenarioHtml(p);
     const summary = ui.checked ? (() => { const { frac } = pbqScore(p, ui.answers); return `<div class="feedback ${frac === 1 ? 'good' : 'bad'}"><div class="verdict">${frac === 1 ? 'Every task right.' : `${Math.round(frac * 100)}% of tasks fully right.`}</div><div class="muted">Best so far: ${Math.round(((st && st.best) || 0) * 100)}%. Read each why, then retry or open the lesson.</div></div>`; })() : '';
     const btns = ui.checked
       ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
       : `<button class="btn primary" data-act="pbq-check" data-arg="${esc(p.id)}">Check my answers</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`;
     return `<div class="content stack" style="gap:18px">${scenario}<div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}"></div>${summary}<div class="row" style="gap:8px;flex-wrap:wrap">${btns}</div></div>`;
   }
-  // Mount the task renderers into #pbq after each paint, like mountInstrument.
+  // Mount the task renderers into #pbq after each paint, like mountInstrument. data-pbq-ui names the
+  // ui the mount uses, so the same PBQ answered inside a test keeps its own working answers.
   function mountPbq() {
     const el = $('#pbq'); if (!el) return; const p = PBQS[el.dataset.pbqId]; if (!p || !window.FRAPbq) return;
-    try { FRAPbq.render(el, p, pbqUi(p.id), PBQ_HELPERS); } catch (err) { console.warn('PBQ failed to render', err); el.innerHTML = '<p class="muted">This PBQ is unavailable.</p>'; }
+    try { FRAPbq.render(el, p, pbqUi(el.dataset.pbqUi || p.id), PBQ_HELPERS); } catch (err) { console.warn('PBQ failed to render', err); el.innerHTML = '<p class="muted">This PBQ is unavailable.</p>'; }
   }
   function checkPbq(p) {
     const ui = pbqUi(p.id); const el = $('#pbq'); if (!el) return;
@@ -975,12 +1003,35 @@
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
     if (ex.i >= ex.items.length) return finishExam();
-    const answered = ex.answers.filter(Boolean).length; const q = fat(ex.items[ex.i]);
+    const answered = ex.answers.filter(Boolean).length;
     const nav = { prev: ex.i > 0, review: ex.i < ex.answers.length, last: ex.i === ex.items.length - 1 };
+    if (isPbqItem(ex.items[ex.i])) return viewExamPbq(ex, nav, answered);
+    const q = fat(ex.items[ex.i]);
     return `<div class="content">
       <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.answers.length / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short, nav })}</div>
       <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
+    </div>`;
+  }
+  // A PBQ inside a test: the same exam head, the scenario, and the task cards with one Submit for the
+  // whole PBQ. Nothing is graded on screen; every task is scored with the questions at the end.
+  function viewExamPbq(ex, nav, answered) {
+    const p = PBQS[ex.items[ex.i].pbq];
+    if (!p) { ex.answers[ex.i] = { pbq: ex.items[ex.i].pbq, answers: {} }; ex.i++; return viewExam(); }
+    const ui = pbqUi('test:' + p.id);
+    // A submitted PBQ comes back with its answers; working answers already in hand win, so stepping
+    // back and forth never throws away what the learner just built.
+    const stored = nav.review ? ex.answers[ex.i] : null;
+    if (stored && stored.answers && !Object.keys(ui.answers || {}).length) { ui.answers = Object.assign({}, stored.answers); ui.sel = {}; }
+    const n = ex.items.slice(0, ex.i + 1).filter(isPbqItem).length, of = ex.items.filter(isPbqItem).length;
+    const prevBtn = nav.prev ? `<button class="btn ghost" data-act="test-prev">&larr; Previous</button>` : '';
+    const btn = nav.review ? `<button class="btn primary" data-act="next">Continue &rarr;</button>` : `<button class="btn primary" data-act="submit">Submit this PBQ</button>`;
+    return `<div class="content">
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">PBQ ${n} of ${of}</span><div class="meter"><i style="width:${100 * ex.answers.length / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      ${pbqScenarioHtml(p)}
+      <div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}" data-pbq-ui="test:${esc(p.id)}"></div>
+      <div class="row spread" style="margin-top:12px;gap:10px;flex-wrap:wrap"><div class="row" style="gap:10px">${prevBtn}<span class="kbd-hint">${plural(p.tasks.length, 'task')}, each one scored as a question</span></div>${btn}</div>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every task is explained on the results page. ${answered} of ${ex.items.length} submitted so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -1009,12 +1060,19 @@
   }
   const nextFlowKind = () => S.exams.some(e => e.kind === 'full' || e.kind === 'practice') ? 'practice' : 'full';
   function startExam(kind, setup) {
-    let items, minutes = kind === 'starter' ? 0 : EXAM_MINUTES, quotas = null;
+    let items, minutes = kind === 'starter' ? 0 : EXAM_MINUTES, quotas = null; let pbqItems = [];
     if (kind === 'starter') items = buildStarter();
-    else { if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); } items = buildExam(quotas); }
-    const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length } : null;
+    else {
+      if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); }
+      // The official-format test opens with PBQs, like the real exam. Practice, starter, and custom
+      // tests never carry one. quotas here are the multiple-choice quotas the tasks were taken from.
+      if (setup && setup.mode === 'standard' && (T.pbqInTest || 0) > 0 && pbqIds.length) { pbqItems = pickPbqs(T.pbqInTest); quotas = cutQuotas(quotas, pbqItems); }
+      items = buildExam(quotas);
+    }
+    const tasks = pbqItems.reduce((n, id) => n + PBQS[id].tasks.length, 0);
+    const meta = setup ? { mode: setup.mode, n: setup.n, minutes, weights: setup.weights, quotas, count: items.length + tasks } : null;
     // Only the starter test asks a sureness question; every other test is scored on the answer alone, like the real exam.
-    S.active = { kind, items: items.map(slim), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: kind !== 'starter' };
+    S.active = { kind, items: pbqItems.map(id => ({ pbq: id })).concat(items.map(slim)), i: 0, answers: [], sel: null, conf: null, submitted: false, startedAt: Date.now(), minutes, setup: meta, noConf: kind !== 'starter' };
     go('exam');
   }
   function finishExam() {
@@ -1022,6 +1080,25 @@
     let score = 0; const byDomain = {}; DOMAIN_IDS.forEach(d => { byDomain[d] = { c: 0, t: 0 }; });
     const review = [];
     items.forEach((q, k) => {
+      // A PBQ: every task is one question. Each one is graded now, recorded against the PBQ's lesson
+      // like any answer, and carried into the review as an inline pseudo-question, so the results
+      // page, the strength chart, and retraining read it the way they read a generated question.
+      if (isPbqItem(q)) {
+        const pbq = PBQS[q.pbq]; if (!pbq) return;
+        const a = ex.answers[k] || { pbq: q.pbq, answers: {} }; const scores = {};
+        pbq.tasks.forEach(t => {
+          const g = FRAPbq.grade(t, a.answers[t.id]); scores[t.id] = g.score;
+          const pq = pbqPseudoQ(pbq, t); const conf = g.correct ? 4 : 3;
+          const res = recordAnswer(pq, g.correct ? 0 : -1, conf);
+          const d = pbq.domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
+          review.push({ q: pq, choice: g.correct ? 0 : -1, pick: FRAPbq.answerText(t, a.answers[t.id]), conf, correct: res.correct, pbq: pbq.id, task: t.id, score: g.score });
+        });
+        // A test records the PBQ's best score, never its done flag: done is earned on the PBQs tab,
+        // where every task shows its why and can be retried.
+        const right = pbq.tasks.filter(t => scores[t.id] === 1).length; const ps = pbqStat(pbq.id);
+        ps.tasks = scores; ps.best = Math.max(ps.best || 0, pbq.tasks.length ? right / pbq.tasks.length : 0); ps.at = Date.now();
+        return;
+      }
       const a = ex.answers[k] || { choice: -1, conf: 1, skipped: true };
       // Without a confidence rating, a right answer counts as sure (4) and a wrong one as plain wrong (3).
       const conf = ex.noConf || a.conf == null ? (a.choice === q.c ? 4 : 3) : a.conf;
@@ -1029,8 +1106,12 @@
       const d = L[q.t].domain; byDomain[d].t++; if (res.correct) { byDomain[d].c++; score++; }
       review.push({ q: slim(q), choice: a.choice, pick: a.choice >= 0 ? q.a[a.choice] : null, conf, correct: res.correct });
     });
-    const total = items.length; const p = pct(score, total);
+    // One task is one question, so the count comes from the review, not the item list.
+    const total = review.length; const p = pct(score, total);
     const rec = { id: 'x-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: Date.now(), kind: ex.kind, score, total, pct: p, byDomain, review, seconds: Math.round((Date.now() - ex.startedAt) / 1000), minutes: ex.minutes, setup: ex.setup || null, noConf: !!ex.noConf };
+    // Which PBQs this attempt used, so the next official-format test can draw different ones. Only a
+    // record that carried PBQs gets the field; every other record keeps the shape it has always had.
+    const usedPbqs = items.filter(isPbqItem).map(x => x.pbq); if (usedPbqs.length) rec.pbqs = usedPbqs;
     S.exams.push(rec); const examIdx = S.exams.length - 1;
     if (ex.kind === 'starter') { S.plan = planFromStarter(rec, examIdx); if (!S.plan.lessons.length) S.plan = null; S.path = null; markPathChanged(); }
     else if (ex.kind === 'custom') {
@@ -1136,7 +1217,13 @@
     // Each miss: what you picked, what was right, and why -- the bank's explanation says why the
     // correct answer is correct and, for most questions, why the others are not. The lesson link
     // is optional; the learner can read the review and go straight to the next test.
-    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return ''; return `<div class="review-item"><div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (e.noConf || r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${e.noConf ? (wrong ? 'Wrong' : 'Right') : KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div><div class="stem">${esc(q.q)}</div>${wrong ? `<div class="ans"><span class="ink2">Your answer:</span> <span style="color:var(--bad)">${pickText(q, r, wrong) || 'skipped'}</span></div>` : ''}<div class="ans"><span class="ink2">Correct answer:</span> <span style="color:var(--good)">${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans"><span class="ink2">Why:</span> ${esc(q.e)}</div><div class="ans muted row" style="gap:6px;flex-wrap:wrap">Lesson: ${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Review the lesson</button>${fbBtn(q, e.kind + '-results')}</div></div>`; };
+    // A missed PBQ task reads the same way: the prompt, what the learner built, the expected answer,
+    // the why, and the PBQ's lesson. Its answer has no option letter, so pickText is skipped.
+    const reviewItem = (r, wrong) => { const q = fat(r.q); if (!q) return '';
+      const head = `<div class="row" style="gap:6px;margin-bottom:4px"><span class="pill ${wrong ? (e.noConf || r.conf >= 4 ? 'bad' : 'warn') : 'warn'}">${e.noConf ? (wrong ? 'Wrong' : 'Right') : KIND_LABEL[kindOf(r.correct, r.conf)]}</span><span class="pill">${DOMAINS[L[q.t].domain].short}</span></div>`;
+      const lesson = `<div class="ans muted row" style="gap:6px;flex-wrap:wrap">Lesson: ${esc(L[q.t].title)} · <button class="btn small ghost" data-act="lesson" data-arg="${q.t}">Review the lesson</button>${fbBtn(q, e.kind + '-results')}</div>`;
+      if (q.pbq) return `<div class="review-item">${head}<div class="stem">PBQ task: ${inline(q.q)}</div>${wrong ? `<div class="ans"><span class="ink2">Your answer:</span> <span style="color:var(--bad)">${esc(r.pick == null ? 'nothing' : r.pick)}</span></div>` : ''}<div class="ans"><span class="ink2">Correct answer:</span> <span style="color:var(--good)">${esc(q.a[0])}</span></div><div class="ans"><span class="ink2">Why:</span> ${inline(q.e)}</div>${lesson}</div>`;
+      return `<div class="review-item">${head}<div class="stem">${esc(q.q)}</div>${wrong ? `<div class="ans"><span class="ink2">Your answer:</span> <span style="color:var(--bad)">${pickText(q, r, wrong) || 'skipped'}</span></div>` : ''}<div class="ans"><span class="ink2">Correct answer:</span> <span style="color:var(--good)">${letters[q.c]}. ${esc(q.a[q.c])}</span></div><div class="ans"><span class="ink2">Why:</span> ${esc(q.e)}</div>${lesson}</div>`; };
     // The next step, offered at the top and the bottom so the review never traps the learner.
     const nk = nextFlowKind();
     const nextBtn = isStarter ? '' : testsLocked('full') ? `<button class="btn primary" data-act="upgrade">Unlock the full course</button>`
@@ -1480,20 +1567,39 @@
   // answer, so leaving a reviewed question saves it; leaving the new question keeps its unsubmitted pick as a
   // draft that comes back when the learner returns to it.
   const testAnswer = (sess, sel, conf) => { const skipped = sel == null; return { choice: skipped ? -1 : sel, conf: sess.noConf ? null : skipped ? 1 : conf, skipped }; };
+  // Reading a PBQ's tasks out of the mounted container: the answer a submitted PBQ carries in the session.
+  function pbqTestAnswer(sess) {
+    const p = PBQS[sess.items[sess.i].pbq]; if (!p) return { pbq: sess.items[sess.i].pbq, answers: {} };
+    const el = $('#pbq'); const ui = pbqUi('test:' + p.id);
+    return { pbq: p.id, answers: el ? FRAPbq.collect(el, p, ui) : (ui.answers || {}) };
+  }
   function testLeave(sess) {
+    // Leaving a submitted PBQ saves whatever its tasks hold now, the same way leaving a reviewed
+    // question saves the selection on screen. The one at the frontier keeps its answers in the ui.
+    if (isPbqItem(sess.items[sess.i])) { if (sess.i < sess.answers.length) sess.answers[sess.i] = pbqTestAnswer(sess); return; }
     if (sess.i < sess.answers.length) sess.answers[sess.i] = testAnswer(sess, sess.sel, sess.conf);
     else sess.draft = { sel: sess.sel, conf: sess.conf };
   }
   function testShow(sess, k) {
     sess.i = k; sess.submitted = false;
+    const it = sess.items[k];
+    if (isPbqItem(it)) { sess.sel = null; sess.conf = null; const a = sess.answers[k]; if (a && a.answers) { const ui = pbqUi('test:' + it.pbq); ui.answers = Object.assign({}, a.answers); ui.sel = {}; } return; }
     if (k < sess.answers.length) { const a = sess.answers[k]; sess.sel = a.skipped || a.choice < 0 ? null : a.choice; sess.conf = a.skipped ? null : a.conf; }
     else { const d = sess.draft || {}; sess.sel = d.sel == null ? null : d.sel; sess.conf = d.conf == null ? null : d.conf; sess.draft = null; }
   }
   // A pick on the starter without its sureness rating is not an answer yet, so it holds the learner on the question.
-  const testUnrated = sess => sess.i < sess.answers.length && !sess.noConf && sess.sel != null && sess.conf == null;
+  // A PBQ has no sureness rating, so it never holds anyone.
+  const testUnrated = sess => !isPbqItem(sess.items[sess.i]) && sess.i < sess.answers.length && !sess.noConf && sess.sel != null && sess.conf == null;
   function testPrev(sess) { if (!isTest(sess.kind) || sess.i <= 0 || testUnrated(sess)) return; testLeave(sess); testShow(sess, sess.i - 1); save(); render(); }
   function testNext(sess) { if (!isTest(sess.kind) || sess.i >= sess.answers.length || testUnrated(sess)) return; testLeave(sess); testShow(sess, sess.i + 1); save(); render(); }
   function submitAnswer(sess, skipped) {
+    // A PBQ submits as a whole: every task answer is banked now and graded with the questions at the
+    // end, so the learner sees no verdict here. A reviewed one moves on, keeping any change it holds.
+    if (isTest(sess.kind) && isPbqItem(sess.items[sess.i])) {
+      if (sess.i < sess.answers.length) return testNext(sess);
+      sess.answers[sess.i] = pbqTestAnswer(sess);
+      sess.i++; sess.sel = null; sess.conf = null; sess.submitted = false; sess.draft = null; save(); render(); return;
+    }
     const q = fat(sess.items[sess.i]);
     if (isTest(sess.kind)) {
       if (sess.i < sess.answers.length) return testNext(sess); // a reviewed question moves on with whatever is selected
@@ -1546,7 +1652,8 @@
       case 'finish-checkpoint': { S.active = null; save(); if (arg === '__stay') return render(); if (arg === '__test') return startExam(S.exams.some(x => x.kind === 'full' || x.kind === 'practice') ? 'practice' : 'full'); const en = planEntry(arg); if (en && S.plan && S.plan.source === 'test' && modeOf(en) !== 'lesson') return openEntry(en); return go('lesson', arg); }
       case 'opt': { const s = sessionForView(); if (!s || s.submitted) return; s.sel = parseInt(arg, 10); save(); render(); return; }
       case 'conf': { const s = sessionForView(); if (!s || s.submitted) return; s.conf = parseInt(arg, 10); save(); render(); return; }
-      case 'submit': { const s = sessionForView(); if (!s || s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
+      // A PBQ has no option to select and no sureness to rate, so Submit this PBQ goes straight through.
+      case 'submit': { const s = sessionForView(); if (!s) return; if (isTest(s.kind) && isPbqItem(s.items[s.i])) return submitAnswer(s, false); if (s.submitted || s.sel == null || (s.conf == null && !s.noConf)) return; submitAnswer(s, false); return; }
       case 'path': { const [scope, idx] = String(arg).split(':'); choosePath(scope === 'full' ? 'full' : 'tailored', parseInt(idx, 10)); render(); toast(scope === 'full' ? 'The whole course it is.' : 'Tailored tutorial chosen.'); return; }
       case 'retrain-preset': { if (!S.plan || S.plan.source !== 'test' || !PRESET_LABEL[arg] || arg === 'custom') return; applyPreset(S.plan, arg); save(); render(); return; }
       case 'retrain-mode': { const [id, m] = String(arg).split(':'); const en = planEntry(id); if (!en || !S.plan || S.plan.source !== 'test' || !MODES.includes(m)) return; en.mode = m; S.plan.changedAt = Date.now(); save(); render(); return; }
@@ -1589,7 +1696,8 @@
       case 'skip': { const s = sessionForView(); if (!s || s.submitted) return; submitAnswer(s, true); return; }
       case 'test-prev': { const s = sessionForView(); if (s) testPrev(s); return; }
       case 'test-next': { const s = sessionForView(); if (s) testNext(s); return; }
-      case 'next': { const s = sessionForView(); if (!s || !s.submitted) return; advance(s); return; }
+      // Continue on a submitted PBQ: nothing was graded on screen, so there is no feedback to leave behind.
+      case 'next': { const s = sessionForView(); if (!s) return; if (isTest(s.kind) && isPbqItem(s.items[s.i])) return testNext(s); if (!s.submitted) return; advance(s); return; }
       case 'start-exam': {
         if (testsLocked(arg === 'starter' ? 'starter' : 'full')) { toast('The full course is needed for this test.'); return go('exam'); }
         if (S.active && S.active.kind !== 'checkpoint' && !confirm('You have an unfinished session. Start a new test and discard it?')) return;
@@ -1652,12 +1760,15 @@
     if (e.key === 'Enter' && e.target && e.target.classList && e.target.classList.contains('lab-in')) { e.preventDefault(); const b = $(`[data-act="lab-check"][data-arg="${e.target.dataset.task}"]`); if (b && !b.disabled) b.click(); return; }
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     const s = sessionForView(); if (!s) return;
+    // A PBQ in a test has no A-D options and no sureness, and FRAPbq owns the keys inside its tasks:
+    // the answer keys and Enter stay out of it so nothing submits the PBQ by accident.
+    const onPbq = isTest(s.kind) && isPbqItem(s.items[s.i]);
     const k = e.key.toUpperCase();
-    if (!s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
-    if (!s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
+    if (!onPbq && !s.submitted && letters.includes(k)) { s.sel = letters.indexOf(k); save(); render(); e.preventDefault(); return; }
+    if (!onPbq && !s.submitted && !s.noConf && /^[1-5]$/.test(k)) { s.conf = parseInt(k, 10); save(); render(); e.preventDefault(); return; }
     if (isTest(s.kind) && e.key === 'ArrowLeft') { e.preventDefault(); testPrev(s); return; }
     if (isTest(s.kind) && e.key === 'ArrowRight') { e.preventDefault(); testNext(s); return; }
-    if (e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (isTest(s.kind) && s.i < s.answers.length) testNext(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
+    if (!onPbq && e.key === 'Enter') { e.preventDefault(); if (s.submitted) advance(s); else if (isTest(s.kind) && s.i < s.answers.length) testNext(s); else if (s.sel != null && (s.conf != null || s.noConf)) submitAnswer(s, false); }
   });
   app.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.acr'); if (el) acrShow(el); });
   app.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('.acr')) acrHide(); });
@@ -1770,8 +1881,12 @@
     } else log.push('labs: none in this pack');
     // The final gate: enough passes among the last few tests qualify the learner, then only a timed
     // official-format pass at the real exam's score clears them, permanently.
-    const allRight = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: q.c, conf: null }; }); sess.i = sess.items.length; render(); };
-    const allWrong = sess => { sess.items.forEach((it, k) => { const q = fat(it); sess.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); sess.i = sess.items.length; render(); };
+    // A task's model answer is what the pack wrote in expect: the index sequence, the chosen indexes,
+    // the index, the first accepted string per field, or the first accepted command.
+    const modelAnswer = t => t.kind === 'form' ? (t.fields || []).reduce((a, f) => { a[f.id] = (f.expect || [])[0]; return a; }, {}) : t.kind === 'command' ? (t.expect || [])[0] : Array.isArray(t.expect) ? t.expect.slice() : t.expect;
+    const pbqModel = id => PBQS[id].tasks.reduce((a, t) => { a[t.id] = modelAnswer(t); return a; }, {});
+    const allRight = sess => { sess.items.forEach((it, k) => { if (isPbqItem(it)) { sess.answers[k] = { pbq: it.pbq, answers: pbqModel(it.pbq) }; return; } const q = fat(it); sess.answers[k] = { choice: q.c, conf: null }; }); sess.i = sess.items.length; render(); };
+    const allWrong = sess => { sess.items.forEach((it, k) => { if (isPbqItem(it)) { sess.answers[k] = { pbq: it.pbq, answers: {} }; return; } const q = fat(it); sess.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); sess.i = sess.items.length; render(); };
     // Resetting the count without trimming the log would leave state the replay cannot
     // reproduce: recomputeQualification would still see the earlier full/custom passes and recount them.
     S.plan = null; S.passes = 0; S.official = null; S.exams = S.exams.filter(e => e.kind === 'starter');
@@ -1785,14 +1900,24 @@
     if (!isOfficial(ex)) throw new Error('standard test not recognized as official'); go('exam'); if (!$('#timer')) throw new Error('official test did not show the timer with the timer setting off'); S.settings.timer = true;
     // The standard test asks no confidence question: no chips, and Submit works on the option alone.
     if (!ex.noConf || $('.confidence')) throw new Error('standard test still shows the confidence chips');
-    $(`[data-act="opt"][data-arg="${fat(ex.items[0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');
-    $('[data-act="submit"]').click(); if (ex.i !== 1 || ex.answers[0].conf != null) throw new Error('standard test answer not recorded without confidence');
+    // The official-format test opens with its PBQs when the pack ships them: the whole PBQ submits at
+    // once, with no option to pick and no sureness to rate, and each of its tasks counts as a question.
+    if (isPbqItem(ex.items[0])) {
+      if (!$('#pbq') || !document.querySelectorAll('.pbq-task').length) throw new Error('the official-format test did not render its PBQ tasks');
+      const want = Math.min(T.pbqInTest, pbqIds.length), got = ex.items.filter(isPbqItem).length;
+      if (got !== want) throw new Error(`expected ${want} PBQs in the official-format test, got ${got}`);
+      $('[data-act="submit"]').click();
+      if (ex.i !== 1 || !ex.answers[0] || ex.answers[0].pbq !== ex.items[0].pbq) throw new Error('submitting the PBQ recorded no task answers');
+    }
+    const i0 = ex.i;
+    $(`[data-act="opt"][data-arg="${fat(ex.items[i0]).c}"]`).click(); if ($('[data-act="submit"]').disabled) throw new Error('standard test submit stayed disabled without a confidence rating');
+    $('[data-act="submit"]').click(); if (ex.i !== i0 + 1 || ex.answers[i0].conf != null) throw new Error('standard test answer not recorded without confidence');
     allRight(ex);
     if (!S.exams[S.exams.length - 1].noConf || /guess/i.test($('.score-hero').textContent)) throw new Error('standard test results still talk about guesses');
     if (!S.official || stage() !== 'ready') throw new Error(`official pass did not clear the learner: stage ${stage()}`);
     go('ready'); if (!document.body.textContent.includes('Book the exam')) throw new Error('readiness report does not say to book');
     log.push(`official ${S.exams[S.exams.length - 1].total} questions in ${REAL_MIN} min passed; stage=${stage()}`);
-    S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; failing.items.forEach((it, k) => { const q = fat(it); failing.answers[k] = { choice: (q.c + 1) % 4, conf: null }; }); failing.i = failing.items.length; render();
+    S.active = null; startExam('practice', { mode: 'standard', n: REAL_N, minutes: REAL_MIN, weights: pctWeights() }); const failing = S.active; allWrong(failing);
     if (!S.official) throw new Error('a failed test revoked the official pass; it is permanent');
     { const keepPlan = S.plan; S.plan = null; if (stage() !== 'ready') throw new Error(`official pass did not keep the learner cleared: stage ${stage()}`); S.plan = keepPlan; }
     if (S.passes !== Math.min(PASSES_NEEDED + 1, PASS_WINDOW - 1)) throw new Error(`window did not slide as expected: passes ${S.passes}`);

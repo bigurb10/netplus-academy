@@ -111,6 +111,20 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
       w.click(w.$('[data-act="submit"]'));
     });
   }
+  // The same gate for a window booted on another course pack: finishStarter reads the Net+ state
+  // key through state(w), so a mini-fixture window needs its own key.
+  function finishStarterIn(w) {
+    const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    w.click(w.$('[data-act="go"][data-arg="home"]'));
+    w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const QQ = {}; w.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    const fatten = x => typeof x === 'string' ? QQ[x] : x;
+    st().active.items.map(fatten).forEach(q => {
+      w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`));
+      w.click(w.$('[data-act="conf"][data-arg="5"]'));
+      w.click(w.$('[data-act="submit"]'));
+    });
+  }
 
   // 1) Saving the custom test setup (readSetupFromForm, via the "Start custom test" button).
   {
@@ -966,6 +980,34 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     stateM().active.items.map(fatP).forEach(q => { wp.click(wp.$(`[data-act="opt"][data-arg="${q.c}"]`)); wp.click(wp.$('[data-act="conf"][data-arg="5"]')); wp.click(wp.$('[data-act="submit"]')); });
     act(wp, 'go', 'home');
     check('Home shows PBQs done', /PBQs done/.test(wp.text()));
+  }
+
+  // ----- PBQs open the official-format test -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    const wo = boot({ courseDir: mini }); const stateM = () => JSON.parse(wo.localStorage.getItem(MK));
+    finishStarterIn(wo);
+    act(wo, 'start-exam', 'practice');
+    check('a practice test carries no PBQ', !stateM().active.items.some(x => x && x.pbq));
+    wo.confirm = () => true; act(wo, 'abandon-exam');
+    act(wo, 'start-standard');
+    const a = stateM().active;
+    check('the official-format test opens with pbqInTest PBQs', a.items.length > 0 && a.items[0].pbq === 'mini-net' && a.items.filter(x => x && x.pbq).length === 1);
+    check('PBQ tasks replace questions one for one: the item count plus task count minus one equals the exam count', (a.items.length - 1) + 6 === 10, a.items.length);
+    check('the exam view renders the PBQ tasks first', wo.$$('.pbq-task').length === 6 && /Submit this PBQ|Continue/.test(wo.text()));
+    // answer two tasks right, four wrong-or-blank, submit the PBQ
+    wo.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
+    wo.click(wo.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
+    act(wo, 'submit');
+    check('submitting the PBQ records the task answers and moves on', stateM().active.i === 1 && stateM().active.answers[0] && stateM().active.answers[0].pbq === 'mini-net' && stateM().active.answers[0].answers.cmd === 'ipconfig /all');
+    // answer the remaining multiple-choice questions correctly
+    const QQ = {}; wo.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    while (stateM().active) { const s = stateM().active; const it = s.items[s.i]; if (!it) break; const q = typeof it === 'string' ? QQ[it] : it; wo.click(wo.$(`[data-act="opt"][data-arg="${q.c}"]`)); act(wo, 'submit'); }
+    const e = stateM().exams[stateM().exams.length - 1];
+    check('the record counts PBQ tasks as questions', e.total === 10 && e.score >= 2 && e.review.length === 10);
+    check('PBQ task review items carry the task as an inline question tied to the PBQ lesson', e.review.slice(0, 6).every(r => r.q && r.q.pbq === 'mini-net' && r.q.t === 'u1l2'));
+    check('the results page explains missed tasks with Expected and Why', /Your answer/.test(wo.text()) && /Correct answer/.test(wo.text()) && /Why:/.test(wo.text()) && /notconnect is the only line/.test(wo.text()));
+    check('missed PBQ tasks feed retraining for the PBQ lesson', !stateM().plan || stateM().plan.lessons.some(l => l.id === 'u1l2') || e.score === 10);
   }
 
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
