@@ -14,7 +14,7 @@ FRA.pbqs["ap2-win-commands"] = {
     { id: "disk", kind: "command", prompt: "Type the command that checks the C: drive's filesystem and fixes the errors it finds (no bad-sector scan needed).", expect: ["chkdsk C: /f"], alt: ["chkdsk /f C:"], flagOrder: false },
     { id: "dns", kind: "command", prompt: "Type the command that clears the PC's DNS resolver cache so it looks the web server up again.", expect: ["ipconfig /flushdns"], alt: ["ipconfig -flushdns"] },
     { id: "policy", kind: "command", prompt: "Type the command that applies Group Policy now, reapplying every setting even if it looks unchanged.", expect: ["gpupdate /force"] },
-    { id: "restart", kind: "command", prompt: "Type the command that restarts the PC immediately, with no countdown.", expect: ["shutdown /r /t 0"], alt: ["shutdown /t 0 /r", "shutdown -r -t 0", "shutdown -t 0 -r"] },
+    { id: "restart", kind: "command", prompt: "Type the command that restarts the PC immediately, with no countdown.", expect: ["shutdown /r /t 0"], alt: ["shutdown /t 0 /r", "shutdown -r -t 0", "shutdown -t 0 -r", "shutdown /r /t 00", "shutdown -r -t 00"] },
     { id: "elevate", kind: "choice", prompt: "One of the repair commands refuses to run and says you must be an administrator running a console session. What do you do?", options: [
       "Close the window and open Command Prompt with Run as administrator, then run the command again",
       "Run the same command again until it succeeds",
@@ -108,7 +108,7 @@ FRA.pbqs["ap2-os-install-order"] = {
   tasks: [
     { id: "steps", kind: "order", prompt: "Put the installation steps in order.", items: [
       "Back up the user's files and preferences from the old desktop",
-      "Check the laptop's hardware, applications, and drivers against the new version's requirements",
+      "Check the laptop's hardware, applications, and drivers against Windows' requirements",
       "Create the bootable USB installer and set the boot order (or use the one-time boot menu)",
       "Boot the installer and choose the edition",
       "Partition and format the drive",
@@ -213,7 +213,7 @@ FRA.pbqs["ap2-backup-form"] = {
   tasks: [
     { id: "plan", kind: "form", prompt: "Fill in the backup plan.", fields: [
       { id: "rule", label: "The rule for copies, media, and off-site (three numbers)", expect: ["3-2-1", "3 2 1", "321", "3-2-1 rule", "3/2/1", "3-2-1 backup rule"], normalize: "text" },
-      { id: "full", label: "How often the full backup runs", expect: ["weekly", "once a week", "every week", "once weekly", "every Sunday", "Sundays"], normalize: "text" },
+      { id: "full", label: "How often the full backup runs", expect: ["weekly", "once a week", "every week", "once weekly", "every Sunday", "Sundays", "Sunday", "once a week on Sunday"], normalize: "text" },
       { id: "inc", label: "Nightly backup type that copies only what changed since the last backup of any type", expect: ["incremental", "incremental backup", "incrementals"], normalize: "text" },
       { id: "diff", label: "Backup type that copies what changed since the last full backup", expect: ["differential", "differential backup", "differentials"], normalize: "text" }
     ] },
@@ -279,14 +279,14 @@ FRA.pbqs["ap2-linux-commands"] = {
     text: "A technician is signed in to a Linux server in her own home directory, which holds the script {{deploy.sh}}, the application log {{app.log}}, the file {{report.txt}}, and a directory named {{backup}}. The script's permissions are currently {{rw-r--r--}}: the owner can read and write, and the group and others can only read. The application writes the word error in lowercase."
   },
   tasks: [
-    { id: "chmod", kind: "command", prompt: "Type the command that gives the owner read, write, and execute on deploy.sh, and the group and others read and execute.", expect: ["chmod 755 deploy.sh"], alt: ["chmod u+rwx,go+rx deploy.sh", "chmod u=rwx,go=rx deploy.sh"] },
+    { id: "chmod", kind: "command", prompt: "Type the command that gives the owner read, write, and execute on deploy.sh, and the group and others read and execute.", expect: ["chmod 755 deploy.sh"], alt: ["chmod u+rwx,go+rx deploy.sh", "chmod u=rwx,go=rx deploy.sh", "chmod +x deploy.sh", "chmod a+x deploy.sh", "chmod ugo+x deploy.sh", "chmod u+x,go+x deploy.sh", "chmod 0755 deploy.sh"] },
     { id: "list", kind: "command", prompt: "Type the command that lists the files in long form, showing each one's permissions, owner, size, and date.", expect: ["ls -l"], alt: ["ls -la", "ls -al"] },
-    { id: "grep", kind: "command", prompt: "Type the command that prints every line of app.log that contains error.", expect: ["grep error app.log"], alt: ["grep -i error app.log", "grep \"error\" app.log", "grep -i \"error\" app.log"] },
-    { id: "copy", kind: "command", prompt: "Type the command that copies report.txt into the backup directory.", expect: ["cp report.txt backup/"], alt: ["cp report.txt backup", "cp report.txt ./backup/", "cp report.txt backup/report.txt"] },
+    { id: "grep", kind: "command", prompt: "Type the command that prints every line of app.log that contains error.", expect: ["grep error app.log"], alt: ["grep -i error app.log", "grep 'error' app.log", "grep -i 'error' app.log", "grep \"error\" app.log", "grep -i \"error\" app.log"] },
+    { id: "copy", kind: "command", prompt: "Type the command that copies report.txt into the backup directory.", expect: ["cp report.txt backup/"], alt: ["cp report.txt backup", "cp report.txt ./backup/", "cp report.txt ./backup", "cp report.txt backup/report.txt"] },
     { id: "root", kind: "choice", prompt: "Installing a package needs root rights. Which command runs one command as the superuser, using her own password, and logs it?", options: ["sudo", "su", "chown", "man"], expect: 0 }
   ],
   why: {
-    chmod: "Read is 4, write 2, and execute 1, so 7 is rwx for the owner and 5 is r-x for the group and others: chmod 755 deploy.sh. The symbolic forms reach the same result from rw-r--r--, but the file name must follow the mode, because chmod reads the mode first and the files after it.",
+    chmod: "Read is 4, write 2, and execute 1, so 7 is rwx for the owner and 5 is r-x for the group and others: chmod 755 deploy.sh. The symbolic forms reach the same result from rw-r--r--, but the file name must follow the mode, because chmod reads the mode first and the files after it. From rw-r--r--, adding execute for everyone with chmod +x lands on the same 755.",
     list: "Ls -l is the long listing with permissions, owner, size, and date, and adding -a also shows hidden files whose names start with a dot, so ls -la and ls -al are accepted too. Plain ls shows only the names.",
     grep: "Grep searches text and prints the matching lines, with the pattern before the file name; since the application writes error in lowercase, plain grep finds every line, and -i (case-insensitive) finds them as well. Find locates files by name rather than searching inside them.",
     copy: "Cp copies a file, source first and destination second; naming the directory, with or without the trailing slash, puts the copy inside it under the same name. Mv would move the file rather than copy it, and cp -r is needed only for copying whole directories.",
