@@ -200,3 +200,7 @@ Done <date>: aplus1 270 questions (Mobile 40, Troubleshooting 90), aplus2 235 (T
 git add -A
 git commit -m "build: rebuilt bundles and site for the question supplement; plan status"
 ```
+
+## Status
+
+Done 2026-10-15: aplus1 270 questions (Mobile 40, Troubleshooting 90), aplus2 235 (Troubleshooting 60), cbet 400 (Problem Solving 120, Healthcare IT 80). Bundles and site rebuilt; npm test green. README states no per-course counts, so it is unchanged.
