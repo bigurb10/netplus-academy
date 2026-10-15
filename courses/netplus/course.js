@@ -13,6 +13,7 @@ FRA.course = {
     h1: "Network+ N10-009 Practice Tests and Study Guide",
     intro: "NetPlus Academy is a free Network+ N10-009 practice test and study guide course: forty-nine lessons mapped to the exam objectives, a printable memorization sheet of ports, protocols, and subnetting, tutorials built from what you miss, and unlimited practice tests in the exam's format. Use it as a Network+ study guide on its own, or work through the N10-009 practice questions bank lesson by lesson.",
     phrases: ["Network+ N10-009 practice test", "Network+ study guide", "N10-009 practice questions"],
+    pbqPhrases: ["Network+ PBQs", "N10-009 performance-based questions", "Network+ PBQ practice"],
     faq: [
       { q: "How many questions are on the Network+ N10-009 exam?", a: "Up to 90 questions in 90 minutes, a mix of multiple choice and performance-based items. The passing score is 720 on a scale of 100 to 900." },
       { q: "What does the exam cover?", a: "Networking concepts, network implementation, network operations, network security, and network troubleshooting, in CompTIA's published weights. The course's practice tests use the same weights." },
@@ -29,7 +30,7 @@ FRA.course = {
     { id: 4, name: "Network Security", short: "Security", pct: 14, quota: 7 },
     { id: 5, name: "Network Troubleshooting", short: "Troubleshooting", pct: 24, quota: 12 }
   ],
-  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3, pbqInTest: 3 },
   // Lessons the starter test samples from, per domain (starterPerDomain different lessons each time).
   starterPool: {
     1: ["u2l1", "u2l2", "u4l3", "u5l2", "u3l3", "u7l4", "u4l5", "u1l3"],

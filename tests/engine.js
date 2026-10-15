@@ -952,7 +952,7 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
   // ----- PBQs tab and view -----
   {
     const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
-    const wn = boot({ courseDir: dir });
+    const wn = boot({ courseDir: path.join(ROOT, 'courses', 'secplus') });
     check('no PBQs tab on a course without PBQs', !wn.$('[data-act="nav"][data-arg="pbq"]'));
     const wp = boot({ courseDir: mini, hash: '#pbq' }); const MK = 'fra.mini.state.v3'; const stateM = () => JSON.parse(wp.localStorage.getItem(MK));
     check('a course with PBQs shows the PBQs tab', !!wp.$('[data-act="nav"][data-arg="pbq"]'));
