@@ -935,6 +935,36 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     w.close();
   }
 
+  // ----- PBQs tab and view -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const wn = boot({ courseDir: dir });
+    check('no PBQs tab on a course without PBQs', !wn.$('[data-act="nav"][data-arg="pbq"]'));
+    const wp = boot({ courseDir: mini, hash: '#pbq' }); const MK = 'fra.mini.state.v3'; const stateM = () => JSON.parse(wp.localStorage.getItem(MK));
+    check('a course with PBQs shows the PBQs tab', !!wp.$('[data-act="nav"][data-arg="pbq"]'));
+    check('#pbq lists the PBQ with its domain and title', /Bring the new printer online/.test(wp.text()) && /Alpha/.test(wp.text()));
+    act(wp, 'pbq-open', 'mini-net');
+    check('opening a PBQ shows the scenario, the log, and six task cards', /VLAN 10 on the 192.168.10.0\/26/.test(wp.text()) && !!wp.$('pre.pbq-log') && wp.$$('.pbq-task').length === 6 && wp.location.hash === '#pbq/mini-net');
+    // Answer the typed and tapped kinds right, leave order and match alone, then Check.
+    wp.$('.pbq-task[data-task="cfg"] input[data-field="ip"]').value = '192.168.10.10'; wp.$('.pbq-task[data-task="cfg"] input[data-field="mask"]').value = '/26';
+    wp.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
+    wp.click(wp.$('.pbq-task[data-task="lines"] [data-pbq="ms-opt"][data-index="0"]'));
+    wp.click(wp.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
+    act(wp, 'pbq-check', 'mini-net');
+    const ps = stateM().pbqs['mini-net'];
+    check('Check writes the PBQ state with per-task scores and a timestamp', ps && ps.at > 0 && ps.tasks.cfg === 1 && ps.tasks.cmd === 1 && ps.tasks.lines === 1 && ps.tasks.cable === 1 && typeof ps.tasks.steps === 'number');
+    check('Check shows a why for every task and the expected answer for a miss', wp.$$('.pbq-why').length === 6);
+    check('best score is the fraction of tasks fully right', Math.abs(ps.best - (Object.values(ps.tasks).filter(s => s === 1).length / 6)) < 0.001);
+    act(wp, 'pbq-retry', 'mini-net');
+    check('Retry clears the answers but keeps the best score', !wp.$('.pbq-why') && stateM().pbqs['mini-net'].best === ps.best && wp.$('.pbq-task[data-task="cmd"] input').value === '');
+    // Home shows the welcome page until the starter test is taken (PBQs are exempt from that gate, Home is not), so take it first.
+    wp.click(wp.$('[data-act="go"][data-arg="home"]')); wp.click(wp.$('[data-act="start-exam"][data-arg="starter"]'));
+    const QP = {}; wp.FRA.questions.forEach(q => { QP[q.id] = q; }); const fatP = x => typeof x === 'string' ? QP[x] : x;
+    stateM().active.items.map(fatP).forEach(q => { wp.click(wp.$(`[data-act="opt"][data-arg="${q.c}"]`)); wp.click(wp.$('[data-act="conf"][data-arg="5"]')); wp.click(wp.$('[data-act="submit"]')); });
+    act(wp, 'go', 'home');
+    check('Home shows PBQs done', /PBQs done/.test(wp.text()));
+  }
+
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }
   console.log('engine: all OK');
   // Explicit on the success path too: engine/app.js's save() now schedules a debounced

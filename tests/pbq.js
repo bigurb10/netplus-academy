@@ -72,5 +72,57 @@ check('answerText: nothing answered reads as such', P.answerText(cmd, null) === 
 check('emptyAnswer: the per-kind empty shape', JSON.stringify(P.emptyAnswer(order)) === '[]' && JSON.stringify(P.emptyAnswer(match)) === '[null,null]' && JSON.stringify(P.emptyAnswer(form)) === '{}' && P.emptyAnswer(cmd) === '' && P.emptyAnswer(choice) === null);
 check('KINDS lists the six kinds', JSON.stringify(P.KINDS) === JSON.stringify(['order', 'match', 'multiselect', 'form', 'command', 'choice']));
 
+// ----- rendering: drag, tap, and keyboard give the same answer; collect maps display order back to pack indexes -----
+{
+  const w2 = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
+  w2.eval(fs.readFileSync(path.join(ROOT, 'engine', 'pbq.js'), 'utf8'));
+  w2.eval(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'mini', 'pbqs.js'), 'utf8'));
+  const P2 = w2.FRAPbq; const pbq = w2.FRA.pbqs['mini-net']; const host = w2.document.getElementById('host');
+  const helpers = { esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])), inline: s => String(s) };
+  const ui = { order: {}, answers: {}, sel: {}, checked: false };
+  P2.render(host, pbq, ui, helpers);
+  check('render: one task card per task', host.querySelectorAll('.pbq-task').length === 6);
+  check('render: no task control carries data-act', host.querySelectorAll('.pbq-task [data-act]').length === 0);
+  const click = el => el.dispatchEvent(new w2.MouseEvent('click', { bubbles: true }));
+  // order by tap: tap an item, tap another, they swap
+  const orderCard = host.querySelector('.pbq-task[data-task="steps"]');
+  const items = () => [...orderCard.querySelectorAll('[data-pbq="order-item"]')];
+  const firstText = items()[0].textContent.trim(), secondText = items()[1].textContent.trim();
+  click(items()[0]); check('order: tapping an item selects it', items()[0].getAttribute('aria-pressed') === 'true');
+  click(items()[1]); check('order: tapping a second item swaps the two', items()[0].textContent.trim() === secondText && items()[1].textContent.trim() === firstText);
+  // order by keyboard: focus an item and press ArrowUp
+  items()[1].focus(); items()[1].dispatchEvent(new w2.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+  check('order: ArrowUp moves the focused item up', items()[0].textContent.trim() === firstText);
+  // order by drag: dragstart on item 3, drop on item 0
+  const dt = { data: {}, setData(k, v) { this.data[k] = v; }, getData(k) { return this.data[k]; }, effectAllowed: '', dropEffect: '' };
+  // The display order is shuffled, so the dragged item is identified by what it shows and the pack index it carries, not by a fixed string.
+  const dragText = items()[3].textContent.trim(); const dragIndex = Number(items()[3].dataset.index);
+  const ds = new w2.Event('dragstart', { bubbles: true }); ds.dataTransfer = dt; items()[3].dispatchEvent(ds);
+  const dp = new w2.Event('drop', { bubbles: true }); dp.dataTransfer = dt; items()[0].dispatchEvent(dp);
+  check('order: dropping item 4 on item 1 moves it there', items()[0].textContent.trim() === dragText);
+  // match by tap: tap a left chip, tap a right slot
+  const matchCard = host.querySelector('.pbq-task[data-task="pairs"]');
+  click(matchCard.querySelector('[data-pbq="match-item"]')); click(matchCard.querySelectorAll('[data-pbq="match-slot"]')[1]);
+  check('match: a tapped chip lands in the tapped slot', matchCard.querySelectorAll('[data-pbq="match-slot"]')[1].querySelector('.pbq-chip') !== null);
+  // multiselect, form, command, choice
+  const msCard = host.querySelector('.pbq-task[data-task="lines"]'); click(msCard.querySelector('[data-pbq="ms-opt"][data-index="0"]'));
+  const formCard = host.querySelector('.pbq-task[data-task="cfg"]'); formCard.querySelector('input[data-field="ip"]').value = '192.168.10.10'; formCard.querySelector('input[data-field="mask"]').value = '/26';
+  host.querySelector('.pbq-task[data-task="cmd"] input').value = 'IPCONFIG /ALL';
+  const chCard = host.querySelector('.pbq-task[data-task="cable"]'); click(chCard.querySelector('[data-pbq="choice"][data-index="0"]'));
+  const answers = P2.collect(host, pbq, ui);
+  check('collect: order answer is in pack indexes and reflects the moves', Array.isArray(answers.steps) && answers.steps.length === 4 && answers.steps[0] === dragIndex);
+  check('collect: match answer maps the chip to the chosen slot in pack indexes', Array.isArray(answers.pairs) && answers.pairs.length === 2 && answers.pairs.filter(x => x != null).length === 1);
+  check('collect: multiselect, form, command, and choice answers are read back', answers.lines.length === 1 && answers.cfg.ip === '192.168.10.10' && answers.cfg.mask === '/26' && answers.cmd === 'IPCONFIG /ALL' && answers.cable != null);
+  const graded = pbq.tasks.map(t => P2.grade(t, answers[t.id]));
+  check('collect then grade: the multiselect, form, command, and choice picks above are right', graded[2].correct && graded[3].correct && graded[4].correct && graded[5].correct);
+  // re-render with checked: true shows every why and locks the controls
+  ui.answers = answers; ui.checked = true; P2.render(host, pbq, ui, helpers);
+  check('render after Check: a why per task and no enabled inputs', host.querySelectorAll('.pbq-why').length === 6 && [...host.querySelectorAll('input, button[data-pbq]')].every(el => el.disabled));
+  // display order is stable across renders
+  const before = [...host.querySelectorAll('.pbq-task[data-task="steps"] [data-pbq="order-item"]')].map(e => e.textContent.trim()).join('|');
+  P2.render(host, pbq, ui, helpers);
+  check('render: the display order survives a re-render', [...host.querySelectorAll('.pbq-task[data-task="steps"] [data-pbq="order-item"]')].map(e => e.textContent.trim()).join('|') === before);
+}
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); }
 console.log('\nAll PBQ tests passed.');

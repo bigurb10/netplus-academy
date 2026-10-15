@@ -80,6 +80,24 @@
     if (!L[lab.lesson] || L[lab.lesson].lab !== id) throw new Error(`lab ${id} is not referenced by its lesson ${lab.lesson}`);
     if (!Array.isArray(lab.tasks) || !lab.tasks.length) throw new Error(`lab ${id} has no tasks`);
   });
+  // PBQs (FRA.pbqs; spec 2026-10-14-comptia-pbqs-design). Checked at boot so a malformed pack fails
+  // here instead of inside a renderer, the test assembly, or the static page, all of which trust these.
+  Object.keys(FRA.pbqs || {}).forEach(id => {
+    const p = FRA.pbqs[id]; const kinds = (window.FRAPbq && FRAPbq.KINDS) || [];
+    if (p.id !== id) throw new Error(`pbq ${id} carries id ${p.id}`);
+    if (!L[p.lesson]) throw new Error(`pbq ${id} names unknown lesson ${p.lesson}`);
+    if (!DOMAIN_IDS.includes(p.domain)) throw new Error(`pbq ${id} uses unknown domain ${p.domain}`);
+    const tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    if (tasks.length < 3 || tasks.length > 6) throw new Error(`pbq ${id} has ${tasks.length} tasks, which is outside the three to six a PBQ carries`);
+    const taskIds = new Set();
+    tasks.forEach(t => {
+      if (!t.id) throw new Error(`pbq ${id} has a task with no id`);
+      if (taskIds.has(t.id)) throw new Error(`pbq ${id} uses the task id ${t.id} twice`);
+      taskIds.add(t.id);
+      if (!kinds.includes(t.kind)) throw new Error(`pbq ${id} task ${t.id} has unknown kind ${t.kind}`);
+      if (typeof (p.why || {})[t.id] !== 'string' || !(p.why || {})[t.id].trim()) throw new Error(`pbq ${id} task ${t.id} has no why`);
+    });
+  });
   document.title = course.name;
   // What engine/strength.js needs to rank domains and topics for this course (the account page builds the same from build.py's table).
   const QLESSON = {}; bank.forEach(q => { QLESSON[q.id] = q.t; });
@@ -503,7 +521,7 @@
   // Shared between the topbar template (so the dot is correct on the render right after
   // navigation, before any onStatus fires) and paintSyncBadge (for updates between renders).
   const SYNC_LABEL = { idle: 'Progress saved', syncing: 'Saving...', error: 'Not saved yet', offline: 'Offline' };
-  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback', 'certificate'];
+  const WELCOME_EXEMPT = ['course', 'lesson', 'progress', 'cheatsheet', 'feedback', 'certificate', 'pbq'];
 
   function toast(msg) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; clearTimeout(toastHandle); toastHandle = setTimeout(() => t.remove(), 2200); }
   function paintSyncBadge() {
@@ -517,7 +535,7 @@
   // ---------- browser history ----------
   // Every view change gets a history entry whose hash names the view (#lesson/u3l2), so Back and Forward move within
   // the course instead of leaving it, and a reload or a shared link opens the view named in the hash.
-  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback', 'certificate'];
+  const HASH_VIEWS = ['home', 'tutorial', 'course', 'lesson', 'exam', 'results', 'train', 'progress', 'ready', 'cheatsheet', 'feedback', 'certificate', 'pbq'];
   const viewKey = v => v.name + (v.arg != null && v.arg !== '' ? '/' + v.arg : '');
   function viewFromHash(h) { const m = /^#([a-z]+)(?:\/([^\s#]+))?$/.exec(h || ''); if (!m || !HASH_VIEWS.includes(m[1])) return null; return m[2] != null ? { name: m[1], arg: decodeURIComponent(m[2]) } : { name: m[1] }; }
   let histKey = null;
@@ -549,6 +567,7 @@
       case 'exam': main = viewExam(); break;
       case 'results': main = viewResults(v.arg); break;
       case 'train': main = viewTrain(); break;
+      case 'pbq': main = viewPbq(v.arg); break;
       case 'progress': main = viewProgress(); break;
       case 'ready': main = viewReady(); break;
       case 'cheatsheet': main = viewCheatsheet(); break;
@@ -565,7 +584,7 @@
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span><span class="name">${esc(course.name)}</span></button>
           ${acctHtml()}
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and recent passes">
             <span class="eyebrow">Readiness</span>
@@ -576,10 +595,11 @@
         <aside class="rail ${railOpen ? 'open' : ''}">${viewRail()}</aside>
         <main class="main">${main}</main>
         <nav class="mobile-nav">
-          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
+          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
       </div>${fbModal()}${acrModal()}`;
     mountInstrument();
+    mountPbq();
     if (v.name === 'exam' && S.active && S.active.kind !== 'train') startTimer(); else stopTimer();
   }
   function acctHtml() {
@@ -663,6 +683,7 @@
         <div class="stat"><div class="eyebrow">${S.plan && S.plan.source === 'test' ? 'Retraining' : 'Tutorial'}</div><div class="big">${S.plan ? (S.plan.lessons.length - rem.length) + '<small> / ' + S.plan.lessons.length + (S.plan.source === 'test' ? ' topics</small>' : ' lessons</small>') : '<small>not built yet</small>'}</div></div>
         <div class="stat"><div class="eyebrow">Lessons passed</div><div class="big">${passedCount}<small> / ${lessons.length}</small></div></div>
         ${labIds.length ? `<div class="stat"><div class="eyebrow">Labs done</div><div class="big">${labsDoneCount()}<small> / ${labIds.length}</small></div></div>` : ''}
+        ${pbqIds.length ? `<div class="stat"><div class="eyebrow">PBQs done</div><div class="big">${pbqsDoneCount()}<small> / ${pbqIds.length}</small></div></div>` : ''}
         <div class="stat"><div class="eyebrow">Last test</div><div class="big">${last ? `${last.pct}<small>% · ${last.score} of ${last.total}</small>` : '<small>none yet</small>'}</div>${last ? `<div class="muted" style="font-size:.85rem">${testLabel(last)}${lastMeta.attempt > 1 ? ` (attempt ${lastMeta.attempt})` : ''} · ${lastMeta.wrong} wrong${last.noConf ? '' : ` · ${lastMeta.guess} guessed`}</div>` : ''}</div>
         <div class="stat"><div class="eyebrow">Passes</div><div class="big">${S.passes}<small> of your last ${PASS_WINDOW} at ${PASS_PCT}%+ · ${PASSES_NEEDED} needed</small></div></div>
       </div>
@@ -857,6 +878,50 @@
     if (!lab || !ins || typeof ins.render !== 'function') { el.innerHTML = '<p class="muted">This lab is unavailable: the instrument module did not load. The tasks below still work with your own kit.</p>'; return; }
     try { ins.render(el, lab, instUi(lab.id), { toast }); } catch (err) { console.warn('instrument failed to render', err); el.innerHTML = '<p class="muted">This lab is unavailable.</p>'; }
   }
+
+  // ---------- PBQs (FRA.pbqs; spec 2026-10-14-comptia-pbqs-design) ----------
+  // Display order and in-progress answers live here per PBQ so re-renders keep them; the saved
+  // state (S.pbqs) holds only scores and the done flag.
+  let pbqUiMap = {}; const pbqUi = id => pbqUiMap[id] || (pbqUiMap[id] = { order: {}, answers: {}, sel: {}, checked: false });
+  const PBQ_HELPERS = { esc, inline };
+  function pbqScore(pbq, answers) { const scores = {}; pbq.tasks.forEach(t => { scores[t.id] = FRAPbq.grade(t, answers[t.id]).score; }); const right = pbq.tasks.filter(t => scores[t.id] === 1).length; return { scores, frac: pbq.tasks.length ? right / pbq.tasks.length : 0 }; }
+  function viewPbq(arg) {
+    if (!pbqIds.length) return viewHome();
+    if (arg && PBQS[arg]) return viewPbqOne(PBQS[arg]);
+    const rows = pbqIds.map(id => { const p = PBQS[id]; const st = S.pbqs[id]; return `<button class="option pbq-row" data-act="pbq-open" data-arg="${esc(id)}"><span class="key">${st && st.done ? 'ok' : (p.tasks || []).length}</span><span><strong>${esc(p.title)}</strong><br><span class="ink2">${esc(DOMAINS[p.domain] ? DOMAINS[p.domain].short : '')} &middot; ${plural((p.tasks || []).length, 'task')}${st && st.at ? ` &middot; best ${Math.round((st.best || 0) * 100)}%` : ''}</span></span></button>`; }).join('');
+    return `<div class="content stack" style="gap:18px">
+      <div><div class="eyebrow">PBQs</div><h1>Performance-based questions</h1><p class="ink2" style="margin-top:6px">The real exam opens with a handful of these: drag items into order, match terms, pick lines in a log, fill a configuration, type a command. Each one here grades every task and explains it. ${(T.pbqInTest || 0) ? `Your official-format test opens with ${T.pbqInTest} of them.` : ''}</p></div>
+      <div class="card stack"><div class="row spread"><h3>${plural(pbqIds.length, 'PBQ')}</h3><span class="muted" style="font-size:.9rem">${pbqsDoneCount()} done</span></div><div class="options">${rows}</div></div>
+    </div>`;
+  }
+  function viewPbqOne(p) {
+    const ui = pbqUi(p.id); const st = S.pbqs[p.id];
+    const sc = p.scenario || {};
+    const scenario = `<div class="card lift stack pbq-scenario"><div class="eyebrow">${esc(DOMAINS[p.domain] ? DOMAINS[p.domain].short : 'Scenario')}</div><h2>${esc(p.title)}</h2><div class="lesson-body">${renderBody(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}</div>`;
+    const summary = ui.checked ? (() => { const { frac } = pbqScore(p, ui.answers); return `<div class="feedback ${frac === 1 ? 'good' : 'bad'}"><div class="verdict">${frac === 1 ? 'Every task right.' : `${Math.round(frac * 100)}% of tasks fully right.`}</div><div class="muted">Best so far: ${Math.round(((st && st.best) || 0) * 100)}%. Read each why, then retry or open the lesson.</div></div>`; })() : '';
+    const btns = ui.checked
+      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
+      : `<button class="btn primary" data-act="pbq-check" data-arg="${esc(p.id)}">Check my answers</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`;
+    return `<div class="content stack" style="gap:18px">${scenario}<div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}"></div>${summary}<div class="row" style="gap:8px;flex-wrap:wrap">${btns}</div></div>`;
+  }
+  // Mount the task renderers into #pbq after each paint, like mountInstrument.
+  function mountPbq() {
+    const el = $('#pbq'); if (!el) return; const p = PBQS[el.dataset.pbqId]; if (!p || !window.FRAPbq) return;
+    try { FRAPbq.render(el, p, pbqUi(p.id), PBQ_HELPERS); } catch (err) { console.warn('PBQ failed to render', err); el.innerHTML = '<p class="muted">This PBQ is unavailable.</p>'; }
+  }
+  function checkPbq(p) {
+    const ui = pbqUi(p.id); const el = $('#pbq'); if (!el) return;
+    ui.answers = FRAPbq.collect(el, p, ui); ui.checked = true;
+    const { scores, frac } = pbqScore(p, ui.answers); const ps = pbqStat(p.id);
+    ps.tasks = scores; ps.best = Math.max(ps.best || 0, frac); ps.at = Date.now();
+    const wasDone = ps.done; ps.done = ps.done || frac === 1;
+    // Each task feeds the topic record like a question, so weak-topic lists and drills see PBQ misses.
+    p.tasks.forEach(t => { recordAnswer(pbqPseudoQ(p, t), scores[t.id] === 1 ? 0 : -1, scores[t.id] === 1 ? 4 : 3); });
+    save(); if (!wasDone && ps.done) { if (window.FRASync) FRASync.pushNow(); toast('PBQ done'); }
+  }
+  // A PBQ task as an inline question record: results pages, retraining, and the strength chart read
+  // review items through fat(), so a task travels as a generated-style question tied to the PBQ's lesson.
+  function pbqPseudoQ(p, t) { return { gen: true, pbq: p.id, task: t.id, id: `pbq:${p.id}:${t.id}`, t: p.lesson, q: t.prompt, a: [FRAPbq.expectedText(t)], c: 0, e: (p.why || {})[t.id] || '' }; }
 
   // Shared question card. sess: { items, i, answers, sel, conf, submitted, noConf }
   function questionCard(sess, opts) {
@@ -1497,6 +1562,9 @@
       case 'lab-answer': { const i = String(arg).indexOf(':'); const tid = String(arg).slice(0, i), val = String(arg).slice(i + 1); const lab = labOfView(); const t = lab && lab.tasks.find(x => x.id === tid); if (!t) return;
         checkLab(lab, t, t.kind === 'verdict' ? val : parseInt(val, 10)); render(); return; }
       case 'lab-redo': { const lab = LABS[arg]; if (!lab) return; S.labs[lab.id] = { done: false, at: Date.now(), values: {}, ok: {} }; save(); render(); return; }
+      case 'pbq-open': { if (!PBQS[arg]) return; return go('pbq', arg); }
+      case 'pbq-check': { const p = PBQS[arg]; if (!p) return; checkPbq(p); render(); return; }
+      case 'pbq-retry': { if (!PBQS[arg]) return; pbqUiMap[arg] = { order: {}, answers: {}, sel: {}, checked: false }; render(); return; }
       // Saving the same name again is not a settings change: restamping settingsAt would hand the
       // merge a newer settings side for nothing.
       case 'cert-name': { const el = $('#cert-name'); const v = el ? String(el.value).trim().slice(0, 80) : ''; const same = v === (S.settings.certName || ''); S.settings.certName = v; if (!same) markSettingsChanged(); save(); render(); if (v) toast('Name saved'); return; }

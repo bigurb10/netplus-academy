@@ -95,9 +95,139 @@ window.FRAPbq = (function () {
     }
   }
 
-  // Filled in by Task 4.
-  function render() { throw new Error('FRAPbq.render is not implemented yet'); }
-  function collect() { throw new Error('FRAPbq.collect is not implemented yet'); }
+  // ---------- rendering ----------
+  // ui = { order: { taskId: [packIndex in display position] }, answers: { taskId: answer }, sel: { taskId: value }, checked }.
+  // Display order is chosen once per task (shuffled) and kept in ui.order so re-renders are stable;
+  // answers are always in pack indexes. Controls carry data-pbq, never data-act.
+  const shuffled = n => { const a = Array.from({ length: n }, (_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function orderFor(ui, task, n, key) {
+    ui.order = ui.order || {}; const k = key || task.id;
+    if (!ui.order[k] || ui.order[k].length !== n) ui.order[k] = shuffled(n);
+    return ui.order[k];
+  }
+  const answerOf = (ui, task) => ui.answers[task.id] != null ? ui.answers[task.id] : emptyAnswer(task);
+  const resultOf = (ui, task) => ui.checked ? grade(task, answerOf(ui, task)) : null;
+  const taskClass = res => 'pbq-task' + (res ? (res.correct ? ' ok' : ' miss') : '');
+  // Everything inside one task card: the stem, the controls for its kind, and, once checked, the
+  // verdict with the expected answer and the why. Split out of render so one card can be
+  // re-rendered in place while the other cards keep their typed fields and their DOM identity.
+  function taskInner(pbq, ui, t, i, helpers) {
+    const esc = helpers.esc, inline = helpers.inline || helpers.esc;
+    const a = answerOf(ui, t); const res = resultOf(ui, t); const dis = ui.checked ? ' disabled' : '';
+    let body = '';
+    if (t.kind === 'order') {
+      // Display order: the learner's current sequence if any, else the shuffle. The position
+      // number sits outside the chip so the chip reads as nothing but the item itself.
+      const seq = Array.isArray(a) && a.length === t.items.length ? a : orderFor(ui, t, t.items.length);
+      body = `<ol class="pbq-order">${seq.map((pi, pos) => `<li><span class="pbq-pos">${pos + 1}</span><button type="button" class="pbq-chip" data-pbq="order-item" data-index="${pi}" draggable="${ui.checked ? 'false' : 'true'}" aria-pressed="${ui.sel[t.id] === pi ? 'true' : 'false'}"${dis}>${inline(t.items[pi])}</button></li>`).join('')}</ol><p class="muted pbq-hint">Drag, or tap one item then another to swap them, or use the arrow keys.</p>`;
+    } else if (t.kind === 'match') {
+      const lo = orderFor(ui, t, t.left.length, t.id + ':l'), ro = orderFor(ui, t, t.right.length, t.id + ':r');
+      const placed = li => Array.isArray(a) ? a[li] : null;
+      const bank = lo.filter(li => placed(li) == null).map(li => `<button type="button" class="pbq-chip" data-pbq="match-item" data-index="${li}" draggable="${ui.checked ? 'false' : 'true'}" aria-pressed="${ui.sel[t.id] === li ? 'true' : 'false'}"${dis}>${inline(t.left[li])}</button>`).join('');
+      const slots = ro.map(ri => { const li = Array.isArray(a) ? a.indexOf(ri) : -1; return `<div class="pbq-slot" data-pbq="match-slot" data-index="${ri}" tabindex="${ui.checked ? -1 : 0}"><span class="pbq-slot-label">${inline(t.right[ri])}</span>${li >= 0 ? `<button type="button" class="pbq-chip" data-pbq="match-item" data-index="${li}" draggable="${ui.checked ? 'false' : 'true'}" aria-pressed="${ui.sel[t.id] === li ? 'true' : 'false'}"${dis}>${inline(t.left[li])}</button>` : '<span class="pbq-empty">drop here</span>'}</div>`; }).join('');
+      body = `<div class="pbq-bank" data-pbq="match-bank">${bank || '<span class="muted">All placed.</span>'}</div><div class="pbq-slots">${slots}</div><p class="muted pbq-hint">Drag an item onto its match, or tap the item then tap the match. Tap a placed item to return it.</p>`;
+    } else if (t.kind === 'multiselect') {
+      const oo = orderFor(ui, t, t.options.length); const chosen = new Set(Array.isArray(a) ? a : []);
+      body = `<div class="options">${oo.map(oi => `<button type="button" class="option" data-pbq="ms-opt" data-index="${oi}" aria-pressed="${chosen.has(oi) ? 'true' : 'false'}"${dis}><span class="key">${chosen.has(oi) ? 'x' : ''}</span><span>${inline(t.options[oi])}</span></button>`).join('')}</div><p class="muted pbq-hint">Pick every line that applies.</p>`;
+    } else if (t.kind === 'form') {
+      body = `<div class="pbq-form">${t.fields.map(f => `<label class="field"><span>${esc(f.label)}</span><input type="text" data-pbq="field" data-field="${esc(f.id)}" value="${esc(a && a[f.id] != null ? a[f.id] : '')}" autocomplete="off" spellcheck="false"${dis}></label>`).join('')}</div>`;
+    } else if (t.kind === 'command') {
+      body = `<div class="pbq-cmd"><span class="pbq-prompt">&gt;</span><input type="text" data-pbq="command" value="${esc(a || '')}" autocomplete="off" spellcheck="false" placeholder="type the command"${dis}></div>`;
+    } else {
+      const oo = orderFor(ui, t, t.options.length);
+      body = `<div class="options">${oo.map((oi, k) => `<button type="button" class="option" data-pbq="choice" data-index="${oi}" aria-pressed="${a === oi ? 'true' : 'false'}"${dis}><span class="key">${'ABCDEFGH'[k] || k + 1}</span><span>${inline(t.options[oi])}</span></button>`).join('')}</div>`;
+    }
+    const verdict = res ? `<div class="feedback ${res.correct ? 'good' : 'bad'}"><div class="verdict">${res.correct ? 'Correct' : res.score > 0 ? `Partly right (${Math.round(res.score * 100)}%)` : 'Not right'}</div>${res.correct ? '' : `<div><strong>Expected:</strong> ${esc(expectedText(t))}</div>`}<div class="pbq-why">${inline((pbq.why || {})[t.id] || '')}</div></div>` : '';
+    return `<div class="q-stem"><span class="muted tnum">${i + 1}.</span> ${inline(t.prompt)}</div>${body}${verdict}`;
+  }
+  function render(container, pbq, ui, helpers) {
+    container.__helpers = helpers;
+    ui.answers = ui.answers || {}; ui.sel = ui.sel || {};
+    container.__pbq = { pbq, ui };
+    container.innerHTML = pbq.tasks.map((t, i) => `<div class="${taskClass(resultOf(ui, t))}" data-task="${helpers.esc(t.id)}" data-kind="${t.kind}">${taskInner(pbq, ui, t, i, helpers)}</div>`).join('');
+    if (!container.__pbqWired) { wire(container); container.__pbqWired = true; }
+  }
+  // The one listener set per container: clicks, drags, keys, and typing on data-pbq controls.
+  function wire(container) {
+    const ctx = () => container.__pbq || {};
+    const taskOf = el => { const card = el.closest('.pbq-task'); const { pbq } = ctx(); return card && pbq ? pbq.tasks.find(t => t.id === card.dataset.task) : null; };
+    // One card at a time: re-rendering only the task that changed leaves the other cards' typed
+    // fields and the rest of the page untouched. A missing card falls back to the whole container.
+    const rerender = tid => {
+      const { pbq, ui } = ctx(); if (!pbq || !ui) return;
+      const i = pbq.tasks.findIndex(t => t.id === tid); const card = container.querySelector(`.pbq-task[data-task="${tid}"]`);
+      if (i < 0 || !card) { render(container, pbq, ui, container.__helpers); return; }
+      const t = pbq.tasks[i];
+      card.className = taskClass(resultOf(ui, t));
+      card.innerHTML = taskInner(pbq, ui, t, i, container.__helpers);
+    };
+    const seqOf = (ui, t) => { const a = ui.answers[t.id]; return Array.isArray(a) && a.length === t.items.length ? a.slice() : orderFor(ui, t, t.items.length).slice(); };
+    const moveOrder = (ui, t, from, to) => { const seq = seqOf(ui, t); const [x] = seq.splice(from, 1); seq.splice(to, 0, x); ui.answers[t.id] = seq; ui.order[t.id] = seq.slice(); };
+    const swapOrder = (ui, t, i, j) => { const seq = seqOf(ui, t); [seq[i], seq[j]] = [seq[j], seq[i]]; ui.answers[t.id] = seq; ui.order[t.id] = seq.slice(); };
+    const place = (ui, t, li, ri) => { const a = Array.isArray(ui.answers[t.id]) ? ui.answers[t.id].slice() : emptyAnswer(t); const prev = a.indexOf(ri); if (prev >= 0) a[prev] = null; a[li] = ri; ui.answers[t.id] = a; };
+    const unplace = (ui, t, li) => { const a = Array.isArray(ui.answers[t.id]) ? ui.answers[t.id].slice() : emptyAnswer(t); a[li] = null; ui.answers[t.id] = a; };
+    container.addEventListener('click', e => {
+      const el = e.target.closest('[data-pbq]'); if (!el || el.disabled) return; const { ui } = ctx(); if (!ui || ui.checked) return;
+      const t = taskOf(el); if (!t) return; const kind = el.dataset.pbq; const idx = Number(el.dataset.index);
+      if (kind === 'order-item') {
+        const seq = seqOf(ui, t); const pos = seq.indexOf(idx);
+        if (ui.sel[t.id] == null) { ui.sel[t.id] = idx; } else if (ui.sel[t.id] === idx) { delete ui.sel[t.id]; } else { swapOrder(ui, t, seq.indexOf(ui.sel[t.id]), pos); delete ui.sel[t.id]; }
+        rerender(t.id); return;
+      }
+      if (kind === 'match-item') {
+        const a = ui.answers[t.id]; const placed = Array.isArray(a) && a[idx] != null;
+        if (placed) { unplace(ui, t, idx); delete ui.sel[t.id]; } else if (ui.sel[t.id] === idx) { delete ui.sel[t.id]; } else { ui.sel[t.id] = idx; }
+        rerender(t.id); return;
+      }
+      if (kind === 'match-slot') { if (ui.sel[t.id] != null) { place(ui, t, ui.sel[t.id], idx); delete ui.sel[t.id]; rerender(t.id); } return; }
+      if (kind === 'ms-opt') { const a = new Set(Array.isArray(ui.answers[t.id]) ? ui.answers[t.id] : []); if (a.has(idx)) a.delete(idx); else a.add(idx); ui.answers[t.id] = Array.from(a); rerender(t.id); return; }
+      if (kind === 'choice') { ui.answers[t.id] = idx; rerender(t.id); return; }
+    });
+    container.addEventListener('keydown', e => {
+      const el = e.target.closest('[data-pbq]'); if (!el || el.disabled) return; const { ui } = ctx(); if (!ui || ui.checked) return;
+      const t = taskOf(el); if (!t) return; const kind = el.dataset.pbq; const idx = Number(el.dataset.index);
+      if (kind === 'order-item' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        const seq = seqOf(ui, t); const pos = seq.indexOf(idx); const to = e.key === 'ArrowUp' ? pos - 1 : pos + 1;
+        if (to < 0 || to >= seq.length) return; e.preventDefault(); moveOrder(ui, t, pos, to); rerender(t.id);
+        const again = container.querySelector(`.pbq-task[data-task="${t.id}"] [data-pbq="order-item"][data-index="${idx}"]`); if (again) again.focus(); return;
+      }
+      if (kind === 'match-slot' && (e.key === 'Enter' || e.key === ' ')) { if (ui.sel[t.id] != null) { e.preventDefault(); place(ui, t, ui.sel[t.id], idx); delete ui.sel[t.id]; rerender(t.id); } }
+    });
+    // Typing lands in ui.answers as it happens, with no re-render to steal the caret, so a repaint
+    // of the whole view keeps what the learner typed. collect still reads the fields from the DOM.
+    container.addEventListener('input', e => {
+      const el = e.target.closest('[data-pbq="field"], [data-pbq="command"]'); if (!el) return; const { ui } = ctx(); if (!ui || ui.checked) return;
+      const t = taskOf(el); if (!t) return;
+      if (t.kind === 'form') { const a = Object.assign({}, ui.answers[t.id] && typeof ui.answers[t.id] === 'object' ? ui.answers[t.id] : {}); a[el.dataset.field] = el.value; ui.answers[t.id] = a; }
+      else ui.answers[t.id] = el.value;
+    });
+    container.addEventListener('dragstart', e => {
+      const el = e.target.closest('[data-pbq="order-item"], [data-pbq="match-item"]'); if (!el) return; const { ui } = ctx(); if (!ui || ui.checked) return;
+      const t = taskOf(el); if (!t) return; container.__drag = { task: t.id, kind: el.dataset.pbq, index: Number(el.dataset.index) };
+      if (e.dataTransfer) { try { e.dataTransfer.setData('text/plain', el.dataset.index); e.dataTransfer.effectAllowed = 'move'; } catch (err) { /* jsdom */ } }
+    });
+    container.addEventListener('dragover', e => { if (container.__drag) e.preventDefault(); });
+    container.addEventListener('drop', e => {
+      const d = container.__drag; if (!d) return; const { ui } = ctx(); container.__drag = null; if (!ui || ui.checked) return;
+      const target = e.target.closest('[data-pbq="order-item"], [data-pbq="match-slot"], [data-pbq="match-bank"]'); if (!target) return;
+      const t = taskOf(target); if (!t || t.id !== d.task) return; e.preventDefault();
+      if (d.kind === 'order-item' && target.dataset.pbq === 'order-item') { const seq = seqOf(ui, t); moveOrder(ui, t, seq.indexOf(d.index), seq.indexOf(Number(target.dataset.index))); rerender(t.id); return; }
+      if (d.kind === 'match-item' && target.dataset.pbq === 'match-slot') { place(ui, t, d.index, Number(target.dataset.index)); rerender(t.id); return; }
+      if (d.kind === 'match-item' && target.dataset.pbq === 'match-bank') { unplace(ui, t, d.index); rerender(t.id); }
+    });
+  }
+  // Read every task's answer out of the DOM and ui (typed fields come from the DOM; the rest from ui.answers).
+  function collect(container, pbq, ui) {
+    const out = {};
+    pbq.tasks.forEach(t => {
+      const card = container.querySelector(`.pbq-task[data-task="${t.id}"]`);
+      if (t.kind === 'form') { const a = {}; if (card) card.querySelectorAll('input[data-field]').forEach(inp => { a[inp.dataset.field] = inp.value; }); out[t.id] = a; }
+      else if (t.kind === 'command') { const inp = card && card.querySelector('input[data-pbq="command"]'); out[t.id] = inp ? inp.value : ''; }
+      else if (t.kind === 'order') { const a = ui.answers[t.id]; out[t.id] = Array.isArray(a) && a.length === t.items.length ? a.slice() : orderFor(ui, t, t.items.length).slice(); }
+      else out[t.id] = ui.answers[t.id] != null ? ui.answers[t.id] : emptyAnswer(t);
+    });
+    return out;
+  }
 
   return { KINDS, normalize, normalizeCommand, grade, emptyAnswer, expectedText, answerText, render, collect };
 })();
