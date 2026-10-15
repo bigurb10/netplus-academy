@@ -1012,7 +1012,19 @@ Expected: suite green; bundles rebuilt (they now carry `FRAPbq`, no visible chan
 
 - [ ] **Step 3: Record and commit**
 
-Add a `## Status` section to this plan: the task commits, the test counts, and the note that no live course changes until Plan B ships `pbqs.js`.
+Add a `## Status
+
+### Task 4 corrections (2026-10-14, commit 992be44 and the fix commit after it)
+
+The implementer found five defects in this plan's Task 4 code and fixed them in place; the review reproduced each and approved:
+
+1. `viewPbqOne` carried a stray `: ''` after the summary line (a syntax error); removed.
+2. The whole-container `rerender` wiped typed `form` and `command` values on any tap and detached the tests' cached card handles; replaced by per-card re-render (`taskInner`) plus an `input` listener that banks typed values in `ui.answers`.
+3. The order chip's position number sat inside the button, so the tests' text comparisons could never match; `.pbq-pos` moved into the `<li>` with two rows of CSS.
+4. Three Step 2 checks assumed an unshuffled display and passed by chance (29 of 120 runs); they now read the display order.
+5. The Step 5 `Home shows PBQs done` check runs behind the welcome gate; the test takes the starter test first.
+
+Rulings after the review: (a) the PBQs tab's Check writes `S.pbqs` only and records no lesson attempts (the brief's per-task `recordAnswer` loop let one Check master a lesson and move readiness; labs record nothing either; the official-format test in Task 5 is where task results count); (b) a `multiselect` task may carry `shuffle: false`, honored by `orderFor`, so log and configuration lines keep their order, and Task 6's static page renders such a task in pack order; (c) keyboard focus returns to the placed chip after Enter on a `match` chip. All three are in the fix commit that follows 992be44.` section to this plan: the task commits, the test counts, and the note that no live course changes until Plan B ships `pbqs.js`.
 
 ```bash
 git add README.md docs/superpowers/plans/2026-10-14-comptia-pbqs-engine.md dist
