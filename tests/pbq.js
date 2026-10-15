@@ -1,6 +1,7 @@
 // PBQ grading, normalization, and answer text (engine/pbq.js). Run: node tests/pbq.js
 const fs = require('fs'); const path = require('path');
 const { JSDOM } = require('jsdom');
+const { boot } = require('./lib');
 const ROOT = path.resolve(__dirname, '..');
 const fails = []; const check = (n, ok, x) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x !== undefined ? '  [' + x + ']' : ''}`); if (!ok) fails.push(n); };
 const w = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
@@ -197,6 +198,16 @@ check('KINDS lists the six kinds', JSON.stringify(P.KINDS) === JSON.stringify(['
   items5()[1].focus(); items5()[1].dispatchEvent(new w5.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
   const moved = P5.collect(host5, pbq5, ui5);
   check('one move makes the order task answered: a full permutation comes back', Array.isArray(moved.steps) && moved.steps.length === 4 && JSON.stringify(moved.steps.slice().sort()) === JSON.stringify([0, 1, 2, 3]), JSON.stringify(moved.steps));
+}
+
+// ----- the scenario svg renders in the PBQs tab (engine/app.js pbqScenarioHtml, the same card a static build inlines) -----
+{
+  const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+  const w6 = boot({ courseDir: mini, hash: '#pbq' });
+  const act6 = (a, arg) => { const b = w6.document.createElement('button'); b.dataset.act = a; if (arg != null) b.dataset.arg = arg; w6.$('#app').appendChild(b); w6.click(b); };
+  act6('pbq-open', 'mini-net');
+  check('the PBQs tab renders the scenario svg inside the pbq-fig figure', !!w6.$('.pbq-scenario .pbq-fig svg'));
+  w6.close();
 }
 
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); }

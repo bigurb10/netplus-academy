@@ -4,7 +4,18 @@ FRA.pbqs = FRA.pbqs || {};
 // the state, the merge, the test integration, and the static page are all testable without a pack.
 FRA.pbqs["mini-net"] = {
   id: "mini-net", title: "Bring the new printer online", domain: 1, lesson: "u1l2", seo: true,
-  scenario: { text: "A new network printer must join VLAN 10 on the 192.168.10.0/26 segment. The switch port shows no link.", log: "Port Gi1/0/7: notconnect\nVLAN 10: active\nPort Gi1/0/7 speed auto duplex auto" },
+  scenario: {
+    text: "A new network printer must join VLAN 10 on the 192.168.10.0/26 segment. The switch port shows no link.",
+    log: "Port Gi1/0/7: notconnect\nVLAN 10: active\nPort Gi1/0/7 speed auto duplex auto",
+    svg: "<svg viewBox=\"0 0 200 70\" xmlns=\"http://www.w3.org/2000/svg\">\n"
+      + "<rect x=\"4\" y=\"15\" width=\"70\" height=\"40\" rx=\"4\" fill=\"none\" stroke=\"#2b2b2b\"/>\n"
+      + "<text x=\"12\" y=\"39\" font-size=\"11\">Switch</text>\n"
+      + "<circle cx=\"66\" cy=\"30\" r=\"4\" fill=\"#c0392b\"/>\n"
+      + "<line x1=\"74\" y1=\"35\" x2=\"140\" y2=\"35\" stroke=\"#2b2b2b\" stroke-width=\"2\"/>\n"
+      + "<rect x=\"140\" y=\"15\" width=\"56\" height=\"40\" rx=\"4\" fill=\"none\" stroke=\"#2b2b2b\"/>\n"
+      + "<text x=\"148\" y=\"39\" font-size=\"11\">Printer</text>\n"
+      + "</svg>"
+  },
   tasks: [
     { id: "steps", kind: "order", prompt: "Put the troubleshooting steps in order.", items: ["Identify the problem", "Establish a theory", "Test the theory", "Establish a plan"], expect: [0, 1, 2, 3] },
     { id: "pairs", kind: "match", prompt: "Match each device to its layer.", left: ["Switch", "Router"], right: ["Layer 2", "Layer 3", "Layer 7"], expect: [0, 1] },
