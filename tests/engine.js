@@ -981,7 +981,7 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     act(wp, 'fb-save');
     { const last = (stateM().feedback || []).slice(-1)[0]; check('a rating-only save stores the rating and an empty category', !!last && last.kind === 'lesson' && last.rating === 7 && last.cat === '' && last.text === '', JSON.stringify(last)); }
     wp.click(wp.$('[data-act="nav"][data-arg="cheatsheet"]'));
-    check('the cheat sheet view links the flashcards page', !!wp.$('a.btn[href="/mini/flashcards/"]') && /Flashcards/.test(wp.$('a.btn[href="/mini/flashcards/"]').textContent));
+    check('the cheat sheet view links the flashcards page beside the print button', !!wp.$('a.btn[href="/mini/flashcards/"]') && /Flashcards/.test(wp.$('a.btn[href="/mini/flashcards/"]').textContent) && wp.$('a.btn[href="/mini/flashcards/"]').parentElement.classList.contains('row') && !!wp.$('a.btn[href="/mini/flashcards/"]').parentElement.querySelector('[data-act="print-cheat"]'));
     act(wp, 'pbq-open', 'mini-net');
     // Home shows the welcome page until the starter test is taken (PBQs are exempt from that gate, Home is not), so take it first.
     wp.click(wp.$('[data-act="go"][data-arg="home"]')); wp.click(wp.$('[data-act="start-exam"][data-arg="starter"]'));

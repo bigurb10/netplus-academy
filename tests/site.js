@@ -161,7 +161,9 @@ check('flashcards: the description and the FAQ count the decks with their names 
 check('flashcards: every storage access is inside a try',!/localStorage/.test(fc.replace(/try\{[^}]*localStorage[^}]*\}/g, '')));
 check('flashcards page is plain ASCII with no undefined or [object leaks', /^[\x00-\x7f]*$/.test(fc) && !/undefined|\[object /.test(fc));
 check('landing has a Flashcards section linking the page with the count', landing.includes('<section id="flashcards">') && landing.includes(`href="/mini/flashcards/"`) && landing.includes(`${m.flashcards.total} cards`));
-check('practice and PBQ pages link the flashcards', read('mini/practice-test/index.html').includes('href="/mini/flashcards/"') && pb.includes('href="/mini/flashcards/"'));
+const ctaOf = h => (h.match(/<aside class="card cta stack">[\s\S]*?<\/aside>/) || [''])[0];
+check('practice and PBQ closing cards link the flashcards', ctaOf(read('mini/practice-test/index.html')).includes('href="/mini/flashcards/"') && ctaOf(pb).includes('href="/mini/flashcards/"'));
+check('the closing-card check sees only the aside, not the nav', !ctaOf(pb.replace(/<aside class="card cta stack">[\s\S]*?<\/aside>/, '<aside class="card cta stack"></aside>')).includes('href="/mini/flashcards/"'));
 {
   // The mini fixture has no glossary and one small table, so the deck rules run on a widened copy:
   // an acronym deck, a three-column table, and a first cell over 80 characters.
