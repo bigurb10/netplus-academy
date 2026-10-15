@@ -291,15 +291,15 @@ FRA.pbqs["net-ipconfig-ping"] = {
 FRA.pbqs["net-dhcp-dns-form"] = {
   id: "net-dhcp-dns-form", title: "Stand up DHCP for the new segment", domain: 3, lesson: "u5l3", seo: false,
   scenario: {
-    text: "A new staff segment, {{10.0.20.0/24}}, needs a DHCP scope. The router is at {{10.0.20.1}}, the servers hold {{10.0.20.2}} through {{10.0.20.20}}, and the DNS server is {{10.0.20.5}}. Clients may use the addresses above the server block. Leases cover a working day, so one shift (8 hours), a long shift (12 hours), or a full day (24 hours) all fit."
+    text: "A new staff segment, {{10.0.20.0/24}}, needs a DHCP scope. The router is at {{10.0.20.1}}, the servers hold {{10.0.20.2}} through {{10.0.20.20}}, and the DNS server is {{10.0.20.5}}. The client pool takes every usable address above the server block, with nothing held back. Leases cover a working day, so one shift (8 hours), a long shift (12 hours), or a full day (24 hours) all fit."
   },
   tasks: [
     { id: "scope", kind: "form", prompt: "Fill in the scope and its options.", fields: [
-      { id: "start", label: "Scope start address", expect: ["10.0.20.21", "10.0.20.50"], normalize: "ip" },
-      { id: "end", label: "Scope end address", expect: ["10.0.20.254", "10.0.20.200"], normalize: "ip" },
+      { id: "start", label: "Scope start address", expect: ["10.0.20.21"], normalize: "ip" },
+      { id: "end", label: "Scope end address", expect: ["10.0.20.254"], normalize: "ip" },
       { id: "router", label: "Default gateway (router) option", expect: ["10.0.20.1"], normalize: "ip" },
       { id: "dns", label: "DNS server option", expect: ["10.0.20.5"], normalize: "ip" },
-      { id: "lease", label: "Lease time in hours", expect: ["8", "12", "24"], normalize: "number" }
+      { id: "lease", label: "Lease time in hours", expect: ["8", "12", "24", "8 hours", "12 hours", "24 hours", "8h", "12h", "24h"], normalize: "number" }
     ] },
     { id: "fixed", kind: "choice", prompt: "A new file server on this segment will take its address from DHCP but must keep the same address every time. What do you configure?", options: [
       "A reservation that ties one address to the server's MAC address",
@@ -317,7 +317,7 @@ FRA.pbqs["net-dhcp-dns-form"] = {
     ], expect: [0, 1, 2, 3] }
   ],
   why: {
-    scope: "The scope must stay clear of the router at .1 and the servers at .2 to .20, so it starts right after the server block at .21, or at .50 to leave room for more servers. It ends at .254, the last usable address, or at .200 to keep a spare block; .0 is the network address, .1 to .20 belong to the router and servers, and .255 is the broadcast. The gateway is option 3 and DNS is option 6; a lease of 8, 12, or 24 hours covers a shift or a working day for a stable staff office, where short leases are for guest networks.",
+    scope: "The scope must stay clear of the router at .1 and the servers at .2 to .20, so it starts right after the server block at .21. It ends at .254, the last usable address, because the pool takes everything above the servers. Address .0 is the network address, .1 to .20 belong to the router and servers, and .255 is the broadcast, so none of those can be handed to clients. The gateway is option 3 and DNS is option 6; a lease of 8, 12, or 24 hours covers a shift or a working day for a stable staff office, where short leases are for guest networks.",
     fixed: "A reservation gives a specific address to a specific MAC every time while the device still uses DHCP. An exclusion only keeps an address out of the pool, a shorter lease changes nothing about which address is given, and a relay is for clients on a remote subnet.",
     needs: "To reach the internet by name a client needs an address, a mask to know what is local, a gateway to leave the subnet, and a DNS server to turn names into addresses. NTP and phone provisioning are useful options, but browsing works without them."
   }

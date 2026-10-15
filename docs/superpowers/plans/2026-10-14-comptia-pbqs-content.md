@@ -245,6 +245,7 @@ Plan B complete on branch `pbq-content`; built and staged locally (`dist/stage/`
 - aplus1 (10): ap1-cables-match, ap1-build-form, ap1-laser-order, ap1-mobile-form, ap1-cloud-match, ap1-display-ms, ap1-bios-form, ap1-laptop-diagram, ap1-net-commands, ap1-virt-ms
 - aplus2 (10): ap2-win-commands, ap2-permissions-form, ap2-malware-order, ap2-os-install-order, ap2-harden-ms, ap2-script-match, ap2-backup-form, ap2-slow-pc-order, ap2-linux-commands, ap2-safety-match
 - The twelve `seo: true` ids: net-subnet-plan, net-troubleshoot-order, net-diagram-ips; sec-log-attack, sec-ir-order, sec-pki-match; ap1-cables-match, ap1-mobile-form, ap1-net-commands; ap2-win-commands, ap2-malware-order, ap2-slow-pc-order
-- Bundle sizes (`dist/<id>.html`, bytes): netplus 969967, secplus 1046391, aplus1 1032899, aplus2 1018344; each carries ten `FRA.pbqs["..."]` entries
+- Bundle sizes (`dist/<id>.html`, bytes): netplus 970058, secplus 1046391, aplus1 1032899, aplus2 1018344; each carries ten `FRA.pbqs["..."]` entries
 - Sitemap: `dist/site/sitemap.xml` (1063 URLs) holds four `/pbq/` URLs; `dist/stage/{netplus,secplus,aplus1,aplus2}/pbq/index.html` staged
 - Task 1 carried a self-test fix in `engine/app.js` (the official-format block now submits every leading PBQ), and `tests/engine.js` boots cbet for its no-PBQs-tab check.
+- Final review fix: net-dhcp-dns-form scope accepts only .21 and .254 (the scenario pins the pool); lease field accepts unit forms.
