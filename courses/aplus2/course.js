@@ -13,6 +13,7 @@ FRA.course = {
     h1: "A+ Core 2 220-1202 Practice Test and Study Guide",
     intro: "APlus Academy Core 2 is a free A+ Core 2 220-1202 practice test and study guide course: forty-one lessons on operating systems, security, software troubleshooting, and operational procedures, a printable memorization sheet, tutorials built from your misses, and unlimited practice tests. Use it as an A+ 220-1202 study guide on its own, or work through the CompTIA A+ Core 2 practice questions bank lesson by lesson.",
     phrases: ["A+ Core 2 220-1202 practice test", "A+ 220-1202 study guide", "CompTIA A+ Core 2 practice questions"],
+    pbqPhrases: ["A+ Core 2 PBQs", "220-1202 performance-based questions", "A+ PBQ practice"],
     faq: [
       { q: "How many questions are on the A+ Core 2 exam?", a: "Up to 90 questions in 90 minutes, multiple choice and performance-based. The passing score is 700 on a scale of 100 to 900." },
       { q: "What does Core 2 cover?", a: "Operating systems, security, software troubleshooting, and operational procedures, including scripting, remote access, and backups." },
@@ -27,7 +28,7 @@ FRA.course = {
     { id: 4, name: "Operational Procedures", short: "Procedures", pct: 21, quota: 10 }
   ],
   // Practice tests pass at 80%; the official-format test uses 78%, the real exam's 700 of 900.
-  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3 },
+  test: { questions: 50, minutes: 50, passPct: 80, passesNeeded: 3, passWindow: 5, starterPerDomain: 2, checkpointN: 4, checkpointPass: 3, pbqInTest: 2 },
   starterPool: {
     1: ["u1l1", "u1l2", "u1l3", "u1l4", "u2l1", "u2l2", "u2l3", "u2l4", "u2l5", "u2l6", "u3l1", "u3l2"],
     2: ["u4l1", "u4l2", "u4l3", "u4l4", "u4l5", "u5l1", "u5l2", "u5l3", "u5l4", "u5l5", "u5l6", "u5l7", "u5l8"],
