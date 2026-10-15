@@ -40,15 +40,15 @@ FRA.pbqs["ap1-cables-match"] = {
 FRA.pbqs["ap1-build-form"] = {
   id: "ap1-build-form", title: "Spec the memory and storage", domain: 3, lesson: "u5l2", seo: false,
   scenario: {
-    text: "A video editor's new desktop is being built on a board whose manual lists four memory slots for 288-pin modules at 1.1 V, keyed differently from the previous generation, and one slot for a card 22 mm wide, M-keyed and wired to PCIe x4 lanes. The editor needs the fastest storage the board supports and 32 GB of memory in total."
+    text: "A video editor's new desktop is being built on a board whose manual lists four memory slots for 288-pin modules at 1.1 V, keyed differently from the previous generation, and one slot for a card 22 mm wide, M-keyed and wired to PCIe x4 lanes, that accepts 2280 cards (80 mm long). The editor needs the fastest storage the board supports and 32 GB of memory in total."
   },
   tasks: [
     { id: "spec", kind: "form", prompt: "Fill in the parts order.", fields: [
       { id: "ramtype", label: "Memory generation", expect: ["DDR5"], normalize: "text" },
       { id: "ramform", label: "Memory module form factor", expect: ["DIMM"], normalize: "text" },
-      { id: "iface", label: "Storage interface for the fastest drive", expect: ["NVMe", "PCIe NVMe", "NVMe over PCIe"], normalize: "text" },
+      { id: "iface", label: "Storage interface for the fastest drive", expect: ["NVMe", "PCIe", "PCIe NVMe", "NVMe over PCIe"], normalize: "text" },
       { id: "slot", label: "Slot (form factor) the drive goes in", expect: ["M.2"], normalize: "text" },
-      { id: "total", label: "Total memory in GB", expect: ["32"], normalize: "number" }
+      { id: "total", label: "Total memory in GB", expect: ["32", "32 GB", "32GB"], normalize: "number" }
     ] },
     { id: "pair", kind: "choice", prompt: "Why order two 16 GB modules rather than one 32 GB module?", options: [
       "Two matched modules in the paired slots run in dual channel, doubling memory bandwidth",
@@ -59,7 +59,7 @@ FRA.pbqs["ap1-build-form"] = {
     { id: "nofit", kind: "multiselect", prompt: "Pick every part that will not work on this board.", options: ["A DDR4 DIMM", "A DDR5 SODIMM", "A DDR5 DIMM", "An M.2 2280 NVMe SSD"], expect: [0, 1] }
   ],
   why: {
-    spec: "A 288-pin module at 1.1 V with its own key is DDR5, and a desktop board takes the long DIMM. A 22 mm card in an M-keyed slot wired to PCIe x4 is an M.2 drive using NVMe, which talks to the CPU over PCIe at thousands of MB/s, many times the roughly 550 MB/s a SATA SSD tops out at. M.2 is the slot and form factor; NVMe is the interface, so the two fields are not interchangeable.",
+    spec: "A 288-pin module at 1.1 V with its own key is DDR5, and a desktop board takes the long DIMM. A 22 mm card in an M-keyed slot wired to PCIe x4 is an M.2 drive using NVMe, which talks to the CPU over PCIe at thousands of MB/s, many times the roughly 550 MB/s a SATA SSD tops out at. M.2 is the slot and form factor; NVMe is the interface, so the two fields are not interchangeable. Either NVMe or PCIe is accepted for the interface: NVMe is the protocol and PCIe is the lanes it rides.",
     pair: "Two matched modules in the correct paired slots enable dual channel, which doubles bandwidth compared with a single module; a single module always runs single channel. A 64-bit OS addresses far more than 32 GB, the power difference is not the reason, and a board boots with one module.",
     nofit: "DDR4 and DDR5 are both 288-pin DIMMs but keyed differently, so a DDR4 module cannot be seated in a DDR5 slot. A SODIMM is the short laptop module and does not fit a desktop DIMM slot. A DDR5 DIMM and an M.2 2280 NVMe SSD are exactly what this board takes."
   }
@@ -95,7 +95,7 @@ FRA.pbqs["ap1-laser-order"] = {
   ],
   why: {
     steps: "The order is processing, charging, exposing, developing, transferring, fusing, cleaning (Please Charge Every Dog Treats For Cleaning). The drum is charged before the laser can expose it, the toner develops onto the drum before it transfers to the paper, and fusing comes after transfer because only toner on the page can be melted into it.",
-    smear: "Toner that wipes off was never melted into the paper, so the fusing step failed and the fuser assembly is the part to replace. A charge roller problem shows as a blank or uneven image, a cleaning fault shows as ghosting, and a memory problem fails or truncates a complex page.",
+    smear: "Toner that wipes off was never melted into the paper, so the fusing step failed and the fuser assembly is the part to replace. A fault in charging or transferring changes what lands on the page, not whether fused toner stays put, a cleaning fault or worn drum shows as ghosting, and a memory problem fails or truncates a complex page.",
     faded: "Faded print points to the toner running low (replace it when shaking the cartridge no longer helps) or a worn transfer roller or belt that no longer pulls the full image onto the paper. A failing fuser leaves smearing toner, a scratched drum leaves repeating marks or lines, and worn pickup rollers cause feed problems, not faded print."
   }
 };
@@ -107,7 +107,7 @@ FRA.pbqs["ap1-mobile-form"] = {
   },
   tasks: [
     { id: "mail", kind: "form", prompt: "Fill in the mail account settings.", fields: [
-      { id: "proto", label: "Incoming mail protocol", expect: ["IMAP", "IMAP4"], normalize: "text" },
+      { id: "proto", label: "Incoming mail protocol", expect: ["IMAP", "IMAP4", "IMAPS"], normalize: "text" },
       { id: "inport", label: "Incoming port", expect: ["993"], normalize: "number" },
       { id: "outport", label: "Outgoing (SMTP) port", expect: ["587", "465"], normalize: "number" },
       { id: "enc", label: "Encryption", expect: ["TLS", "SSL/TLS"], normalize: "text" }
@@ -189,7 +189,7 @@ FRA.pbqs["ap1-display-ms"] = {
       "Reinstall the graphics driver",
       "Replace the motherboard"
     ], expect: 0 },
-    { id: "repair", kind: "order", prompt: "Put the repair steps in order, cheapest and least invasive first.", items: [
+    { id: "repair", kind: "order", prompt: "Put the repair steps in the order the technician works them, starting from the flashlight test already done.", items: [
       "Confirm with the flashlight that the image is there but unlit",
       "Check the brightness keys and power-saving settings",
       "Connect an external monitor to prove the graphics output works",
@@ -211,10 +211,10 @@ FRA.pbqs["ap1-bios-form"] = {
   },
   tasks: [
     { id: "fw", kind: "form", prompt: "Fill in the firmware settings before the install.", fields: [
-      { id: "secureboot", label: "Secure Boot", expect: ["Enabled", "On"], normalize: "text" },
-      { id: "tpm", label: "TPM", expect: ["Enabled", "On"], normalize: "text" },
+      { id: "secureboot", label: "Secure Boot", expect: ["Enabled", "Enable", "On"], normalize: "text" },
+      { id: "tpm", label: "TPM", expect: ["Enabled", "Enable", "On"], normalize: "text" },
       { id: "bootdev", label: "First boot device for the install", expect: ["USB", "USB drive", "USB flash drive", "USB stick"], normalize: "text" },
-      { id: "vt", label: "CPU virtualization (VT-x or AMD-V)", expect: ["Enabled", "On"], normalize: "text" }
+      { id: "vt", label: "CPU virtualization (VT-x or AMD-V)", expect: ["Enabled", "Enable", "On"], normalize: "text" }
     ] },
     { id: "superpw", kind: "choice", prompt: "The technician sets a supervisor password in the firmware. What does it protect?", options: [
       "The firmware settings",
@@ -287,10 +287,10 @@ FRA.pbqs["ap1-laptop-diagram"] = {
       "Optical drive"
     ], expect: [0, 1, 2, 3, 4] },
     { id: "first", kind: "choice", prompt: "The laptop is shut down and the power adapter is unplugged. What do you disconnect before touching any of the numbered parts?", options: [
-      "The battery (callout 1)",
-      "The memory modules (callout 2)",
-      "The wireless antenna leads (callout 4)",
-      "The CMOS battery (callout 5)"
+      "The battery",
+      "The memory modules",
+      "The wireless antenna leads",
+      "The CMOS battery"
     ], expect: 0 },
     { id: "antenna", kind: "choice", prompt: "Two thin leads run from the hinge to one of the parts. Which part do the antenna leads snap onto?", options: ["The wireless card", "The M.2 SSD", "The SODIMM memory", "The CMOS battery"], expect: 0 }
   ],
