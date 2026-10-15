@@ -6,7 +6,7 @@ FRA.course = {
   short: "BM",
   brand: "FieldReady Academy",
   catalogUrl: "/",
-  exam: { vendor: "AAMI / ACI", title: "Certified Associate in Biomedical Technology", code: "CABT", questions: 100, minutes: 120, passPct: 70 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Associate in Biomedical Technology", code: "CABT", questions: 100, minutes: 120, passPct: 70, fee: "2026: $220 AAMI member, $270 non-member; retake $190 or $240" },
   description: "Biomed basic training for the AAMI/ACI CABT: 53 lessons, 13 hands-on labs on virtual instruments, a printable memorization sheet, adaptive tutorials, and practice exams.",
   seo: {
     title: "BMET Training Course for the AAMI CABT | BMET Academy",

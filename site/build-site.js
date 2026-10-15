@@ -355,6 +355,8 @@ function defaultFaq(m) {
   const out = [];
   if (ex.questions && ex.minutes) out.push({ q: `How many questions are on the ${examName(c)} exam?`, a: `${ex.questions} questions in ${ex.minutes} minutes.${c.realExamNote ? ' ' + c.realExamNote : ''}` });
   if (t.passesNeeded && t.passWindow && t.passPct) out.push({ q: 'How does the course decide I am ready?', a: `${t.passesNeeded} of your last ${t.passWindow} practice tests at ${t.passPct}% or better, then one full-length test in the real exam's format at its passing score.` });
+  out.push({ q: `What is on the ${examName(c) || c.name} exam?`, a: `${(c.domains || []).map(d => `${d.name} (${d.pct}%)`).join(', ')}. The course's units follow the same domains, and every practice test is weighted the same way.` });
+  if (ex.fee) out.push({ q: `How much does the ${examName(c) || c.name} exam cost?`, a: `${ex.fee}. The fee goes to the certifying body; this course is free.` });
   out.push({ q: 'Is the course free?', a: 'Yes. Every lesson, the cheat sheet, and unlimited practice tests are free while the site launches.' });
   out.push({ q: 'Can I read the lessons without signing in?', a: `The first ${m.freeLessons.length} lessons and the cheat sheet are open on this site; the full course runs in the app.` });
   return out;
@@ -371,15 +373,26 @@ function landingPage(m, R, origin, guides, siblings) {
   const totalMin = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
   const labs = m.lessons.filter(l => l.lab);
   const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }];
-  const facts = [
-    ['Exam', ex.title ? (ex.vendor && !ex.title.startsWith(ex.vendor) ? `${ex.vendor} ${ex.title}` : ex.title) : c.name],
+  const hasPbq = Object.keys(m.pbqs || {}).length > 0;
+  const examFacts = [
+    ex.vendor ? ['Vendor', ex.vendor] : null,
+    ['Exam', ex.title || c.name],
     ex.code ? ['Code', ex.code] : null,
     ex.questions ? ['Questions', `${ex.questions}`] : null,
     ex.minutes ? ['Time', `${ex.minutes} minutes`] : null,
-    c.realExamNote ? ['Passing', c.realExamNote] : null,
-    ['Course', `${m.lessons.length} lessons across ${m.units.length} units${labs.length ? `, ${labs.length} labs` : ''}${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
+    ['Format', hasPbq ? 'Multiple choice plus performance-based questions' : 'Multiple choice'],
+    c.realExamNote ? ['Passing', c.realExamNote] : (ex.passPct ? ['Passing', `${ex.passPct}%`] : null),
+    ex.fee ? ['Fee', ex.fee] : null
+  ].filter(Boolean).concat((c.domains || []).map(d => [d.name, `${d.pct}%`]));
+  const courseFacts = [
+    ['Lessons', `${m.lessons.length} across ${m.units.length} units${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
+    labs.length ? ['Labs', `${labs.length}`] : null,
+    ['Questions', `${m.questions.length}, every one explained`],
+    hasPbq ? ['PBQs', `${Object.keys(m.pbqs).length}`] : null,
+    m.flashcards && m.flashcards.total ? ['Flashcards', `${m.flashcards.total}`] : null,
     ['Cost', 'Free']
   ].filter(Boolean);
+  const factsTable = (id, rows) => `<div class="table-wrap"><table class="plain facts" id="${id}"><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>`;
   const body = `${crumbs(crumbList)}
 <div class="course-hero">
   <div class="eyebrow">${esc(BRAND)}</div>
@@ -389,7 +402,9 @@ function landingPage(m, R, origin, guides, siblings) {
 </div>
 <section>
   <h2>The exam at a glance</h2>
-  <div class="table-wrap"><table class="plain facts"><tbody>${facts.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
+  ${factsTable('exam-facts', examFacts)}
+  <h2>This course</h2>
+  ${factsTable('course-facts', courseFacts)}
 </section>
 <section>
   <h2>How the course works</h2>

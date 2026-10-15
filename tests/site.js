@@ -70,6 +70,10 @@ check('landing lists every free lesson', m.freeLessons.every(l => landing.includ
 check('landing links its related guide in a Guides section, and the nav carries a Guides link', landing.includes('href="/guides/sample-guide/"') && landing.includes('href="/guides/"'));
 const lld = [...landing.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
 check('landing JSON-LD: Course, FAQPage, BreadcrumbList', lld.map(x => x['@type']).join(',') === 'Course,FAQPage,BreadcrumbList', lld.map(x => x['@type']).join(','));
+check('landing has an exam facts table with the vendor, format, and every domain weight', landing.includes('id="exam-facts"') && landing.includes('<th scope="row">Vendor</th>') && landing.includes('<th scope="row">Format</th>') && m.c.domains.every(d => landing.includes(`<th scope="row">${esc(d.name)}</th><td>${d.pct}%</td>`)));
+check('landing has a course facts table with lessons, questions, and cost', landing.includes('id="course-facts"') && landing.includes('<th scope="row">Questions</th>') && landing.includes('<th scope="row">Cost</th><td>Free</td>'));
+check('landing shows a fee row only when the manifest sets exam.fee', (!!m.c.exam.fee) === landing.includes('<th scope="row">Fee</th>'));
+check('landing FAQ asks what is on the exam and lists the domains', landing.includes('What is on the') && m.c.domains.every(d => landing.includes(esc(d.name))));
 check('landing FAQ falls back to exam facts when the manifest has none', lld[1].mainEntity.length >= 3);
 check('landing carries og:image and is indexable', landing.includes('property="og:image" content="https://example.test/og-image.png"') && !landing.includes('name="robots"'));
 

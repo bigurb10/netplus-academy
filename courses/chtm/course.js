@@ -6,7 +6,7 @@ FRA.course = {
   short: "CH",
   brand: "FieldReady Academy",
   catalogUrl: "/",
-  exam: { vendor: "AAMI / ACI", title: "Certified Healthcare Technology Manager", code: "CHTM", questions: 100, minutes: 120, passPct: 70 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Healthcare Technology Manager", code: "CHTM", questions: 100, minutes: 120, passPct: 70, fee: "2026: $490 AAMI member, $565 non-member; retake $440 or $515" },
   description: "Self-paced Certified Healthcare Technology Manager (CHTM) exam prep with adaptive training and practice exams.",
   seo: {
     title: "CHTM Study Guide and Practice Tests | CHTM Academy",
