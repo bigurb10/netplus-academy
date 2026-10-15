@@ -362,14 +362,13 @@ FRA.cheatsheet = {
           ["Rocker and shaker", "Speed and tilt; motor and belt"],
           ["Refrigerator and freezer", "Blood and vaccine storage 2 to 8 C; freezers minus 20 or minus 80 C; continuous temperature logging and alarms; door gaskets and defrost"],
           ["Microscope", "Light source, objectives, focus; cleaning optics"],
-          ["Water bath", "Temperature control and uniformity; thermostat and heater"],
+          ["Water bath", "Gentle heating under 100 C with stirring; temperature control and uniformity via thermostat and heater; incubates microbial samples; not heating = setpoint or limit below ambient, or low water"],
           ["Analyzers", "Reagents, calibration, quality control samples, fluidics and clogs, temperature"],
           ["Cryostat and microtome", "Cryostat cuts frozen sections in a cold chamber (about minus 20 C); microtome cuts thin sections; blade safety, temperature, advance mechanism"],
           ["Blood gas analyzer", "Clark electrode pO2 (platinum cathode, silver anode, O2 membrane, current); glass electrode pH (voltage); Severinghaus electrode pCO2 (pH electrode behind a CO2 membrane in bicarbonate); too cold = thermistor; barcode = window"],
           ["Spectrophotometer", "Absorbance at selected wavelengths; tungsten lamp for visible, deuterium for UV; read a blank first; quartz cuvettes for UV; intermittent at all wavelengths = power cable"],
           ["Hematocrit centrifuge", "Packs red cells in capillary tubes at about 10,000 to 15,000 g; RCF rises with speed squared and radius"],
-          ["Microtome detail", "Paraffin-embedded blocks; thickness depends on blade clamping, sharpness, clearance angle, cool block, slow steady stroke, no wax; cryostat frost = drafts or breath, splinter = too cold"],
-          ["Water bath", "Gentle heating under 100 C with stirring; incubates microbial samples; not heating = setpoint or limit below ambient, or low water"]
+          ["Microtome detail", "Paraffin-embedded blocks; thickness depends on blade clamping, sharpness, clearance angle, cool block, slow steady stroke, no wax; cryostat frost = drafts or breath, splinter = too cold"]
         ] }
       ]
     },

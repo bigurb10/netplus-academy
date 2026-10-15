@@ -6,7 +6,7 @@ FRA.course = {
   short: "CB",
   brand: "FieldReady Academy",
   catalogUrl: "/",
-  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180, passPct: 70 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Biomedical Equipment Technician", code: "CBET", questions: 165, minutes: 180, passPct: 70, fee: "2026: $410 AAMI member, $460 non-member; retake $355 or $405" },
   description: "Self-paced Certified Biomedical Equipment Technician (CBET) exam prep with adaptive training and practice exams.",
   seo: {
     title: "CBET Study Guide and Practice Tests | CBET Academy",

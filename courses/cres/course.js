@@ -6,7 +6,7 @@ FRA.course = {
   short: "CR",
   brand: "FieldReady Academy",
   catalogUrl: "/",
-  exam: { vendor: "AAMI / ACI", title: "Certified Radiology Equipment Specialist", code: "CRES", questions: 165, minutes: 180, passPct: 70 },
+  exam: { vendor: "AAMI / ACI", title: "Certified Radiology Equipment Specialist", code: "CRES", questions: 165, minutes: 180, passPct: 70, fee: "2026: $410 AAMI member, $460 non-member; retake $355 or $405" },
   description: "Self-paced Certified Radiology Equipment Specialist (CRES) exam prep with adaptive training and practice exams.",
   seo: {
     title: "CRES Study Guide and Practice Tests | CRES Academy",

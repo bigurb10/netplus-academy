@@ -99,6 +99,46 @@ const slugify = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace
 // The id leads so the URL stays stable if a title is edited.
 const slug = l => `${l.id}-${slugify(l.title)}`;
 
+// Flashcards come from data the pack already has: the acronym glossary (front: the key, back: what it
+// stands for and the tip) and every two-column cheat-sheet table (front: first column, back: second).
+// Wider tables are not cards, and a first cell over 80 characters is a sentence, not a prompt.
+// A key with a second meaning (`alt`) carries both on its back. When two tables in one section would
+// give two cards the same front, every card from those tables gets its table's second column header
+// in parentheses ("System (Purpose)"), or its first column header where the two tables share the
+// second, so each front in a deck is unique and still reads naturally. "Got it" marks are keyed by
+// front and back together, so a duplicate row inside one table still marks only itself.
+//
+// clashingTables: the indexes of the tables (lists of cards) that share a front with another table.
+function clashingTables(tables) {
+  const seen = {};
+  tables.forEach((cards, ti) => new Set(cards.map(x => x.front)).forEach(f => { (seen[f] = seen[f] || []).push(ti); }));
+  const out = new Set();
+  Object.keys(seen).forEach(f => { if (seen[f].length > 1) seen[f].forEach(ti => out.add(ti)); });
+  return out;
+}
+function flashcardDecks(m) {
+  const decks = [];
+  const meaning = a => [String((a && a.full) || '').replace(/\.$/, ''), a && a.tip].filter(Boolean).join('. ');
+  const stop = s => (!s || /[.!?]$/.test(s)) ? s : s + '.';
+  const acrBack = a => a.alt ? [stop(meaning(a)), 'Also: ' + meaning(a.alt)].filter(Boolean).join(' ') : meaning(a);
+  const byKey = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b);
+  const acr = Object.keys(m.acronyms || {}).sort(byKey).map(k => ({ front: k, back: acrBack(m.acronyms[k]) }));
+  if (acr.length) decks.push({ slug: 'acronyms', name: 'Acronyms', cards: acr });
+  ((m.cheatsheet && m.cheatsheet.sections) || []).forEach(s => {
+    const tables = (s.blocks || []).filter(b => b.type === 'table' && Array.isArray(b.cols) && b.cols.length === 2)
+      .map(b => ({ cols: b.cols.map(String), cards: (b.rows || []).filter(r => String(r[0]).length <= 80).map(r => ({ front: String(r[0]), back: String(r[1]) })) }));
+    const label = (t, col) => t.cards.map(x => ({ front: `${x.front} (${t.cols[col]})`, back: x.back }));
+    // The second column header first; where the clashing tables share that header too, the first.
+    const first = clashingTables(tables.map(t => t.cards));
+    let byTable = tables.map((t, ti) => first.has(ti) ? label(t, 1) : t.cards);
+    const still = clashingTables(byTable);
+    if (still.size) byTable = byTable.map((cards, ti) => still.has(ti) ? label(tables[ti], 0) : cards);
+    const cards = byTable.flat();
+    if (cards.length) decks.push({ slug: s.id, name: s.title, cards });
+  });
+  return { decks, total: decks.reduce((n, d) => n + d.cards.length, 0) };
+}
+
 function model(FRA) {
   const c = FRA.course;
   const units = (FRA.units || []).slice().sort((a, b) => a.n - b.n);
@@ -111,7 +151,7 @@ function model(FRA) {
   else if (typeof f.lessons === 'number') lessons.slice(0, f.lessons).forEach(l => free.add(l.id));
   const domains = {};
   (c.domains || []).forEach(d => { domains[d.id] = d; });
-  return {
+  const m = {
     c, units, lessons, free, domains,
     freeLessons: lessons.filter(l => free.has(l.id)),
     deep: FRA.deep || {},
@@ -128,11 +168,14 @@ function model(FRA) {
       course: `/${c.id}/lessons/`,
       cheat: `/${c.id}/cheatsheet/`,
       pbq: `/${c.id}/pbq/`,
+      flashcards: `/${c.id}/flashcards/`,
       pdf: `/${c.id}/cheatsheet.pdf`,
       lesson: l => `/${c.id}/lessons/${slug(l)}/`,
       inApp: l => `/${c.id}/app/#lesson/${l.id}`
     }
   };
+  m.flashcards = flashcardDecks(m);
+  return m;
 }
 
 const examName = c => [c.exam && c.exam.title, c.exam && c.exam.code].filter(Boolean).join(' ');
@@ -205,7 +248,7 @@ ${p.body}
 
 function nav(m, current) {
   const item = (href, label, cls) => `<a href="${href}"${cls ? ` class="${cls}"` : ''}${current === href ? ' aria-current="page"' : ''}>${label}</a>`;
-  return item(m.urls.landing, 'Overview') + item(m.urls.course, 'Lessons') + item(m.urls.practice, 'Practice test') + item(m.urls.cheat, 'Cheat sheet') + item('/guides/', 'Guides') + item(m.urls.app, 'Start the course', 'btn primary small');
+  return item(m.urls.landing, 'Overview') + item(m.urls.course, 'Lessons') + item(m.urls.practice, 'Practice test') + item(m.urls.cheat, 'Cheat sheet') + (m.flashcards && m.flashcards.total ? item(m.urls.flashcards, 'Flashcards') : '') + item('/guides/', 'Guides') + item(m.urls.app, 'Start the course', 'btn primary small');
 }
 
 function crumbs(items) {
@@ -350,11 +393,20 @@ ${ctaCard(m, null)}`;
 
 const FORWARDER = `<script>if(location.hash&&/^#[a-z]/.test(location.hash))location.replace(location.pathname.replace(/(index\\.html)?\\/?$/,'/')+'app/'+location.search+location.hash)</script>`;
 
+function examFaq(m) {
+  const c = m.c; const ex = c.exam || {};
+  const out = [];
+  out.push({ q: `What is on the ${examName(c) || c.name} exam?`, a: `${(c.domains || []).map(d => `${d.name} (${d.pct}%)`).join(', ')}. The course's units follow the same domains, and the practice tests draw on the same domain weights.` });
+  if (ex.fee) out.push({ q: `How much does the ${examName(c) || c.name} exam cost?`, a: `${ex.fee}. The fee goes to the certifying body; this course is free.` });
+  return out;
+}
+
 function defaultFaq(m) {
   const c = m.c; const ex = c.exam || {}; const t = c.test || {};
   const out = [];
   if (ex.questions && ex.minutes) out.push({ q: `How many questions are on the ${examName(c)} exam?`, a: `${ex.questions} questions in ${ex.minutes} minutes.${c.realExamNote ? ' ' + c.realExamNote : ''}` });
   if (t.passesNeeded && t.passWindow && t.passPct) out.push({ q: 'How does the course decide I am ready?', a: `${t.passesNeeded} of your last ${t.passWindow} practice tests at ${t.passPct}% or better, then one full-length test in the real exam's format at its passing score.` });
+  out.push(...examFaq(m));
   out.push({ q: 'Is the course free?', a: 'Yes. Every lesson, the cheat sheet, and unlimited practice tests are free while the site launches.' });
   out.push({ q: 'Can I read the lessons without signing in?', a: `The first ${m.freeLessons.length} lessons and the cheat sheet are open on this site; the full course runs in the app.` });
   return out;
@@ -366,20 +418,32 @@ function landingPage(m, R, origin, guides, siblings) {
   const h1 = seo.h1 || `${c.name}: ${examName(c) || c.name} study guide and practice tests`;
   const title = seo.title || `${h1} | ${BRAND}`;
   const intro = seo.intro || c.description;
-  const faq = Array.isArray(seo.faq) && seo.faq.length ? seo.faq : defaultFaq(m);
+  const baseFaq = Array.isArray(seo.faq) && seo.faq.length ? seo.faq : defaultFaq(m);
+  const faq = baseFaq.concat(examFaq(m).filter(e => !baseFaq.some(b => b.q === e.q || (/cost/i.test(e.q) && /cost/i.test(b.q)))));
   const description = shorten(intro, DESC_MAX);
   const totalMin = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
   const labs = m.lessons.filter(l => l.lab);
   const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }];
-  const facts = [
-    ['Exam', ex.title ? (ex.vendor && !ex.title.startsWith(ex.vendor) ? `${ex.vendor} ${ex.title}` : ex.title) : c.name],
+  const hasPbq = Object.keys(m.pbqs || {}).length > 0;
+  const examFacts = [
+    ex.vendor ? ['Vendor', ex.vendor] : null,
+    ['Exam', ex.title || c.name],
     ex.code ? ['Code', ex.code] : null,
     ex.questions ? ['Questions', `${ex.questions}`] : null,
     ex.minutes ? ['Time', `${ex.minutes} minutes`] : null,
-    c.realExamNote ? ['Passing', c.realExamNote] : null,
-    ['Course', `${m.lessons.length} lessons across ${m.units.length} units${labs.length ? `, ${labs.length} labs` : ''}${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
+    ['Format', hasPbq ? 'Multiple choice plus performance-based questions' : 'Multiple choice'],
+    c.realExamNote ? ['Passing', c.realExamNote] : (ex.passPct ? ['Passing', `${ex.passPct}%`] : null),
+    ex.fee ? ['Fee', ex.fee] : null
+  ].filter(Boolean).concat((c.domains || []).length ? [['Exam domains', 'share of the questions']] : []).concat((c.domains || []).map(d => [d.name, `${d.pct}%`]));
+  const courseFacts = [
+    ['Lessons', `${m.lessons.length} across ${m.units.length} units${totalMin ? `, about ${Math.round(totalMin / 60 * 10) / 10} hours of reading` : ''}`],
+    labs.length ? ['Labs', `${labs.length}`] : null,
+    ['Questions', `${m.questions.length}, every one explained`],
+    hasPbq ? ['PBQs', `${Object.keys(m.pbqs).length}`] : null,
+    m.flashcards && m.flashcards.total ? ['Flashcards', `${m.flashcards.total}`] : null,
     ['Cost', 'Free']
   ].filter(Boolean);
+  const factsTable = (id, rows) => `<div class="table-wrap"><table class="plain facts" id="${id}"><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>`;
   const body = `${crumbs(crumbList)}
 <div class="course-hero">
   <div class="eyebrow">${esc(BRAND)}</div>
@@ -389,7 +453,9 @@ function landingPage(m, R, origin, guides, siblings) {
 </div>
 <section>
   <h2>The exam at a glance</h2>
-  <div class="table-wrap"><table class="plain facts"><tbody>${facts.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
+  ${factsTable('exam-facts', examFacts)}
+  <h2>This course</h2>
+  ${factsTable('course-facts', courseFacts)}
 </section>
 <section>
   <h2>How the course works</h2>
@@ -400,6 +466,11 @@ function landingPage(m, R, origin, guides, siblings) {
   <ol class="lesson-list">${m.freeLessons.map(l => `<li><a href="${m.urls.lesson(l)}">${esc(l.title)}</a> <span class="muted">${l.minutes} min</span></li>`).join('')}</ol>
   <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
 </section>
+${m.flashcards && m.flashcards.total ? `<section id="flashcards">
+  <h2>Flashcards</h2>
+  <p class="ink2">${m.flashcards.total} cards from the cheat sheet and glossary: ${m.flashcards.decks.map(d => `${d.cards.length} ${esc(d.name)}`).join('; ')}. Flip, shuffle, mark what you know.</p>
+  <p><a class="btn" href="${m.urls.flashcards}">Drill the flashcards</a></p>
+</section>` : ''}
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
 ${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
@@ -472,7 +543,7 @@ function practicePage(m, R, origin) {
   <div class="eyebrow">That was ${items.length} of ${m.questions.length}</div>
   <h2>Every question in the course is explained like this</h2>
   <p class="ink2">Start with the short starter test and the course builds your tutorial from what you miss. Free while we launch.</p>
-  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a></p>
+  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a>${Object.keys(m.pbqs || {}).length ? ` <a class="btn" href="${m.urls.pbq}">Practice PBQs</a>` : ''} <a class="btn" href="${m.urls.landing}">About the course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a>${m.flashcards && m.flashcards.total ? ` <a class="btn" href="${m.urls.flashcards}">Flashcards</a>` : ''}</p>
 </aside>`;
   return shell({
     origin, path: m.urls.practice, type: 'article',
@@ -526,7 +597,7 @@ function pbqPage(m, R, origin) {
   <div class="eyebrow">That was ${ids.length} of ${Object.keys(m.pbqs).length}</div>
   <h2>Practice all ${Object.keys(m.pbqs).length} PBQs in the course</h2>
   <p class="ink2">Interactive, graded task by task, with the why for each. Free while we launch.</p>
-  <p><a class="btn primary" href="${m.urls.app}#pbq">Practice all ${Object.keys(m.pbqs).length} PBQs</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a> <a class="btn" href="${m.urls.landing}">About the course</a></p>
+  <p><a class="btn primary" href="${m.urls.app}#pbq">Practice all ${Object.keys(m.pbqs).length} PBQs</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a> <a class="btn" href="${m.urls.landing}">About the course</a>${m.flashcards && m.flashcards.total ? ` <a class="btn" href="${m.urls.flashcards}">Flashcards</a>` : ''}</p>
 </aside>`;
   return shell({
     origin, path: m.urls.pbq, type: 'article',
@@ -535,6 +606,85 @@ function pbqPage(m, R, origin) {
     jsonld: [
       { '@context': 'https://schema.org', '@type': 'Quiz', name: h1, description, url: origin + m.urls.pbq, inLanguage: 'en', isAccessibleForFree: true, about: { '@type': 'Thing', name: examName(c) || c.name }, educationalLevel: 'Intermediate', provider: org(),
         hasPart: ids.flatMap(id => m.pbqs[id].tasks.map(t => ({ '@type': 'Question', name: R.plain(t.prompt), eduQuestionType: 'Performance-based', learningResourceType: 'Practice problem', text: R.plain(t.prompt), acceptedAnswer: { '@type': 'Answer', text: P.expectedText(t) } }))) },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+      breadcrumbLd(origin, crumbList)
+    ],
+    body
+  });
+}
+
+// The flashcards page: every deck rendered as a definition list (complete without JavaScript),
+// with an inline viewer that flips one card at a time and remembers "Got it" in localStorage.
+function flashcardsPage(m, R, origin) {
+  const c = m.c; const decks = m.flashcards.decks; const total = m.flashcards.total;
+  const h1 = `${examName(c) || c.name} Flashcards: ${total} cards`;
+  const exam = (c.exam && c.exam.title) || examName(c) || c.name;
+  const counts = decks.map(d => `${d.cards.length} ${d.name}`).join(', ');
+  const description = shorten(`Free ${examName(c) || c.name} flashcards: ${counts}. Flip, shuffle, and mark the ones you know.`, DESC_MAX);
+  const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Flashcards', href: m.urls.flashcards }];
+  const deckHtml = decks.map(d => `<section class="deck" data-deck="${esc(d.slug)}"><h2>${esc(d.name)} <span class="muted">${d.cards.length}</span></h2><dl>${d.cards.map(x => `<div class="fc"><dt>${esc(x.front)}</dt><dd>${esc(x.back)}</dd></div>`).join('')}</dl></section>`).join('');
+  const faq = [
+    { q: `How many ${examName(c) || c.name} flashcards are there?`, a: `${total}: ${counts}. They come from the course's cheat sheet and glossary, so what you drill is what the lessons teach.` },
+    { q: 'Do I need an account?', a: 'No. The cards you mark as known are remembered in this browser only. Sign in to the course for progress that follows you between devices.' }
+  ];
+  const body = `${crumbs(crumbList)}
+<article class="lesson flashcards">
+  <div class="eyebrow">${esc(examName(c) || c.name)}</div>
+  <h1>${esc(h1)}</h1>
+  <p class="lede ink2">${total} free ${esc(exam)} flashcards from the course's cheat sheet and glossary. Tap a card to flip it. Mark the ones you know and they drop out of the deck; the rest keep coming back.</p>
+  <div class="card fc-viewer" id="fc-viewer" hidden>
+    <div class="row spread" style="flex-wrap:wrap;gap:8px"><label class="muted">Deck <select id="fc-deck">${decks.map(d => `<option value="${esc(d.slug)}">${esc(d.name)} (${d.cards.length})</option>`).join('')}</select></label><span class="muted" id="fc-count" aria-live="polite"></span></div>
+    <button class="fc-card" id="fc-card" type="button"><span class="fc-face" id="fc-front"></span><span class="fc-face fc-back" id="fc-back" hidden></span></button>
+    <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn" type="button" id="fc-prev">Previous</button><button class="btn" type="button" id="fc-next">Next</button><button class="btn" type="button" id="fc-shuffle">Shuffle</button><button class="btn primary" type="button" id="fc-know">Got it</button><button class="btn" type="button" id="fc-again">Again</button><button class="btn ghost" type="button" id="fc-reset">Reset this deck</button></div>
+    <p class="muted" style="font-size:.9rem">Space flips, arrow keys move. Known cards are remembered in this browser.</p>
+  </div>
+  ${deckHtml}
+  <section><h2>Questions people ask</h2>${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}</section>
+</article>
+<aside class="card cta stack">
+  <div class="eyebrow">Flashcards are the recall half</div>
+  <h2>The course teaches the other half</h2>
+  <p class="ink2">${m.lessons.length} lessons, ${m.questions.length} explained questions, and a tutorial built from what you miss. Free while we launch.</p>
+  <p><a class="btn primary" href="${m.urls.app}">Start the free course</a> <a class="btn" href="${m.urls.cheat}">Read the cheat sheet</a> <a class="btn" href="${m.urls.practice}">Try the practice test</a></p>
+</aside>
+<script>
+(function(){
+  var KEY='fra.${c.id}.flashcards';
+  var decks={};document.querySelectorAll('section.deck').forEach(function(s){decks[s.dataset.deck]=Array.prototype.map.call(s.querySelectorAll('.fc'),function(x){return {f:x.querySelector('dt').textContent,b:x.querySelector('dd').textContent};});});
+  function isMap(x){return !!x&&typeof x==='object'&&!Array.isArray(x);}
+  var known={};try{known=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){known={};}
+  if(!isMap(known)||!Object.keys(known).every(function(d){return isMap(known[d]);}))known={};
+  function store(){try{localStorage.setItem(KEY,JSON.stringify(known));}catch(e){}}
+  function id(c){return c.f+' = '+c.b;}
+  var v=document.getElementById('fc-viewer'),sel=document.getElementById('fc-deck'),card=document.getElementById('fc-card'),front=document.getElementById('fc-front'),back=document.getElementById('fc-back'),count=document.getElementById('fc-count');
+  if(!v||!sel||!Object.keys(decks).length)return;
+  var deck=sel.value,order=[],i=0,flipped=false;
+  function pool(){var k=known[deck]||{};return decks[deck].map(function(c,n){return n;}).filter(function(n){return !k[id(decks[deck][n])];});}
+  function load(){order=pool();i=0;flipped=false;show();}
+  function show(){var all=decks[deck].length;if(!order.length){front.textContent='Every card in this deck is marked known. Reset to start over.';back.hidden=true;front.hidden=false;count.textContent=all+' of '+all+' known';return;}
+    if(i>=order.length)i=0;if(i<0)i=order.length-1;var c=decks[deck][order[i]];front.textContent=c.f;back.textContent=c.b;front.hidden=flipped;back.hidden=!flipped;count.textContent=(i+1)+' of '+order.length+' left, '+(all-order.length)+' known';}
+  function flip(){if(!order.length)return;flipped=!flipped;show();}
+  function move(d){if(!order.length)return;i+=d;flipped=false;show();}
+  sel.addEventListener('change',function(){deck=sel.value;load();});
+  card.addEventListener('click',flip);
+  document.getElementById('fc-prev').addEventListener('click',function(){move(-1);});
+  document.getElementById('fc-next').addEventListener('click',function(){move(1);});
+  document.getElementById('fc-shuffle').addEventListener('click',function(){for(var a=order.length-1;a>0;a--){var b=Math.floor(Math.random()*(a+1));var t=order[a];order[a]=order[b];order[b]=t;}i=0;flipped=false;show();});
+  document.getElementById('fc-know').addEventListener('click',function(){if(!order.length)return;known[deck]=known[deck]||{};known[deck][id(decks[deck][order[i]])]=1;store();order.splice(i,1);flipped=false;show();});
+  document.getElementById('fc-again').addEventListener('click',function(){move(1);});
+  document.getElementById('fc-reset').addEventListener('click',function(){delete known[deck];store();load();});
+  // Space on the card button flips through its own click; otherwise only from the page body, while the viewer is on screen.
+  document.addEventListener('keydown',function(e){var t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA'||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key===' '){if(e.target!==v&&e.target!==document.body&&e.target!==document.documentElement)return;var r=v.getBoundingClientRect();if(r.bottom<0||r.top>window.innerHeight)return;e.preventDefault();flip();}else if(e.key==='ArrowRight'||e.key==='ArrowLeft'){if(!v.contains(e.target)&&e.target!==document.body&&e.target!==document.documentElement)return;var q=v.getBoundingClientRect();if(q.bottom<0||q.top>window.innerHeight)return;move(e.key==='ArrowRight'?1:-1);}});
+  v.hidden=false;load();
+})();
+</script>`;
+  return shell({
+    origin, path: m.urls.flashcards, type: 'article',
+    title: `${h1} | ${c.name}`, ogTitle: h1, description,
+    nav: nav(m, m.urls.flashcards),
+    jsonld: [
+      { '@context': 'https://schema.org', '@type': 'LearningResource', name: h1, description, url: origin + m.urls.flashcards, inLanguage: 'en', isAccessibleForFree: true, learningResourceType: 'Flashcards', about: { '@type': 'Thing', name: examName(c) || c.name }, provider: org() },
+      ...(decks.some(d => d.slug === 'acronyms') ? [{ '@context': 'https://schema.org', '@type': 'DefinedTermSet', name: `${examName(c) || c.name} acronyms`, hasDefinedTerm: decks.find(d => d.slug === 'acronyms').cards.map(x => ({ '@type': 'DefinedTerm', termCode: x.front, name: x.front, description: x.back })) }] : []),
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
       breadcrumbLd(origin, crumbList)
     ],
@@ -645,6 +795,7 @@ function buildCourse(FRA, opts) {
   pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin, opts.guides, opts.siblings)) });
   pages.push({ url: m.urls.practice, title: 'Practice test', file: writePage(opts.out, m.urls.practice, practicePage(m, R, origin)) });
   if (Object.keys(m.pbqs).length) pages.push({ url: m.urls.pbq, title: 'PBQ practice', file: writePage(opts.out, m.urls.pbq, pbqPage(m, R, origin)) });
+  if (m.flashcards.total) pages.push({ url: m.urls.flashcards, title: 'Flashcards', file: writePage(opts.out, m.urls.flashcards, flashcardsPage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
   if (m.cheatsheet) pages.push({ url: m.urls.cheat, title: m.cheatsheet.title, file: writePage(opts.out, m.urls.cheat, cheatPage(m, R, origin)) });
   for (const l of m.freeLessons) pages.push({ url: m.urls.lesson(l), title: l.title, file: writePage(opts.out, m.urls.lesson(l), lessonPage(m, l, R, origin)) });
@@ -656,7 +807,7 @@ function buildCourse(FRA, opts) {
 // course's pages re-rendered after an edit) still needs every course's URLs in the sitemap,
 // so this is computed from a model alone rather than from the pages a build actually wrote.
 function courseUrls(m) {
-  return [m.urls.landing, m.urls.practice, m.urls.course, m.urls.cheat].concat(Object.keys(m.pbqs || {}).length ? [m.urls.pbq] : []).concat(m.freeLessons.map(l => m.urls.lesson(l)));
+  return [m.urls.landing, m.urls.practice, m.urls.course, m.urls.cheat].concat(Object.keys(m.pbqs || {}).length ? [m.urls.pbq] : []).concat(m.flashcards && m.flashcards.total > 0 ? [m.urls.flashcards] : []).concat(m.freeLessons.map(l => m.urls.lesson(l)));
 }
 
 function sitemap(origin, urls, lastmod) {
@@ -714,7 +865,7 @@ function buildAll(opts) {
 // ./build-serviceforge, which requires ./build-site back (circular) -- if exports were not
 // set yet when `node site/build-site.js` is run directly, that circular require would see
 // an empty exports object and crash on shell/crumbs/slugify being undefined.
-module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, pbqPage, ORIGIN, BRAND, shell, crumbs, breadcrumbLd, org, DESC_MAX };
+module.exports = { loadPack, courseDirs, model, slug, slugify, firstParagraph, shorten, apportionN, pickPractice, buildCourse, buildAll, courseUrls, sitemap, robots, notFoundPage, gaSnippet, loadGuides, guidePage, guidesIndex, landingPage, pbqPage, flashcardDecks, flashcardsPage, ORIGIN, BRAND, shell, crumbs, breadcrumbLd, org, DESC_MAX };
 
 if (require.main === module) {
   const wanted = process.argv.slice(2);
