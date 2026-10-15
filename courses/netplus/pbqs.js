@@ -100,7 +100,7 @@ FRA.pbqs["net-wap-config"] = {
   },
   tasks: [
     { id: "cfg", kind: "form", prompt: "Fill in the staff network settings.", fields: [
-      { id: "band", label: "Band", expect: ["5 GHz", "5GHz", "5"], normalize: "text" },
+      { id: "band", label: "Band", expect: ["5 GHz", "5GHz", "5.0 GHz", "5"], normalize: "text" },
       { id: "mode", label: "Security mode", expect: ["WPA3-Enterprise", "WPA3 Enterprise", "WPA2-Enterprise", "WPA2 Enterprise"], normalize: "text" },
       { id: "auth", label: "Authentication standard the AP uses with the server", expect: ["802.1X"], normalize: "text" },
       { id: "radius", label: "Authentication server address", expect: ["10.0.5.20"], normalize: "ip" }
@@ -163,7 +163,7 @@ FRA.pbqs["net-diagram-ips"] = {
       + "<rect x=\"10\" y=\"20\" width=\"90\" height=\"36\" rx=\"4\" fill=\"none\" stroke=\"currentColor\"/>\n"
       + "<text x=\"34\" y=\"42\">Provider</text>\n"
       + "<line x1=\"100\" y1=\"38\" x2=\"170\" y2=\"38\" stroke=\"currentColor\" stroke-width=\"2\"/>\n"
-      + "<text x=\"104\" y=\"30\">WAN 203.0.113.2/30</text>\n"
+      + "<text x=\"104\" y=\"54\">WAN .2/30</text>\n"
       + "<rect x=\"170\" y=\"20\" width=\"80\" height=\"36\" rx=\"4\" fill=\"none\" stroke=\"currentColor\"/>\n"
       + "<text x=\"190\" y=\"42\">Router</text>\n"
       + "<line x1=\"210\" y1=\"56\" x2=\"210\" y2=\"100\" stroke=\"currentColor\" stroke-width=\"2\"/>\n"
@@ -262,13 +262,13 @@ FRA.pbqs["net-ipconfig-ping"] = {
   id: "net-ipconfig-ping", title: "Read the workstation's output", domain: 5, lesson: "u9l5", seo: false,
   scenario: {
     text: "A clinic workstation cannot reach anything on the network. The DHCP server was down this morning and is back up now. The file server is named {{fileserver}} in the {{clinic.local}} domain. Here is what the workstation shows.",
-    log: "C:\\> ipconfig\n\nEthernet adapter Ethernet:\n\n   Link-local IPv6 Address . . . . . : fe80::4c1a:2b7f:9e3d:12a8%7\n   IPv4 Address. . . . . . . . . . . : 169.254.23.7\n   Subnet Mask . . . . . . . . . . . : 255.255.0.0\n   Default Gateway . . . . . . . . . :\n\nC:\\> ping 10.0.1.1\n\nPinging 10.0.1.1 with 32 bytes of data:\nReply from 169.254.23.7: Destination host unreachable."
+    log: "C:\\> ipconfig\n\nEthernet adapter Ethernet:\n\n   Link-local IPv6 Address . . . . . : fe80::4c1a:2b7f:9e3d:12a8%7\n   Autoconfiguration IPv4 Address. . : 169.254.23.7\n   Subnet Mask . . . . . . . . . . . : 255.255.0.0\n   Default Gateway . . . . . . . . . :\n\nC:\\> ping 10.0.1.1\n\nPinging 10.0.1.1 with 32 bytes of data:\nReply from 169.254.23.7: Destination host unreachable."
   },
   tasks: [
     { id: "lines", kind: "multiselect", shuffle: false, prompt: "Pick every ipconfig line that shows why the workstation cannot reach the network.", options: [
       "Ethernet adapter Ethernet:",
       "Link-local IPv6 Address . . . . . : fe80::4c1a:2b7f:9e3d:12a8%7",
-      "IPv4 Address. . . . . . . . . . . : 169.254.23.7",
+      "Autoconfiguration IPv4 Address. . : 169.254.23.7",
       "Default Gateway . . . . . . . . . :"
     ], expect: [2, 3] },
     { id: "apipa", kind: "choice", prompt: "What does the 169.254.23.7 address tell you?", options: [
@@ -277,7 +277,7 @@ FRA.pbqs["net-ipconfig-ping"] = {
       "The workstation has a valid lease from the DHCP server",
       "Someone typed a static address on the wrong subnet"
     ], expect: 0 },
-    { id: "renew", kind: "command", prompt: "The DHCP server is back. Type the Windows command that asks it for a new lease.", expect: ["ipconfig /renew"], alt: ["ipconfig -renew", "ipconfig /release && ipconfig /renew"] },
+    { id: "renew", kind: "command", prompt: "The DHCP server is back. Type the Windows command that asks it for a new lease.", expect: ["ipconfig /renew"], alt: ["ipconfig -renew", "ipconfig /release && ipconfig /renew", "ipconfig /release & ipconfig /renew", "ipconfig /renew *"] },
     { id: "dns", kind: "command", prompt: "The workstation has a lease again. Type the command that checks DNS resolves the file server's name.", expect: ["nslookup fileserver"], alt: ["nslookup fileserver.clinic.local"] }
   ],
   why: {
@@ -291,7 +291,7 @@ FRA.pbqs["net-ipconfig-ping"] = {
 FRA.pbqs["net-dhcp-dns-form"] = {
   id: "net-dhcp-dns-form", title: "Stand up DHCP for the new segment", domain: 3, lesson: "u5l3", seo: false,
   scenario: {
-    text: "A new staff segment, {{10.0.20.0/24}}, needs a DHCP scope. The router is at {{10.0.20.1}}, the servers hold {{10.0.20.2}} through {{10.0.20.20}}, and the DNS server is {{10.0.20.5}}. Clients may use the addresses above the server block. Staff leases should last about one 8-hour shift."
+    text: "A new staff segment, {{10.0.20.0/24}}, needs a DHCP scope. The router is at {{10.0.20.1}}, the servers hold {{10.0.20.2}} through {{10.0.20.20}}, and the DNS server is {{10.0.20.5}}. Clients may use the addresses above the server block. Leases cover a working day, so one shift (8 hours), a long shift (12 hours), or a full day (24 hours) all fit."
   },
   tasks: [
     { id: "scope", kind: "form", prompt: "Fill in the scope and its options.", fields: [
@@ -317,7 +317,7 @@ FRA.pbqs["net-dhcp-dns-form"] = {
     ], expect: [0, 1, 2, 3] }
   ],
   why: {
-    scope: "The scope must stay clear of the router at .1 and the servers at .2 to .20, so it starts at .21 or above and ends no higher than .254, the last address before the broadcast. The gateway is option 3 and DNS is option 6; a lease of about a shift suits a stable staff office, where short leases are for guest networks.",
+    scope: "The scope must stay clear of the router at .1 and the servers at .2 to .20, so it starts right after the server block at .21, or at .50 to leave room for more servers. It ends at .254, the last usable address, or at .200 to keep a spare block; .0 is the network address, .1 to .20 belong to the router and servers, and .255 is the broadcast. The gateway is option 3 and DNS is option 6; a lease of 8, 12, or 24 hours covers a shift or a working day for a stable staff office, where short leases are for guest networks.",
     fixed: "A reservation gives a specific address to a specific MAC every time while the device still uses DHCP. An exclusion only keeps an address out of the pool, a shorter lease changes nothing about which address is given, and a relay is for clients on a remote subnet.",
     needs: "To reach the internet by name a client needs an address, a mask to know what is local, a gateway to leave the subnet, and a DNS server to turn names into addresses. NTP and phone provisioning are useful options, but browsing works without them."
   }
