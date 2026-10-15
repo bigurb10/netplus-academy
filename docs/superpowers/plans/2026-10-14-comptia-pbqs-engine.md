@@ -933,7 +933,7 @@ function pbqPage(m, R, origin) {
   const taskHtml = (p, t) => `<li class="pbq-task"><p class="stem">${R.inline(t.prompt)}</p>${t.kind === 'order' ? `<p class="muted">Items: ${t.items.map(x => R.inline(x)).join('; ')}</p>` : t.kind === 'match' ? `<p class="muted">Items: ${t.left.map(x => R.inline(x)).join('; ')}. Slots: ${t.right.map(x => R.inline(x)).join('; ')}</p>` : (t.kind === 'multiselect' || t.kind === 'choice') ? `<ol class="opts">${t.options.map(o => `<li class="opt">${R.inline(o)}</li>`).join('')}</ol>` : t.kind === 'form' ? `<p class="muted">Fields: ${t.fields.map(f => esc(f.label)).join('; ')}</p>` : ''}<p><strong>Expected: ${esc(P.expectedText(t))}</strong></p><p>${R.inline((p.why || {})[t.id] || '')}</p></li>`;
   const sections = ids.map(id => { const p = m.pbqs[id]; const sc = p.scenario || {}; return `<section class="pbq"><h2>${esc(p.title)}</h2><div class="scenario">${R.inline(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}<ol class="pbq-tasks">${p.tasks.map(t => taskHtml(p, t)).join('')}</ol></section>`; }).join('');
   const faq = [
-    { q: `How many PBQs are on the ${examName(c) || c.name} exam?`, a: 'CompTIA does not publish the count. Expect a handful at the start of the exam, each worth more than one multiple-choice question in time and often in points.' },
+    { q: `How many PBQs are on the ${examName(c) || c.name} exam?`, a: 'CompTIA does not publish the count. Expect a handful at the start of the exam; each one takes longer than a multiple-choice question, so budget your time.' },
     { q: 'Can you skip a PBQ and come back to it?', a: 'Yes. Flag it, answer the multiple-choice questions, and return with the time you have left.' },
     { q: 'Are PBQs weighted more than other questions?', a: 'CompTIA does not disclose its weighting. Treat each task inside a PBQ as a question you can get right or wrong.' },
     { q: `How does ${c.name} practice PBQs?`, a: `The course has ${Object.keys(m.pbqs).length} interactive PBQs: drag items into order, match terms, pick lines in a log, fill a configuration, type a command. Every task is graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.` }
@@ -1013,6 +1013,13 @@ Expected: suite green; bundles rebuilt (they now carry `FRAPbq`, no visible chan
 - [ ] **Step 3: Record and commit**
 
 Add a `## Status
+
+### Plan A status (2026-10-15)
+
+- Commits on `pbq-engine`: Task 1 1dac7c5 (grading core); Task 2 70396b4 and 4cb829e (loader registration); Task 3 3965743 (state, merge, sync hash, summary, account); Task 4 992be44 and the fix 591ee44 (PBQs tab and renderers; docs 93b2d57); Task 5 2f98968 and the fix 38d9ecb (the official-format test; docs bb78142); Task 6 566000d and the fix ab3ccb8 (the static page, landing section, sitemap, self-test); Task 7 is this commit (README, rebuilt bundles, local stage).
+- `npm test`: 1,300 pass, 0 fail across the nineteen suites including `tests/pbq.js`. `python build.py`: every course bundle carries `window.FRAPbq` (no visible change). `node site/build-site.js`: no `/pbq/` page, landing section, or sitemap entry for any live course. `bash scripts/stage.sh --local`: 1,078 files, the same count as after the CHTM merge.
+- No live course changes until Plan B ships `pbqs.js`; the mini fixture exercises every task kind, `shuffle: false`, the scenario SVG, the static page, the official-format test, the sync merge, and the account count.
+- Every task was reviewed by an independent subagent and every fix re-reviewed; the reviews are in `.superpowers/sdd/pbq-a-task-N-review.md` and `pbq-a-task-N-fix-review.md` (gitignored). A reviewer's probe once left an untracked `dist/site/mini/` build behind, which `scripts/stage.sh` would have deployed; it was removed before the stage. Keep `dist/site/` free of anything but the live courses before staging.
 
 ### Task 4 corrections (2026-10-14, commit 992be44 and the fix commit after it)
 
