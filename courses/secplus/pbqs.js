@@ -38,7 +38,11 @@ FRA.pbqs["sec-log-attack"] = {
       "sudo iptables -I INPUT -s 203.0.113.9 -j DROP",
       "iptables -I INPUT -s 203.0.113.9 -j DROP",
       "sudo iptables -I INPUT 1 -s 203.0.113.9 -j DROP",
-      "iptables -I INPUT 1 -s 203.0.113.9 -j DROP"
+      "iptables -I INPUT 1 -s 203.0.113.9 -j DROP",
+      "sudo ufw prepend deny from 203.0.113.9",
+      "ufw prepend deny from 203.0.113.9",
+      "sudo ufw prepend deny from 203.0.113.9 to any",
+      "ufw prepend deny from 203.0.113.9 to any"
     ] },
     { id: "control", kind: "choice", prompt: "Which control would have stopped this attack from getting in?", options: [
       "Multifactor authentication on every account",
@@ -50,7 +54,7 @@ FRA.pbqs["sec-log-attack"] = {
   why: {
     lines: "The attack is the eight failed logins for eight different usernames from 203.0.113.9 inside two seconds, plus the accepted login for jlopez from the same address a second later, which is the attacker getting in. The publickey login from the backup host, the scheduled cron session, and mlee's login from an internal address are normal activity, so they are not part of it.",
     name: "Password spraying tries one common password against many accounts, and its tell is many accounts with a single failed login in the same window, exactly what this log shows. Brute force hammers one account with many guesses, credential stuffing replays username and password pairs leaked from another site rather than one password, and credential replay reuses a captured hash or token instead of guessing.",
-    block: "ufw and iptables check rules in order and the first match wins, so a deny appended below the SSH allow rule would never be reached for SSH, the very traffic the attacker uses; ufw insert 1 deny from 203.0.113.9 puts the block at the top. The same rule written directly in iptables, iptables -I INPUT -s 203.0.113.9 -j DROP, inserts at the top too and is accepted; blocking addresses is part of containment.",
+    block: "ufw and iptables check rules in order and the first match wins, so a deny appended below the SSH allow rule would never be reached for SSH, the very traffic the attacker uses; ufw insert 1 deny from 203.0.113.9 puts the block at the top. The same rule written directly in iptables, iptables -I INPUT -s 203.0.113.9 -j DROP, inserts at the top too and is accepted; blocking addresses is part of containment. ufw prepend deny from 203.0.113.9 also inserts at the top and is accepted.",
     control: "MFA stops spraying, because a guessed password alone no longer opens the account. Account lockout does not, because spraying makes only one attempt per account and stays under the threshold; password expiry and encrypting the log do nothing to stop the guess."
   }
 };
@@ -133,7 +137,7 @@ FRA.pbqs["sec-attack-match"] = {
 };
 
 FRA.pbqs["sec-firewall-acl"] = {
-  id: "sec-firewall-acl", title: "Write the ACL for the DMZ", domain: 3, lesson: "u7l2", seo: false,
+  id: "sec-firewall-acl", title: "Write the ACL for the web server's zone", domain: 3, lesson: "u7l2", seo: false,
   scenario: {
     text: "A clinic's public web server, {{172.16.50.10}}, sits in its own zone between the internet and the internal network. Administrators work from a jump host on the admin subnet {{10.0.9.0/24}} and manage the servers in that zone over SSH. Policy: replies to established sessions are allowed; anyone may reach the web server on HTTPS; the admin subnet may reach the zone's servers over SSH; everything else is denied and logged. The team orders allow rules by traffic: established replies are most of it, public HTTPS is next, and admin SSH is occasional.",
     svg: "<svg viewBox=\"0 0 420 220\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"sans-serif\" font-size=\"11\" fill=\"currentColor\">\n"
@@ -185,7 +189,7 @@ FRA.pbqs["sec-wifi-config"] = {
   },
   tasks: [
     { id: "cfg", kind: "form", prompt: "Fill in the new staff network settings.", fields: [
-      { id: "mode", label: "Security mode", expect: ["WPA3-Enterprise", "WPA3 Enterprise", "WPA2-Enterprise", "WPA2 Enterprise"], normalize: "text" },
+      { id: "mode", label: "Security mode (the full variant name)", expect: ["WPA3-Enterprise", "WPA3 Enterprise", "WPA2-Enterprise", "WPA2 Enterprise"], normalize: "text" },
       { id: "std", label: "Standard that keeps the connection closed until the user is approved", expect: ["802.1X", "IEEE 802.1X"], normalize: "text" },
       { id: "server", label: "Type of authentication server", expect: ["RADIUS"], normalize: "text" },
       { id: "eap", label: "EAP method", expect: ["EAP-TLS", "EAP TLS"], normalize: "text" }
@@ -323,8 +327,8 @@ FRA.pbqs["sec-commands"] = {
   },
   tasks: [
     { id: "linux", kind: "command", prompt: "On a Linux workstation, type the command that prints the SHA-256 hash of tools.iso.", expect: ["sha256sum tools.iso"], alt: ["shasum -a 256 tools.iso"] },
-    { id: "windows", kind: "command", prompt: "On a Windows workstation, type the certutil command that prints the SHA-256 hash of tools.iso.", expect: ["certutil -hashfile tools.iso SHA256"], flagOrder: false },
-    { id: "scan", kind: "command", prompt: "Type the nmap command that scans 10.0.0.5 and identifies the version of each service it finds.", expect: ["nmap -sV 10.0.0.5"], alt: ["nmap -sV -p- 10.0.0.5"], flagOrder: false },
+    { id: "windows", kind: "command", prompt: "On a Windows workstation, type the certutil command that prints the SHA-256 hash of tools.iso.", expect: ["certutil -hashfile tools.iso SHA256"] },
+    { id: "scan", kind: "command", prompt: "Type the nmap command that scans 10.0.0.5 and identifies the version of each service it finds.", expect: ["nmap -sV 10.0.0.5"], alt: ["nmap -sV -p- 10.0.0.5", "sudo nmap -sV 10.0.0.5", "sudo nmap -sV -p- 10.0.0.5"], flagOrder: false },
     { id: "mismatch", kind: "choice", prompt: "The hash you computed does not match the one the vendor published. What does that mean?", options: [
       "Do not install it: the file is corrupt or was altered",
       "Install it: hashes often differ between operating systems",
@@ -334,7 +338,7 @@ FRA.pbqs["sec-commands"] = {
   ],
   why: {
     linux: "sha256sum tools.iso prints the file's SHA-256 hash to compare with the vendor's; shasum -a 256 tools.iso is the same hash from the shasum tool. SHA-256 is the current standard hash, while MD5 and SHA-1 are broken and only recognized, never recommended.",
-    windows: "certutil -hashfile tools.iso SHA256 prints the SHA-256 hash on Windows. The flags may come in either order. Compare the printed value with the vendor's published SHA-256 hash; any difference at all is a mismatch.",
+    windows: "certutil -hashfile tools.iso SHA256 prints the SHA-256 hash on Windows. The command is positional: the file name comes first, then the algorithm name. Compare the printed value with the vendor's published SHA-256 hash; any difference at all is a mismatch.",
     scan: "nmap -sV probes each open port and reports the service and its version, which is what a vulnerability check needs; adding -p- scans all 65,535 TCP ports instead of the common ones and is accepted too. A plain nmap 10.0.0.5 lists open ports without versions.",
     mismatch: "A hash is a fingerprint: change one bit of the file and the hash changes completely, so a mismatch means the file is not the one the vendor published, whether corrupted in transit or tampered with. Hashes of the same file match on every operating system, and MD5 is broken, so falling back to it proves nothing."
   }
@@ -372,7 +376,7 @@ FRA.pbqs["sec-risk-register"] = {
   ],
   why: {
     strategies: "Reducing likelihood or impact with controls is mitigate, stopping the activity that creates the risk is avoid, shifting the financial impact to another party through insurance or contracts is transfer, and acknowledging a risk whose treatment costs more than the loss is accept. Ignore is not a strategy: accepting a risk is a documented decision, and ignoring it is no decision at all.",
-    entries: "Each register entry carries a risk owner, the person accountable for the risk; a risk threshold, the level at which action is required; and key risk indicators, the measurable signals that the risk is increasing.",
+    entries: "Each register entry carries a risk owner, the person accountable for the risk; a risk threshold, the level at which action is required; and key risk indicators, the measurable signals that the risk is increasing. The threshold triggers action when a risk crosses it, the key risk indicators feed the report to leadership, and the owner is held accountable for the response.",
     appetite: "Risk appetite is how much risk the organization is willing to pursue in general, expansionary, neutral, or conservative. Risk tolerance is the acceptable variation around that appetite for one specific risk, the threshold is where action starts, and a key risk indicator is a signal, not a limit."
   }
 };
