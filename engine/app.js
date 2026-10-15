@@ -321,15 +321,28 @@
     }
     return shuffle(items);
   }
-  // PBQs for an official-format test: by domain weight, avoiding the ones the last official attempt used when enough exist.
-  function pickPbqs(n) {
+  // PBQs for an official-format test: by domain weight, avoiding the ones the last official attempt
+  // used when enough exist, and never more tasks than the exam has questions (count).
+  function pickPbqs(n, count) {
     const last = S.exams.slice().reverse().find(e => e.setup && e.setup.mode === 'standard'); const used = new Set(((last && last.pbqs) || []));
     const pool = shuffle(pbqIds.filter(id => !used.has(id))).concat(shuffle(pbqIds.filter(id => used.has(id))));
     const weights = pctWeights(); const byD = {}; pool.forEach(id => { (byD[PBQS[id].domain] = byD[PBQS[id].domain] || []).push(id); });
     const want = apportion(Math.min(n, pbqIds.length), weights); const out = [];
     TESTED_IDS.forEach(d => { (byD[d] || []).slice(0, want[d] || 0).forEach(id => out.push(id)); });
     let k = 0; while (out.length < Math.min(n, pbqIds.length) && k < pool.length) { if (!out.includes(pool[k])) out.push(pool[k]); k++; }
-    return out.slice(0, n);
+    // The weights choose the domains, but the apportionment is deterministic, so a used PBQ in a
+    // high-weight domain would come back every attempt while an unused one in a low-weight domain
+    // never appeared. Any pick the last attempt used gives its slot to an unused PBQ from anywhere
+    // in the pool, so the avoidance holds across the whole pool while an unused one is left.
+    const spare = shuffle(pbqIds.filter(id => !used.has(id) && out.indexOf(id) < 0));
+    for (let i = 0; i < out.length && spare.length; i++) if (used.has(out[i])) out[i] = spare.shift();
+    const picks = out.slice(0, n);
+    // Every task takes a question's place, so a pack whose PBQs carry more tasks than the exam has
+    // questions loses picks here rather than growing the test past the count it advertises.
+    if (!(count > 0)) return picks;
+    const fit = []; let tasks = 0;
+    picks.forEach(id => { const len = PBQS[id].tasks.length; if (tasks + len <= count) { fit.push(id); tasks += len; } });
+    return fit;
   }
   // Each PBQ task counts as one question, so the tasks come out of the question quotas one for one:
   // out of their own PBQ's domain first, then off the largest remaining quota when a domain holds
@@ -378,6 +391,11 @@
   const fat = x => typeof x === 'string' ? Q[x] : x;
   // A test item that is a PBQ rather than a question: { pbq: id }. fat() hands it back untouched.
   const isPbqItem = x => !!(x && typeof x === 'object' && x.pbq);
+  // What an item is worth in questions: a PBQ's tasks each count as one, so a test's question count
+  // is not its item count. qCount totals the first n items, which is what the counter, the progress
+  // meter, and the answered-so-far line all count.
+  const itemQs = x => isPbqItem(x) ? ((PBQS[x.pbq] && PBQS[x.pbq].tasks.length) || 1) : 1;
+  const qCount = (items, n) => items.slice(0, n).reduce((a, x) => a + itemQs(x), 0);
   // The learner's answer for a stored record, by option text. Answer keys get rebalanced between builds, so an index
   // saved by an older build can point at a different option today; records store the text (pick) and are matched by it.
   // Older records without it fall back to the index, except where that index now lands on the correct answer of a
@@ -1003,19 +1021,22 @@
     const ex = S.active && isTest(S.active.kind) ? S.active : null;
     if (!ex) return viewTestsHub();
     if (ex.i >= ex.items.length) return finishExam();
-    const answered = ex.answers.filter(Boolean).length;
+    // One PBQ task is one question, so the learner's progress is counted in questions: the item
+    // list is shorter than the test whenever a PBQ is in it, and the test is advertised, recorded,
+    // and scored in questions.
+    const prog = { total: qCount(ex.items, ex.items.length), done: qCount(ex.items, ex.answers.length), at: qCount(ex.items, ex.i) };
     const nav = { prev: ex.i > 0, review: ex.i < ex.answers.length, last: ex.i === ex.items.length - 1 };
-    if (isPbqItem(ex.items[ex.i])) return viewExamPbq(ex, nav, answered);
+    if (isPbqItem(ex.items[ex.i])) return viewExamPbq(ex, nav, prog);
     const q = fat(ex.items[ex.i]);
     return `<div class="content">
-      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${ex.i + 1} of ${ex.items.length}</span><div class="meter"><i style="width:${100 * ex.answers.length / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">Question ${prog.at + 1} of ${prog.total}</span><div class="meter"><i style="width:${100 * prog.done / prog.total}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       <div class="card lift">${questionCard(ex, { immediate: false, allowSkip: true, title: DOMAINS[L[q.t].domain].short, nav })}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${answered} answered so far.</p>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. ${ex.noConf ? 'No confidence ratings on this test, like the real exam. Every wrong answer is explained on the results page.' : 'Every wrong answer and every guess is explained on the results page.'} ${prog.done} answered so far.</p>
     </div>`;
   }
   // A PBQ inside a test: the same exam head, the scenario, and the task cards with one Submit for the
   // whole PBQ. Nothing is graded on screen; every task is scored with the questions at the end.
-  function viewExamPbq(ex, nav, answered) {
+  function viewExamPbq(ex, nav, prog) {
     const p = PBQS[ex.items[ex.i].pbq];
     if (!p) { ex.answers[ex.i] = { pbq: ex.items[ex.i].pbq, answers: {} }; ex.i++; return viewExam(); }
     const ui = pbqUi('test:' + p.id);
@@ -1027,11 +1048,11 @@
     const prevBtn = nav.prev ? `<button class="btn ghost" data-act="test-prev">&larr; Previous</button>` : '';
     const btn = nav.review ? `<button class="btn primary" data-act="next">Continue &rarr;</button>` : `<button class="btn primary" data-act="submit">Submit this PBQ</button>`;
     return `<div class="content">
-      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">PBQ ${n} of ${of}</span><div class="meter"><i style="width:${100 * ex.answers.length / ex.items.length}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
+      <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">PBQ ${n} of ${of}</span><div class="meter"><i style="width:${100 * prog.done / prog.total}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       ${pbqScenarioHtml(p)}
       <div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}" data-pbq-ui="test:${esc(p.id)}"></div>
       <div class="row spread" style="margin-top:12px;gap:10px;flex-wrap:wrap"><div class="row" style="gap:10px">${prevBtn}<span class="kbd-hint">${plural(p.tasks.length, 'task')}, each one scored as a question</span></div>${btn}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every task is explained on the results page. ${answered} of ${ex.items.length} submitted so far.</p>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every task is explained on the results page. ${prog.done} of ${prog.total} submitted so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -1066,7 +1087,13 @@
       if (setup) { quotas = apportion(setup.n, setup.weights); minutes = clampMin(setup.minutes); }
       // The official-format test opens with PBQs, like the real exam. Practice, starter, and custom
       // tests never carry one. quotas here are the multiple-choice quotas the tasks were taken from.
-      if (setup && setup.mode === 'standard' && (T.pbqInTest || 0) > 0 && pbqIds.length) { pbqItems = pickPbqs(T.pbqInTest); quotas = cutQuotas(quotas, pbqItems); }
+      if (setup && setup.mode === 'standard' && (T.pbqInTest || 0) > 0 && pbqIds.length) {
+        pbqItems = pickPbqs(T.pbqInTest, setup.n); quotas = cutQuotas(quotas, pbqItems);
+        // A new test is a new attempt: the working answers a PBQ holds from an earlier test in this
+        // page session are not answers to this one, so each pick starts empty rather than opening
+        // with the last attempt's typed and selected answers already in place and graded.
+        pbqItems.forEach(id => { pbqUiMap['test:' + id] = { order: {}, answers: {}, sel: {}, checked: false }; });
+      }
       items = buildExam(quotas);
     }
     const tasks = pbqItems.reduce((n, id) => n + PBQS[id].tasks.length, 0);

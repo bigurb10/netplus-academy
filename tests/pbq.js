@@ -171,5 +171,33 @@ check('KINDS lists the six kinds', JSON.stringify(P.KINDS) === JSON.stringify(['
   check('keyboard focus follows the placed chip after Enter on a match slot', matchCard.contains(w4.document.activeElement) && w4.document.activeElement !== w4.document.body);
 }
 
+// ----- an order task never opens solved, and one the learner never touched is unanswered -----
+{
+  const w5 = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
+  w5.eval(fs.readFileSync(path.join(ROOT, 'engine', 'pbq.js'), 'utf8'));
+  w5.eval(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'mini', 'pbqs.js'), 'utf8'));
+  const P5 = w5.FRAPbq; const pbq5 = w5.FRA.pbqs['mini-net']; const host5 = w5.document.getElementById('host');
+  const helpers5 = { esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])), inline: s => String(s) };
+  const steps = pbq5.tasks[0]; // the four-item order task, expect [0, 1, 2, 3]
+  const shown = () => [...host5.querySelectorAll('.pbq-task[data-task="steps"] [data-pbq="order-item"]')].map(e => Number(e.dataset.index));
+  let openedSolved = 0;
+  for (let i = 0; i < 50; i++) { P5.render(host5, pbq5, { order: {}, answers: {}, sel: {}, checked: false }, helpers5); if (JSON.stringify(shown()) === JSON.stringify(steps.expect)) openedSolved++; }
+  check('an order task never opens in its correct sequence across 50 renders', openedSolved === 0, openedSolved);
+  const solo = { tasks: [{ id: 'solo', kind: 'order', prompt: 'One step', items: ['The only step'], expect: [0] }] };
+  P5.render(host5, solo, { order: {}, answers: {}, sel: {}, checked: false }, helpers5);
+  check('a one-item order task still renders its only item', host5.querySelectorAll('[data-pbq="order-item"]').length === 1);
+  // Untouched: collect reports no answer at all, so it grades zero like an unanswered question.
+  const ui5 = { order: {}, answers: {}, sel: {}, checked: false };
+  P5.render(host5, pbq5, ui5, helpers5);
+  const untouched = P5.collect(host5, pbq5, ui5);
+  check('an untouched order task collects as unanswered', Array.isArray(untouched.steps) && untouched.steps.length === 0, JSON.stringify(untouched.steps));
+  check('an untouched order task grades zero and reads as no answer', P5.grade(steps, untouched.steps).score === 0 && P5.answerText(steps, untouched.steps) === '(no answer)');
+  // One keyboard move is a touch: the learner's whole sequence comes back.
+  const items5 = () => [...host5.querySelectorAll('.pbq-task[data-task="steps"] [data-pbq="order-item"]')];
+  items5()[1].focus(); items5()[1].dispatchEvent(new w5.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+  const moved = P5.collect(host5, pbq5, ui5);
+  check('one move makes the order task answered: a full permutation comes back', Array.isArray(moved.steps) && moved.steps.length === 4 && JSON.stringify(moved.steps.slice().sort()) === JSON.stringify([0, 1, 2, 3]), JSON.stringify(moved.steps));
+}
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); }
 console.log('\nAll PBQ tests passed.');

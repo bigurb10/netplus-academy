@@ -995,11 +995,16 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('the official-format test opens with pbqInTest PBQs', a.items.length > 0 && a.items[0].pbq === 'mini-net' && a.items.filter(x => x && x.pbq).length === 1);
     check('PBQ tasks replace questions one for one: the item count plus task count minus one equals the exam count', (a.items.length - 1) + 6 === 10, a.items.length);
     check('the exam view renders the PBQ tasks first', wo.$$('.pbq-task').length === 6 && /Submit this PBQ|Continue/.test(wo.text()));
+    check('the PBQ page counts questions, not items, in its submitted-so-far line', /0 of 10 submitted so far/.test(wo.text()));
     // answer two tasks right, four wrong-or-blank, submit the PBQ
     wo.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
     wo.click(wo.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
     act(wo, 'submit');
     check('submitting the PBQ records the task answers and moves on', stateM().active.i === 1 && stateM().active.answers[0] && stateM().active.answers[0].pbq === 'mini-net' && stateM().active.answers[0].answers.cmd === 'ipconfig /all');
+    // Six tasks done out of ten questions: the counter and the meter count questions, not items.
+    check('the in-test counter counts questions: six tasks done reads question 7 of 10', /Question 7 of 10/.test(wo.text()));
+    check('the in-test meter counts questions: six of ten is 60%', wo.$('.exam-head .meter i').style.width === '60%', wo.$('.exam-head .meter i').style.width);
+    check('the in-test footer counts questions answered', /6 answered so far/.test(wo.text()));
     // answer the remaining multiple-choice questions correctly
     const QQ = {}; wo.FRA.questions.forEach(q => { QQ[q.id] = q; });
     while (stateM().active) { const s = stateM().active; const it = s.items[s.i]; if (!it) break; const q = typeof it === 'string' ? QQ[it] : it; wo.click(wo.$(`[data-act="opt"][data-arg="${q.c}"]`)); act(wo, 'submit'); }
@@ -1008,6 +1013,58 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('PBQ task review items carry the task as an inline question tied to the PBQ lesson', e.review.slice(0, 6).every(r => r.q && r.q.pbq === 'mini-net' && r.q.t === 'u1l2'));
     check('the results page explains missed tasks with Expected and Why', /Your answer/.test(wo.text()) && /Correct answer/.test(wo.text()) && /Why:/.test(wo.text()) && /notconnect is the only line/.test(wo.text()));
     check('missed PBQ tasks feed retraining for the PBQ lesson', !stateM().plan || stateM().plan.lessons.some(l => l.id === 'u1l2') || e.score === 10);
+    // A second official-format test in the same page session is a new attempt: the last attempt's
+    // answers are not the learner's answers to this one, so every task opens empty.
+    act(wo, 'start-standard');
+    check('a second official-format test opens with nothing typed in the PBQ', wo.$('.pbq-task[data-task="cmd"] input').value === '' && wo.$('.pbq-task[data-task="cfg"] input[data-field="ip"]').value === '', wo.$('.pbq-task[data-task="cmd"] input').value);
+    check('a second official-format test opens with nothing selected in the PBQ', wo.$$('.pbq-task [aria-pressed="true"]').length === 0, wo.$$('.pbq-task [aria-pressed="true"]').length);
+    act(wo, 'submit');
+    const a2 = stateM().active.answers[0].answers;
+    check('a second official-format test banks the empty answer shape for every task', JSON.stringify(a2.steps) === '[]' && JSON.stringify(a2.pairs) === '[null,null]' && JSON.stringify(a2.lines) === '[]' && a2.cmd === '' && a2.cfg.ip === '' && a2.cfg.mask === '' && a2.cable == null, JSON.stringify(a2));
+  }
+
+  // ----- the PBQ draw spreads across the pool and avoids the last attempt -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    // Three small PBQs, one per domain, on a four-question exam, so twelve official-format tests run
+    // quickly. pbqInTest is 1, so every test draws one of the three and two are always unused.
+    const threePbqs = w => {
+      w.FRA.pbqs = {};
+      [1, 2, 3].forEach(d => {
+        const tasks = ['a', 'b', 'c'].map(k => ({ id: k, kind: 'choice', prompt: 'Pick one', options: ['right', 'wrong'], expect: 0 }));
+        w.FRA.pbqs['p' + d] = { id: 'p' + d, title: 'PBQ ' + d, domain: d, lesson: 'u1l2', scenario: { text: 'Scenario ' + d }, tasks, why: { a: 'Because.', b: 'Because.', c: 'Because.' } };
+      });
+      w.FRA.course.test.questions = 4;
+    };
+    const wd = boot({ courseDir: mini, beforeApp: threePbqs }); const stateD = () => JSON.parse(wd.localStorage.getItem(MK));
+    finishStarterIn(wd);
+    const drawn = [];
+    for (let k = 0; k < 12; k++) {
+      act(wd, 'start-standard');
+      drawn.push(stateD().active.items.filter(x => x && x.pbq).map(x => x.pbq).join(','));
+      act(wd, 'submit'); // the PBQ, left unanswered
+      while (stateD().active) { wd.click(wd.$('[data-act="opt"][data-arg="0"]')); act(wd, 'submit'); }
+    }
+    check('twelve official-format tests do not all draw the same PBQ', new Set(drawn).size > 1, drawn.join(' '));
+    check('no official-format test redraws the PBQ the last one used while an unused one exists', drawn.every((id, i) => i === 0 || id !== drawn[i - 1]), drawn.join(' '));
+  }
+
+  // ----- the draw is clamped to the exam's question count -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    // Two six-task PBQs with pbqInTest 2 would be twelve tasks on a ten-question exam.
+    const twoBigPbqs = w => {
+      const src = w.FRA.pbqs['mini-net'];
+      w.FRA.pbqs = { 'big-a': Object.assign({}, src, { id: 'big-a', domain: 1 }), 'big-b': Object.assign({}, src, { id: 'big-b', domain: 2 }) };
+      w.FRA.course.test.pbqInTest = 2;
+    };
+    const wc = boot({ courseDir: mini, beforeApp: twoBigPbqs }); const stateC = () => JSON.parse(wc.localStorage.getItem(MK));
+    finishStarterIn(wc);
+    act(wc, 'start-standard');
+    const ic = stateC().active.items;
+    const qs = ic.reduce((a, x) => a + (x && x.pbq ? wc.FRA.pbqs[x.pbq].tasks.length : 1), 0);
+    check('a PBQ whose tasks would not fit the exam count is dropped from the draw', qs === 10, qs + ' questions from ' + ic.length + ' items');
+    check('the clamped draw keeps the exam question count in the session setup', stateC().active.setup.count === 10 && ic.filter(x => x && x.pbq).length === 1, stateC().active.setup.count);
   }
 
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }

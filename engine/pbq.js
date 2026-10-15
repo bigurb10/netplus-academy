@@ -101,12 +101,22 @@ window.FRAPbq = (function () {
   // answers are always in pack indexes. Controls carry data-pbq, never data-act.
   const shuffled = n => { const a = Array.from({ length: n }, (_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const identity = n => Array.from({ length: n }, (_, i) => i);
+  const sameSeq = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => x === b[i]);
+  // The order a task opens in. An order task must never open already solved, so its shuffle is
+  // redrawn while it matches the expected sequence; a one-item task has only that sequence, so it
+  // stands. Every other kind takes the plain shuffle.
+  function openingOrder(task, n) {
+    let o = shuffled(n);
+    if (task.kind !== 'order' || n < 2 || !Array.isArray(task.expect) || task.expect.length !== n) return o;
+    let guard = 0; while (sameSeq(o, task.expect) && guard++ < 100) o = shuffled(n);
+    return o;
+  }
   function orderFor(ui, task, n, key) {
     ui.order = ui.order || {}; const k = key || task.id;
     // A multiselect task over consecutive lines (a log, a running-config excerpt) can opt out of the
     // shuffle with shuffle: false so the order a learner reads stays the order the pack wrote.
     const keepOrder = task.kind === 'multiselect' && task.shuffle === false;
-    if (!ui.order[k] || ui.order[k].length !== n) ui.order[k] = keepOrder ? identity(n) : shuffled(n);
+    if (!ui.order[k] || ui.order[k].length !== n) ui.order[k] = keepOrder ? identity(n) : openingOrder(task, n);
     return ui.order[k];
   }
   const answerOf = (ui, task) => ui.answers[task.id] != null ? ui.answers[task.id] : emptyAnswer(task);
@@ -231,7 +241,11 @@ window.FRAPbq = (function () {
       const card = container.querySelector(`.pbq-task[data-task="${t.id}"]`);
       if (t.kind === 'form') { const a = {}; if (card) card.querySelectorAll('input[data-field]').forEach(inp => { a[inp.dataset.field] = inp.value; }); out[t.id] = a; }
       else if (t.kind === 'command') { const inp = card && card.querySelector('input[data-pbq="command"]'); out[t.id] = inp ? inp.value : ''; }
-      else if (t.kind === 'order') { const a = ui.answers[t.id]; out[t.id] = Array.isArray(a) && a.length === t.items.length ? a.slice() : orderFor(ui, t, t.items.length).slice(); }
+      // An order task the learner never touched has no answer: the display order is the engine's
+      // shuffle, not the learner's sequence, so collecting it would score a task nobody answered.
+      // Any drag, tap, or keyboard move writes the sequence into ui.answers, which is the record
+      // that the task was touched and survives a reload that restores answers into a fresh ui.
+      else if (t.kind === 'order') { const a = ui.answers[t.id]; out[t.id] = Array.isArray(a) && a.length === t.items.length ? a.slice() : []; }
       else out[t.id] = ui.answers[t.id] != null ? ui.answers[t.id] : emptyAnswer(t);
     });
     return out;
