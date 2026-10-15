@@ -39,6 +39,10 @@ for (const dir of courseDirs()) {
   const sample = m.freeLessons.map(l => R.renderBody(l.body)).join('');
   check(`${m.c.id}: acronyms render as <abbr title> on the static side`, !hasAcr || /<abbr title="[^"]+">/.test(sample));
   const lp = site.landingPage(m, R, 'https://example.test', []);
+  check(`${m.c.id}: landing without siblings has no related-courses section`, !lp.includes('<section class="related">'));
+  const sib = { c: { id: 'other', name: 'Other Academy', exam: { title: 'Other Exam' } }, urls: { landing: '/other/', practice: '/other/practice-test/' } };
+  const lp2 = site.landingPage(m, R, 'https://example.test', [], [sib]);
+  check(`${m.c.id}: landing lists a sibling course with its exam and practice test`, lp2.includes('<section class="related"><h2>More ') && lp2.includes('<a href="/other/">Other Academy</a> <span class="muted">Other Exam</span>') && lp2.includes('href="/other/practice-test/"'));
   check(`${m.c.id}: landing carries the manifest seo title, h1, and phrases`, !m.seo || (lp.includes(`<title>${esc(m.seo.title)}</title>`) && lp.includes(`<h1>${esc(m.seo.h1)}</h1>`) && (m.seo.phrases || []).every(p => lp.toLowerCase().includes(p.toLowerCase()))));
   w.close();
 }
@@ -93,10 +97,12 @@ check('practice page links the app and the landing page', pt.includes('href="/mi
 check('pbq page written for a course with PBQs', exists('mini/pbq/index.html'));
 const pb = read('mini/pbq/index.html');
 check('pbq page h1 and title lead with the exam name and PBQ Practice', pb.includes('<h1>Mini Exam MC-1 PBQ Practice</h1>') && pb.includes('<title>Mini Exam MC-1 PBQ Practice | Mini Course</title>'));
-check('pbq page renders the seo PBQ with scenario, log, every task, the expected answer, and the why', (pb.match(/<section class="pbq">/g) || []).length === 1 && pb.includes('<pre class="pbq-log">') && (pb.match(/<li class="pbq-task">/g) || []).length === 6 && pb.includes('Expected: Identify the problem, Establish a theory, Test the theory, Establish a plan') && pb.includes('notconnect is the only line'));
+check('pbq page renders the seo PBQ with scenario, log, every task, the expected answer, and the why', (pb.match(/<section class="pbq">/g) || []).length === 1 && pb.includes('<pre class="pbq-log">') && (pb.match(/<li class="pbq-task">/g) || []).length === 6 && pb.includes('Expected: 1. Identify the problem; 2. Establish a theory; 3. Test the theory; 4. Establish a plan') && pb.includes('notconnect is the only line'));
 check('pbq page inlines the scenario svg inside the pbq-fig figure', pb.includes('<div class="pbq-fig"><svg') && pb.includes('</svg></div>'));
 const pbqLesson = m.lessons.find(l => l.id === m.pbqs['mini-net'].lesson);
 check('pbq page links the lesson behind the PBQ', pb.includes('From the lesson') && pb.includes(`href="${m.urls.lesson(pbqLesson)}"`));
+const pbqAlso = m.lessons.find(l => l.id === m.pbqs['mini-net'].also);
+check('pbq page links the see-also lesson after the lesson', pb.includes('See also <a href="') && pb.includes(`${m.free.has(pbqAlso.id) ? m.urls.lesson(pbqAlso) : m.urls.inApp(pbqAlso)}">${pbqAlso.title}</a>`));
 check('pbq page carries the phrases, the FAQ, and the app link', pb.includes('Mini Exam PBQs') && pb.includes('MC-1 performance-based questions') && pb.includes('How many PBQs') && pb.includes('href="/mini/app/#pbq"'));
 const pld = [...pb.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(x => JSON.parse(x[1]));
 check('pbq JSON-LD: a Quiz with one Question per task, an FAQPage, and a BreadcrumbList', pld[0]['@type'] === 'Quiz' && pld[0].hasPart.length === 6 && pld[1]['@type'] === 'FAQPage' && pld[2]['@type'] === 'BreadcrumbList', pld.map(x => x['@type']).join(','));

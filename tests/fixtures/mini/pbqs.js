@@ -3,7 +3,7 @@ FRA.pbqs = FRA.pbqs || {};
 // One PBQ with every task kind, on the free lesson u1l2, marked for the static page, so the view,
 // the state, the merge, the test integration, and the static page are all testable without a pack.
 FRA.pbqs["mini-net"] = {
-  id: "mini-net", title: "Bring the new printer online", domain: 1, lesson: "u1l2", seo: true,
+  id: "mini-net", title: "Bring the new printer online", domain: 1, lesson: "u1l2", also: "u1l1", seo: true,
   scenario: {
     text: "A new network printer must join VLAN 10 on the 192.168.10.0/26 segment. The switch port shows no link.",
     log: "Port Gi1/0/7: notconnect\nVLAN 10: active\nPort Gi1/0/7 speed auto duplex auto",

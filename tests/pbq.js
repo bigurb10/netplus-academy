@@ -60,13 +60,13 @@ const choice = { id: 'p', kind: 'choice', prompt: 'Pick', options: ['x', 'y', 'z
 check('choice: the expected index is right, anything else zero', g(choice, 2).score === 1 && g(choice, 1).score === 0 && g(choice, null).score === 0);
 
 // ----- answer and expected text (for the results page and the static page) -----
-check('expectedText: order lists the sequence', P.expectedText(order) === 'Identify, Theory, Test, Plan');
+check('expectedText: order lists the sequence', P.expectedText(order) === '1. Identify; 2. Theory; 3. Test; 4. Plan');
 check('expectedText: match lists the pairs', P.expectedText(match) === 'Switch: Layer 2; Router: Layer 3');
-check('expectedText: multiselect lists the picks', P.expectedText(multi) === 'b, d');
+check('expectedText: multiselect lists the picks', P.expectedText(multi) === 'b; d');
 check('expectedText: form lists field and first accepted value', P.expectedText(form) === 'IP address: 192.168.10.1; Subnet mask: 255.255.255.192; VLAN: 10; SSID: Clinic-5G');
 check('expectedText: command gives the first accepted form', P.expectedText(cmd) === 'ipconfig /all');
 check('expectedText: choice gives the option', P.expectedText(choice) === 'z');
-check('answerText: order in the chosen sequence', P.answerText(order, [1, 0, 2, 3]) === 'Theory, Identify, Test, Plan');
+check('answerText: order in the chosen sequence', P.answerText(order, [1, 0, 2, 3]) === '1. Theory; 2. Identify; 3. Test; 4. Plan');
 check('answerText: match shows placed and unplaced', P.answerText(match, [2, null]) === 'Switch: Layer 7; Router: (not placed)');
 check('answerText: form shows what was typed, blank for empty', P.answerText(form, { ip: '1.2.3.4' }) === 'IP address: 1.2.3.4; Subnet mask: (blank); VLAN: (blank); SSID: (blank)');
 check('answerText: nothing answered reads as such', P.answerText(cmd, null) === '(no answer)');

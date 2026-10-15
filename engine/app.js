@@ -86,6 +86,8 @@
     const p = FRA.pbqs[id]; const kinds = (window.FRAPbq && FRAPbq.KINDS) || [];
     if (p.id !== id) throw new Error(`pbq ${id} carries id ${p.id}`);
     if (!L[p.lesson]) throw new Error(`pbq ${id} names unknown lesson ${p.lesson}`);
+    if (p.also !== undefined && !L[p.also]) throw new Error(`pbq ${id} names unknown see-also lesson ${p.also}`);
+    if (p.also === p.lesson) throw new Error(`pbq ${id} lists its own lesson ${p.lesson} as the see-also lesson`);
     if (!DOMAIN_IDS.includes(p.domain)) throw new Error(`pbq ${id} uses unknown domain ${p.domain}`);
     const tasks = Array.isArray(p.tasks) ? p.tasks : [];
     if (tasks.length < 3 || tasks.length > 6) throw new Error(`pbq ${id} has ${tasks.length} tasks, which is outside the three to six a PBQ carries`);
@@ -950,7 +952,7 @@
     const scenario = pbqScenarioHtml(p);
     const summary = ui.checked ? (() => { const { frac } = pbqScore(p, ui.answers); return `<div class="feedback ${frac === 1 ? 'good' : 'bad'}"><div class="verdict">${frac === 1 ? 'Every task right.' : `${Math.round(frac * 100)}% of tasks fully right.`}</div><div class="muted">Best so far: ${Math.round(((st && st.best) || 0) * 100)}%. Read each why, then retry or open the lesson.</div></div>`; })() : '';
     const btns = ui.checked
-      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
+      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button>${p.also && L[p.also] ? `<button class="btn ghost" data-act="lesson" data-arg="${esc(p.also)}">See also: ${esc(L[p.also].title)}</button>` : ''}<button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
       : `<button class="btn primary" data-act="pbq-check" data-arg="${esc(p.id)}">Check my answers</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`;
     return `<div class="content stack" style="gap:18px">${scenario}<div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}"></div>${summary}<div class="row" style="gap:8px;flex-wrap:wrap">${btns}</div></div>`;
   }

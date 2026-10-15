@@ -6317,7 +6317,7 @@ window.FRA = window.FRA || {};
 FRA.pbqs = FRA.pbqs || {};
 
 FRA.pbqs["sec-log-attack"] = {
-  id: "sec-log-attack", title: "Find the attack in the log", domain: 4, lesson: "u13l3", seo: true,
+  id: "sec-log-attack", title: "Find the attack in the log", domain: 4, lesson: "u13l3", also: "u5l4", seo: true,
   scenario: {
     text: "A clinic's Linux file server, {{files01}}, accepts SSH logins from staff and from a backup host. The security analyst pulls the authentication log for the early hours of the morning after an alert. A copy of the attacker's script, found later, held one common password and a list of staff usernames.",
     log: "Oct 14 02:12:55 files01 sshd[3102]: Accepted publickey for backup from 10.0.4.15 port 40112 ssh2\nOct 14 02:13:07 files01 sshd[3120]: Failed password for adavis from 203.0.113.9 port 51022 ssh2\nOct 14 02:13:07 files01 sshd[3121]: Failed password for bchen from 203.0.113.9 port 51024 ssh2\nOct 14 02:13:07 files01 sshd[3122]: Failed password for cortiz from 203.0.113.9 port 51026 ssh2\nOct 14 02:13:07 files01 sshd[3123]: Failed password for dpatel from 203.0.113.9 port 51028 ssh2\nOct 14 02:13:08 files01 sshd[3124]: Failed password for ewong from 203.0.113.9 port 51030 ssh2\nOct 14 02:13:08 files01 sshd[3125]: Failed password for fmoore from 203.0.113.9 port 51032 ssh2\nOct 14 02:13:08 files01 sshd[3126]: Failed password for gsingh from 203.0.113.9 port 51034 ssh2\nOct 14 02:13:08 files01 sshd[3127]: Failed password for hnguyen from 203.0.113.9 port 51036 ssh2\nOct 14 02:13:09 files01 sshd[3128]: Accepted password for jlopez from 203.0.113.9 port 51040 ssh2\nOct 14 02:15:01 files01 CRON[3140]: pam_unix(cron:session): session opened for user root by (uid=0)\nOct 14 02:21:40 files01 sshd[3155]: Accepted password for mlee from 10.0.4.22 port 40230 ssh2"
@@ -6633,7 +6633,7 @@ FRA.pbqs["sec-access-matrix"] = {
 };
 
 FRA.pbqs["sec-commands"] = {
-  id: "sec-commands", title: "Verify the download and scan the host", domain: 4, lesson: "u10l1", seo: false,
+  id: "sec-commands", title: "Verify the download and scan the host", domain: 4, lesson: "u10l1", also: "u2l3", seo: false,
   scenario: {
     text: "An administrator downloads {{tools.iso}} from a vendor's site. The vendor publishes the file's SHA-256 hash next to the download. After installing the tools on a new server at {{10.0.0.5}}, the administrator wants to see which services and versions it exposes to the network."
   },
@@ -8810,9 +8810,9 @@ window.FRAPbq = (function () {
   const NONE = '(no answer)';
   function expectedText(task) {
     switch (task.kind) {
-      case 'order': return (task.expect || []).map(i => task.items[i]).join(', ');
+      case 'order': return (task.expect || []).map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ');
       case 'match': return (task.left || []).map((l, i) => `${l}: ${task.right[task.expect[i]]}`).join('; ');
-      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ');
+      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ');
       case 'form': return (task.fields || []).map(f => `${f.label}: ${(f.expect || [])[0] || ''}`).join('; ');
       case 'command': return (task.expect || [])[0] || '';
       case 'choice': return str((task.options || [])[task.expect]);
@@ -8822,9 +8822,9 @@ window.FRAPbq = (function () {
   function answerText(task, answer) {
     if (answer == null) return NONE;
     switch (task.kind) {
-      case 'order': return Array.isArray(answer) && answer.length ? answer.map(i => task.items[i]).join(', ') : NONE;
+      case 'order': return Array.isArray(answer) && answer.length ? answer.map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ') : NONE;
       case 'match': return (task.left || []).map((l, i) => `${l}: ${answer[i] != null ? task.right[answer[i]] : '(not placed)'}`).join('; ');
-      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ') : NONE;
+      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ') : NONE;
       case 'form': return (task.fields || []).map(f => `${f.label}: ${squash(answer[f.id]) || '(blank)'}`).join('; ');
       case 'command': return squash(answer) || NONE;
       case 'choice': return answer != null && task.options && task.options[answer] != null ? task.options[answer] : NONE;
@@ -9079,6 +9079,8 @@ window.FRAPbq = (function () {
     const p = FRA.pbqs[id]; const kinds = (window.FRAPbq && FRAPbq.KINDS) || [];
     if (p.id !== id) throw new Error(`pbq ${id} carries id ${p.id}`);
     if (!L[p.lesson]) throw new Error(`pbq ${id} names unknown lesson ${p.lesson}`);
+    if (p.also !== undefined && !L[p.also]) throw new Error(`pbq ${id} names unknown see-also lesson ${p.also}`);
+    if (p.also === p.lesson) throw new Error(`pbq ${id} lists its own lesson ${p.lesson} as the see-also lesson`);
     if (!DOMAIN_IDS.includes(p.domain)) throw new Error(`pbq ${id} uses unknown domain ${p.domain}`);
     const tasks = Array.isArray(p.tasks) ? p.tasks : [];
     if (tasks.length < 3 || tasks.length > 6) throw new Error(`pbq ${id} has ${tasks.length} tasks, which is outside the three to six a PBQ carries`);
@@ -9943,7 +9945,7 @@ window.FRAPbq = (function () {
     const scenario = pbqScenarioHtml(p);
     const summary = ui.checked ? (() => { const { frac } = pbqScore(p, ui.answers); return `<div class="feedback ${frac === 1 ? 'good' : 'bad'}"><div class="verdict">${frac === 1 ? 'Every task right.' : `${Math.round(frac * 100)}% of tasks fully right.`}</div><div class="muted">Best so far: ${Math.round(((st && st.best) || 0) * 100)}%. Read each why, then retry or open the lesson.</div></div>`; })() : '';
     const btns = ui.checked
-      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
+      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button>${p.also && L[p.also] ? `<button class="btn ghost" data-act="lesson" data-arg="${esc(p.also)}">See also: ${esc(L[p.also].title)}</button>` : ''}<button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
       : `<button class="btn primary" data-act="pbq-check" data-arg="${esc(p.id)}">Check my answers</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`;
     return `<div class="content stack" style="gap:18px">${scenario}<div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}"></div>${summary}<div class="row" style="gap:8px;flex-wrap:wrap">${btns}</div></div>`;
   }

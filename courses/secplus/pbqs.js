@@ -5,7 +5,7 @@ window.FRA = window.FRA || {};
 FRA.pbqs = FRA.pbqs || {};
 
 FRA.pbqs["sec-log-attack"] = {
-  id: "sec-log-attack", title: "Find the attack in the log", domain: 4, lesson: "u13l3", seo: true,
+  id: "sec-log-attack", title: "Find the attack in the log", domain: 4, lesson: "u13l3", also: "u5l4", seo: true,
   scenario: {
     text: "A clinic's Linux file server, {{files01}}, accepts SSH logins from staff and from a backup host. The security analyst pulls the authentication log for the early hours of the morning after an alert. A copy of the attacker's script, found later, held one common password and a list of staff usernames.",
     log: "Oct 14 02:12:55 files01 sshd[3102]: Accepted publickey for backup from 10.0.4.15 port 40112 ssh2\nOct 14 02:13:07 files01 sshd[3120]: Failed password for adavis from 203.0.113.9 port 51022 ssh2\nOct 14 02:13:07 files01 sshd[3121]: Failed password for bchen from 203.0.113.9 port 51024 ssh2\nOct 14 02:13:07 files01 sshd[3122]: Failed password for cortiz from 203.0.113.9 port 51026 ssh2\nOct 14 02:13:07 files01 sshd[3123]: Failed password for dpatel from 203.0.113.9 port 51028 ssh2\nOct 14 02:13:08 files01 sshd[3124]: Failed password for ewong from 203.0.113.9 port 51030 ssh2\nOct 14 02:13:08 files01 sshd[3125]: Failed password for fmoore from 203.0.113.9 port 51032 ssh2\nOct 14 02:13:08 files01 sshd[3126]: Failed password for gsingh from 203.0.113.9 port 51034 ssh2\nOct 14 02:13:08 files01 sshd[3127]: Failed password for hnguyen from 203.0.113.9 port 51036 ssh2\nOct 14 02:13:09 files01 sshd[3128]: Accepted password for jlopez from 203.0.113.9 port 51040 ssh2\nOct 14 02:15:01 files01 CRON[3140]: pam_unix(cron:session): session opened for user root by (uid=0)\nOct 14 02:21:40 files01 sshd[3155]: Accepted password for mlee from 10.0.4.22 port 40230 ssh2"
@@ -321,7 +321,7 @@ FRA.pbqs["sec-access-matrix"] = {
 };
 
 FRA.pbqs["sec-commands"] = {
-  id: "sec-commands", title: "Verify the download and scan the host", domain: 4, lesson: "u10l1", seo: false,
+  id: "sec-commands", title: "Verify the download and scan the host", domain: 4, lesson: "u10l1", also: "u2l3", seo: false,
   scenario: {
     text: "An administrator downloads {{tools.iso}} from a vendor's site. The vendor publishes the file's SHA-256 hash next to the download. After installing the tools on a new server at {{10.0.0.5}}, the administrator wants to see which services and versions it exposes to the network."
   },

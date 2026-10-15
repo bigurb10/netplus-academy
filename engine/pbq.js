@@ -136,9 +136,9 @@ window.FRAPbq = (function () {
   const NONE = '(no answer)';
   function expectedText(task) {
     switch (task.kind) {
-      case 'order': return (task.expect || []).map(i => task.items[i]).join(', ');
+      case 'order': return (task.expect || []).map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ');
       case 'match': return (task.left || []).map((l, i) => `${l}: ${task.right[task.expect[i]]}`).join('; ');
-      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ');
+      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ');
       case 'form': return (task.fields || []).map(f => `${f.label}: ${(f.expect || [])[0] || ''}`).join('; ');
       case 'command': return (task.expect || [])[0] || '';
       case 'choice': return str((task.options || [])[task.expect]);
@@ -148,9 +148,9 @@ window.FRAPbq = (function () {
   function answerText(task, answer) {
     if (answer == null) return NONE;
     switch (task.kind) {
-      case 'order': return Array.isArray(answer) && answer.length ? answer.map(i => task.items[i]).join(', ') : NONE;
+      case 'order': return Array.isArray(answer) && answer.length ? answer.map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ') : NONE;
       case 'match': return (task.left || []).map((l, i) => `${l}: ${answer[i] != null ? task.right[answer[i]] : '(not placed)'}`).join('; ');
-      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ') : NONE;
+      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ') : NONE;
       case 'form': return (task.fields || []).map(f => `${f.label}: ${squash(answer[f.id]) || '(blank)'}`).join('; ');
       case 'command': return squash(answer) || NONE;
       case 'choice': return answer != null && task.options && task.options[answer] != null ? task.options[answer] : NONE;

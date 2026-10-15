@@ -360,7 +360,7 @@ function defaultFaq(m) {
   return out;
 }
 
-function landingPage(m, R, origin, guides) {
+function landingPage(m, R, origin, guides, siblings) {
   const c = m.c; const ex = c.exam || {}; const seo = m.seo || {};
   const relatedGuides = (guides || []).filter(g => ((g.related && g.related.courses) || []).includes(c.id));
   const h1 = seo.h1 || `${c.name}: ${examName(c) || c.name} study guide and practice tests`;
@@ -403,6 +403,7 @@ function landingPage(m, R, origin, guides) {
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
 ${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
+${(siblings || []).length ? `<section class="related"><h2>More ${esc(ex.vendor || '')} courses</h2><ul>${siblings.map(s => `<li><a href="${s.urls.landing}">${esc(s.c.name)}</a> <span class="muted">${esc((s.c.exam && s.c.exam.title) || '')}</span> &middot; <a href="${s.urls.practice}">practice test</a></li>`).join('')}</ul></section>` : ''}
 <section>
   <h2>Questions people ask</h2>
   ${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}
@@ -504,7 +505,8 @@ function pbqPage(m, R, origin) {
   const taskHtml = (p, t) => `<li class="pbq-task"><p class="stem">${R.inline(t.prompt)}</p>${t.kind === 'order' ? `<p class="muted">Items: ${t.items.map(x => R.inline(x)).join('; ')}</p>` : t.kind === 'match' ? `<p class="muted">Items: ${t.left.map(x => R.inline(x)).join('; ')}. Slots: ${t.right.map(x => R.inline(x)).join('; ')}</p>` : (t.kind === 'multiselect' || t.kind === 'choice') ? `<ol class="opts">${t.options.map(o => `<li class="opt">${R.inline(o)}</li>`).join('')}</ol>` : t.kind === 'form' ? `<p class="muted">Fields: ${t.fields.map(f => esc(f.label)).join('; ')}</p>` : ''}<p><strong>Expected: ${esc(P.expectedText(t))}</strong></p><p>${R.inline((p.why || {})[t.id] || '')}</p></li>`;
   // The lesson a PBQ belongs to, linked on this site when it is free and in the app when it is not,
   // the same rule the practice-test page uses for a question's lesson.
-  const lessonLink = p => { const l = m.lessons.find(x => x.id === p.lesson); return l ? `<p class="muted">From the lesson <a href="${m.free.has(l.id) ? m.urls.lesson(l) : m.urls.inApp(l)}">${esc(l.title)}</a>.</p>` : ''; };
+  const lessonHref = l => m.free.has(l.id) ? m.urls.lesson(l) : m.urls.inApp(l);
+  const lessonLink = p => { const l = m.lessons.find(x => x.id === p.lesson); const a = p.also ? m.lessons.find(x => x.id === p.also) : null; return l ? `<p class="muted">From the lesson <a href="${lessonHref(l)}">${esc(l.title)}</a>.${a ? ` See also <a href="${lessonHref(a)}">${esc(a.title)}</a>.` : ''}</p>` : ''; };
   const sections = ids.map(id => { const p = m.pbqs[id]; const sc = p.scenario || {}; return `<section class="pbq"><h2>${esc(p.title)}</h2><div class="scenario">${R.inline(sc.text || '')}</div>${sc.svg ? `<div class="pbq-fig">${sc.svg}</div>` : ''}${sc.log ? `<pre class="pbq-log">${esc(sc.log)}</pre>` : ''}<ol class="pbq-tasks">${p.tasks.map(t => taskHtml(p, t)).join('')}</ol>${lessonLink(p)}</section>`; }).join('');
   const faq = [
     { q: `How many PBQs are on the ${examName(c) || c.name} exam?`, a: 'CompTIA does not publish the count. Expect a handful at the start of the exam, each taking longer than a multiple-choice question.' },
@@ -640,7 +642,7 @@ function buildCourse(FRA, opts) {
   const m = model(FRA);
   const R = makeRenderer(m.acronyms);
   const pages = [];
-  pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin, opts.guides)) });
+  pages.push({ url: m.urls.landing, title: m.c.name, file: writePage(opts.out, m.urls.landing, landingPage(m, R, origin, opts.guides, opts.siblings)) });
   pages.push({ url: m.urls.practice, title: 'Practice test', file: writePage(opts.out, m.urls.practice, practicePage(m, R, origin)) });
   if (Object.keys(m.pbqs).length) pages.push({ url: m.urls.pbq, title: 'PBQ practice', file: writePage(opts.out, m.urls.pbq, pbqPage(m, R, origin)) });
   pages.push({ url: m.urls.course, title: `${examName(m.c)} free course`, file: writePage(opts.out, m.urls.course, coursePage(m, R, origin)) });
@@ -683,7 +685,9 @@ function buildAll(opts) {
   const packFor = dir => packs[dir] || (packs[dir] = loadPack(dir));
   const models = allDirs.map(dir => model(packFor(dir)));
   const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
-  const results = dirs.map(dir => buildCourse(packFor(dir), { out, origin, analytics: opts.analytics, guides }));
+  // A course's siblings are the other courses from the same certifying body, in catalog (directory) order.
+  const siblingsOf = m => models.filter(o => o.c.id !== m.c.id && (o.c.exam && o.c.exam.vendor) === (m.c.exam && m.c.exam.vendor));
+  const results = dirs.map(dir => { const m = model(packFor(dir)); return buildCourse(packFor(dir), { out, origin, analytics: opts.analytics, guides, siblings: siblingsOf(m) }); });
   const guideUrls = [];
   if (guides.length) {
     writePage(out, '/guides/', guidesIndex(guides, origin)); guideUrls.push('/guides/');

@@ -28,7 +28,7 @@ FRA.pbqs["net-subnet-plan"] = {
 };
 
 FRA.pbqs["net-cables-ports"] = {
-  id: "net-cables-ports", title: "Pick the cable for each run", domain: 1, lesson: "u3l1", seo: false,
+  id: "net-cables-ports", title: "Pick the cable for each run", domain: 1, lesson: "u3l1", also: "u3l2", seo: false,
   scenario: {
     text: "A branch office is being cabled. The installer has a list of five runs and must choose the medium for each one, plus the patch cords for the server rack."
   },

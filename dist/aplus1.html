@@ -8030,9 +8030,9 @@ window.FRAPbq = (function () {
   const NONE = '(no answer)';
   function expectedText(task) {
     switch (task.kind) {
-      case 'order': return (task.expect || []).map(i => task.items[i]).join(', ');
+      case 'order': return (task.expect || []).map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ');
       case 'match': return (task.left || []).map((l, i) => `${l}: ${task.right[task.expect[i]]}`).join('; ');
-      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ');
+      case 'multiselect': return (task.expect || []).slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ');
       case 'form': return (task.fields || []).map(f => `${f.label}: ${(f.expect || [])[0] || ''}`).join('; ');
       case 'command': return (task.expect || [])[0] || '';
       case 'choice': return str((task.options || [])[task.expect]);
@@ -8042,9 +8042,9 @@ window.FRAPbq = (function () {
   function answerText(task, answer) {
     if (answer == null) return NONE;
     switch (task.kind) {
-      case 'order': return Array.isArray(answer) && answer.length ? answer.map(i => task.items[i]).join(', ') : NONE;
+      case 'order': return Array.isArray(answer) && answer.length ? answer.map((i, n) => `${n + 1}. ${task.items[i]}`).join('; ') : NONE;
       case 'match': return (task.left || []).map((l, i) => `${l}: ${answer[i] != null ? task.right[answer[i]] : '(not placed)'}`).join('; ');
-      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join(', ') : NONE;
+      case 'multiselect': return Array.isArray(answer) && answer.length ? answer.slice().sort((a, b) => a - b).map(i => task.options[i]).join('; ') : NONE;
       case 'form': return (task.fields || []).map(f => `${f.label}: ${squash(answer[f.id]) || '(blank)'}`).join('; ');
       case 'command': return squash(answer) || NONE;
       case 'choice': return answer != null && task.options && task.options[answer] != null ? task.options[answer] : NONE;
@@ -8299,6 +8299,8 @@ window.FRAPbq = (function () {
     const p = FRA.pbqs[id]; const kinds = (window.FRAPbq && FRAPbq.KINDS) || [];
     if (p.id !== id) throw new Error(`pbq ${id} carries id ${p.id}`);
     if (!L[p.lesson]) throw new Error(`pbq ${id} names unknown lesson ${p.lesson}`);
+    if (p.also !== undefined && !L[p.also]) throw new Error(`pbq ${id} names unknown see-also lesson ${p.also}`);
+    if (p.also === p.lesson) throw new Error(`pbq ${id} lists its own lesson ${p.lesson} as the see-also lesson`);
     if (!DOMAIN_IDS.includes(p.domain)) throw new Error(`pbq ${id} uses unknown domain ${p.domain}`);
     const tasks = Array.isArray(p.tasks) ? p.tasks : [];
     if (tasks.length < 3 || tasks.length > 6) throw new Error(`pbq ${id} has ${tasks.length} tasks, which is outside the three to six a PBQ carries`);
@@ -9163,7 +9165,7 @@ window.FRAPbq = (function () {
     const scenario = pbqScenarioHtml(p);
     const summary = ui.checked ? (() => { const { frac } = pbqScore(p, ui.answers); return `<div class="feedback ${frac === 1 ? 'good' : 'bad'}"><div class="verdict">${frac === 1 ? 'Every task right.' : `${Math.round(frac * 100)}% of tasks fully right.`}</div><div class="muted">Best so far: ${Math.round(((st && st.best) || 0) * 100)}%. Read each why, then retry or open the lesson.</div></div>`; })() : '';
     const btns = ui.checked
-      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
+      ? `<button class="btn primary" data-act="pbq-retry" data-arg="${esc(p.id)}">Retry</button><button class="btn ghost" data-act="lesson" data-arg="${esc(p.lesson)}">Review the lesson</button>${p.also && L[p.also] ? `<button class="btn ghost" data-act="lesson" data-arg="${esc(p.also)}">See also: ${esc(L[p.also].title)}</button>` : ''}<button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`
       : `<button class="btn primary" data-act="pbq-check" data-arg="${esc(p.id)}">Check my answers</button><button class="btn ghost" data-act="go" data-arg="pbq">All PBQs</button>`;
     return `<div class="content stack" style="gap:18px">${scenario}<div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}"></div>${summary}<div class="row" style="gap:8px;flex-wrap:wrap">${btns}</div></div>`;
   }
