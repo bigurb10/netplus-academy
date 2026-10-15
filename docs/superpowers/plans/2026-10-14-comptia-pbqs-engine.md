@@ -1012,7 +1012,28 @@ Expected: suite green; bundles rebuilt (they now carry `FRAPbq`, no visible chan
 
 - [ ] **Step 3: Record and commit**
 
-Add a `## Status
+Add a `## Status` section to this plan: the task commits, the test counts, and the note that no live course changes until Plan B ships `pbqs.js`.
+
+```bash
+git add README.md docs/superpowers/plans/2026-10-14-comptia-pbqs-engine.md dist
+git commit -m "docs: PBQ authoring notes and Plan A status; rebuilt bundles carry the PBQ module"
+```
+
+---
+
+## Self-review against the spec (done while writing)
+
+- Spec 1 decisions: five kinds plus choice (Task 1), tab (Task 4), official-format test with `pbqInTest` (Task 5), static page and links (Task 6), phone-first tap and keyboard (Task 4 renderers and tests), ASCII.
+- Spec 2 data model and grading: Task 1 implements the shapes and rules verbatim and tests each; `seo: true` exactly three per shipped course is enforced by the self-test (Task 6) with the mini fixture at one.
+- Spec 2 tab, state, account: Tasks 3 and 4 (`S.pbqs` with `best, done, at, tasks`, merge by `at`, hash strip, summary and account count, Home stat).
+- Spec 2 test integration: Task 5 (first items, one-for-one replacement by domain, task as question, results, strength and retraining through the pseudo-question path, no PBQs in practice, starter, or custom tests).
+- Spec 2 engine changes: `engine/pbq.js` and its registrations (Tasks 1 and 2), `app.js`, `merge.js`, `sync.js`, `summary.js`, `strength.js` needs no change because review items resolve by `q.t` (verified in the map at `engine/strength.js:62`), `styles.css`.
+- Spec 3 SEO: Task 6 (title, H1, phrases from `seo.pbqPhrases`, the seo PBQs rendered static, FAQ and Quiz data, app link, landing section, practice link, sitemap). The catalog card links are deferred to Plan B so the catalog never links a page that does not exist yet; recorded here as a deviation from spec 6 item 2.
+- Spec 5 tests: `tests/pbq.js` (grading, rendering, three input methods), `tests/engine.js` (tab, view, test integration), `tests/merge.js`, `tests/sync.js`, `tests/summary.js`, `tests/account.js`, `tests/selftest.js`, `tests/site.js`, `tests/loaders.js`, the mini fixture.
+- Spec 6 delivery: branch `pbq-engine` off `main` after the CRES and CHTM merges; mergeable with no visible change.
+- Type consistency: `FRAPbq.render(container, pbq, ui, helpers)` and `collect(container, pbq, ui)` are named the same in Tasks 1, 4, 5, and 6; the review item shape `{ q: pseudoQ, choice, pick, conf, correct, pbq, task, score }` is the same in Task 5's implementation and tests; `S.pbqs[id]` fields match Task 3's accessor, Task 4's `checkPbq`, and `engine/summary.js`.
+
+## Status
 
 ### Plan A status (2026-10-15)
 
@@ -1037,27 +1058,4 @@ Rulings after the review: (a) the PBQs tab's Check writes `S.pbqs` only and reco
 
 The implementer's deviations from this plan's Task 5 code, each reproduced and approved by the review: the quota cut spills beyond the PBQ's own domain when that quota is short, so the question count holds (the plan's version lost questions); the draw pool keeps the avoidance of the last attempt's PBQs; `setup.count` counts tasks; `rec.pbqs` is set only on records that carried PBQs; `submit`, `next`, and keydown guards; `runSelfTest` reads PBQ items.
 
-Fixes after the review (38d9ecb): the official-format test resets its PBQ answers at `startExam` (they persisted across attempts); the draw is by domain weight across the whole pool, avoiding the last official attempt's PBQs while an unused one exists (the plan's within-domain avoidance drew the same PBQ every time); the in-test counter and meter count questions, not items; the draw is clamped so the tasks never exceed the exam's question count. Ruling carried from Task 4: an `order` task never displays in its correct sequence, and one the learner never touched collects as unanswered and scores 0 (`ui.answers` is the touch record, so a reload mid-test keeps a real sequence).` section to this plan: the task commits, the test counts, and the note that no live course changes until Plan B ships `pbqs.js`.
-
-```bash
-git add README.md docs/superpowers/plans/2026-10-14-comptia-pbqs-engine.md dist
-git commit -m "docs: PBQ authoring notes and Plan A status; rebuilt bundles carry the PBQ module"
-```
-
----
-
-## Self-review against the spec (done while writing)
-
-- Spec 1 decisions: five kinds plus choice (Task 1), tab (Task 4), official-format test with `pbqInTest` (Task 5), static page and links (Task 6), phone-first tap and keyboard (Task 4 renderers and tests), ASCII.
-- Spec 2 data model and grading: Task 1 implements the shapes and rules verbatim and tests each; `seo: true` exactly three per shipped course is enforced by the self-test (Task 6) with the mini fixture at one.
-- Spec 2 tab, state, account: Tasks 3 and 4 (`S.pbqs` with `best, done, at, tasks`, merge by `at`, hash strip, summary and account count, Home stat).
-- Spec 2 test integration: Task 5 (first items, one-for-one replacement by domain, task as question, results, strength and retraining through the pseudo-question path, no PBQs in practice, starter, or custom tests).
-- Spec 2 engine changes: `engine/pbq.js` and its registrations (Tasks 1 and 2), `app.js`, `merge.js`, `sync.js`, `summary.js`, `strength.js` needs no change because review items resolve by `q.t` (verified in the map at `engine/strength.js:62`), `styles.css`.
-- Spec 3 SEO: Task 6 (title, H1, phrases from `seo.pbqPhrases`, the seo PBQs rendered static, FAQ and Quiz data, app link, landing section, practice link, sitemap). The catalog card links are deferred to Plan B so the catalog never links a page that does not exist yet; recorded here as a deviation from spec 6 item 2.
-- Spec 5 tests: `tests/pbq.js` (grading, rendering, three input methods), `tests/engine.js` (tab, view, test integration), `tests/merge.js`, `tests/sync.js`, `tests/summary.js`, `tests/account.js`, `tests/selftest.js`, `tests/site.js`, `tests/loaders.js`, the mini fixture.
-- Spec 6 delivery: branch `pbq-engine` off `main` after the CRES and CHTM merges; mergeable with no visible change.
-- Type consistency: `FRAPbq.render(container, pbq, ui, helpers)` and `collect(container, pbq, ui)` are named the same in Tasks 1, 4, 5, and 6; the review item shape `{ q: pseudoQ, choice, pick, conf, correct, pbq, task, score }` is the same in Task 5's implementation and tests; `S.pbqs[id]` fields match Task 3's accessor, Task 4's `checkPbq`, and `engine/summary.js`.
-
-## Status
-
-(filled in by Task 7)
+Fixes after the review (38d9ecb): the official-format test resets its PBQ answers at `startExam` (they persisted across attempts); the draw is by domain weight across the whole pool, avoiding the last official attempt's PBQs while an unused one exists (the plan's within-domain avoidance drew the same PBQ every time); the in-test counter and meter count questions, not items; the draw is clamped so the tasks never exceed the exam's question count. Ruling carried from Task 4: an `order` task never displays in its correct sequence, and one the learner never touched collects as unanswered and scores 0 (`ui.answers` is the touch record, so a reload mid-test keeps a real sequence).
