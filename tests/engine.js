@@ -996,6 +996,11 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('PBQ tasks replace questions one for one: the item count plus task count minus one equals the exam count', (a.items.length - 1) + 6 === 10, a.items.length);
     check('the exam view renders the PBQ tasks first', wo.$$('.pbq-task').length === 6 && /Submit this PBQ|Continue/.test(wo.text()));
     check('the PBQ page counts questions, not items, in its submitted-so-far line', /0 of 10 submitted so far/.test(wo.text()));
+    // The scoring note must survive the phone: .kbd-hint is display:none below 700px, so the only
+    // sentence saying a task counts as a question has to live outside it.
+    const scoreNote = /each one scored as a question/;
+    check('the PBQ test item says each task is scored as a question', scoreNote.test(wo.text()));
+    check('the per-task scoring note is not inside a .kbd-hint, which phones hide', !scoreNote.test(wo.$$('.kbd-hint').map(el => el.textContent).join(' ')), wo.$$('.kbd-hint').map(el => el.textContent).join(' | '));
     // answer two tasks right, four wrong-or-blank, submit the PBQ
     wo.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
     wo.click(wo.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));

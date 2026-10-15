@@ -401,7 +401,7 @@ function landingPage(m, R, origin, guides) {
   <p><a href="${m.urls.course}">Every lesson, by unit</a></p>
 </section>
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
-${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo).length} PBQs here</a></p></section>` : ''}
+${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
 <section>
   <h2>Questions people ask</h2>
@@ -494,7 +494,9 @@ function practicePage(m, R, origin) {
 // Every task shows its prompt, its items or options in pack order, the expected answer in words,
 // and the why. The interactive versions live in the app, behind the page's buttons.
 function pbqPage(m, R, origin) {
-  const c = m.c; const ids = Object.keys(m.pbqs).filter(id => m.pbqs[id].seo); const P = m.pbqText;
+  // seo === true, the same test the pack self-test counts with, so the page and the self-test never
+  // disagree about which PBQs are public.
+  const c = m.c; const ids = Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true); const P = m.pbqText;
   const phrases = (m.seo && Array.isArray(m.seo.pbqPhrases) && m.seo.pbqPhrases.length) ? m.seo.pbqPhrases : [`${examName(c) || c.name} PBQs`, `${(c.exam && c.exam.code) || c.name} performance-based questions`];
   const h1 = `${examName(c) || c.name} PBQ Practice`;
   const description = shorten(`Free ${examName(c) || c.name} performance-based questions with every task answered and explained: ${phrases.join(', ')}. Practice all ${Object.keys(m.pbqs).length} in the course.`, DESC_MAX);

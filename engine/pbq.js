@@ -60,6 +60,69 @@ window.FRAPbq = (function () {
     return { score, correct: score === 1, detail };
   }
 
+  // ---------- pack validation ----------
+  // What a well-formed `expect` is, per kind. Every index must point at a real slot in the task's
+  // own arrays and every kind must carry something to be right about: an out-of-range index makes a
+  // task no learner can ever get right (so the PBQ can never be marked done) and prints "undefined"
+  // as its expected answer, both on the results page and on the crawlable static page. The pack
+  // self-test in engine/app.js throws on whatever this returns, so each clause names its task.
+  const NORMS = Object.keys(normalize);
+  const list = v => Array.isArray(v) && v.length ? v : null;
+  const inRange = (x, n) => Number.isInteger(x) && x >= 0 && x < n;
+  const repeats = a => a.some((x, i) => a.indexOf(x) !== i);
+  const strings = v => Array.isArray(v) && v.every(s => typeof s === 'string' && s.trim());
+  function expectProblems(task) {
+    const t = task || {}; const out = []; const say = m => out.push(`task ${t.id} ${m}`);
+    const e = t.expect;
+    if (t.kind === 'order') {
+      const items = list(t.items);
+      if (!items) say('has no items to put in order');
+      else if (!Array.isArray(e)) say('has no expected sequence');
+      else if (e.length !== items.length) say(`expects ${e.length} positions for its ${items.length} items`);
+      else if (!e.every(x => inRange(x, items.length))) say(`expects an index outside its ${items.length} items: ${JSON.stringify(e)}`);
+      else if (repeats(e)) say(`repeats an index in its expected sequence: ${JSON.stringify(e)}`);
+    } else if (t.kind === 'match') {
+      const left = list(t.left), right = list(t.right);
+      if (!left) say('has no left items to match');
+      else if (!right) say('has no right slots to match into');
+      else if (!Array.isArray(e)) say('has no expected pairing');
+      else if (e.length !== left.length) say(`expects ${e.length} pairings for its ${left.length} left items`);
+      else if (!e.every(x => inRange(x, right.length))) say(`expects a slot outside its ${right.length} right slots: ${JSON.stringify(e)}`);
+      // A right slot holds one left item (placing an item clears that slot's previous one), so a
+      // slot expected twice is a pairing the learner has no way to complete.
+      else if (repeats(e)) say(`expects one right slot for two left items: ${JSON.stringify(e)}`);
+    } else if (t.kind === 'multiselect') {
+      const opts = list(t.options);
+      if (!opts) say('has no options to pick from');
+      else if (!list(e)) say('expects no option, so it can never be right');
+      else if (!e.every(x => inRange(x, opts.length))) say(`expects an index outside its ${opts.length} options: ${JSON.stringify(e)}`);
+      else if (repeats(e)) say(`repeats an expected option: ${JSON.stringify(e)}`);
+    } else if (t.kind === 'form') {
+      const fs = list(t.fields);
+      if (!fs) say('has no fields to fill');
+      else {
+        const seen = new Set();
+        fs.forEach((f0, k) => {
+          const f = f0 || {};
+          if (typeof f.id !== 'string' || !f.id.trim()) { say(`has a field with no id in position ${k + 1}`); return; }
+          // Answers are keyed by field id, so two fields sharing one id share one typed value.
+          if (seen.has(f.id)) say(`uses the field id ${f.id} twice`);
+          seen.add(f.id);
+          if (!list(f.expect) || !strings(f.expect)) say(`field ${f.id} has no accepted value in expect`);
+          if (!NORMS.includes(f.normalize)) say(`field ${f.id} normalizes with ${f.normalize}, which is not one of ${NORMS.join(', ')}`);
+        });
+      }
+    } else if (t.kind === 'command') {
+      if (!list(e) || !strings(e)) say('has no accepted command in expect');
+      if (t.alt != null && !strings(t.alt)) say('carries an alt that is not a list of accepted commands');
+    } else if (t.kind === 'choice') {
+      const opts = list(t.options);
+      if (!opts) say('has no options to choose from');
+      else if (!inRange(e, opts.length)) say(`expects ${JSON.stringify(e)}, which is not one of its ${opts.length} options`);
+    }
+    return out;
+  }
+
   function emptyAnswer(task) {
     switch (task.kind) {
       case 'order': return [];
@@ -251,5 +314,5 @@ window.FRAPbq = (function () {
     return out;
   }
 
-  return { KINDS, normalize, normalizeCommand, grade, emptyAnswer, expectedText, answerText, render, collect };
+  return { KINDS, normalize, normalizeCommand, grade, emptyAnswer, expectedText, answerText, expectProblems, render, collect };
 })();

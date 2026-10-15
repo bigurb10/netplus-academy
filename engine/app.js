@@ -96,6 +96,11 @@
       taskIds.add(t.id);
       if (!kinds.includes(t.kind)) throw new Error(`pbq ${id} task ${t.id} has unknown kind ${t.kind}`);
       if (typeof (p.why || {})[t.id] !== 'string' || !(p.why || {})[t.id].trim()) throw new Error(`pbq ${id} task ${t.id} has no why`);
+      // Every expect index must point at a real slot in the task's own arrays, and every kind must
+      // carry something to be right about. engine/pbq.js owns the per-kind rules because it owns the
+      // kinds; its clauses already name the task, so the message reads like the checks above.
+      const flaws = (window.FRAPbq && FRAPbq.expectProblems) ? FRAPbq.expectProblems(t) : [];
+      if (flaws.length) throw new Error(`pbq ${id} ${flaws.join('; ')}`);
     });
   });
   document.title = course.name;
@@ -1051,8 +1056,8 @@
       <div class="exam-head"><span class="pill accent">${testLabel(ex)}</span><span class="tnum">PBQ ${n} of ${of}</span><div class="meter"><i style="width:${100 * prog.done / prog.total}%"></i></div>${(S.settings.timer || isOfficial(ex)) && examMinutes(ex) ? `<span class="timer" id="timer">--:--</span>` : ''}<button class="btn ghost small" data-act="abandon-exam">Quit</button></div>
       ${pbqScenarioHtml(p)}
       <div class="card stack pbq-tasks" id="pbq" data-pbq-id="${esc(p.id)}" data-pbq-ui="test:${esc(p.id)}"></div>
-      <div class="row spread" style="margin-top:12px;gap:10px;flex-wrap:wrap"><div class="row" style="gap:10px">${prevBtn}<span class="kbd-hint">${plural(p.tasks.length, 'task')}, each one scored as a question</span></div>${btn}</div>
-      <p class="muted" style="margin-top:12px;font-size:.9rem">No feedback until the end. Every task is explained on the results page. ${prog.done} of ${prog.total} submitted so far.</p>
+      <div class="row spread" style="margin-top:12px;gap:10px;flex-wrap:wrap"><div class="row" style="gap:10px">${prevBtn}</div>${btn}</div>
+      <p class="muted" style="margin-top:12px;font-size:.9rem">${plural(p.tasks.length, 'task')}, each one scored as a question. No feedback until the end. Every task is explained on the results page. ${prog.done} of ${prog.total} submitted so far.</p>
     </div>`;
   }
   function viewTestsHub() {
@@ -1907,8 +1912,9 @@
       log.push(`labs ${labIds.length} validated; ${lab.id} completes and clears`);
     } else log.push('labs: none in this pack');
     // PBQs: the boot check above already rejects a malformed entry (its id must be its key, its
-    // lesson must exist, three to six tasks with unique ids and known kinds, a why for each). What
-    // only a whole pack can show is checked here: every PBQ sits in a domain the tests draw from,
+    // lesson must exist, three to six tasks with unique ids and known kinds, a why for each, and an
+    // expect that points at real slots in the task's own arrays). What only a whole pack can show is
+    // checked here: every PBQ sits in a domain the tests draw from,
     // and the static page's set is exactly three (or all of them in a pack that ships fewer).
     if (pbqIds.length) {
       const offDomain = pbqIds.filter(id => !TESTED_IDS.some(d => String(d) === String(PBQS[id].domain)));

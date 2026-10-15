@@ -73,6 +73,21 @@ check('answerText: nothing answered reads as such', P.answerText(cmd, null) === 
 check('emptyAnswer: the per-kind empty shape', JSON.stringify(P.emptyAnswer(order)) === '[]' && JSON.stringify(P.emptyAnswer(match)) === '[null,null]' && JSON.stringify(P.emptyAnswer(form)) === '{}' && P.emptyAnswer(cmd) === '' && P.emptyAnswer(choice) === null);
 check('KINDS lists the six kinds', JSON.stringify(P.KINDS) === JSON.stringify(['order', 'match', 'multiselect', 'form', 'command', 'choice']));
 
+// ----- expect well-formedness (the guard the pack self-test throws on; engine/app.js calls this at boot) -----
+// Every clause names its task, so the self-test's message reads "pbq <id> task <id> ...".
+const prob = t => P.expectProblems(t).join('; ');
+const bend = (t, over) => Object.assign({}, t, over);
+check('expectProblems: every well-formed task above passes', [order, match, multi, form, cmd, cmd2, cmd3, choice].every(t => P.expectProblems(t).length === 0), prob(order) + prob(match) + prob(form));
+check('expectProblems: an order expect that repeats an index is named with its task', /^task o .*repeats/.test(prob(bend(order, { expect: [0, 1, 2, 2] }))), prob(bend(order, { expect: [0, 1, 2, 2] })));
+check('expectProblems: an order expect that is not a full permutation is rejected', prob(bend(order, { expect: [0, 1] })).includes('task o') && prob(bend(order, { expect: [0, 4, 1, 2] })).includes('outside its 4 items'));
+check('expectProblems: a match expect index outside the right array is rejected', prob(bend(match, { expect: [0, 5] })).includes('task m') && prob(bend(match, { expect: [0, 5] })).includes('right slots'), prob(bend(match, { expect: [0, 5] })));
+check('expectProblems: a match expect must have one entry per left item, and no null', prob(bend(match, { expect: [0] })).includes('task m') && prob(bend(match, { expect: [0, null] })).includes('task m'), prob(bend(match, { expect: [0, null] })));
+check('expectProblems: a multiselect with no expected pick, or one out of range, is rejected', prob(bend(multi, { expect: [] })).includes('task s') && prob(bend(multi, { expect: [1, 9] })).includes('outside its 5 options') && prob(bend(multi, { expect: [1, 1] })).includes('task s'));
+check('expectProblems: a form with no fields, a field with no id, or a field with no expect is rejected', prob(bend(form, { fields: [] })).includes('task f') && prob(bend(form, { fields: [{ label: 'x', expect: ['y'], normalize: 'text' }] })).includes('no id') && prob(bend(form, { fields: [{ id: 'ip', label: 'x', expect: [], normalize: 'ip' }] })).includes('field ip'));
+check('expectProblems: a form field with an unknown normalize is rejected', prob(bend(form, { fields: [{ id: 'mask', label: 'Mask', expect: ['/26'], normalize: 'netmask' }] })).includes('netmask'), prob(bend(form, { fields: [{ id: 'mask', label: 'Mask', expect: ['/26'], normalize: 'netmask' }] })));
+check('expectProblems: a command with no accepted string, or a bad alt, is rejected', prob(bend(cmd, { expect: [] })).includes('task c') && prob(bend(cmd, { expect: ['ipconfig /all'], alt: 'ipconfig -all' })).includes('alt'));
+check('expectProblems: a choice expect outside the options is rejected', prob(bend(choice, { expect: 9 })).includes('task p') && prob(bend(choice, { expect: null })).includes('task p'), prob(bend(choice, { expect: 9 })));
+
 // ----- rendering: drag, tap, and keyboard give the same answer; collect maps display order back to pack indexes -----
 {
   const w2 = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' }).window;
