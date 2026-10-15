@@ -350,13 +350,20 @@ ${ctaCard(m, null)}`;
 
 const FORWARDER = `<script>if(location.hash&&/^#[a-z]/.test(location.hash))location.replace(location.pathname.replace(/(index\\.html)?\\/?$/,'/')+'app/'+location.search+location.hash)</script>`;
 
+function examFaq(m) {
+  const c = m.c; const ex = c.exam || {};
+  const out = [];
+  out.push({ q: `What is on the ${examName(c) || c.name} exam?`, a: `${(c.domains || []).map(d => `${d.name} (${d.pct}%)`).join(', ')}. The course's units follow the same domains, and the practice tests draw on the same domain weights.` });
+  if (ex.fee) out.push({ q: `How much does the ${examName(c) || c.name} exam cost?`, a: `${ex.fee}. The fee goes to the certifying body; this course is free.` });
+  return out;
+}
+
 function defaultFaq(m) {
   const c = m.c; const ex = c.exam || {}; const t = c.test || {};
   const out = [];
   if (ex.questions && ex.minutes) out.push({ q: `How many questions are on the ${examName(c)} exam?`, a: `${ex.questions} questions in ${ex.minutes} minutes.${c.realExamNote ? ' ' + c.realExamNote : ''}` });
   if (t.passesNeeded && t.passWindow && t.passPct) out.push({ q: 'How does the course decide I am ready?', a: `${t.passesNeeded} of your last ${t.passWindow} practice tests at ${t.passPct}% or better, then one full-length test in the real exam's format at its passing score.` });
-  out.push({ q: `What is on the ${examName(c) || c.name} exam?`, a: `${(c.domains || []).map(d => `${d.name} (${d.pct}%)`).join(', ')}. The course's units follow the same domains, and every practice test is weighted the same way.` });
-  if (ex.fee) out.push({ q: `How much does the ${examName(c) || c.name} exam cost?`, a: `${ex.fee}. The fee goes to the certifying body; this course is free.` });
+  out.push(...examFaq(m));
   out.push({ q: 'Is the course free?', a: 'Yes. Every lesson, the cheat sheet, and unlimited practice tests are free while the site launches.' });
   out.push({ q: 'Can I read the lessons without signing in?', a: `The first ${m.freeLessons.length} lessons and the cheat sheet are open on this site; the full course runs in the app.` });
   return out;
@@ -368,7 +375,8 @@ function landingPage(m, R, origin, guides, siblings) {
   const h1 = seo.h1 || `${c.name}: ${examName(c) || c.name} study guide and practice tests`;
   const title = seo.title || `${h1} | ${BRAND}`;
   const intro = seo.intro || c.description;
-  const faq = Array.isArray(seo.faq) && seo.faq.length ? seo.faq : defaultFaq(m);
+  const baseFaq = Array.isArray(seo.faq) && seo.faq.length ? seo.faq : defaultFaq(m);
+  const faq = baseFaq.concat(examFaq(m).filter(e => !baseFaq.some(b => b.q === e.q || (/cost/i.test(e.q) && /cost/i.test(b.q)))));
   const description = shorten(intro, DESC_MAX);
   const totalMin = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
   const labs = m.lessons.filter(l => l.lab);
