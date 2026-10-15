@@ -111,6 +111,20 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
       w.click(w.$('[data-act="submit"]'));
     });
   }
+  // The same gate for a window booted on another course pack: finishStarter reads the Net+ state
+  // key through state(w), so a mini-fixture window needs its own key.
+  function finishStarterIn(w) {
+    const MK = 'fra.mini.state.v3'; const st = () => JSON.parse(w.localStorage.getItem(MK));
+    w.click(w.$('[data-act="go"][data-arg="home"]'));
+    w.click(w.$('[data-act="start-exam"][data-arg="starter"]'));
+    const QQ = {}; w.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    const fatten = x => typeof x === 'string' ? QQ[x] : x;
+    st().active.items.map(fatten).forEach(q => {
+      w.click(w.$(`[data-act="opt"][data-arg="${q.c}"]`));
+      w.click(w.$('[data-act="conf"][data-arg="5"]'));
+      w.click(w.$('[data-act="submit"]'));
+    });
+  }
 
   // 1) Saving the custom test setup (readSetupFromForm, via the "Start custom test" button).
   {
@@ -933,6 +947,129 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('the no-kit window is on Home', !!w.$('.stats'));
     check('a manifest without a kit shows no kit card', !w.$('.kit-card'));
     w.close();
+  }
+
+  // ----- PBQs tab and view -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const wn = boot({ courseDir: dir });
+    check('no PBQs tab on a course without PBQs', !wn.$('[data-act="nav"][data-arg="pbq"]'));
+    const wp = boot({ courseDir: mini, hash: '#pbq' }); const MK = 'fra.mini.state.v3'; const stateM = () => JSON.parse(wp.localStorage.getItem(MK));
+    check('a course with PBQs shows the PBQs tab', !!wp.$('[data-act="nav"][data-arg="pbq"]'));
+    check('#pbq lists the PBQ with its domain and title', /Bring the new printer online/.test(wp.text()) && /Alpha/.test(wp.text()));
+    act(wp, 'pbq-open', 'mini-net');
+    check('opening a PBQ shows the scenario, the log, and six task cards', /VLAN 10 on the 192.168.10.0\/26/.test(wp.text()) && !!wp.$('pre.pbq-log') && wp.$$('.pbq-task').length === 6 && wp.location.hash === '#pbq/mini-net');
+    // Answer the typed and tapped kinds right, leave order and match alone, then Check.
+    wp.$('.pbq-task[data-task="cfg"] input[data-field="ip"]').value = '192.168.10.10'; wp.$('.pbq-task[data-task="cfg"] input[data-field="mask"]').value = '/26';
+    wp.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
+    wp.click(wp.$('.pbq-task[data-task="lines"] [data-pbq="ms-opt"][data-index="0"]'));
+    wp.click(wp.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
+    const attemptsBefore = (stateM().topics.u1l2 || { attempts: 0 }).attempts;
+    act(wp, 'pbq-check', 'mini-net');
+    const ps = stateM().pbqs['mini-net'];
+    check('Check writes the PBQ state with per-task scores and a timestamp', ps && ps.at > 0 && ps.tasks.cfg === 1 && ps.tasks.cmd === 1 && ps.tasks.lines === 1 && ps.tasks.cable === 1 && typeof ps.tasks.steps === 'number');
+    check('Check writes state only: no lesson attempt is recorded for the PBQ\'s topic', stateM().topics.u1l2 === undefined || stateM().topics.u1l2.attempts === attemptsBefore);
+    check('Check writes state only: pbqs[id].at is still a real timestamp', typeof ps.at === 'number' && ps.at > 0);
+    check('Check shows a why for every task and the expected answer for a miss', wp.$$('.pbq-why').length === 6);
+    check('best score is the fraction of tasks fully right', Math.abs(ps.best - (Object.values(ps.tasks).filter(s => s === 1).length / 6)) < 0.001);
+    act(wp, 'pbq-retry', 'mini-net');
+    check('Retry clears the answers but keeps the best score', !wp.$('.pbq-why') && stateM().pbqs['mini-net'].best === ps.best && wp.$('.pbq-task[data-task="cmd"] input').value === '');
+    // Home shows the welcome page until the starter test is taken (PBQs are exempt from that gate, Home is not), so take it first.
+    wp.click(wp.$('[data-act="go"][data-arg="home"]')); wp.click(wp.$('[data-act="start-exam"][data-arg="starter"]'));
+    const QP = {}; wp.FRA.questions.forEach(q => { QP[q.id] = q; }); const fatP = x => typeof x === 'string' ? QP[x] : x;
+    stateM().active.items.map(fatP).forEach(q => { wp.click(wp.$(`[data-act="opt"][data-arg="${q.c}"]`)); wp.click(wp.$('[data-act="conf"][data-arg="5"]')); wp.click(wp.$('[data-act="submit"]')); });
+    act(wp, 'go', 'home');
+    check('Home shows PBQs done', /PBQs done/.test(wp.text()));
+  }
+
+  // ----- PBQs open the official-format test -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    const wo = boot({ courseDir: mini }); const stateM = () => JSON.parse(wo.localStorage.getItem(MK));
+    finishStarterIn(wo);
+    act(wo, 'start-exam', 'practice');
+    check('a practice test carries no PBQ', !stateM().active.items.some(x => x && x.pbq));
+    wo.confirm = () => true; act(wo, 'abandon-exam');
+    act(wo, 'start-standard');
+    const a = stateM().active;
+    check('the official-format test opens with pbqInTest PBQs', a.items.length > 0 && a.items[0].pbq === 'mini-net' && a.items.filter(x => x && x.pbq).length === 1);
+    check('PBQ tasks replace questions one for one: the item count plus task count minus one equals the exam count', (a.items.length - 1) + 6 === 10, a.items.length);
+    check('the exam view renders the PBQ tasks first', wo.$$('.pbq-task').length === 6 && /Submit this PBQ|Continue/.test(wo.text()));
+    check('the PBQ page counts questions, not items, in its submitted-so-far line', /0 of 10 submitted so far/.test(wo.text()));
+    // The scoring note must survive the phone: .kbd-hint is display:none below 700px, so the only
+    // sentence saying a task counts as a question has to live outside it.
+    const scoreNote = /each one scored as a question/;
+    check('the PBQ test item says each task is scored as a question', scoreNote.test(wo.text()));
+    check('the per-task scoring note is not inside a .kbd-hint, which phones hide', !scoreNote.test(wo.$$('.kbd-hint').map(el => el.textContent).join(' ')), wo.$$('.kbd-hint').map(el => el.textContent).join(' | '));
+    // answer two tasks right, four wrong-or-blank, submit the PBQ
+    wo.$('.pbq-task[data-task="cmd"] input').value = 'ipconfig /all';
+    wo.click(wo.$('.pbq-task[data-task="cable"] [data-pbq="choice"][data-index="0"]'));
+    act(wo, 'submit');
+    check('submitting the PBQ records the task answers and moves on', stateM().active.i === 1 && stateM().active.answers[0] && stateM().active.answers[0].pbq === 'mini-net' && stateM().active.answers[0].answers.cmd === 'ipconfig /all');
+    // Six tasks done out of ten questions: the counter and the meter count questions, not items.
+    check('the in-test counter counts questions: six tasks done reads question 7 of 10', /Question 7 of 10/.test(wo.text()));
+    check('the in-test meter counts questions: six of ten is 60%', wo.$('.exam-head .meter i').style.width === '60%', wo.$('.exam-head .meter i').style.width);
+    check('the in-test footer counts questions answered', /6 answered so far/.test(wo.text()));
+    // answer the remaining multiple-choice questions correctly
+    const QQ = {}; wo.FRA.questions.forEach(q => { QQ[q.id] = q; });
+    while (stateM().active) { const s = stateM().active; const it = s.items[s.i]; if (!it) break; const q = typeof it === 'string' ? QQ[it] : it; wo.click(wo.$(`[data-act="opt"][data-arg="${q.c}"]`)); act(wo, 'submit'); }
+    const e = stateM().exams[stateM().exams.length - 1];
+    check('the record counts PBQ tasks as questions', e.total === 10 && e.score >= 2 && e.review.length === 10);
+    check('PBQ task review items carry the task as an inline question tied to the PBQ lesson', e.review.slice(0, 6).every(r => r.q && r.q.pbq === 'mini-net' && r.q.t === 'u1l2'));
+    check('the results page explains missed tasks with Expected and Why', /Your answer/.test(wo.text()) && /Correct answer/.test(wo.text()) && /Why:/.test(wo.text()) && /notconnect is the only line/.test(wo.text()));
+    check('missed PBQ tasks feed retraining for the PBQ lesson', !stateM().plan || stateM().plan.lessons.some(l => l.id === 'u1l2') || e.score === 10);
+    // A second official-format test in the same page session is a new attempt: the last attempt's
+    // answers are not the learner's answers to this one, so every task opens empty.
+    act(wo, 'start-standard');
+    check('a second official-format test opens with nothing typed in the PBQ', wo.$('.pbq-task[data-task="cmd"] input').value === '' && wo.$('.pbq-task[data-task="cfg"] input[data-field="ip"]').value === '', wo.$('.pbq-task[data-task="cmd"] input').value);
+    check('a second official-format test opens with nothing selected in the PBQ', wo.$$('.pbq-task [aria-pressed="true"]').length === 0, wo.$$('.pbq-task [aria-pressed="true"]').length);
+    act(wo, 'submit');
+    const a2 = stateM().active.answers[0].answers;
+    check('a second official-format test banks the empty answer shape for every task', JSON.stringify(a2.steps) === '[]' && JSON.stringify(a2.pairs) === '[null,null]' && JSON.stringify(a2.lines) === '[]' && a2.cmd === '' && a2.cfg.ip === '' && a2.cfg.mask === '' && a2.cable == null, JSON.stringify(a2));
+  }
+
+  // ----- the PBQ draw spreads across the pool and avoids the last attempt -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    // Three small PBQs, one per domain, on a four-question exam, so twelve official-format tests run
+    // quickly. pbqInTest is 1, so every test draws one of the three and two are always unused.
+    const threePbqs = w => {
+      w.FRA.pbqs = {};
+      [1, 2, 3].forEach(d => {
+        const tasks = ['a', 'b', 'c'].map(k => ({ id: k, kind: 'choice', prompt: 'Pick one', options: ['right', 'wrong'], expect: 0 }));
+        w.FRA.pbqs['p' + d] = { id: 'p' + d, title: 'PBQ ' + d, domain: d, lesson: 'u1l2', scenario: { text: 'Scenario ' + d }, tasks, why: { a: 'Because.', b: 'Because.', c: 'Because.' } };
+      });
+      w.FRA.course.test.questions = 4;
+    };
+    const wd = boot({ courseDir: mini, beforeApp: threePbqs }); const stateD = () => JSON.parse(wd.localStorage.getItem(MK));
+    finishStarterIn(wd);
+    const drawn = [];
+    for (let k = 0; k < 12; k++) {
+      act(wd, 'start-standard');
+      drawn.push(stateD().active.items.filter(x => x && x.pbq).map(x => x.pbq).join(','));
+      act(wd, 'submit'); // the PBQ, left unanswered
+      while (stateD().active) { wd.click(wd.$('[data-act="opt"][data-arg="0"]')); act(wd, 'submit'); }
+    }
+    check('twelve official-format tests do not all draw the same PBQ', new Set(drawn).size > 1, drawn.join(' '));
+    check('no official-format test redraws the PBQ the last one used while an unused one exists', drawn.every((id, i) => i === 0 || id !== drawn[i - 1]), drawn.join(' '));
+  }
+
+  // ----- the draw is clamped to the exam's question count -----
+  {
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini'); const MK = 'fra.mini.state.v3';
+    // Two six-task PBQs with pbqInTest 2 would be twelve tasks on a ten-question exam.
+    const twoBigPbqs = w => {
+      const src = w.FRA.pbqs['mini-net'];
+      w.FRA.pbqs = { 'big-a': Object.assign({}, src, { id: 'big-a', domain: 1 }), 'big-b': Object.assign({}, src, { id: 'big-b', domain: 2 }) };
+      w.FRA.course.test.pbqInTest = 2;
+    };
+    const wc = boot({ courseDir: mini, beforeApp: twoBigPbqs }); const stateC = () => JSON.parse(wc.localStorage.getItem(MK));
+    finishStarterIn(wc);
+    act(wc, 'start-standard');
+    const ic = stateC().active.items;
+    const qs = ic.reduce((a, x) => a + (x && x.pbq ? wc.FRA.pbqs[x.pbq].tasks.length : 1), 0);
+    check('a PBQ whose tasks would not fit the exam count is dropped from the draw', qs === 10, qs + ' questions from ' + ic.length + ' items');
+    check('the clamped draw keeps the exam question count in the session setup', stateC().active.setup.count === 10 && ic.filter(x => x && x.pbq).length === 1, stateC().active.setup.count);
   }
 
   if (fails.length) { console.error(`engine: ${fails.length} failed`); process.exit(1); }

@@ -685,6 +685,17 @@ if (box2) {
   check('certAt is 0 when neither side has it', M.mergeState(none, none, OPTS).certAt === 0);
 }
 
+// ----- pbqs merge by newer at -----
+{
+  const a = { v: 3, course: 'mini', exams: [], pbqs: { p1: { best: 0.5, done: false, at: 10, tasks: { t: 0.5 } }, p2: { best: 1, done: true, at: 50, tasks: { t: 1 } } } };
+  const b = { v: 3, course: 'mini', exams: [], pbqs: { p1: { best: 1, done: true, at: 20, tasks: { t: 1 } }, p3: { best: 0, done: false, at: 5, tasks: {} } } };
+  const m = M.mergeState(a, b, { passPct: 80, passesNeeded: 3, passWindow: 5, officialPct: 70 });
+  check('pbqs: the newer entry wins whole', m.pbqs.p1.at === 20 && m.pbqs.p1.done === true && m.pbqs.p1.best === 1);
+  check('pbqs: entries on one side pass through', m.pbqs.p2.at === 50 && m.pbqs.p3.at === 5);
+  const m2 = M.mergeState({ v: 3, course: 'mini', exams: [] }, { v: 3, course: 'mini', exams: [] }, { passPct: 80, passesNeeded: 3, passWindow: 5, officialPct: 70 });
+  check('pbqs: always present after a merge, empty when neither side had it', m2.pbqs && typeof m2.pbqs === 'object' && Object.keys(m2.pbqs).length === 0);
+}
+
 if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
 console.log('\nAll merge tests passed.');
 // Explicit exit: the round-trip block boots the real engine, whose save() now schedules a

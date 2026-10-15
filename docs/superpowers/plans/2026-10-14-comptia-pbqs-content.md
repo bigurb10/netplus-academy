@@ -12,6 +12,8 @@ Spec: `docs/superpowers/specs/2026-10-14-comptia-pbqs-design.md` (section 4 list
 
 ## Global Constraints
 
+- A `multiselect` task whose options are log lines, configuration lines, or command output carries `shuffle: false` (the engine then keeps the options in pack order); every other task leaves `shuffle` unset (added 2026-10-14 after the engine's Task 4 review).
+
 - Data shape (verbatim from the engine plan): `FRA.pbqs["<id>"] = { id, title, domain, lesson, seo, scenario: { text, svg?, log? }, tasks: [...], why: { taskId: "..." } }`; three to six tasks per PBQ; every task id has a `why`; `expect` indexes refer to the arrays as written. Kinds and answer shapes: `order` (`items`, `expect` = correct index sequence), `match` (`left`, `right`, `expect[i]` = right index for left i; `right` may carry distractor slots), `multiselect` (`options`, `expect` = correct indexes), `form` (`fields: [{ id, label, expect: [accepted...], normalize: "ip" | "cidr" | "text" | "number" }]`), `command` (`expect: [...]`, optional `alt: [...]`, optional `flagOrder: false`), `choice` (`options`, `expect` index).
 - Exactly three PBQs per course carry `seo: true` (the self-test enforces it). The three are the broadest and least spoilable; the plan marks them.
 - Every PBQ names its `domain` (the course's domain id) and its `lesson` (an existing lesson id from the lists below); the self-test rejects unknown ids.

@@ -101,7 +101,10 @@
       ratings: mergeBy(a.ratings, b.ratings, (x, y) => laterOf(x, y, 'ts')),
       // Lab progress: the newer entry per lab wins whole, so a Redo on one device (done: false,
       // newer at) is not undone by an older done: true from the other.
-      labs: mergeBy(a.labs, b.labs, (x, y) => laterOf(x, y, 'at'))
+      labs: mergeBy(a.labs, b.labs, (x, y) => laterOf(x, y, 'at')),
+      // PBQ progress, the same rule for the same reason: the newer entry per PBQ wins whole, so a
+      // Retry on one device (a lower best, newer at) is not undone by an older done: true.
+      pbqs: mergeBy(a.pbqs, b.pbqs, (x, y) => laterOf(x, y, 'at'))
     };
   }
 
@@ -167,7 +170,7 @@
       v: 3,
       course: a.course || b.course || null,
       lessons: maps.lessons, topics: maps.topics, qstats: maps.qstats,
-      seen: maps.seen, ratings: maps.ratings, labs: maps.labs,
+      seen: maps.seen, ratings: maps.ratings, labs: maps.labs, pbqs: maps.pbqs,
       exams: exams,
       feedback: feedback,
       passes: q.passes,

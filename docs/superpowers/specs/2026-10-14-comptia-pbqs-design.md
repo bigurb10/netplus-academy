@@ -52,7 +52,9 @@ the arrays as written (the engine shuffles items, right-hand slots, and options 
 maps back). `match` may have more right-hand slots than left items (distractors). `form` fields
 carry `expect` (accepted values) and a `normalize` of `ip`, `cidr`, `text`, or `number`.
 `command` carries `expect` and optional `alt`; grading lowercases, collapses spaces, strips a
-trailing period, and, when `flagOrder` is false, treats flags in any order as equal.
+trailing period, and, when `flagOrder` is false, treats flags in any order as equal. A `multiselect` task may carry `shuffle: false` to keep its options in pack order (log,
+configuration, or command-output lines whose order carries meaning); every other task shuffles
+for display (added 2026-10-14 after the Task 4 review). The pack self-test validates every `expect`: an `order` expect is a permutation of its items, a `match` expect pairs every left item with a distinct right slot (no `null`, no shared slot), a `multiselect` expect is a non-empty set of option indexes, a `form` field has a non-empty expect list and one of the four normalizers, a `command` expect is a non-empty list of strings, a `choice` expect is an option index (added 2026-10-15 after the final review).
 
 ### Grading
 
@@ -71,7 +73,8 @@ its lesson link, Retry keeps the scenario and clears answers. Drag-and-drop on p
 tap an item then tap a slot on touch; arrow keys and Enter on keyboards; the three give the same
 result. State: `S.pbqs[id] = { best, done, at, tasks: { taskId: score } }`, written on Check,
 merged across devices by newer `at` (the additive-field pattern: `engine/sync.js` `hashOf` strips
-an empty `pbqs`). The account page shows "PBQs done" per course beside "Labs done".
+an empty `pbqs`). Check writes `S.pbqs` only and records no lesson attempts, the same as a lab's Check;
+task results move readiness through the official-format test (added 2026-10-14). The account page shows "PBQs done" per course beside "Labs done".
 
 ### In the official-format test
 

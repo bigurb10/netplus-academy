@@ -61,6 +61,15 @@ function run(opts) {
 }
 const settle = () => new Promise(r => setTimeout(r, 30));
 
+// One course's card HTML, for checks about a single fact. The page exports its own card()
+// renderer, so this needs no server rows: boot the page once, then render any course and
+// state pair through the markup the page itself would produce.
+let cardW = null;
+function renderCard(course, state) {
+  if (!cardW) cardW = run({ fetch: [['/v1/progress', res(200, [])]] }).w;
+  return cardW.FRA_ACCOUNT.card({ course: course, row: { updated_at: new Date().toISOString() }, state: state });
+}
+
 (async () => {
   // 1) Signed out.
   {
@@ -152,6 +161,10 @@ const settle = () => new Promise(r => setTimeout(r, 30));
     check('the weakest line links the topic into the app', !!card.querySelector('.weakest a[href="/netplus/app/#lesson/u1l2"]') && /OSI Model/.test(card.querySelector('.weakest').textContent), card.querySelector('.weakest') && card.querySelector('.weakest').textContent);
     check('courses without data show no chart', w.$$('.card').slice(1).every(c => !c.querySelector('.sbars') && !c.querySelector('.weakest')));
   }
+
+  // 7) The PBQs fact rides on the course having PBQs at all, the way the labs fact does.
+  check('account card shows PBQs done when the course has PBQs', renderCard({ id: 'x', name: 'X', exam: 'X', lessons: 10, labs: 0, pbqs: 10, examQuestions: 50, passPct: 80, passesNeeded: 3, passWindow: 5, checkpointN: 4, domains: [], lessonList: [] }, { pbqs: { a: { done: true, at: 1 } } }).includes('PBQs done'));
+  check('account card hides PBQs done when the course has none', !renderCard({ id: 'x', name: 'X', exam: 'X', lessons: 10, labs: 0, pbqs: 0, examQuestions: 50, passPct: 80, passesNeeded: 3, passWindow: 5, checkpointN: 4, domains: [], lessonList: [] }, {}).includes('PBQs done'));
 
   if (fails.length) { console.error(`\n${fails.length} FAILED: ${fails.join(', ')}`); process.exit(1); }
   console.log('All account tests passed.');
