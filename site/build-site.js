@@ -102,13 +102,38 @@ const slug = l => `${l.id}-${slugify(l.title)}`;
 // Flashcards come from data the pack already has: the acronym glossary (front: the key, back: what it
 // stands for and the tip) and every two-column cheat-sheet table (front: first column, back: second).
 // Wider tables are not cards, and a first cell over 80 characters is a sentence, not a prompt.
+// A key with a second meaning (`alt`) carries both on its back. When two tables in one section would
+// give two cards the same front, every card from those tables gets its table's second column header
+// in parentheses ("System (Purpose)"), or its first column header where the two tables share the
+// second, so each front in a deck is unique and still reads naturally. "Got it" marks are keyed by
+// front and back together, so a duplicate row inside one table still marks only itself.
+//
+// clashingTables: the indexes of the tables (lists of cards) that share a front with another table.
+function clashingTables(tables) {
+  const seen = {};
+  tables.forEach((cards, ti) => new Set(cards.map(x => x.front)).forEach(f => { (seen[f] = seen[f] || []).push(ti); }));
+  const out = new Set();
+  Object.keys(seen).forEach(f => { if (seen[f].length > 1) seen[f].forEach(ti => out.add(ti)); });
+  return out;
+}
 function flashcardDecks(m) {
   const decks = [];
-  const acr = Object.keys(m.acronyms || {}).sort().map(k => ({ front: k, back: [m.acronyms[k].full, m.acronyms[k].tip].filter(Boolean).join('. ').replace(/\.\./g, '.') }));
+  const meaning = a => [String((a && a.full) || '').replace(/\.$/, ''), a && a.tip].filter(Boolean).join('. ');
+  const stop = s => (!s || /[.!?]$/.test(s)) ? s : s + '.';
+  const acrBack = a => a.alt ? [stop(meaning(a)), 'Also: ' + meaning(a.alt)].filter(Boolean).join(' ') : meaning(a);
+  const byKey = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()) || a.localeCompare(b);
+  const acr = Object.keys(m.acronyms || {}).sort(byKey).map(k => ({ front: k, back: acrBack(m.acronyms[k]) }));
   if (acr.length) decks.push({ slug: 'acronyms', name: 'Acronyms', cards: acr });
   ((m.cheatsheet && m.cheatsheet.sections) || []).forEach(s => {
-    const cards = (s.blocks || []).filter(b => b.type === 'table' && Array.isArray(b.cols) && b.cols.length === 2)
-      .flatMap(b => (b.rows || []).filter(r => String(r[0]).length <= 80).map(r => ({ front: String(r[0]), back: String(r[1]) })));
+    const tables = (s.blocks || []).filter(b => b.type === 'table' && Array.isArray(b.cols) && b.cols.length === 2)
+      .map(b => ({ cols: b.cols.map(String), cards: (b.rows || []).filter(r => String(r[0]).length <= 80).map(r => ({ front: String(r[0]), back: String(r[1]) })) }));
+    const label = (t, col) => t.cards.map(x => ({ front: `${x.front} (${t.cols[col]})`, back: x.back }));
+    // The second column header first; where the clashing tables share that header too, the first.
+    const first = clashingTables(tables.map(t => t.cards));
+    let byTable = tables.map((t, ti) => first.has(ti) ? label(t, 1) : t.cards);
+    const still = clashingTables(byTable);
+    if (still.size) byTable = byTable.map((cards, ti) => still.has(ti) ? label(tables[ti], 0) : cards);
+    const cards = byTable.flat();
     if (cards.length) decks.push({ slug: s.id, name: s.title, cards });
   });
   return { decks, total: decks.reduce((n, d) => n + d.cards.length, 0) };
@@ -588,18 +613,20 @@ function pbqPage(m, R, origin) {
 function flashcardsPage(m, R, origin) {
   const c = m.c; const decks = m.flashcards.decks; const total = m.flashcards.total;
   const h1 = `${examName(c) || c.name} Flashcards: ${total} cards`;
-  const description = shorten(`Free ${examName(c) || c.name} flashcards: ${decks.map(d => `${d.cards.length} ${d.name.toLowerCase()}`).join(', ')}. Flip, shuffle, and mark the ones you know.`, DESC_MAX);
+  const exam = (c.exam && c.exam.title) || examName(c) || c.name;
+  const counts = decks.map(d => `${d.cards.length} ${d.name}`).join(', ');
+  const description = shorten(`Free ${examName(c) || c.name} flashcards: ${counts}. Flip, shuffle, and mark the ones you know.`, DESC_MAX);
   const crumbList = [{ name: 'Courses', href: '/' }, { name: c.name, href: m.urls.landing }, { name: 'Flashcards', href: m.urls.flashcards }];
   const deckHtml = decks.map(d => `<section class="deck" data-deck="${esc(d.slug)}"><h2>${esc(d.name)} <span class="muted">${d.cards.length}</span></h2><dl>${d.cards.map(x => `<div class="fc"><dt>${esc(x.front)}</dt><dd>${esc(x.back)}</dd></div>`).join('')}</dl></section>`).join('');
   const faq = [
-    { q: `How many ${examName(c) || c.name} flashcards are there?`, a: `${total}: ${decks.map(d => `${d.cards.length} on ${d.name.toLowerCase()}`).join(', ')}. They come from the course's cheat sheet and glossary, so what you drill is what the lessons teach.` },
+    { q: `How many ${examName(c) || c.name} flashcards are there?`, a: `${total}: ${counts}. They come from the course's cheat sheet and glossary, so what you drill is what the lessons teach.` },
     { q: 'Do I need an account?', a: 'No. The cards you mark as known are remembered in this browser only. Sign in to the course for progress that follows you between devices.' }
   ];
   const body = `${crumbs(crumbList)}
 <article class="lesson flashcards">
   <div class="eyebrow">${esc(examName(c) || c.name)}</div>
   <h1>${esc(h1)}</h1>
-  <p class="lede ink2">Tap a card to flip it. Mark the ones you know and they drop out of the deck; the rest keep coming back. ${total} cards from the course's cheat sheet and glossary.</p>
+  <p class="lede ink2">${total} free ${esc(exam)} flashcards from the course's cheat sheet and glossary. Tap a card to flip it. Mark the ones you know and they drop out of the deck; the rest keep coming back.</p>
   <div class="card fc-viewer" id="fc-viewer" hidden>
     <div class="row spread" style="flex-wrap:wrap;gap:8px"><label class="muted">Deck <select id="fc-deck">${decks.map(d => `<option value="${esc(d.slug)}">${esc(d.name)} (${d.cards.length})</option>`).join('')}</select></label><span class="muted" id="fc-count"></span></div>
     <button class="fc-card" id="fc-card" type="button" aria-live="polite"><span class="fc-face" id="fc-front"></span><span class="fc-face fc-back" id="fc-back" hidden></span></button>
@@ -619,12 +646,15 @@ function flashcardsPage(m, R, origin) {
 (function(){
   var KEY='fra.${c.id}.flashcards';
   var decks={};document.querySelectorAll('section.deck').forEach(function(s){decks[s.dataset.deck]=Array.prototype.map.call(s.querySelectorAll('.fc'),function(x){return {f:x.querySelector('dt').textContent,b:x.querySelector('dd').textContent};});});
-  var known={};try{known=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){known={};}
+  function isMap(x){return !!x&&typeof x==='object'&&!Array.isArray(x);}
+  var known={};try{known=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){known={};}
+  if(!isMap(known)||!Object.keys(known).every(function(d){return isMap(known[d]);}))known={};
   function store(){try{localStorage.setItem(KEY,JSON.stringify(known));}catch(e){}}
+  function id(c){return c.f+' = '+c.b;}
   var v=document.getElementById('fc-viewer'),sel=document.getElementById('fc-deck'),card=document.getElementById('fc-card'),front=document.getElementById('fc-front'),back=document.getElementById('fc-back'),count=document.getElementById('fc-count');
   if(!v||!sel||!Object.keys(decks).length)return;
   var deck=sel.value,order=[],i=0,flipped=false;
-  function pool(){var k=known[deck]||{};return decks[deck].map(function(c,n){return n;}).filter(function(n){return !k[n];});}
+  function pool(){var k=known[deck]||{};return decks[deck].map(function(c,n){return n;}).filter(function(n){return !k[id(decks[deck][n])];});}
   function load(){order=pool();i=0;flipped=false;show();}
   function show(){var all=decks[deck].length;if(!order.length){front.textContent='Every card in this deck is marked known. Reset to start over.';back.hidden=true;front.hidden=false;count.textContent=all+' of '+all+' known';return;}
     if(i>=order.length)i=0;if(i<0)i=order.length-1;var c=decks[deck][order[i]];front.textContent=c.f;back.textContent=c.b;front.hidden=flipped;back.hidden=!flipped;count.textContent=(i+1)+' of '+order.length+' left, '+(all-order.length)+' known';}
@@ -635,10 +665,11 @@ function flashcardsPage(m, R, origin) {
   document.getElementById('fc-prev').addEventListener('click',function(){move(-1);});
   document.getElementById('fc-next').addEventListener('click',function(){move(1);});
   document.getElementById('fc-shuffle').addEventListener('click',function(){for(var a=order.length-1;a>0;a--){var b=Math.floor(Math.random()*(a+1));var t=order[a];order[a]=order[b];order[b]=t;}i=0;flipped=false;show();});
-  document.getElementById('fc-know').addEventListener('click',function(){if(!order.length)return;known[deck]=known[deck]||{};known[deck][order[i]]=1;store();order.splice(i,1);flipped=false;show();});
+  document.getElementById('fc-know').addEventListener('click',function(){if(!order.length)return;known[deck]=known[deck]||{};known[deck][id(decks[deck][order[i]])]=1;store();order.splice(i,1);flipped=false;show();});
   document.getElementById('fc-again').addEventListener('click',function(){move(1);});
   document.getElementById('fc-reset').addEventListener('click',function(){delete known[deck];store();load();});
-  document.addEventListener('keydown',function(e){var t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA'||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key===' '){if(t==='BUTTON')return;e.preventDefault();flip();}else if(e.key==='ArrowRight'){move(1);}else if(e.key==='ArrowLeft'){move(-1);}});
+  // Space on the card button flips through its own click; otherwise only from the page body, while the viewer is on screen.
+  document.addEventListener('keydown',function(e){var t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA'||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key===' '){if(e.target!==v&&e.target!==document.body&&e.target!==document.documentElement)return;var r=v.getBoundingClientRect();if(r.bottom<0||r.top>window.innerHeight)return;e.preventDefault();flip();}else if(e.key==='ArrowRight'){move(1);}else if(e.key==='ArrowLeft'){move(-1);}});
   v.hidden=false;load();
 })();
 </script>`;

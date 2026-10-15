@@ -146,6 +146,8 @@ main section h3 { font-size: 1.05rem; margin: 22px 0 4px; }
 .deck dt { font-weight: 600; margin: 0 0 4px; }
 .deck dd { margin: 0; color: var(--ink-2, #b8bec9); font-size: .95rem; }
 .fc-viewer:not([hidden]) { display: flex; flex-direction: column; gap: 12px; }
+/* catalog.css gives .card display:flex, which beats the hidden attribute; keep the viewer out until its script runs. */
+.fc-viewer[hidden] { display: none; }
 .fc-card { display: block; width: 100%; min-height: 180px; border: 1px solid var(--line, #2a2f3a); border-radius: 12px; background: var(--surface-2, rgba(255,255,255,.03)); color: inherit; font: inherit; font-size: 1.15rem; line-height: 1.4; padding: 24px; text-align: center; cursor: pointer; }
 .fc-card .fc-back { font-size: 1rem; }
 .fc-viewer select { background: var(--surface-2, #1b2230); color: var(--ink, #e8ebf0); border: 1px solid var(--line, #2a2f3a); border-radius: 6px; padding: 4px 8px; font: inherit; }
