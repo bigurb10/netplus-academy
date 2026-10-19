@@ -186,7 +186,7 @@ window.FRA = window.FRA || {};
 
   // ---------- Infusion arithmetic (u5l2) ----------
   function infusion() {
-    const kind = R(5);
+    const kind = R(4);
     if (kind === 0) {
       const vol = pick([250, 500, 1000]); const hrs = pick([2, 4, 5, 8, 10, 12, 24]); const rate = vol / hrs; const c = `${num(rate, 1)} mL/hr`;
       return build("u5l2", `An order calls for ${money(vol)} mL to infuse over ${hrs} hours. What rate should be programmed?`, c, wrong(c, [`${num(rate * 2, 1)} mL/hr`, `${num(rate / 2, 1)} mL/hr`, `${num(vol / (hrs * 60), 2)} mL/hr`, `${money(vol * hrs)} mL/hr`, `${num(rate * 10, 1)} mL/hr`]),
@@ -198,14 +198,12 @@ window.FRA = window.FRA || {};
         `Drops per minute = (mL/hr x drop factor) / 60 = (${rate} x ${df}) / 60 = ${gtt} gtt/min.`, "inf");
     }
     if (kind === 2) {
-      const dose = pick([0.05, 0.1, 0.2, 0.5, 1]); const kg = pick([50, 60, 70, 80, 90, 100]); const conc = pick([0.5, 1, 2, 4]); const mgHr = dose * kg; const rate = mgHr / conc; const c = `${num(rate)} mL/hr`;
-      return build("u5l2", `A ${kg} kg patient is ordered ${dose} mg/kg/hr of a drug supplied at ${conc} mg/mL. What pump rate delivers the order?`, c, wrong(c, [`${num(mgHr)} mL/hr`, `${num(mgHr * conc)} mL/hr`, `${num(rate * 10)} mL/hr`, `${num(rate / 10)} mL/hr`, `${num(dose * conc)} mL/hr`]),
-        `Dose per hour = ${dose} mg/kg/hr x ${kg} kg = ${num(mgHr)} mg/hr. Divide by the concentration: ${num(mgHr)} / ${conc} mg/mL = ${num(rate)} mL/hr.`, "inf");
-    }
-    if (kind === 3) {
-      const dose = pick([2, 5, 10]); const kg = pick([50, 60, 70, 80]); const conc = pick([1, 2, 4, 8]); const mcgMin = dose * kg; const mgHr = mcgMin * 60 / 1000; const rate = mgHr / conc; const c = `${num(rate)} mL/hr`;
-      return build("u5l2", `A ${kg} kg patient is ordered ${dose} mcg/kg/min of a drug supplied at ${conc} mg/mL. What pump rate delivers the order?`, c, wrong(c, [`${num(rate * 10)} mL/hr`, `${num(rate / 10)} mL/hr`, `${num(mcgMin / conc)} mL/hr`, `${num(mgHr)} mL/hr`, `${num(rate * 60)} mL/hr`]),
-        `${dose} mcg/kg/min x ${kg} kg = ${mcgMin} mcg/min. Times 60 is ${mcgMin * 60} mcg/hr = ${num(mgHr)} mg/hr. Divide by ${conc} mg/mL: ${num(rate)} mL/hr. Convert units before dividing.`, "inf");
+      const set = pick([50, 100, 200, 250]); const err = pick([-12, -8, -6, -4, -3, -2, 2, 3, 4, 6, 8, 12]); const meas = set * (100 + err) / 100; const pass = Math.abs(err) <= 5;
+      const lo = num(set * 0.95, 1), hi = num(set * 1.05, 1);
+      const verdict = (ok) => `${ok ? "Pass" : "Fail"}: the error is ${num(err, 1)} percent, ${ok ? "inside" : "outside"} the ${lo} to ${hi} mL/hr band`;
+      return build("u5l2", `An infusion pump set to ${set} mL/hr delivers ${num(meas, 1)} mL/hr on the infusion analyzer. The manufacturer allows plus or minus 5 percent. What is the result?`, verdict(pass),
+        [verdict(!pass), `Pass: the error is under 10 percent, the usual tolerance for a large-volume pump`, `Inconclusive: repeat the measurement on a patient infusion before deciding`],
+        `Percent error = (delivered - set) / set x 100 = (${num(meas, 1)} - ${set}) / ${set} x 100 = ${num(err, 1)} percent. Five percent of ${set} mL/hr is ${num(set * 0.05, 1)} mL/hr, so the band is ${lo} to ${hi} mL/hr. ${pass ? "Inside the band passes." : "Outside the band fails: repair, retest, and only then return the pump to service."}`, "inf");
     }
     const mg = pick([200, 400, 500, 800, 1000, 2000]); const mL = pick([100, 250, 500, 1000]); const conc = mg / mL; const c = `${num(conc)} mg/mL`;
     return build("u5l2", `A bag contains ${money(mg)} mg of drug in ${money(mL)} mL. What is the concentration?`, c, wrong(c, [`${num(mL / mg, 3)} mg/mL`, `${num(conc * 10)} mg/mL`, `${num(conc / 10, 3)} mg/mL`, `${money(mg)} mg/mL`, `${num(conc * 2)} mg/mL`]),
@@ -216,9 +214,11 @@ window.FRA = window.FRA || {};
   const VALARMS = [["a kinked endotracheal tube", "High pressure"], ["thick secretions blocking the airway", "High pressure"], ["the patient biting the tube", "High pressure"], ["water pooled in the circuit tubing", "High pressure"], ["bronchospasm", "High pressure"], ["the circuit disconnected at the wye", "Low pressure or low minute volume"], ["a leaking endotracheal tube cuff", "Low pressure or low minute volume"], ["a cracked humidifier chamber", "Low pressure or low minute volume"], ["no spontaneous breath detected for the set interval", "Apnea"], ["a depleted oxygen sensor reading wrong", "FiO2"]];
   function vent() {
     const kind = R(5);
-    if (kind === 0) { const perKg = pick([6, 7, 8]); const kg = pick([50, 55, 60, 65, 70, 75, 80]); const vt = perKg * kg; const c = `${money(vt)} mL`;
-      return build("u6l4", `A ventilator is set to deliver ${perKg} mL/kg of ideal body weight to a patient whose ideal body weight is ${kg} kg. What tidal volume should be set?`, c, wrong(c, [`${money(vt * 2)} mL`, `${money(Math.round(vt / 2))} mL`, `${money(kg * 10)} mL`, `${money(perKg * 100)} mL`, `${money(vt + 100)} mL`]),
-        `Tidal volume = ${perKg} mL/kg x ${kg} kg = ${money(vt)} mL. Lung-protective volumes are 6 to 8 mL per kilogram of ideal, not actual, body weight.`, "vent"); }
+    if (kind === 0) { const set = pick([400, 500, 600]); const err = pick([-15, -12, -8, -5, -3, 3, 5, 8, 12, 15]); const meas = set * (100 + err) / 100; const pass = Math.abs(err) <= 10;
+      const verdict = (ok) => `${ok ? "Pass" : "Fail"}: the error is ${num(err)} percent, ${ok ? "within" : "outside"} the 10 percent allowance`;
+      return build("u6l4", `A ventilator set to a ${set} mL tidal volume delivers ${money(meas)} mL into the test lung as measured by the gas flow analyzer. The specification is plus or minus 10 percent. What is the result?`, verdict(pass),
+        [verdict(!pass), `Pass: any delivered volume within 100 mL of the setting is acceptable`, `Fail: a ventilator must deliver exactly the set volume`],
+        `Percent error = (${money(meas)} - ${set}) / ${set} x 100 = ${num(err)} percent. Ten percent of ${set} mL is ${set / 10} mL, so the band is ${set - set / 10} to ${set + set / 10} mL. ${pass ? "The ventilator passes." : "Before condemning the exhalation valve, check the flow sensor calibration and the circuit compliance setting, then repair and retest."}`, "vent"); }
     if (kind === 1) { const vt = pick([400, 450, 500, 550, 600]); const rate = pick([10, 12, 14, 15, 16, 18, 20]); const mv = vt * rate / 1000; const c = `${num(mv, 1)} L/min`;
       return build("u6l4", `A ventilator delivers a tidal volume of ${vt} mL at ${rate} breaths per minute. What is the minute volume?`, c, wrong(c, [`${num(mv * 2, 1)} L/min`, `${num(mv / 2, 1)} L/min`, `${num(vt / rate, 1)} L/min`, `${num(vt * rate / 100, 1)} L/min`, `${num(mv * 10, 1)} L/min`]),
         `Minute volume = tidal volume x rate = ${vt} mL x ${rate} = ${money(vt * rate)} mL/min = ${num(mv, 1)} L/min.`, "vent"); }
