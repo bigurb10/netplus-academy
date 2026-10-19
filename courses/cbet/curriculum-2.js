@@ -121,7 +121,7 @@ Monitors derive respiratory rate by **impedance pneumography**: a small high-fre
 Normal is 37 C; hypothermia below about 35 C; fever above about 38 C.
 
 ## Reading the scenario
-- "SpO2 reads 99 percent in a patient rescued from a house fire who is cyanotic": carboxyhemoglobin; the oximeter is fooled.
+- "SpO2 reads 99 percent but the clinician says the patient looks poorly oxygenated": a device limitation, not a fault; carboxyhemoglobin, methemoglobin, and dyes fool a two-wavelength oximeter, and the laboratory's co-oximeter is the reference.
 - "EtCO2 waveform vanished but the ventilator shows normal volumes": circuit disconnect at the airway or loss of circulation; check the patient first.
 - "Temperature reads 3 degrees off with a new probe": wrong YSI series or monitor setting.
 - "Respiration rate shows 0 while the patient breathes": impedance electrodes placed poorly or an artifact setting; capnography would show it.
@@ -288,7 +288,7 @@ Power injectors for CT, MRI, and angiography push contrast at programmed volumes
 Verify flow accuracy at low and high rates, occlusion alarm pressure and time to alarm, air-in-line detection with a known bubble, free-flow protection with the set removed, battery runtime, and the drug library version.
 - Rate: mL/hr = total volume / hours. One liter over 8 hours is 125 mL/hr.
 - Drops: drops per minute = (mL/hr x drop factor) / 60. At 125 mL/hr with a 15 drop/mL set: 125 x 15 / 60 = 31 drops per minute.
-- Dose: mL/hr = (dose in mg/kg/hr x weight in kg) / concentration in mg/mL. A 70 kg patient at 0.1 mg/kg/hr from a 1 mg/mL bag: 7 mg/hr, so 7 mL/hr.
+- Accuracy: percent error = (delivered minus set) / set x 100. A pump set to 100 mL/hr that delivers 93 mL in an hour is 7 percent low, outside a 5 percent specification, so it fails the PM. Dose-to-rate arithmetic belongs to pharmacy and nursing; the drug library is where the biomed meets it.
 
 > Exam tip: free-flow protection, occlusion (upstream and downstream), air-in-line, and the drug library are the four safety features. Enteral connectors do not fit IV lines on purpose. Accuracy within about 5 percent, checked with an infusion analyzer. PCA has a lockout interval.`,
       hook: "LVP peristaltic, within 5 percent, free-flow protection, occlusion up and downstream, air-in-line, drug library. Syringe pumps: size detection, start-up delay, siphoning. PCA: bolus, lockout, limit. Enteral connectors incompatible by design. Injectors: pressure limit, air detection. mL/hr = volume/hours; dose math."
@@ -441,8 +441,8 @@ Precision optics on a balanced stand with motorized focus and zoom, illumination
 ## Defibrillators
 A defibrillator charges a capacitor to a high voltage and discharges it through the chest to stop ventricular fibrillation so the heart can restart in rhythm.
 - **Energy** in joules: stored energy is one half x C x V squared; delivered energy is lower and depends on the patient's impedance (about 50 ohms is the test load).
-- **Monophasic** waveforms (older) deliver up to **360 J**. **Biphasic** waveforms reverse polarity mid-pulse and need less, typically **120 to 200 J** for adults, device specific. Pediatric doses are **2 J/kg** first, then **4 J/kg**.
-- **Synchronized cardioversion** for organized rhythms (atrial fibrillation, some tachycardias) times the shock to the R wave, avoiding the vulnerable period that could cause fibrillation. **Unsynchronized** defibrillation for VF and pulseless VT.
+- **Monophasic** waveforms (older) deliver up to **360 J**. **Biphasic** waveforms reverse polarity mid-pulse and need less, typically **120 to 200 J** for adults, device specific. Pediatric energies are lower and weight based, chosen by the clinician; the analyzer verifies them like any other setting.
+- **Synchronized cardioversion**, which the clinician selects for an organized rhythm, times the shock to the R wave, avoiding the vulnerable period that could cause fibrillation. **Unsynchronized** defibrillation for VF and pulseless VT.
 - **AEDs** analyze the rhythm and advise a shock only for shockable rhythms; public devices with self-tests.
 - Paddles and pads: adhesive pads are safer and enable hands-free pacing; paddles need gel and firm pressure.
 - **Daily user check**: a shock into the tester or a self-test, pads in date, battery charged, paper loaded.
@@ -463,8 +463,8 @@ A catheter with a long balloon sits in the descending aorta. Timed to the ECG or
 - "Balloon pump alarms gas leak with blood visible in the catheter tubing": balloon rupture; the pump stops; clinical emergency.
 - "Charge time has grown to 20 seconds": battery or capacitor aging.
 
-> Exam tip: biphasic 120 to 200 J, monophasic 360, pediatric 2 then 4 J/kg. Synchronized for organized rhythms. Test into 50 ohms with an analyzer. Demand pacing only when the rate falls below the set rate. Balloon inflates in diastole with helium, deflates before systole.`,
-      hook: "Defibrillator: stored energy half CV squared, delivered into 50 ohms; biphasic 120 to 200 J, mono 360, peds 2 then 4 J/kg; sync to the R wave for organized rhythms; analyzer checks energy, charge time, sync. Pacer: demand versus fixed, capture. IABP: helium, inflate in diastole, deflate before systole."
+> Exam tip: biphasic 120 to 200 J, monophasic 360. Synchronized for organized rhythms. Test into 50 ohms with an analyzer. Demand pacing only when the rate falls below the set rate. Balloon inflates in diastole with helium, deflates before systole.`,
+      hook: "Defibrillator: stored energy half CV squared, delivered into 50 ohms; biphasic 120 to 200 J, mono 360; sync to the R wave for organized rhythms; analyzer checks energy, charge time, sync. Pacer: demand versus fixed, capture. IABP: helium, inflate in diastole, deflate before systole."
     },
     {
       id: "u6l4", title: "Ventilators and Anesthesia Machines", domain: 4, obj: "Function", minutes: 12,

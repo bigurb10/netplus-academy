@@ -192,7 +192,7 @@ Using only the pulsing component ignores skin, bone, and venous blood, which do 
 
 Where the physics breaks down:
 \`\`\`
-carboxyhemoglobin (CO poisoning)   absorbs like oxyhemoglobin        reads falsely HIGH; patient may be dying at 99%
+carboxyhemoglobin (CO poisoning)   absorbs like oxyhemoglobin        reads falsely HIGH; a device limitation, not a fault
 methemoglobin                      absorbs both wavelengths equally   reading drifts toward 85% regardless of truth
 motion                             adds false pulses                  erratic values
 low perfusion (cold, shock)        pulse too small to measure         no reading or unreliable
@@ -235,7 +235,7 @@ A probe of the wrong series reads several degrees off with no error message, so 
 
 ## Worked scenarios
 \`\`\`
-"Rescued from a garage with a running car; SpO2 99%, patient drowsy"     carboxyhemoglobin; the oximeter is fooled; blood gas needed
+"Clinician doubts an SpO2 of 99% and asks if the oximeter is broken"     a two-wavelength oximeter cannot see carboxyhemoglobin or methemoglobin; not a fault; the laboratory's co-oximeter is the reference
 "EtCO2 dropped to zero during transport; ventilator shows volumes"        disconnect at the airway or loss of pulse; check the patient
 "Capnogram baseline sits at 8 mmHg"                                       rebreathing; check the absorber and flow
 "New probe reads 3 degrees low"                                           wrong YSI series or monitor probe setting
@@ -583,8 +583,8 @@ software            drug library version current; alarm volume; electrical safet
 \`\`\`
 rate            mL/hr = total mL / hours                1,000 mL over 8 hr = 125 mL/hr
 drops           gtt/min = (mL/hr x drop factor) / 60    125 mL/hr, 15 gtt/mL: 125 x 15 / 60 = 31 gtt/min
-dose to rate    mL/hr = (mg/kg/hr x kg) / (mg/mL)       0.1 mg/kg/hr x 70 kg = 7 mg/hr; at 1 mg/mL = 7 mL/hr
-micrograms      convert first: 5 mcg/kg/min x 80 kg = 400 mcg/min = 24 mg/hr; at 4 mg/mL = 6 mL/hr
+percent error   (delivered minus set) / set x 100         set 100 mL/hr, delivered 93 mL in an hour = -7%; fails a 5% spec
+tolerance band  5% of the set rate, in mL/hr              set 100 mL/hr: 95 to 105 passes; 93 fails, 104 passes
 \`\`\`
 
 ## Worked scenarios
@@ -599,7 +599,7 @@ micrograms      convert first: 5 mcg/kg/min x 80 kg = 400 mcg/min = 24 mg/hr; at
 ## What to memorize
 - Free-flow protection, occlusion (up and downstream), air-in-line, drug library; KVO; accuracy about 5%.
 - Syringe: size detection, start-up delay, siphoning. PCA: bolus, lockout, limit. Enteral connectors are incompatible on purpose. Injectors: pressure limit and air detection.
-- mL/hr = volume / hours; drops = rate x factor / 60; dose math converts units first.`,
+- mL/hr = volume / hours; drops = rate x factor / 60; percent error = (delivered minus set) / set x 100 against the 5% spec.`,
 
 u5l3: `## Devices that treat, on the wards
 Not surgery, not life support: the equipment that warms, cools, suctions, squeezes, and stimulates. The outline's five categories each have one or two numbers and one hazard the exam expects.
@@ -917,11 +917,11 @@ delivered energy  less than stored; depends on the patient's impedance; tested i
 monophasic        one-direction pulse; older; up to 360 J
 biphasic          current reverses partway; more effective at lower energy; adults typically 120 to 200 J
                   (device specific: follow the manufacturer's sequence)
-pediatric         2 J/kg first shock, 4 J/kg after
+pediatric         lower, weight-based energies chosen by the clinician
 \`\`\`
 \`\`\`
 DEFIBRILLATION    unsynchronized; for VF and pulseless VT; the shock fires when the button is pressed
-CARDIOVERSION     SYNCHRONIZED; for organized rhythms (atrial fibrillation, some tachycardias with a pulse);
+CARDIOVERSION     SYNCHRONIZED; for an organized rhythm the clinician chooses to cardiovert;
                   the shock is timed to the R wave so it does not land on the T wave, where it could CAUSE VF
 AED               analyzes the rhythm itself; advises and delivers a shock only for VF or pulseless VT;
                   public access units self-test and nag about pads and batteries
@@ -975,7 +975,7 @@ Timing errors matter: early inflation fights the ventricle; late deflation raise
 \`\`\`
 
 ## What to memorize
-- Stored half CV squared; delivered into 50 ohms; biphasic 120 to 200 J, monophasic 360; peds 2 then 4 J/kg.
+- Stored half CV squared; delivered into 50 ohms; biphasic 120 to 200 J, monophasic 360.
 - Synchronized for organized rhythms (timed to R); unsynchronized for VF. AEDs shock only VF and pulseless VT.
 - Analyzer: energy, charge time, sync, pacing. Demand pacing inhibits on intrinsic beats; capture is spike then QRS.
 - IABP: helium, inflate in diastole, deflate before systole; gas leak alarm.`,

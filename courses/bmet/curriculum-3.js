@@ -200,7 +200,7 @@ Older units delivered a **monophasic** waveform, current in one direction, and n
 Setting                 Energy
 biphasic adult shock    120 to 200 J, by the manufacturer's protocol
 monophasic adult shock  360 J
-pediatric dosing        2 to 4 J/kg of body weight
+pediatric settings      lower and weight based, chosen by the clinician
 analyzer load           50 ohm, standing in for a patient's chest
 \`\`\`
 
@@ -222,8 +222,8 @@ The hazard is the **capacitor**. It holds a lethal charge after the unit is char
 ## In the lab
 You discharge into the analyzer at the 2, 50, 200, and 360 J settings and record what it measured at each one, compute the percent error at 360 J keeping the sign, and then apply the allowance rule: plus or minus a percentage of the setting or a fixed number of joules, whichever is larger, which is why a 2 J setting is judged against the fixed figure rather than the percentage.
 
-> Exam tip: biphasic adult 120 to 200 J, monophasic adult 360 J, pediatric 2 to 4 J/kg, analyzer load 50 ohm. The analyzer measures delivered energy, charge time, and sync delay. Synchronized cardioversion times the shock to the QRS; defibrillation is unsynchronized. Pads expire, and a charged capacitor stays lethal after the power is off.`,
-      hook: "Defibrillation stops ventricular fibrillation or pulseless ventricular tachycardia so the heart's own pacemaker can restart an organized rhythm; a flat line gets compressions, not a shock. A manual unit lets a clinician choose the energy, while an AED reads the rhythm and advises a shock only when one will help. Monophasic current goes one direction and needs more energy; biphasic reverses partway and works at lower energy. Biphasic adult 120 to 200 J, monophasic adult 360 J, pediatric 2 to 4 J/kg. Synchronized cardioversion times the shock to the QRS; external pacing drives a slow heart. Pads are disposable and expire; paddles are reusable with gel. The defibrillator analyzer presents a 50 ohm load and measures delivered energy, charge time, and sync delay. Daily user checks cover battery, pads in date, cables, paper, and the self-test log. A charged capacitor stays lethal after power off, so dump the charge before opening the case."
+> Exam tip: biphasic adult 120 to 200 J, monophasic adult 360 J, analyzer load 50 ohm. The analyzer measures delivered energy, charge time, and sync delay. Synchronized cardioversion times the shock to the QRS; defibrillation is unsynchronized. Pads expire, and a charged capacitor stays lethal after the power is off.`,
+      hook: "Defibrillation stops ventricular fibrillation or pulseless ventricular tachycardia so the heart's own pacemaker can restart an organized rhythm; a flat line gets compressions, not a shock. A manual unit lets a clinician choose the energy, while an AED reads the rhythm and advises a shock only when one will help. Monophasic current goes one direction and needs more energy; biphasic reverses partway and works at lower energy. Biphasic adult 120 to 200 J, monophasic adult 360 J. Synchronized cardioversion times the shock to the QRS; external pacing drives a slow heart. Pads are disposable and expire; paddles are reusable with gel. The defibrillator analyzer presents a 50 ohm load and measures delivered energy, charge time, and sync delay. Daily user checks cover battery, pads in date, cables, paper, and the self-test log. A charged capacitor stays lethal after power off, so dump the charge before opening the case."
     },
     {
       id: "u6l7", title: "Suction, Warming and Cooling, SCDs, and Physical Therapy Equipment", domain: 2, obj: "MD-C", minutes: 9,

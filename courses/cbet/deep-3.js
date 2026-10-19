@@ -428,13 +428,13 @@ None of these announce themselves. PM exists to catch them: flow accuracy at two
 \`\`\`
 The log usually resolves the question of device versus use: a pump that recorded 10 mg/mL entered for a 1 mg/mL bag has told you the story.
 
-## Dose arithmetic checks
-When reviewing a programmed infusion, recompute it:
+## Flow accuracy checks
+When a pump is suspected of under- or over-delivery, measure it on the analyzer and compute the error:
 \`\`\`
-ordered 2 mg/min; bag 400 mg in 250 mL -> 1.6 mg/mL -> 2 / 1.6 = 1.25 mL/min = 75 mL/hr
-ordered 5 mcg/kg/min, 60 kg; bag 400 mg in 250 mL -> 300 mcg/min = 18 mg/hr -> 18 / 1.6 = 11.25 mL/hr
+set 100 mL/hr; 93 mL collected in 60 min -> (93 - 100) / 100 x 100 = -7%; outside 5%; fail
+set 25 mL/hr; 25.6 mL collected in 60 min -> (25.6 - 25) / 25 x 100 = +2.4%; inside 5%; pass
 \`\`\`
-A rate ten times either answer is a decimal or unit error, the pattern behind most serious pump events.
+A programmed rate ten times what the order implies is a decimal or unit error by the user, the pattern behind most serious pump events; the event log shows it.
 
 ## Enteral pumps and injectors
 Enteral pump alarms usually mean viscous formula or a clogged set; a formula found in an IV line means an adapter defeated the connector standard, which is a reportable event. Injector faults: pressure limit reached (catheter too small or occluded), air detected because purging was skipped, heater faults, and scanner interface cables. Never bypass an injector's air detection.

@@ -292,7 +292,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Defibrillator number", "Value"], rows: [
           ["Biphasic adult shock", "120 to 200 J, depending on the manufacturer's protocol"],
           ["Monophasic adult shock", "360 J"],
-          ["Pediatric dosing", "2 to 4 J/kg of body weight"],
+          ["Pediatric settings", "Lower and weight based, chosen by the clinician"],
           ["Analyzer load", "The analyzer presents a 50 ohm load, standing in for the patient's chest"],
           ["Charge time", "Timed from the charge button to the ready tone; a slow charge usually means an aging battery or capacitor"],
           ["Synchronized mode", "Times the shock to the QRS complex for an organized rhythm; a chaotic rhythm gets unsynchronized defibrillation. Compare delivered joules at low, middle, and maximum settings against tolerance"]

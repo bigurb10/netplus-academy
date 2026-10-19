@@ -61,7 +61,7 @@ FRA.cheatsheet = {
           "PR interval 0.12 to 0.20 s; QRS under 0.12 s; QT under about 0.44 s",
           "Paper speed 25 mm/s; 1 mV = 10 mm; small box 0.04 s (1 mm), large box 0.20 s (5 mm)",
           "Heart rate = 1500 / small boxes between R waves, or 300 / large boxes",
-          "Ventricular fibrillation: chaotic, no QRS, shockable. Asystole: flat line, not shockable. Atrial fibrillation: irregular, no P waves, cardiovert synchronized"
+          "Ventricular fibrillation: chaotic, no QRS, shockable. Asystole: flat line, not shockable. Atrial fibrillation: irregular, no P waves"
         ] },
         { type: "table", cols: ["Anatomy detail", "Facts"], rows: [
           ["Skin layers", "Epidermis (stratum basale at its base) over dermis over hypodermis (deepest); sebaceous glands oil, sweat glands cool, vitamin D made in skin"],
@@ -251,7 +251,7 @@ FRA.cheatsheet = {
           ["Lead-off", "High impedance detected on an electrode; check gel, skin prep, cable"],
           ["Simulator test", "Patient simulator provides rate, amplitude, and arrhythmias to verify the monitor"],
           ["Rhythms on the strip", "Sinus tachycardia fast regular; atrial (supraventricular) tachycardia rapid consistent narrow complexes; atrial fibrillation irregular with quivering waves, no P; ventricular tachycardia rapid WIDE QRS; ventricular fibrillation chaotic; asystole flat (check leads)"],
-          ["Lead views and counts", "aVF views the inferior wall; 12 leads from 10 electrodes (4 limb, 6 chest); IEC colors RA red, LA yellow, LL green, RL black differ from AHA; thermal print head tested by printing letters or diagonals; paper speeds 10, 12.5, 25, 50 mm/s test the drive"]
+          ["Lead views and counts", "aVF's positive pole is the left leg; 12 leads from 10 electrodes (4 limb, 6 chest); IEC colors RA red, LA yellow, LL green, RL black differ from AHA; thermal print head tested by printing letters or diagonals; paper speeds 10, 12.5, 25, 50 mm/s test the drive"]
         ] },
         { type: "table", cols: ["Blood pressure fact", "Value"], rows: [
           ["Korotkoff sounds", "Auscultatory method: cuff above systolic, deflate; first sound (phase 1) is systolic, sounds muffle then disappear (phase 5) at diastolic; automated devices use oscillometry instead"],
@@ -338,7 +338,7 @@ FRA.cheatsheet = {
           ["PCA pump", "Patient button, bolus dose, lockout interval, hourly limit; locked to prevent tampering"],
           ["Feeding (enteral) pump", "Enteral-only connectors on purpose; lower accuracy acceptable"],
           ["Contrast injector", "Programmed volume and flow for imaging; pressure limit; air detection; heated syringe"],
-          ["Rate math", "mL/hr = total mL / hours; drops per minute = (mL/hr x drop factor) / 60; mL/hr = (mg/kg/hr x kg) / (mg/mL)"],
+          ["Rate math", "mL/hr = total mL / hours; drops per minute = (mL/hr x drop factor) / 60; percent error = (delivered minus set) / set x 100"],
           ["Enteral versus parenteral", "TPN by vein through a standard pump; enteral by rotary peristaltic head on wide tubing; low flow = empty bag, occlusion, drip chamber seated wrong or coated; no set = seating, wrong set, or bright light on the detector"],
           ["Syringe pump settings", "Must know the syringe diameter and brand; small volume, fine control; runs past empty = sensor, size setting, or multi-phase program, not low voltage"],
           ["PCA settings", "Bolus, lockout interval, maximum dose per hour or 4 hours, optional background; logged; locked; ignores requests = check settings first"],
@@ -396,8 +396,8 @@ FRA.cheatsheet = {
           "Hemodialysis order: access, arterial monitor, blood pump, heparin pump, dialyzer (countercurrent dialysate across a semipermeable membrane), venous monitor, air trap and detector (last), return"
         ] },
         { type: "table", cols: ["Defibrillation and pacing", "Value"], rows: [
-          ["Adult energy", "Monophasic 360 J; biphasic 120 to 200 J (device specific); pediatric 2 J/kg first, 4 J/kg after"],
-          ["Synchronized cardioversion", "Shock timed to the R wave for organized rhythms (atrial fibrillation, SVT); unsynchronized for VF and pulseless VT"],
+          ["Adult energy", "Monophasic 360 J; biphasic 120 to 200 J (device specific); pediatric energies lower and weight based"],
+          ["Synchronized cardioversion", "Shock timed to the R wave for an organized rhythm the clinician chooses to cardiovert; unsynchronized for VF and pulseless VT"],
           ["Testing", "Defibrillator analyzer with a 50 ohm load; check delivered energy, charge time, synchronization, pacing output; daily user checks"],
           ["AED", "Analyzes rhythm, advises shock only for VF and pulseless VT"],
           ["External pacing", "Demand mode paces only when intrinsic rate falls below the set rate; fixed mode paces regardless; output in mA; capture confirmed by QRS after each spike"],

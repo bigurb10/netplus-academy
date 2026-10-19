@@ -262,7 +262,7 @@ AED
 Setting                 Energy                          Why
 biphasic adult shock    120 to 200 J, per the protocol   the current reverses, so less energy does the job
 monophasic adult shock  360 J                            current in one direction needs more energy
-pediatric dosing        2 to 4 J/kg of body weight       energy scales with the size of the child
+pediatric settings      lower and weight based           chosen by the clinician; the analyzer verifies them
 analyzer load           50 ohm                           the standard stand-in for a chest's impedance
 \`\`\`
 

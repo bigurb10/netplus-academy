@@ -456,18 +456,18 @@ Procedure: inflate until the radial pulse disappears, deflate slowly, first soun
 
 ## Rhythms, drawn in words
 \`\`\`
-rhythm                     P waves          QRS          rate and rhythm                       action
-sinus tachycardia          normal           narrow       fast, regular
-supraventricular (atrial) tachycardia   hidden or abnormal   narrow   rapid, consistent, often over 150   vagal maneuvers, drugs, synchronized cardioversion if unstable
-atrial fibrillation        none; quivering  narrow       irregularly irregular                 rate control; synchronized cardioversion
-ventricular tachycardia    none visible     WIDE         rapid, regular                        cardioversion or defibrillation if pulseless
-ventricular fibrillation   none             none         chaotic, irregular spikes             defibrillate now
-asystole                   none             none         flat                                  CPR; check the leads
+rhythm                     P waves          QRS          rate and rhythm                       simulator check
+sinus tachycardia          normal           narrow       fast, regular                         high rate alarm
+supraventricular (atrial) tachycardia   hidden or abnormal   narrow   rapid, consistent, often over 150   tachycardia alarm
+atrial fibrillation        none; quivering  narrow       irregularly irregular                 irregular rhythm alarm
+ventricular tachycardia    none visible     WIDE         rapid, regular                        VT alarm
+ventricular fibrillation   none             none         chaotic, irregular spikes             VF alarm, highest priority
+asystole                   none             none         flat                                  asystole alarm; check the leads
 \`\`\`
 The P-to-R gap is the AV delay; the S-to-T gap is full ventricular depolarization.
 
 ## Twelve leads from ten electrodes
-Four limb electrodes (RA, LA, LL, RL as ground) and six chest electrodes. The three bipolar limb leads use pairs; the three augmented leads use one limb as positive against the other two; the six chest leads are unipolar. aVF's positive pole is the left leg, so it views the inferior wall. Colors: AHA white, black, green, red, brown; IEC red, yellow, black (RL), green (LL). An electrocardiograph's thermal head is checked by printing letters or diagonals; paper speeds of 10, 12.5, 25, and 50 mm/s test the drive.
+Four limb electrodes (RA, LA, LL, RL as ground) and six chest electrodes. The three bipolar limb leads use pairs; the three augmented leads use one limb as positive against the other two; the six chest leads are unipolar. aVF's positive pole is the left leg. Colors: AHA white, black, green, red, brown; IEC red, yellow, black (RL), green (LL). An electrocardiograph's thermal head is checked by printing letters or diagonals; paper speeds of 10, 12.5, 25, and 50 mm/s test the drive.
 
 ## EEG landmarks
 \`\`\`
@@ -505,7 +505,7 @@ DMM                         voltage, current, resistance, continuity (tone at lo
 - "Sphygmomanometer always reads high; most appropriate check?" Run it on an NIBP simulator (a leak would read low).
 - "Which device is used in manual auscultation?" The manometer (Korotkoff sounds are what you hear, not a device).
 - "Atrial tachycardia on the ECG?" Rapid, consistent waves. "Wide QRS?" Ventricular tachycardia.
-- "Which lead views the inferior wall?" aVF. "Electrodes for a 12-lead?" Ten. "AHA limb colors?" RA white, LA black, RL green, LL red.
+- "Positive pole of aVF?" The left leg. "Electrodes for a 12-lead?" Ten. "AHA limb colors?" RA white, LA black, RL green, LL red.
 - "Which parameters does a ventilator analyzer measure?" Flow, oxygen concentration, pressure, breath detection threshold.
 - "Which is NOT simulated by a physiological simulator?" Current.
 - "Continuity mode of a DMM measures?" Total resistance between two points.

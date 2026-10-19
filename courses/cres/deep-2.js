@@ -394,7 +394,7 @@ A catheterization or interventional room is the same chain built for long cases:
 ## Recognizing the procedure
 Access the vessel, thread a guidewire, advance a catheter over it, inject contrast and image, place a device if one is needed, close the site, and watch the patient. Knowing that sequence tells you when the room must not be interrupted and which equipment is critical at which moment: injector and imaging during the run, monitoring throughout, and subtraction only as good as the stillness between mask and contrast.
 
-Contrast is the pharmacological risk in the room. Low-osmolality nonionic agents are much safer than the older ionic agents, but around 3 percent of patients still react, so the room keeps emergency drugs, oxygen, and suction, and the technician keeps the equipment that supports a reaction working and charged.
+Contrast is the pharmacological risk in the room, and that risk belongs to the clinical team. The room keeps emergency drugs, oxygen, and suction for it, and the technician's part is the equipment that supports a response: suction, monitoring, the defibrillator on the cart, all inspected, charged, and working.
 
 ## Dose, because interventional dose lands in one spot
 \`\`\`
@@ -412,7 +412,7 @@ A skin dose near 1,000 mGy is common in a long interventional case and is to be 
 - The C keeps tube and receptor aligned; brakes, cables, foot switch, aimers, cord, and cart are the service list.
 - Faults that follow arm movement are cable flex failures, found with continuity during motion.
 - Angiography: access, guidewire, catheter, contrast, image, device, close, observe.
-- Nonionic low-osmolality contrast still gives reactions in about 3 percent of patients.
+- The suite's emergency equipment (suction, monitoring, the crash cart) is on the technician's inspection list.
 - Reference air kerma, dose area product, fluoroscopy time, and peak skin dose are the recorded dose numbers.`,
 
 u6l5: `## Everything follows from one problem

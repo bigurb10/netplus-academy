@@ -129,7 +129,7 @@ Heart rate times stroke volume, about 70 beats x 70 mL, roughly 5 liters per min
 \`\`\`
 Bradycardia               rate under 60; pacemakers fix it
 Tachycardia               rate over 100
-Atrial fibrillation       irregular rhythm, no P waves; synchronized cardioversion
+Atrial fibrillation       irregular rhythm, no P waves
 Ventricular fibrillation  chaotic squiggle, no output; defibrillate immediately
 Asystole                  flat line; CPR and drugs, not a shock
 Myocardial infarction     blocked coronary artery, muscle dies; ST changes on the ECG
@@ -178,7 +178,7 @@ FVC                     forced vital capacity          the spirometry number
 FEV1                    volume out in the first second normal FEV1/FVC about 0.7 to 0.8;
                                                        lower means obstruction (asthma, COPD)
 \`\`\`
-Worked example: a 70 kg patient at 7 mL/kg gets a tidal volume of 490 mL; at a rate of 14, minute volume is 6.9 L/min. If the rate is raised to 20, minute volume rises to 9.8 L/min and EtCO2 falls, because more CO2 is being blown off.
+Worked example: a ventilator set to a tidal volume of 490 mL at a rate of 14 delivers a minute volume of 6.9 L/min. If the rate is raised to 20, minute volume rises to 9.8 L/min and EtCO2 falls, because more CO2 is being blown off.
 
 ## The gas numbers
 - **SpO2** is the percentage of hemoglobin carrying oxygen, 95 to 100 normal. It measures oxygenation, not ventilation; a patient on supplemental oxygen can have a fine SpO2 while barely breathing.
@@ -190,7 +190,7 @@ A ventilator delivers gas under pressure through the circuit. Peak pressure rise
 
 ## When it goes wrong
 \`\`\`
-Asthma, COPD      narrowed airways, air trapping; low FEV1/FVC; wheezing; high peak pressures on a ventilator
+Asthma, COPD      narrowed airways, air trapping; wheezing; high peak pressures on a ventilator
 Pneumonia         alveoli fill with fluid; oxygenation fails while ventilation may be fine
 Apnea             no breathing; the ventilator's apnea alarm; sleep apnea treated with CPAP
 Hypoxia           too little oxygen; hypercapnia: too much CO2; both show on the monitor
