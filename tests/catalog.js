@@ -73,6 +73,24 @@ function run(token) {
     check('the ServiceForge page logo is a link to the main page', !!brand && brand.tagName === 'A' && brand.getAttribute('href') === '/', brand && brand.outerHTML);
     check('the ServiceForge page keeps its All courses link', !!d.querySelector('main a.back[href="../"]'));
   }
+  // ----- Rewards: the free year and the leaderboard page (Blake, 2026-10-21) -----
+  {
+    const sfHtml = fs.readFileSync(path.join(ROOT, 'serviceforge', 'index.html'), 'utf8');
+    const d = new JSDOM(sfHtml, { url: 'https://fieldreadyacademy.com/serviceforge/' }).window.document;
+    const rewards = d.querySelector('main #rewards');
+    check('the ServiceForge page has a rewards section linking the leaderboard', !!rewards && /free year/.test(rewards.textContent) && !!rewards.querySelector('a[href="/serviceforge/leaderboard/"]'));
+    check('the rewards copy states the threshold, the opt-in, and the prize rule', /Twenty in any 365 days/.test(rewards.textContent) && /Opt in/.test(rewards.textContent) && /opted-in technicians only/.test(rewards.textContent));
+    const faqs = [...d.querySelectorAll('#faq h3')].map(h => h.textContent.trim());
+    const ld = [...d.querySelectorAll('script[type="application/ld+json"]')].map(s => JSON.parse(s.textContent)).find(x => x['@type'] === 'FAQPage');
+    check('the FAQ names the reward and the JSON-LD mirrors every visible question', faqs.includes('Is there a reward for contributing?') && JSON.stringify(ld.mainEntity.map(q => q.name)) === JSON.stringify(faqs), JSON.stringify(faqs));
+    const lbHtml = fs.readFileSync(path.join(ROOT, 'serviceforge', 'leaderboard', 'index.html'), 'utf8');
+    const lb = new JSDOM(lbHtml, { url: 'https://fieldreadyacademy.com/serviceforge/leaderboard/' }).window.document;
+    const lbBrand = lb.querySelector('header .brand');
+    check('the leaderboard page logo is a link to the main page', !!lbBrand && lbBrand.getAttribute('href') === '/');
+    check('the leaderboard page has the table, the back link, and fetches the public route', !!lb.querySelector('#leaders tbody') && !!lb.querySelector('main a.back[href="../"]') && lbHtml.includes("fetch('https://mcp.fieldreadyacademy.com/leaderboard'"));
+    check('the leaderboard page states the three rules', /20 logs in a year/.test(lb.body.textContent) && /opt-in/.test(lb.body.textContent) && /cash prize/.test(lb.body.textContent));
+    check('the built leaderboard page exists', fs.existsSync(path.join(ROOT, 'dist', 'serviceforge-leaderboard.html')));
+  }
   // ----- The Discord link in every header (Blake, 2026-10-21) -----
   {
     const discord = d => { const a = d.querySelector('header a.discord'); return !!a && a.getAttribute('href') === 'https://discord.gg/8mvaA7q9Er' && a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '') && !!a.querySelector('svg') && !!a.getAttribute('aria-label'); };
@@ -81,6 +99,8 @@ function run(token) {
     check('the ServiceForge page header links the Discord', discord(sfDoc));
     const acctDoc = new JSDOM(fs.readFileSync(path.join(ROOT, 'account', 'index.html'), 'utf8')).window.document;
     check('the account page header links the Discord', discord(acctDoc));
+    const lbDoc = new JSDOM(fs.readFileSync(path.join(ROOT, 'serviceforge', 'leaderboard', 'index.html'), 'utf8')).window.document;
+    check('the leaderboard page header links the Discord', discord(lbDoc));
   }
   // ----- Catalog categories (Blake, 2026-10-12) -----
   {

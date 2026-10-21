@@ -140,6 +140,17 @@ def build_serviceforge():
     print(f"  wrote dist/serviceforge.html {len(html)} bytes")
 
 
+def build_serviceforge_leaderboard():
+    """dist/serviceforge-leaderboard.html - the live contributor leaderboard page (served at
+    /serviceforge/leaderboard/ by scripts/stage.sh; the table is filled in the browser from
+    https://mcp.fieldreadyacademy.com/leaderboard)."""
+    html = with_analytics(read(os.path.join(ROOT, "serviceforge", "leaderboard", "index.html")))
+    os.makedirs(DIST, exist_ok=True)
+    with open(os.path.join(DIST, "serviceforge-leaderboard.html"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(html)
+    print(f"  wrote dist/serviceforge-leaderboard.html {len(html)} bytes")
+
+
 def build_catalog():
     """dist/index.html - the catalog with engine/auth.js inlined for its header control."""
     html = with_analytics(inline_engine(read(os.path.join(ROOT, "index.html")), "engine/auth.js", "auth.js"))
@@ -273,5 +284,6 @@ if __name__ == "__main__":
         build(cid)
     build_callback()
     build_serviceforge()
+    build_serviceforge_leaderboard()
     build_catalog()
     build_account()

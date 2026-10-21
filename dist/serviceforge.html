@@ -64,7 +64,7 @@
     .faq p { color: var(--ink-2); margin: 0; }
   </style>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ServiceForge","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"A medical equipment troubleshooting knowledge base for biomeds, reached through Claude, ChatGPT, Gemini, or Copilot.","url":"https://fieldreadyacademy.com/serviceforge/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","category":"Free"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is ServiceForge?","acceptedAnswer":{"@type":"Answer","text":"A knowledge base of medical equipment troubleshooting records: symptom, ranked causes, ordered checks with test points and expected values, corrective actions with part numbers, error codes, and PM intervals, plus fixes logged by other technicians. You reach it through your own AI assistant instead of a separate app."}},{"@type":"Question","name":"How do I connect it?","acceptedAnswer":{"@type":"Answer","text":"Add it as a custom connector or MCP server in Claude, ChatGPT, Gemini, or Copilot using the connector address on this page, then sign in with your email and a one-time code. The exact steps for each assistant are above, under Setting it up."}},{"@type":"Question","name":"What does it cost right now?","acceptedAnswer":{"@type":"Answer","text":"Nothing. Everything is free while we launch. You sign in with a free account and there is no payment step."}},{"@type":"Question","name":"Are the records verified?","acceptedAnswer":{"@type":"Answer","text":"They are ServiceForge knowledge base records, and the page for every model states it directly: field-unverified unless technicians confirmed it. Treat ServiceForge as a starting point and confirm anything safety-critical against your own procedure."}},{"@type":"Question","name":"Who writes the community fixes?","acceptedAnswer":{"@type":"Answer","text":"Technicians, through their own AI. When one of them solves something, their assistant can log the fix along with its outcome, and the next technician who hits the same symptom sees it."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is ServiceForge?","acceptedAnswer":{"@type":"Answer","text":"A knowledge base of medical equipment troubleshooting records: symptom, ranked causes, ordered checks with test points and expected values, corrective actions with part numbers, error codes, and PM intervals, plus fixes logged by other technicians. You reach it through your own AI assistant instead of a separate app."}},{"@type":"Question","name":"How do I connect it?","acceptedAnswer":{"@type":"Answer","text":"Add it as a custom connector or MCP server in Claude, ChatGPT, Gemini, or Copilot using the connector address on this page, then sign in with your email and a one-time code. The exact steps for each assistant are above, under Setting it up."}},{"@type":"Question","name":"What does it cost right now?","acceptedAnswer":{"@type":"Answer","text":"Nothing. Everything is free while we launch. You sign in with a free account and there is no payment step."}},{"@type":"Question","name":"Are the records verified?","acceptedAnswer":{"@type":"Answer","text":"They are ServiceForge knowledge base records, and the page for every model states it directly: field-unverified unless technicians confirmed it. Treat ServiceForge as a starting point and confirm anything safety-critical against your own procedure."}},{"@type":"Question","name":"Who writes the community fixes?","acceptedAnswer":{"@type":"Answer","text":"Technicians, through their own AI. When one of them solves something, their assistant can log the fix along with its outcome, and the next technician who hits the same symptom sees it."}},{"@type":"Question","name":"Is there a reward for contributing?","acceptedAnswer":{"@type":"Answer","text":"Yes. Twenty logs in any 365 days (fixes, confirmations, parts, PM reports or access codes) earn a one-time code for a free year of ServiceForge, redeemable when subscriptions start. Technicians who opt in through their AI appear on the public contributor leaderboard, and its top contributor earns a cash prize."}}]}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TD548C4WQZ"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-TD548C4WQZ');</script>
 </head>
@@ -99,6 +99,11 @@
       <div class="ask"><strong>Your own fixes</strong>When you solve something, your AI can log it so the next technician finds it.</div>
     </div>
     <p class="note">Answers come back in two labelled parts: what ServiceForge holds, kept separate from what your AI knows on its own. You always see which is which.</p>
+
+    <section id="rewards">
+      <h2>Log fixes, earn a free year</h2>
+      <p>Every fix, confirmation, part, PM report or access code you log through your AI counts. Twenty in any 365 days earns a one-time code for a free year of ServiceForge, redeemable when subscriptions start. Opt in through your AI to appear on the <a href="/serviceforge/leaderboard/">contributor leaderboard</a>; the top contributor earns a cash prize (opted-in technicians only). Ask your AI &ldquo;show me the ServiceForge leaderboard&rdquo; any time.</p>
+    </section>
 
     <section id="connect">
       <h2>Connect ServiceForge to your AI</h2>
@@ -173,6 +178,7 @@
       <tr><td>Your AI does the talking</td><td>ServiceForge only supplies the facts. The reasoning and the bill are your AI subscription's.</td></tr>
       <tr><td>Not a substitute for the manual</td><td>Follow OEM procedure and your facility's policy. Confirm anything safety-critical against the manual for your exact model and revision.</td></tr>
       <tr><td>Contributions are open</td><td>Anything logged shows as one technician's unverified experience until others confirm it.</td></tr>
+      <tr><td>Logging pays</td><td>20 logs in a rolling year earn a one-time free-year code. The <a href="/serviceforge/leaderboard/">leaderboard</a> is opt-in and its top contributor gets a cash prize.</td></tr>
     </table>
 
     <h2>If it does not work</h2>
@@ -194,6 +200,9 @@
 
       <h3>Who writes the community fixes?</h3>
       <p>Technicians, through their own AI. When one of them solves something, their assistant can log the fix along with its outcome, and the next technician who hits the same symptom sees it.</p>
+
+      <h3>Is there a reward for contributing?</h3>
+      <p>Yes. Twenty logs in any 365 days (fixes, confirmations, parts, PM reports or access codes) earn a one-time code for a free year of ServiceForge, redeemable when subscriptions start. Technicians who opt in through their AI appear on the public contributor leaderboard, and its top contributor earns a cash prize.</p>
     </section>
   </main>
 

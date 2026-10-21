@@ -95,8 +95,10 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
    one line at 1400px and up; below that the readiness label goes, then the course name
    (both marks stay, so the page is still identifiable), then at 900px the nav moves to the
    bottom of the screen. */
-@media (max-width: 1400px) { .readiness .eyebrow { display: none; } .readiness { flex: 0 1 200px; min-width: 44px; } }
-@media (max-width: 1220px) { .topbar button.brand .name { display: none; } .nav button, .nav a { padding: 8px 7px; font-size: 0.85rem; } .topbar .btn.small { padding: 6px 8px; } }
+@media (max-width: 1400px) { .readiness .eyebrow { display: none; } .readiness { flex: 0 1 200px; min-width: 44px; } .nav button, .nav a { padding: 8px 8px; } }
+@media (max-width: 1220px) { .topbar button.brand .name { display: none; } .nav button, .nav a { padding: 8px 5px; font-size: 0.85rem; } .topbar .btn.small { padding: 6px 8px; } .topbar { gap: 10px; } }
+/* Below 1000px the Discord link (2026-10-21) needs the last few pixels: tighter nav and account button. */
+@media (max-width: 1000px) { .nav button, .nav a { padding: 8px 4px; font-size: 0.8rem; } .topbar .btn.small { padding: 6px 7px; font-size: 0.8rem; } }
 .rail-toggle { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
 
 .rail { background: var(--surface); border-right: 1px solid var(--line); padding: 18px 14px 40px; overflow-y: auto; position: sticky; top: 57px; height: calc(100vh - 57px); }

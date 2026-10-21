@@ -856,7 +856,8 @@ function buildAll(opts) {
   // in the sitemap whenever the feature is on, independent of whether the generated model/class tree
   // exists yet.
   const sfModelUrls = (sfEnabled && fs.existsSync(sfData)) ? require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls : [];
-  const sfUrls = sfEnabled ? ['/serviceforge/'].concat(sfModelUrls) : [];
+  // /serviceforge/leaderboard/ is the second hand-written page (dist/serviceforge-leaderboard.html).
+  const sfUrls = sfEnabled ? ['/serviceforge/', '/serviceforge/leaderboard/'].concat(sfModelUrls) : [];
   const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls).concat(sfUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
