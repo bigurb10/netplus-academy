@@ -63,3 +63,7 @@ section.cat + section.cat { margin-top: 8px; }
 .top-links { display: flex; gap: 14px; margin-left: auto; margin-right: 12px; font-weight: 600; }
 .top-links a { color: inherit; text-decoration: none; }
 .top-links a:hover { color: var(--accent); }
+
+/* Discord: one icon in every header (Blake, 2026-10-21). */
+.discord { display: inline-flex; align-items: center; color: var(--ink-2); line-height: 0; }
+.discord:hover, .discord:focus-visible { color: #5865F2; }

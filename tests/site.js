@@ -57,6 +57,7 @@ const exists = p => fs.existsSync(path.join(out, p));
 
 check('mini: the free lessons are the first free.lessons in course order', m.freeLessons.map(l => l.id).join(',') === m.lessons.slice(0, FRA.course.free.lessons).map(l => l.id).join(','), m.freeLessons.map(l => l.id).join(','));
 check('course landing page written', exists('mini/lessons/index.html'));
+check('every static page header links the Discord (Blake, 2026-10-21)', ['mini/lessons/index.html', 'mini/cheatsheet/index.html', '404.html'].every(p => read(p).includes('<header class="site-head">') && read(p).includes('class="discord" href="https://discord.gg/8mvaA7q9Er" target="_blank" rel="noopener"')));
 check('cheat sheet page written', exists('mini/cheatsheet/index.html'));
 const nonFree = m.lessons.filter(l => !m.free.has(l.id));
 check('one page per free lesson', m.freeLessons.every(l => exists(`mini/lessons/${site.slug(l)}/index.html`)));

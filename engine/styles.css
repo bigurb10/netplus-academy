@@ -440,3 +440,8 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .cert-body { max-width: 560px; margin: 0 auto; font-size: 1.05rem; }
 .cert-date { color: var(--muted); }
 @media print { .certificate { border-color: #000; page-break-inside: avoid; } }
+
+/* Discord: one icon in every header (Blake, 2026-10-21). */
+.discord { display: inline-flex; align-items: center; color: var(--ink-2); line-height: 0; }
+.discord:hover, .discord:focus-visible { color: #5865F2; }
+.topbar .discord { flex: none; }

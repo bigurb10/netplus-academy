@@ -396,6 +396,9 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     const links = [...w.document.querySelectorAll('.topbar .nav a')].map(a => [a.textContent.trim(), a.getAttribute('href')]);
     check('the nav ends with All courses then ServiceForge', JSON.stringify(links.slice(-2)) === JSON.stringify([['All courses', '/'], ['ServiceForge', '/serviceforge/']]), JSON.stringify(links));
     check('the course brand still goes to course Home', !!w.$('.topbar button.brand[data-act="go"][data-arg="home"]'));
+    // The Discord link sits in the topbar outside .nav, so phones keep it (Blake, 2026-10-21).
+    const dc = w.$('.topbar a.discord');
+    check('the topbar links the Discord outside the nav', !!dc && dc.getAttribute('href') === 'https://discord.gg/8mvaA7q9Er' && dc.getAttribute('target') === '_blank' && !dc.closest('.nav'), dc && dc.outerHTML);
   }
 
   // 2) Signed in: the topbar shows the account, the sync dot, and sign-out -- never sign-in.
