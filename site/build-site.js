@@ -858,7 +858,9 @@ function buildAll(opts) {
   const sfModelUrls = (sfEnabled && fs.existsSync(sfData)) ? require('./build-serviceforge').buildServiceForge({ dataFile: sfData, out, origin }).urls : [];
   // /serviceforge/leaderboard/ is the second hand-written page (dist/serviceforge-leaderboard.html).
   const sfUrls = sfEnabled ? ['/serviceforge/', '/serviceforge/leaderboard/'].concat(sfModelUrls) : [];
-  const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls).concat(sfUrls);
+  // Hand-written legal and support pages (dist/privacy.html etc., placed by scripts/stage.sh).
+  const legalUrls = ['/privacy/', '/terms/', '/support/'];
+  const urls = ['/'].concat(...models.map(courseUrls)).concat(guideUrls).concat(sfUrls).concat(legalUrls);
   fs.writeFileSync(path.join(out, 'sitemap.xml'), sitemap(origin, urls), 'utf8');
   fs.writeFileSync(path.join(out, 'robots.txt'), robots(origin), 'utf8');
   fs.writeFileSync(path.join(out, '404.html'), notFoundPage(models, origin), 'utf8');

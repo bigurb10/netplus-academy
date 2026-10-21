@@ -63,6 +63,7 @@ check('course landing page written', exists('mini/lessons/index.html'));
   site.buildAll({ courseDirs: [mini], allCourseDirs: [mini], out: o, origin: 'https://example.test/', guidesDir: path.join(ROOT, 'tests', 'fixtures', 'guides'), serviceforge: true });
   const sm = fs.readFileSync(path.join(o, 'sitemap.xml'), 'utf8');
   check('the sitemap lists /serviceforge/ and /serviceforge/leaderboard/ when ServiceForge is on', sm.includes('<loc>https://example.test/serviceforge/</loc>') && sm.includes('<loc>https://example.test/serviceforge/leaderboard/</loc>'));
+  check('the sitemap lists the privacy, terms and support pages', ['/privacy/', '/terms/', '/support/'].every(u => sm.includes(`<loc>https://example.test${u}</loc>`)));
 }
 check('every static page header links the Discord (Blake, 2026-10-21)', ['mini/lessons/index.html', 'mini/cheatsheet/index.html', '404.html'].every(p => read(p).includes('<header class="site-head">') && read(p).includes('class="discord" href="https://discord.gg/8mvaA7q9Er" target="_blank" rel="noopener"')));
 check('cheat sheet page written', exists('mini/cheatsheet/index.html'));
@@ -270,7 +271,7 @@ check('site.css, robots.txt and sitemap.xml written at the root', exists('site.c
 
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
-const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/mini/pbq/', 'https://example.test/mini/flashcards/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
+const expected = ['https://example.test/', 'https://example.test/mini/', 'https://example.test/mini/practice-test/', 'https://example.test/mini/lessons/', 'https://example.test/mini/cheatsheet/', 'https://example.test/mini/pbq/', 'https://example.test/mini/flashcards/', 'https://example.test/guides/', 'https://example.test/guides/sample-guide/', 'https://example.test/privacy/', 'https://example.test/terms/', 'https://example.test/support/'].concat(m.freeLessons.map(l => 'https://example.test' + m.urls.lesson(l)));
 check('sitemap lists home, the app, the landing page, the cheat sheet, the PBQ page and every free lesson, once each', locs.length === expected.length && expected.every(u => locs.includes(u)) && new Set(locs).size === locs.length, locs.join(' '));
 check('robots.txt allows crawling and names the sitemap', /Allow: \/\n/.test(read('robots.txt')) && read('robots.txt').includes('Sitemap: https://example.test/sitemap.xml'));
 check('sitemap entries carry a lastmod date', /<url><loc>[^<]+<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/.test(sm) && (sm.match(/<lastmod>/g) || []).length === locs.length);

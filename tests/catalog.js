@@ -91,6 +91,20 @@ function run(token) {
     check('the leaderboard page states the three rules', /20 logs in a year/.test(lb.body.textContent) && /opt-in/.test(lb.body.textContent) && /cash prize/.test(lb.body.textContent));
     check('the built leaderboard page exists', fs.existsSync(path.join(ROOT, 'dist', 'serviceforge-leaderboard.html')));
   }
+  // ----- Privacy, terms, support (ChatGPT plugin listing requirements, 2026-10-21) -----
+  {
+    for (const name of ['privacy', 'terms', 'support']) {
+      const html = fs.readFileSync(path.join(ROOT, name, 'index.html'), 'utf8');
+      const d = new JSDOM(html, { url: `https://fieldreadyacademy.com/${name}/` }).window.document;
+      const brand = d.querySelector('header .brand');
+      check(`${name}: logo links home, footer links the other two pages, Discord in the header`, !!brand && brand.getAttribute('href') === '/' && !!d.querySelector('footer a[href="/privacy/"]') && !!d.querySelector('footer a[href="/terms/"]') && !!d.querySelector('footer a[href="/support/"]') && !!d.querySelector('header a.discord'));
+      check(`${name}: built page exists`, fs.existsSync(path.join(ROOT, 'dist', `${name}.html`)));
+    }
+    const priv = fs.readFileSync(path.join(ROOT, 'privacy', 'index.html'), 'utf8');
+    check('the privacy policy names the processors and the patient-information rule', /WorkOS/.test(priv) && /Hetzner/.test(priv) && /Google Analytics/.test(priv) && /patient/i.test(priv));
+    const terms = fs.readFileSync(path.join(ROOT, 'terms', 'index.html'), 'utf8');
+    check('the terms state the rewards rules as the connector enforces them', /Twenty qualifying contributions/.test(terms) && /365-day/.test(terms) && /opt-in/.test(terms) && /Catalog additions do not count/.test(terms));
+  }
   // ----- The Discord link in every header (Blake, 2026-10-21) -----
   {
     const discord = d => { const a = d.querySelector('header a.discord'); return !!a && a.getAttribute('href') === 'https://discord.gg/8mvaA7q9Er' && a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '') && !!a.querySelector('svg') && !!a.getAttribute('aria-label'); };

@@ -151,6 +151,17 @@ def build_serviceforge_leaderboard():
     print(f"  wrote dist/serviceforge-leaderboard.html {len(html)} bytes")
 
 
+def build_legal_pages():
+    """dist/privacy.html, dist/terms.html, dist/support.html - hand-written pages with analytics
+    (served at /privacy/, /terms/, /support/ by scripts/stage.sh)."""
+    for name in ("privacy", "terms", "support"):
+        html = with_analytics(read(os.path.join(ROOT, name, "index.html")))
+        os.makedirs(DIST, exist_ok=True)
+        with open(os.path.join(DIST, f"{name}.html"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(html)
+        print(f"  wrote dist/{name}.html {len(html)} bytes")
+
+
 def build_catalog():
     """dist/index.html - the catalog with engine/auth.js inlined for its header control."""
     html = with_analytics(inline_engine(read(os.path.join(ROOT, "index.html")), "engine/auth.js", "auth.js"))
@@ -285,5 +296,6 @@ if __name__ == "__main__":
     build_callback()
     build_serviceforge()
     build_serviceforge_leaderboard()
+    build_legal_pages()
     build_catalog()
     build_account()

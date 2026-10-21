@@ -15,7 +15,7 @@ const dist = path.join(ROOT, 'dist');
 // Every page with a <head>: the catalog, account, callback and ServiceForge pages, the eight
 // course bundles, and every static lessons / lesson / cheat-sheet page. The body-only
 // -artifact bundles have no head and carry no snippet.
-const pages = ['index.html', 'account.html', 'callback.html', 'serviceforge.html', 'serviceforge-leaderboard.html', 'bmet.html', 'netplus.html', 'secplus.html', 'cbet.html', 'cres.html', 'chtm.html', 'aplus1.html', 'aplus2.html']
+const pages = ['index.html', 'account.html', 'callback.html', 'serviceforge.html', 'serviceforge-leaderboard.html', 'privacy.html', 'terms.html', 'support.html', 'bmet.html', 'netplus.html', 'secplus.html', 'cbet.html', 'cres.html', 'chtm.html', 'aplus1.html', 'aplus2.html']
   .map(f => path.join(dist, f)).concat(fs.existsSync(path.join(dist, 'site')) ? walk(path.join(dist, 'site')) : []);
 const missing = pages.filter(p => !fs.existsSync(p)).map(p => path.relative(ROOT, p));
 check('the built pages exist (npm run build, npm run build:site)', !missing.length, missing.join(','));

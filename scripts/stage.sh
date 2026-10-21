@@ -6,7 +6,7 @@
 #   bash scripts/stage.sh --local    build and assemble only
 #
 # Staged: the catalog (dist/index.html), catalog.css, the favicons, account/, callback/,
-# serviceforge/ and serviceforge/leaderboard/, the eight course bundles as <id>/app/index.html, each course's landing page
+# serviceforge/, serviceforge/leaderboard/, privacy/, terms/, support/, the eight course bundles as <id>/app/index.html, each course's landing page
 # at <id>/index.html from the static site, and the rest of the static site (site.css,
 # robots.txt, sitemap.xml, every <id>/lessons/ and <id>/cheatsheet/ page).
 # Cheat sheet PDFs are not staged; they change only when a pack's cheat sheet does.
@@ -22,7 +22,7 @@ mkdir -p "$STAGE"
 cp -a dist/site/. "$STAGE/"
 cp dist/index.html "$STAGE/index.html"
 cp catalog.css favicon.ico favicon.svg apple-touch-icon.png "$STAGE/"
-for p in account callback serviceforge; do
+for p in account callback serviceforge privacy terms support; do
   mkdir -p "$STAGE/$p"
   cp "dist/$p.html" "$STAGE/$p/index.html"
 done
