@@ -102,17 +102,21 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .nav button[aria-current="page"] { background: var(--accent-soft); color: var(--ink); }
 .nav a { display: inline-flex; align-items: center; padding: 8px 10px; border-radius: 8px; font-family: var(--font-display); font-weight: 500; font-size: 0.92rem; color: var(--muted); text-decoration: none; white-space: nowrap; }
 .nav a:hover { background: var(--surface-2); color: var(--ink); }
+/* The Flashcards link sits among the in-app views, so it takes their colour, not the site links' muted one. */
+.nav a.flash { color: var(--ink-2); }
 .readiness { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 200px; }
 .readiness .eyebrow { white-space: nowrap; }
 .topbar .btn { white-space: nowrap; }
-/* The topbar holds two brands, the account control, nine nav items and the meter. It fits on
-   one line at 1400px and up; below that the readiness label goes, then the course name
-   (both marks stay, so the page is still identifiable), then at 900px the nav moves to the
-   bottom of the screen. */
-@media (max-width: 1400px) { .readiness .eyebrow { display: none; } .readiness { flex: 0 1 200px; min-width: 44px; } .nav button, .nav a { padding: 8px 8px; } }
-@media (max-width: 1220px) { .topbar button.brand .name { display: none; } .nav button, .nav a { padding: 8px 5px; font-size: 0.85rem; } .topbar .btn.small { padding: 6px 8px; } .topbar { gap: 10px; } }
-/* Below 1000px the Discord link (2026-10-21) needs the last few pixels: tighter nav and account button. */
-@media (max-width: 1000px) { .nav button, .nav a { padding: 8px 4px; font-size: 0.8rem; } .topbar .btn.small { padding: 6px 7px; font-size: 0.8rem; } }
+/* The topbar holds two brands, the account control, ten nav items (the Flashcards link since
+   2026-10-25), the meter and the Discord link. It fits on one line at 1500px and up; below
+   that the readiness label goes, then the course name (both marks stay, so the page is still
+   identifiable), then the nav tightens, then at 900px the nav moves to the bottom of the screen. */
+@media (max-width: 1500px) { .readiness .eyebrow { display: none; } .readiness { flex: 0 1 200px; min-width: 44px; } .nav button, .nav a { padding: 8px 8px; } }
+@media (max-width: 1320px) { .topbar button.brand .name { display: none; } .nav button, .nav a { padding: 8px 5px; font-size: 0.85rem; } .topbar .btn.small { padding: 6px 8px; } .topbar { gap: 10px; } }
+@media (max-width: 1100px) { .nav button, .nav a { padding: 8px 4px; font-size: 0.8rem; } .topbar .btn.small { padding: 6px 7px; font-size: 0.8rem; } }
+/* Below 1000px the Discord link (2026-10-21) needs the last few pixels: the All courses text link
+   goes (the FR mark at the left opens the catalog) and the nav tightens once more. */
+@media (max-width: 1000px) { .nav a[href$="/"]:not(.flash):not([href*="serviceforge"]) { display: none; } .nav button, .nav a { padding: 8px 3px; } }
 .rail-toggle { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
 
 .rail { background: var(--surface); border-right: 1px solid var(--line); padding: 18px 14px 40px; overflow-y: auto; position: sticky; top: 57px; height: calc(100vh - 57px); }
@@ -270,7 +274,7 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
   .score-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .exam-head { position: static; }
   .mobile-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--line); z-index: 25; }
-  .mobile-nav button { flex: 1; background: none; border: 0; padding: 10px 4px 12px; font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; color: var(--ink-2); }
+  .mobile-nav button, .mobile-nav a { flex: 1; background: none; border: 0; padding: 10px 4px 12px; font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; color: var(--ink-2); text-align: center; text-decoration: none; }
   .mobile-nav button[aria-current="page"] { color: var(--accent); }
 }
 @media (min-width: 901px) { .mobile-nav { display: none; } }
@@ -327,7 +331,7 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .field select, .field textarea, .field input { font: inherit; font-family: var(--font-body); font-weight: 400; font-size: 1rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; }
 .field textarea { resize: vertical; min-height: 96px; }
-@media (max-width: 900px) { .mobile-nav button { padding: 10px 2px 12px; font-size: 0.7rem; } }
+@media (max-width: 900px) { .mobile-nav button, .mobile-nav a { padding: 10px 2px 12px; font-size: 0.7rem; } }
 
 /* Acronym links, tooltip, modal, and the cheat sheet's Acronyms section */
 .acr { text-decoration: underline dotted; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; border-radius: 3px; }
@@ -8952,7 +8956,7 @@ window.FRAPbq = (function () {
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span><span class="name">${esc(course.name)}</span></button>
           ${acctHtml()}
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Cheat sheet')}${flashLink('Flashcards')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and recent passes">
             <span class="eyebrow">Readiness</span>
@@ -8964,7 +8968,7 @@ window.FRAPbq = (function () {
         <aside class="rail ${railOpen ? 'open' : ''}">${viewRail()}</aside>
         <main class="main">${main}</main>
         <nav class="mobile-nav">
-          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
+          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Sheet')}${flashLink('Cards')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
       </div>${fbModal()}${acrModal()}`;
     mountInstrument();
@@ -8978,6 +8982,11 @@ window.FRAPbq = (function () {
     // The learner's name if their account has one, never the email: the topbar is on
     // screen in every lesson, screenshot, and over-the-shoulder glance.
     return `<div class="acct"><a class="who" href="/account/" title="Your progress on every course">${esc(u.name || 'Signed in')}</a><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
+  }
+  // The flashcards page is a static page outside the app, so the nav carries a plain link to it.
+  // Only over http: a file:// open of a bundle has no /<id>/flashcards/ to land on.
+  function flashLink(label) {
+    return /^http/.test(location.protocol) ? `<a class="flash" href="/${esc(course.id)}/flashcards/" title="Flashcards: every acronym and cheat sheet fact as a card">${label}</a>` : '';
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');

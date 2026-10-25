@@ -632,7 +632,7 @@
           <button class="brand" data-act="go" data-arg="home"><span class="mark">${esc(course.short)}</span><span class="name">${esc(course.name)}</span></button>
           ${acctHtml()}
           <nav class="nav">
-            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Cheat sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
+            ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Cheat sheet')}${flashLink('Flashcards')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}${course.catalogUrl ? `<a href="${esc(course.catalogUrl)}" title="${esc(course.brand)}">All courses</a><a href="${esc(course.catalogUrl)}serviceforge/" title="ServiceForge: the troubleshooting knowledge base for biomed technicians">ServiceForge</a>` : ''}
           </nav>
           <div class="readiness" title="Readiness estimate: recent test scores, mastered topics, and recent passes">
             <span class="eyebrow">Readiness</span>
@@ -644,7 +644,7 @@
         <aside class="rail ${railOpen ? 'open' : ''}">${viewRail()}</aside>
         <main class="main">${main}</main>
         <nav class="mobile-nav">
-          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Sheet')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
+          ${navBtn('home', 'Home')}${navBtn('tutorial', 'Tutorial')}${navBtn('exam', 'Tests')}${navBtn('train', 'Drills')}${pbqIds.length ? navBtn('pbq', 'PBQs') : ''}${navBtn('cheatsheet', 'Sheet')}${flashLink('Cards')}${navBtn('progress', 'Progress')}${navBtn('feedback', 'Feedback')}
         </nav>
       </div>${fbModal()}${acrModal()}`;
     mountInstrument();
@@ -658,6 +658,11 @@
     // The learner's name if their account has one, never the email: the topbar is on
     // screen in every lesson, screenshot, and over-the-shoulder glance.
     return `<div class="acct"><a class="who" href="/account/" title="Your progress on every course">${esc(u.name || 'Signed in')}</a><span class="syncdot ${esc(syncStatus)}" id="syncdot" title="${esc(SYNC_LABEL[syncStatus] || '')}"></span><button class="btn ghost small" data-act="sign-out">Sign out</button></div>`;
+  }
+  // The flashcards page is a static page outside the app, so the nav carries a plain link to it.
+  // Only over http: a file:// open of a bundle has no /<id>/flashcards/ to land on.
+  function flashLink(label) {
+    return /^http/.test(location.protocol) ? `<a class="flash" href="/${esc(course.id)}/flashcards/" title="Flashcards: every acronym and cheat sheet fact as a card">${label}</a>` : '';
   }
   function navBtn(name, label) {
     const cur = (S.view.name === name) || (name === 'tutorial' && (S.view.name === 'lesson' || S.view.name === 'course')) || (name === 'exam' && S.view.name === 'results');
