@@ -40,9 +40,12 @@ for (const dir of courseDirs()) {
   check(`${m.c.id}: acronyms render as <abbr title> on the static side`, !hasAcr || /<abbr title="[^"]+">/.test(sample));
   const lp = site.landingPage(m, R, 'https://example.test', []);
   check(`${m.c.id}: landing without siblings has no related-courses section`, !lp.includes('<section class="related">'));
-  const sib = { c: { id: 'other', name: 'Other Academy', exam: { title: 'Other Exam' } }, urls: { landing: '/other/', practice: '/other/practice-test/' } };
+  const sib = { c: { id: 'other', name: 'Other Academy', exam: { title: 'Other Exam', vendor: (m.c.exam && m.c.exam.vendor) || 'X' } }, urls: { landing: '/other/', practice: '/other/practice-test/' } };
   const lp2 = site.landingPage(m, R, 'https://example.test', [], [sib]);
-  check(`${m.c.id}: landing lists a sibling course with its exam and practice test`, lp2.includes('<section class="related"><h2>More ') && lp2.includes('<a href="/other/">Other Academy</a> <span class="muted">Other Exam</span>') && lp2.includes('href="/other/practice-test/"'));
+  check(`${m.c.id}: landing lists a same-vendor sibling under More <vendor> courses`, lp2.includes('<section class="related"><h2>More ') && lp2.includes('<a href="/other/">Other Academy</a> <span class="muted">Other Exam</span>') && lp2.includes('href="/other/practice-test/"'));
+  const rel = { c: { id: 'far', name: 'Far Academy', exam: { title: 'Far Exam', vendor: 'Some Other Body' } }, urls: { landing: '/far/', practice: '/far/practice-test/' } };
+  const lp3 = site.landingPage(m, R, 'https://example.test', [], [rel]);
+  check(`${m.c.id}: landing lists an other-vendor course under Related courses`, lp3.includes('<section class="related"><h2>Related courses</h2>') && lp3.includes('<a href="/far/">Far Academy</a>'));
   check(`${m.c.id}: landing carries the manifest seo title, h1, and phrases`, !m.seo || (lp.includes(`<title>${esc(m.seo.title)}</title>`) && lp.includes(`<h1>${esc(m.seo.h1)}</h1>`) && (m.seo.phrases || []).every(p => lp.toLowerCase().includes(p.toLowerCase()))));
   w.close();
 }
