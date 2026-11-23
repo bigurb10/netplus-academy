@@ -60,15 +60,15 @@ Cloud storage is rented capacity. Check egress cost (you pay to pull data out), 
 ## The seven layers with an imaging example
 \`\`\`
 Layer            Imaging example                         Failure looks like
-7 application    DICOM, HL7, HTTP messages               association rejected
+7 application    DICOM (association, AE titles), HL7, HTTP  association rejected
 6 presentation   TLS encryption, encoding                certificate error
-5 session        DICOM association, remote desktop       session drops mid-transfer
+5 session        remote desktop session, connection setup  session drops mid-transfer
 4 transport      TCP and UDP ports                       port blocked
 3 network        IP addresses, routers                   no route, wrong gateway
 2 data link      Ethernet frames, MAC addresses, VLANs   wrong VLAN, flapping port
 1 physical       cable, fiber, radio                     dead link light
 \`\`\`
-Work from the bottom up when nothing connects, and from the top down when the connection works but the exchange fails.
+DICOM is an application-layer protocol: association negotiation and AE titles belong to layer 7, and the data rides on TCP at layer 4. Work from the bottom up when nothing connects, and from the top down when the connection works but the exchange fails.
 
 ## TCP and UDP
 **TCP** is connection-oriented: it acknowledges data and retransmits what is lost. DICOM, HL7, and HTTP use it because a study must arrive whole. **UDP** has no delivery guarantee and is fast, which suits DNS lookups, time, and logging.
@@ -160,7 +160,7 @@ A **virtual machine** is a server running in software; one physical host runs ma
 Phones and tablets suit review, on-call triage, and viewing reports. They are not for primary diagnostic reading unless the display and the software are cleared and calibrated for it. Mobile devices need device management, encryption, and a lockable application.
 
 > Exam tip: when a vendor pins an old runtime, the BEST answer isolates and plans an upgrade; it never disables the security team's policy or lets the application run unsupported without a documented exception.`,
-      hook: "Pin versions are a managed risk: match OS and runtime to what the vendor supports, isolate what is old, and never read diagnostically on an uncalibrated phone."
+      hook: "Pinned versions are a managed risk: match OS and runtime to what the vendor supports, isolate what is old, and never read diagnostically on an uncalibrated phone."
     },
     {
       id: "u4l7", title: "Identity and Access: Active Directory, LDAP, Group Policy, SSO, Two-Factor Authentication, RBAC", domain: 7, obj: "G3", minutes: 10,
@@ -224,7 +224,7 @@ FRA.units.push({
       body: `Radiology plans to add a second CT scanner and asks how much storage to buy for the next five years. You cannot answer from a feeling. You answer from exam counts and study sizes, and the arithmetic is short.
 
 ## Study size
-Study size equals images x rows x columns x bytes per pixel. A CT slice of 512 x 512 pixels at 2 bytes per pixel is 524,288 bytes. A study of 60 slices is 60 x 524,288 = 31,457,280 bytes, about 31.5 million bytes. Here are four more worked sizes, using round example matrices (check the real matrix on your own scanners):
+Study size equals images x rows x columns x bytes per pixel. A CT slice of 512 x 512 pixels at 2 bytes per pixel is 524,288 bytes. A study of 60 slices is 60 x 524,288 = 31,457,280 bytes, about 31.5 million bytes. Here are four more worked sizes, using round example matrices (check the real matrix on your own scanners). The mammography row is a round example: real screening studies at 50 micron pixels run about 197 MB uncompressed:
 \`\`\`
 Modality        Images  Rows x columns   Bytes/pixel   Size
 MR (one series)    200  256 x 256        2             26,214,400 bytes (about 26 MB)
@@ -384,7 +384,7 @@ A **downtime policy** states when downtime procedures start and who decides. The
 ## Testing
 A plan that is never exercised fails. Test restores of real backups, a failover to the standby, and a downtime drill with real staff on paper, and record the time each step took against the RTO.
 
-> Exam tip: the FIRST concern for a ransomware question is the recovery objective and the clean backup, so the immutable offsite copy is the protection that works when production and replicas are both encrypted.`,
+> Exam tip: for a ransomware question, the FIRST concern is a clean copy to restore from. The immutable offsite copy is the protection that still works when production and replicas are both encrypted.`,
       hook: "Disaster recovery restores the systems, business continuity keeps work going; set RPO and RTO with the clinicians, keep an immutable offsite copy, and drill the downtime plan."
     },
     {

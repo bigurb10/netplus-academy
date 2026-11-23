@@ -67,7 +67,7 @@ Layer   What to test                          Tool or sign
 2       VLAN, switch port, duplex             switch port status, MAC address table
 3       IP, mask, gateway, route              ping, trace route
 4       port open, firewall rule              connect to the port from the modality's side
-5-6     association, TLS certificate          the modality's log, certificate dates
+5-6     session drops, TLS certificate        the modality's log, certificate dates
 7       AE title, SOP class, transfer syntax  DICOM echo, then the PACS rejection reason
 \`\`\`
 
@@ -270,7 +270,7 @@ Second copy for DR           x 2                      doubles the stored total
 Five years of data at the growth rate sum to about 9.7 TB of single copy and about 19.4 TB with a second copy. Say the growth rate and the ratio out loud in the plan, because they are assumptions and the plan should be revisited each year against actual consumption.
 
 ## Study size from the matrix
-The sheet's example: a 512 x 512 CT slice at 2 bytes per pixel is 512 x 512 x 2 = 524,288 bytes. Sixty slices are 31,457,280 bytes. For a modality, the study size is images x rows x columns x bytes per pixel, and your own scanners report the real counts. A chest radiograph of 2,000 x 2,500 pixels at 2 bytes is 10,000,000 bytes per image, and a two-view study is 20,000,000 bytes, which is 20 MB.
+The cheat sheet's example: a 512 x 512 CT slice at 2 bytes per pixel is 512 x 512 x 2 = 524,288 bytes. Sixty slices are 31,457,280 bytes. For a modality, the study size is images x rows x columns x bytes per pixel, and your own scanners report the real counts. A chest radiograph of 2,000 x 2,500 pixels at 2 bytes is 10,000,000 bytes per image, and a two-view study is 20,000,000 bytes, which is 20 MB.
 
 ## A change that moves the total
 The second CT will add 6,000 exams a year, and the new protocol produces studies 20 percent larger than the old average of 52 MB.
@@ -400,7 +400,7 @@ After every change, ask what was added, changed, or removed. A new modality adds
 Keep the cases in a shared, versioned place, name them with a pattern, and keep the executed results with the build number. When an auditor, a vendor, or a successor asks what was tested before the last upgrade, the record answers.`,
 
 u5l5: `## The availability ladder in minutes
-The sheet gives the ladder, and each row comes from the same rule: downtime per year equals (1 minus availability) x 525,600 minutes, the number of minutes in a 365-day year.
+The cheat sheet gives the ladder, and each row comes from the same rule: downtime per year equals (1 minus availability) x 525,600 minutes, the number of minutes in a 365-day year.
 
 \`\`\`
 Availability    1 minus availability   x 525,600       Downtime per year
