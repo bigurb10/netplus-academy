@@ -12,6 +12,7 @@ FRA.units.push({
       body: `Radiologists complain that reports take too long, and the chair asks you to fix it. The worst answer is a guess followed by a new rule. Quality improvement gives you a way to find the real cause and prove that your change worked.
 
 ## The philosophy
+A just culture asks what failed in the process before it asks who failed, and it still holds people accountable for reckless choices.
 - **Think in systems.** A slow report comes from a chain of steps, handoffs, and tools, not from one careless person. Improve the process, not blame the person.
 - **Measure first.** Without a baseline you cannot say whether anything got better.
 - **Improve continuously.** One change is never the end; you measure, change, and measure again.
@@ -109,6 +110,7 @@ A policy has an owner, an approving body, an effective date, and a review date, 
       body: `A privacy officer calls: a radiologist saw the images of a neighbor who is not her patient. At the same time the mammography site is due for its yearly inspection. Compliance is the set of laws you must prove you follow, and the proof is documents and logs that you keep.
 
 ## HIPAA
+Regulatory compliance needs policy management: a written policy, an owner, and a review date. A business associate agreement ({{BAA}}) binds any vendor that touches {{PHI}}.
 HIPAA protects protected health information, meaning anything that identifies a patient and relates to care or payment. Three parts matter to imaging.
 - The **Privacy Rule** limits who may use and disclose the data and says to use the minimum necessary for the task.
 - The **Security Rule** requires safeguards for electronic data: administrative (risk analysis, policies, training), physical (locked rooms, workstation placement), and technical (unique user IDs, access control, audit logs, encryption, integrity checks).
@@ -119,6 +121,7 @@ Vendors who handle patient data are business associates and sign an agreement th
 The HITECH Act of 2009 pushed adoption of electronic health records (the meaningful use program), extended HIPAA directly to business associates, strengthened enforcement with higher penalties, and made breach notification law.
 
 ## MQSA
+The {{FDA}}, the Food and Drug Administration, regulates medical devices, including imaging systems and software, and it enforces MQSA.
 The Mammography Quality Standards Act is the federal law for mammography. A facility must be accredited and certified, have qualified interpreting physicians, and perform quality control. For informatics the key duties are records and reporting.
 - Keep the mammograms and reports for the required period. The federal minimum is 5 years, or 10 years if the patient has no later exam at the facility, and longer where state law says so.
 - Send the patient a written summary of the result in plain language, and track outcomes for the facility's audit.
@@ -202,9 +205,11 @@ Match the audience. Executives want uptime, risk, and cost on one page. The depa
       body: `You export 200,000 exam records to a spreadsheet and the manager asks which modality is growing fastest. A list that long answers nothing until you summarize it and draw it. The skill here is choosing the summary and the picture that fit the question.
 
 ## Summarize first: the pivot table
+A data warehouse is a separate store, copied from the live systems and built for reports, so analysis does not slow clinical use.
 A **pivot table** groups a long list by categories and totals a value. Drag modality to the rows, month to the columns, and count of exams to the values, and the list becomes a small table. Change the grouping to study a different question without redoing the work.
 
 ## Pick the chart for the question
+A histogram, a bar chart of how many values fall in each range, shows the spread of turnaround times.
 \`\`\`
 Question                                  Chart
 Which category is biggest?                bar chart
@@ -273,6 +278,7 @@ FRA.units.push({
       body: `The PACS is eight years old, support ends in two, and the hospital board asks, "Why should we spend money on this?" Before any vendor hears from you, you define the project and justify it in numbers a board understands.
 
 ## Project definition
+Check feasibility first: can the project be done with the money, people, and time available? Imaging program oversight, a steering group with a mission and principles, keeps projects aligned.
 Write down, in this order, and have the sponsors agree to it:
 - **Goals**: what the organization gets, such as faster reads, a supported platform, and one archive for all sites.
 - **Scope of solution**: what is included (PACS, archive, viewers, interfaces, migration) and what is not (new modalities, the EMR).
@@ -323,6 +329,7 @@ Strong   A 500-image CT study opens at the workstation in under 10 seconds (exam
 Use must-have and nice-to-have labels, number each requirement, and ask the vendor to state whether it is standard, a configuration, a custom development, or not available.
 
 ## Finding vendors
+A best of breed strategy buys the strongest product for each function and integrates them, while a single-vendor approach buys one suite. Weigh integration effort against single accountability.
 Identify candidates from the market, peer sites, and industry events. Qualify them: do they have installed customers of your size and type, financial stability, and support in your region.
 
 ## RFI, RFP, and RFQ
@@ -344,6 +351,7 @@ Use an RFI when you are still learning, an RFP to select a solution, and an RFQ 
 Read the written proposals against the requirement list, mark what is standard, configured, custom, or missing, and send written questions for anything unclear. Keep every vendor on equal terms: the same questions, the same deadlines, the same information.
 
 ## Scripted demonstrations
+A proof of concept, a small trial in your own environment, shows whether the product works with your data before you commit.
 In a **scripted demonstration** every vendor performs the same scenarios in the same order, using your sample studies and your workflow. Examples: receive a study with a mismatched patient name and correct it, hang a prior comparison, send a study to an outside site, and show an audit trail. Evaluators score each scenario as it happens, because memory fades.
 
 ## The scoring matrix
@@ -361,7 +369,7 @@ Each evaluator scores each criterion from 1 to 5; the weight times the score, su
 Call current customers of your size and type, and ask what went wrong, how the vendor handled it, how upgrades went, and whether they would buy again. A **site visit** lets your staff watch the system in daily use. Choose customers yourself, not only those the vendor offers.
 
 ## Selection and contract
-Select on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
+Vendor selection is the decision step: choose on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
 - **Deliverables and acceptance criteria**: tests that must pass before the final payment.
 - **Uptime and support terms**, with response and resolution times and remedies.
 - **Data ownership and exit**: the data stays yours, and the vendor must return it in a standard format at no unreasonable cost.
@@ -420,6 +428,7 @@ A **dependency** is a task that cannot start until another finishes: you cannot 
 A **work breakdown structure**, or WBS, splits the project into smaller and smaller pieces of work until each piece can be assigned and estimated. Think of it as an outline of deliverables, not of dates. The rule is that the lowest level, a work package, is small enough that one person can own it and estimate it.
 
 ## Resources and effort estimates
+A task allocation matrix lists each task against each person or team and marks who does it, approves it, or must be told.
 For each work package, identify the **resources**: the people (analyst, network engineer, technologist), the equipment, and the vendor time. Then estimate the **effort**, the hours of work. Effort is not duration. A task of 16 hours of effort for one person is two working days of duration if they work on it full time, but it could take a week if they work on it two hours a day. Ask the person who will do the work, and add contingency for the unknowns.
 
 ## Milestones
@@ -546,6 +555,7 @@ Radiology reads most of the images. Orthopedics uses them for bones and joints, 
 **Anatomy** is the structures of the body, **physiology** is how they work, and **pathology** is the study of disease. You do not diagnose; you recognize that an exam of the chest, the abdomen, or the brain is named for a body region, and that a report finding is a pathology term.
 
 ## Directional terms and planes
+Imaging planes and imaging positions are two different ideas: a plane is how the body is sliced, and a position is how the patient is placed.
 \`\`\`
 Anterior   front              Superior   toward the head
 Posterior  back               Inferior   toward the feet
@@ -598,6 +608,7 @@ Different roles need different content.
 - **IT staff** want the technical sequence: the start time, the checks, the back-out time, and the contacts.
 
 ## Timing and channels
+An online status website that shows the current service state saves the help desk from repeating the same message.
 Give early notice, then reminders. For a planned downtime, send a first notice about two weeks ahead, a reminder a few days before, a final notice on the day, and a message when it ends (example schedule). Use several channels: email, a banner on the login screen, huddles in the reading room, the intranet, and a phone call or page for urgent contacts. An unplanned outage cannot wait for a schedule, so send a short message at once, with the time you will send the next update.
 
 ## Close the loop
@@ -611,6 +622,7 @@ Say when the change is over, and what to report if something looks wrong. After 
       body: `The hospital's strategic plan says, "reduce time to treatment for stroke patients." Your department's plan says, "upgrade the PACS." Leaders fund what they can tie to their goals, so your job is to show the link, then report the evidence that it worked.
 
 ## Alignment
+A tactical plan turns the strategic plan into this year's projects and owners.
 Start from the organization's strategic plan and ask which goals imaging informatics can serve. Then write the department goal in the organization's words.
 \`\`\`
 Organization goal            Imaging informatics goal                   Measure
@@ -693,6 +705,7 @@ Quick reference card one page placed at the workstation for the few key steps
 Use more than one format for important tasks. A video shows how, a card reminds, and a practice exercise makes it stick. Keep each piece short: a three-minute video on one task beats a one-hour tour.
 
 ## Super-users and train-the-trainer
+Super-users, also written superusers, are staff who learn first and then coach their peers.
 A **super-user** is a staff member in each area, such as a technologist on each shift or a clerk at each desk, who gets extra training and then coaches colleagues, answers first-line questions, and reports problems to the project team. In a **train-the-trainer** model, you train the super-users and they train their peers. It scales well, puts a trusted face in each area, and keeps help near the work. Support super-users with time in their schedule and a clear way to reach you.
 
 ## Schedule around clinical work
@@ -706,6 +719,7 @@ Offer sessions on each shift, short enough to fit between exams (30 minutes is a
       body: `Training finished last week. The attendance sheet is full and everyone smiled. Then the help desk reports that calls about the same three screens have doubled. A full sign-in sheet shows people attended; it does not show they can do the job. Assessment finds out whether the training worked.
 
 ## Tools to assess
+Training assessment uses one or more of the tools below, matched to the objective.
 \`\`\`
 Tool                        What it tells you
 Quiz                        whether the learner knows the facts

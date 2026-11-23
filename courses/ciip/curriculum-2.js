@@ -14,7 +14,7 @@ FRA.units.push({
 ## Four ways to attach storage
 - **DAS**, direct-attached storage, is a set of drives wired to one server. It is simple and fast, and nobody else can use it.
 - **NAS**, network-attached storage, shares folders over the network. Windows clients use SMB (the older name is CIFS); Unix and Linux clients use NFS. The server sees a file share.
-- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The two transports are Fibre Channel (its own fast fabric) and iSCSI (block storage over ordinary TCP and Ethernet). The server sees a disk it formats itself.
+- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The two transports are Fibre Channel (spelled fiber channel in some documents, its own fast fabric) and iSCSI (block storage over ordinary TCP and Ethernet). The server sees a disk it formats itself.
 - **Object storage** keeps data as objects, each with an ID and metadata, in one flat space. It is reached through an interface such as S3, scales very wide, and is how most cloud archives work.
 
 ## Block, file, and object
@@ -26,7 +26,7 @@ Object     keyed objects        S3                      long-term archive, cloud
 \`\`\`
 
 ## The drive underneath
-**SATA** is the drive interface for lower-cost disks and **SCSI** for enterprise storage. An **SSD** is flash with no moving parts, so reads are very fast and latency is low. Spinning disks cost less per terabyte. A common design puts the database and the active image cache on SSD and the bulk of older studies on cheaper disk or object storage.
+**SATA** is the drive interface for lower-cost disks and **SCSI** for enterprise storage. An **SSD** is flash with no moving parts, so reads are very fast and latency is low. A spinning hard drive costs less per terabyte. A common design puts the database and the active image cache on SSD and the bulk of older studies on cheaper disk or object storage.
 
 ## Choosing for the job
 Ask what the workload does. A PACS database makes many small reads and writes, so it needs block storage with high IOPS. An image cache serves large files to viewers, so a file share on fast disk works. A ten-year archive needs capacity and low cost, so object storage or nearline disk fits.
@@ -74,6 +74,7 @@ DICOM is an application-layer protocol: association negotiation and AE titles be
 **TCP** is connection-oriented: it acknowledges data and retransmits what is lost. DICOM, HL7, and HTTP use it because a study must arrive whole. **UDP** has no delivery guarantee and is fast, which suits DNS lookups, time, and logging.
 
 ## Devices
+Computer networking is how imaging systems find and talk to each other, and these devices are its building blocks.
 A **hub** repeats every frame to every port. A **switch** forwards by MAC address. A **router** moves traffic between networks by IP address. A **gateway** translates between different protocols or networks. A **trunk** carries several VLANs between switches.
 
 ## Media
@@ -132,6 +133,7 @@ A **NIC** set to the wrong speed or duplex slows image loading even on a good ne
 CD and DVD drives still hand patients their images and import outside studies. USB drives are common and risky: an unknown drive can carry malware, so imports go through a controlled workstation and the demographics are reconciled before the images join the archive.
 
 ## Servers
+Servers live in a datacenter, a room or leased space with power, cooling, ventilation, and controlled physical access.
 Servers play roles: database, image archive, web viewer, interface engine, and application. A rack server uses redundant power supplies, mirrored boot drives, and often two NICs, so one failed part does not stop the service. Workstations play roles too: diagnostic reading, clinical review, technologist QC, and administration. Size each for its role; a diagnostic reader needs the most RAM, the best GPU and displays, and a fast wired connection.
 
 > Exam tip: the FIRST check on a slow workstation is the cheap and local one: memory use, the NIC link speed and duplex, and the drive, before replacing the server or the network.`,
@@ -154,6 +156,7 @@ Browser-based viewers need no install on the workstation, but they need a suppor
 **RDP** and **VNC** let an administrator or a vendor control a computer from elsewhere. Use them only over a VPN, with named accounts and logging, and close vendor access when the support case ends.
 
 ## Virtual machines and VDI
+Server-based computing ({{SBC}}) is the older cousin: users run sessions on a shared server instead of owning a desktop each.
 A **virtual machine** is a server running in software; one physical host runs many, on a platform such as VMware. **VDI** hosts desktops in the data center and shows them on a thin client, using a product such as Citrix. It helps with central patching and with reading from many places, but a diagnostic session needs enough GPU and bandwidth behind it.
 
 ## Mobile devices
@@ -189,6 +192,7 @@ Provision on the first day by role, change roles when the job changes, and depro
       body: `The department head asks how many chest studies are still unread, by site, and no report in the system answers it. A short database query will. You do not need to be a programmer for the exam, but you must read a simple query and know how a database is built.
 
 ## SQL in five words
+Databases hold the studies, orders, and users, and data retrieval means asking them questions.
 {{SELECT}} chooses the columns to return, {{WHERE}} filters rows by a condition, {{JOIN}} combines rows from two tables on a matching key, {{GROUP BY}} groups rows so a count is computed per group, and {{COUNT}} counts the rows. A query for unread exams by site reads:
 \`\`\`
 SELECT site, COUNT(*) FROM exams WHERE status = 'unread' GROUP BY site
@@ -365,6 +369,7 @@ Each extra nine cuts allowed downtime to a tenth and costs much more. Ask whethe
       body: `A ransomware message appears on a file server at two in the morning. The next hour decides whether radiology is reading on paper for a day or for a week. What you did years ago, in plans and backups, is what you now have.
 
 ## Two plans, two jobs
+Business continuance is another name for business continuity. A mission critical application is one whose loss stops patient care, so it gets the shortest recovery objective.
 **Disaster recovery** restores the systems: servers, storage, the network, and the data. **Business continuity** keeps the clinical work going while the systems are down: who does what, on which forms, and with which local tools. A hospital needs both, and each has an owner and a written plan.
 
 ## Data protection
@@ -379,6 +384,7 @@ RTO         how long can we be down before it hurts    standby systems, restore 
 An RPO of 15 minutes means data must be copied at least every 15 minutes. An RTO of 4 hours means the restore must be proven to finish in under 4 hours. Tighter objectives cost more, so the clinical owners set them, not the IT team alone.
 
 ## Downtime policy and procedures
+Service interruption management covers identifying an interruption, communicating it to users, and running the work-around until service returns.
 A **downtime policy** states when downtime procedures start and who decides. The procedures name: a **downtime viewer** with recent images and reports; the **local storage** on each modality, which holds studies until PACS returns; **paper workflows** with prepared forms for orders and requisitions; and a **reconciliation** step afterward, when paper orders are re-entered, studies are matched, and the queues are checked for lost or duplicated work.
 
 ## Testing
@@ -458,7 +464,7 @@ Define what moves: which systems, how many years, which data types (images, repo
 - **Archive to archive**: copy from the old archive into the new one directly, without the viewer in the path.
 
 ## Physical transfer
-Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or ship drives. A migration also loads the old system, so schedule heavy transfer in off hours.
+A physical data transfer, meaning drives or appliances carried or shipped between sites, is the fallback when the network is too slow. Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or ship drives. A migration also loads the old system, so schedule heavy transfer in off hours.
 
 ## Standardization and integrity
 Migration is the chance to fix tags: **tag morphing** corrects patient IDs, procedure names, and other fields on the way. **Reconcile counts** by patient, study, series, and image between source and target, and sample images to confirm they open and look the same.
@@ -470,7 +476,7 @@ Find problems by queries: duplicate patients, missing accession numbers, studies
 Presentation states, annotations, and key images are often stored in a vendor-specific form. Plan a custom migration method, convert to a standard representation where possible, and tell the radiologists what will not move.
 
 ## Cost, impact, and progress
-Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Report progress weekly: studies moved, studies failed, and estimated completion.
+Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Progress monitoring means reporting weekly: studies moved, studies failed, and estimated completion.
 
 > Exam tip: the BEST proof of a good migration is a reconciliation of counts at every level plus a sample of images, signed off before the old system is retired.`,
       hook: "Scope it, pick the strategy, compute the transfer time, fix tags in flight, reconcile counts, plan for proprietary data, and report progress."
@@ -487,6 +493,7 @@ Plan the cost of transfer effort, extra storage, and the vendor's migration fees
 Retention periods and breach deadlines vary by state and country, so check the local rule rather than recall a number.
 
 ## Layered security
+Social engineering, such as phishing, tricks a person instead of a system, and a Trojan horse hides harmful code inside something that looks useful. A man in the middle attack sits quietly between two systems and reads or alters their traffic. Penetration testing, authorized attempts to break in, finds weaknesses before an attacker does.
 \`\`\`
 Layer           Examples
 Physical        locked server rooms, badge access, screen privacy

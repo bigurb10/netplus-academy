@@ -105,6 +105,7 @@ RadLex        imaging terms and procedure names   reports, protocoling, indexing
 The **RadLex Playbook** gives standard names and codes for imaging procedures. A site maps each of its local procedure names to one Playbook entry. After that, a hanging protocol, a dose registry, a billing check, and an outside exchange can all key on the same code instead of on local spelling.
 
 ## Why mapping matters
+A lexicon is a list of approved terms, a coding system gives each term a code, and an ontology adds the relationships between terms, so a system can know that one finding is a kind of another.
 - Hanging protocols select layouts from the procedure code.
 - Analytics count volumes and turnaround by procedure, which only works when similar exams share a code.
 - Exchange with other organizations is clean only when both sides agree on terms.
@@ -149,6 +150,7 @@ Name the profile, the actor, and the role you need: for example "image manager a
       body: `A cardiologist clicks a result in the EMR and expects the images to open. Instead a blank viewer appears. The work of integration is making each connection explicit, owned, and tested.
 
 ## The connections
+The client-server architecture underneath is simple: workstations and viewers are clients that ask, and the PACS, RIS, and interface servers answer.
 - **EMR to RIS** over HL7 for orders, ADT, and results.
 - **RIS to PACS** for the worklist and status updates.
 - **PACS to modalities** over DICOM for worklist, store, and storage commitment.
@@ -157,7 +159,7 @@ Name the profile, the actor, and the role you need: for example "image manager a
 - **APIs and web services** such as DICOMweb and FHIR let apps and portals fetch data without a point-to-point interface.
 
 ## The patient portal and the enterprise viewer
-A portal shows reports and often images through a secure link. An **enterprise viewer** (also called a universal viewer) serves clinicians outside radiology, so they are not forced to learn the diagnostic workstation.
+Web portals, such as the patient portal, show reports and often images through a secure link. An **enterprise image viewer** (also called an enterprise viewer or universal viewer) serves clinicians outside radiology, so they are not forced to learn the diagnostic workstation.
 
 ## Reporting, speech recognition, and scanned documents
 Reporting systems use speech recognition for dictation and send finished reports by ORU. Scanned requisitions and outside documents arrive as documents and are attached to the order or the study. Enterprise image devices, such as dermatology cameras, wound care photos, and surgical video, need orders or an encounter link or they arrive unidentified.
@@ -205,6 +207,7 @@ At recognition level: an AI tool is another consumer of images and producer of r
       body: `A radiologist finds an urgent finding at 02:10. The question is not only what the finding is. It is whether the right clinician was told, who said so, and where it is written down. Informatics builds that safety net.
 
 ## Critical and urgent results
+The urgency of a result sets how fast it must reach the clinician, and an actionable finding is one the clinician must act on, not just file.
 A **critical result** workflow is closed-loop: the radiologist reports, the system or a person communicates to the responsible clinician, the clinician confirms, and the confirmation is recorded with a time and a name. Systems can prompt for communication, keep a log, and escalate if nobody acknowledges.
 
 ## Discordant findings
@@ -251,6 +254,7 @@ Ultrasound          640 x 480, 1 byte grayscale (3 for color); 30 images about 9
 \`\`\`
 
 ## The arithmetic
+A CT image is built from voxels, small volume elements, and each pixel holds a Hounsfield unit, a number for tissue density. When the voxels are isotropic, equal in all three directions, the stack can be reformatted into any plane without blurring.
 Study size is matrix x bytes per pixel x number of images. A CT slice of 512 x 512 pixels at 2 bytes is 524,288 bytes, and 500 slices is about 262 million bytes, which matches the 262 MB average for a multi-slice study.
 
 ## Workflow quirks
@@ -279,14 +283,14 @@ Visible light        photos and video, often encapsulated or multi-frame
 \`\`\`
 
 ## What to remember about each
-- **Nuclear medicine and PET:** the patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam.
+- **Nuclear medicine and PET:** together with PET and {{SPECT}} this family is often called molecular imaging, because it shows how a tracer behaves in the body rather than only its shape. The patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam.
 - **Cardiology:** often a separate department system. The cardiology PACS must connect to the enterprise so priors and reports are shared.
 - **Radiation therapy:** plan, structure set, and dose are special DICOM objects. The oncology system, not only PACS, consumes them. Know the objects at recognition level.
 - **IR:** procedure room images and dose reports must reach the record.
 - **Visible light:** captured outside radiology workflows, so the order or patient link is often missing.
 
 ## Ancillary services
-Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
+Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound ({{POCUS}}) and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
 
 > Exam tip: for any non-radiology source, ask three things: how does it get the patient and order link, what object type does it produce, and which system consumes it.`,
       hook: "Nuclear medicine, cardiology, radiation therapy, IR, and visible light each produce their own objects and workflows, and each needs a patient link and a consumer."
@@ -343,7 +347,7 @@ If no proposed syntax is acceptable, that context is rejected and the objects ar
 Validation checks an object against the standard: required elements present, valid values, correct UIDs. Run it before accepting a new device and when imported studies behave oddly.
 
 ## Tools at recognition level
-A set of tools helps: an echo and send utility, a query tool, a header dump viewer, a simulator that acts as a modality or PACS, a validator, and network capture that shows the association messages.
+The DICOM tools you meet in daily work are a set of small utilities: an echo and send utility, a query tool, a header dump viewer, a simulator that acts as a modality or PACS, a validator, and network capture that shows the association messages. On a switched network the capture needs a mirrored port or a tap, and the capture card runs in promiscuous mode so it records traffic not addressed to it.
 
 ## Other integration types
 Secondary capture wraps a screenshot as an image object. An encapsulated PDF stores a document in a DICOM study. Non-DICOM converters turn photos or video into DICOM objects so they can be filed with a patient.
@@ -356,6 +360,7 @@ Secondary capture wraps a screenshot as an image object. An encapsulated PDF sto
       body: `A radiologist says a diagnostic monitor "looks washed out" on the second screen. The images are fine. Displays drift, and only measurement tells you by how much.
 
 ## Why calibrate
+Human perception is the reason: the eye judges small brightness steps along a curve, and the display must follow that curve so equal steps in the data look equal on screen.
 The **grayscale standard display function** (DICOM part 14) maps each pixel value to a luminance so equal steps look equally different. That is perceptual linearization. A calibrated display shows the same contrast wherever it is used.
 
 ## What gets tested
@@ -372,6 +377,7 @@ Matched displays      centers within 10 percent of each other
 Also resolution, noise, and geometric patterns, and pixel dropouts.
 
 ## Acceptance versus routine
+A qualified medical physicist ({{QMP}}) usually runs acceptance testing, often with a test pattern or a phantom, an object built to image in a known way.
 An **acceptance test** is done once at installation with the full set. **Routine QC** follows on a schedule with simpler checks and a visual pattern.
 
 ## Automation and records
@@ -425,9 +431,11 @@ FRA.units.push({
       body: `A new reading room opens and within a month three radiologists report neck strain and a glare problem on the end workstation. The design was approved on a floor plan. The exam wants you to design for the person who sits there for hours.
 
 ## Ergonomics
+Computer vision syndrome, meaning eye strain, dry eyes, and headaches from long screen work, is what good ergonomics prevents. One cause is a screen placed nearer than the eyes' resting point of vergence ({{RPV}}), the distance at which the eyes relax.
 Choose adjustable chairs with lumbar support and desks that change height. Place monitors at a comfortable height and angle, matched side by side, at a distance that does not force the neck or eyes to strain. Put the keyboard, mouse, and microphone where the arms rest naturally. Repetitive strain comes from long hours with fixed postures, so adjustability is the control.
 
 ## Light and the screen
+Veiling glare is stray light that washes over the screen and lowers contrast, so control it first.
 Ambient light should be dim, even, and controllable at each workstation, at 20 to 40 lux for reading. Light that is too bright washes out dark parts of the image and lowers perceived contrast. Avoid glare and reflections: no window or lamp should reflect in a screen. Indirect lighting with dimmers works better than overhead fluorescent light.
 
 ## Noise, temperature, and air
@@ -451,6 +459,7 @@ Power and network       extra outlets, cable management, a network drop per desk
       body: `A radiologist logs into four applications to read one study and tells you the day has become a typing exercise. The human-computer interface is how many steps, clicks, and logins stand between the reader and the image.
 
 ## Displays
+Resolution is counted in megapixels, and a diagnostic display carries far more of them than an office monitor.
 A **diagnostic display** is calibrated, has a high luminance and contrast ratio, and a large matrix suited to the images read on it. Mammography needs specialty displays. A **clinical review display** is for referring clinicians, with lower requirements (a contrast ratio above 100 instead of above 250). Grayscale suits most radiography reads; color is used for postprocessed and ultrasound images. Calibration and acceptance testing follow the unit 2 rules.
 
 ## Input devices
@@ -482,6 +491,7 @@ A study is **read-ready** when it is complete (all images arrived), correct (pat
 Rules fetch earlier exams of the same patient and body part. A rule can ask for the same modality, the same region, or a time window. Prefetch brings them from the archive before the reader opens the study.
 
 ## Postprocessing
+Image filtering, such as sharpening or smoothing, is one kind of postprocessing. It changes how the image looks, never the stored original.
 Reformats, multiplanar views, and 3D rendering are built from the stored slices, usually on an advanced visualization server, and results are stored as new series.
 
 ## Key images and annotation
@@ -498,6 +508,7 @@ A reader marks key images and annotations. They are stored as their own objects,
       body: `Storage is growing faster than the budget, and someone suggests compressing everything. The first question is what kind of compression, and who decides.
 
 ## Two kinds
+A codec is the program that compresses and decompresses an image, and both ends must support the same one.
 **Lossless** compression recovers every pixel exactly. Typical reduction is about 1.8 to 2.8 times, and storage planners often use 2.5 to 1. **Lossy**, also called irreversible, discards data for good. Ratios used when interpreting are about 20 to 1 for radiography, 10 to 1 for CT, and 5 to 1 for MRI.
 
 ## Who decides
@@ -560,6 +571,7 @@ A wrong-patient image can lead to a wrong diagnosis or treatment. Every check sh
       body: `An emergency physician acted on a preliminary report and the final report said something different. Who saw which version, and when? Report status is a data field with consequences.
 
 ## Report statuses
+An addendum (plural addenda) is added to a signed report instead of rewriting it.
 \`\`\`
 Status       Meaning
 Preliminary  early read, not signed as final
@@ -572,6 +584,7 @@ Corrected    final report replaced because of an error, flagged for readers
 The reporting system sends each version to the EMR as an ORU message, and the RIS status changes with it. The EMR must display the status clearly, and a change from preliminary to final should be visible to the ordering clinician. Who sees which status is a design decision: some roles may see preliminary reports and others only final.
 
 ## Structured versus narrative
+A scheme such as {{BI-RADS}} gives breast reports a fixed set of categories, so results can be counted and followed up.
 A **structured** report uses standard fields, templates, and terms, so it is easier to search, count, and feed to decision support. A **narrative** report is free text, flexible but harder to analyze.
 
 ## Speech recognition
@@ -588,6 +601,7 @@ Every status change and result view should be logged with the user and time, so 
       body: `A radiologist wants to save an interesting case to a teaching file, and a research group wants 400 head CT studies for a trial. Both requests must pass through de-identification.
 
 ## Workflows
+Research may draw on an imaging biobank, a managed collection of de-identified studies kept for later projects.
 A **teaching file** keeps selected cases for education, de-identified before saving or sharing. **Research** and **clinical trial** flows send images to a sponsor or an analysis group. An **IRB** reviews research and says what may leave the organization.
 
 ## What to remove
@@ -602,6 +616,7 @@ UIDs                      may reveal the source if not replaced
 \`\`\`
 
 ## Pseudonymization
+Some documents write this as pseudoanonymization.
 Replace identifiers with a code and keep a separate key, so those authorized can restore the link. Replace UIDs consistently so a study keeps its internal structure without exposing the original.
 
 ## Burned-in annotations
@@ -626,6 +641,7 @@ Turnaround time is measured from stage to stage: order to exam, exam to read-rea
 - **Bottleneck analysis:** remove the slowest step first, such as an unmatched-study queue.
 
 ## Remote interpretation
+Consultation tools, such as secure messaging and shared viewing, let a remote reader talk with the local team. A nighthawk service is a remote group that covers overnight reads.
 \`\`\`
 Model                     Needs
 Home reading              secure connection, calibrated display, fast study retrieval
@@ -660,6 +676,7 @@ Imported study risks: wrong demographics, duplicate UIDs, unknown transfer synta
 **PDI** is the standard layout for portable media: a DICOMDIR index and often a viewer. Export rules decide who may export, what, and how it is tracked.
 
 ## Cloud and standards
+Cross-enterprise sharing in a region often runs through a regional health information organization ({{RHIO}}) and an XDS affinity domain, the group of sites that agree to publish and query documents the same way.
 \`\`\`
 Method                Notes
 DICOM media (PDI)     disc or USB with DICOMDIR
@@ -689,6 +706,7 @@ A named policy owner, working with compliance, legal, and radiology leadership, 
 The record that must be kept is the original from which the diagnosis was made. A digitized film copy is not the original for legal retention.
 
 ## Lifecycle and deletion
+Destruction of images and electronic protected health information ({{ePHI}}) follows the written policy and is documented.
 \`\`\`
 Step                  Control
 Classify              by modality, patient age, and legal hold flag
