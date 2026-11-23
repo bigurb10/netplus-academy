@@ -52,6 +52,9 @@ Two devices open an **association**: the requester proposes **presentation conte
 ## The core services
 {{C-ECHO}} tests the connection, {{C-STORE}} sends an object, {{C-FIND}} queries, {{C-MOVE}} asks a provider to send matches to a named destination, and {{C-GET}} retrieves over the same association. DICOMweb offers store, query, and retrieve over HTTP.
 
+## The header and tags
+Every DICOM object carries a header of data elements, each addressed by a tag written as (group,element). A few matter every day: (0010,0010) is the patient name, (0010,0020) is the patient ID, (0008,0050) is the accession number that ties the images to the order, and (0020,000D) is the study instance UID. When a study will not match, read these four first.
+
 ## Reading the conformance statement
 Every product ships one. It lists the SOP classes, user and provider roles, transfer syntaxes, and options. Read it before buying.
 
@@ -244,7 +247,7 @@ Mammography         4 images about 197 MB, 6 images about 296 MB       specialty
 Tomosynthesis       roughly 450 MB to 3 GB                             very large objects
 CT                  512 x 512 at 2 bytes = 524,288 bytes per slice     thin and thick series
 MRI                 256 x 256 at 2 bytes; 200 images about 26 MB       many series per study
-Ultrasound          640 x 480, 3 bytes color; 30 images about 9.2 MB   cine and structured reports
+Ultrasound          640 x 480, 1 byte grayscale (3 for color); 30 images about 9.2 MB   cine and structured reports
 \`\`\`
 
 ## The arithmetic

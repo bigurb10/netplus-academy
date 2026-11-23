@@ -245,13 +245,14 @@ Size is matrix times bytes per pixel times number of images. Do the arithmetic o
 Modality        Matrix        Bytes per pixel   Images   Size per image     Study size
 CT              512 x 512     2                 500      524,288 bytes      about 262 MB
 MRI             256 x 256     2                 200      131,072 bytes      about 26 MB
-Ultrasound      640 x 480     3 (color)         30       921,600 bytes      about 27.6 MB uncompressed
+Ultrasound      640 x 480     1 (grayscale)     30       307,200 bytes      about 9.2 MB
+Ultrasound      640 x 480     3 (color)         30       921,600 bytes      about 27.6 MB
 \`\`\`
 
 ## Checking each row
 CT: 512 x 512 is 262,144 pixels, times 2 bytes is 524,288 bytes. Times 500 images is 262,144,000 bytes, about 262 MB, which matches the sheet's average for a multi-slice study.
 MRI: 256 x 256 is 65,536 pixels, times 2 bytes is 131,072 bytes. Times 200 images is 26,214,400 bytes, about 26 MB, which matches the sheet.
-Ultrasound: 640 x 480 is 307,200 pixels, times 3 bytes is 921,600 bytes. Times 30 images is 27,648,000 bytes, about 27.6 MB uncompressed. The sheet's average for ultrasound is 9.2 MB, because the images are usually stored compressed or in fewer color bytes, so use the sheet for planning and the arithmetic to understand the pattern.
+Ultrasound: 640 x 480 is 307,200 pixels. At 1 byte per pixel (grayscale) that is 307,200 bytes, and 30 images is 9,216,000 bytes, about 9.2 MB, which matches the sheet's average. At 3 bytes per pixel (color) each image is 921,600 bytes and 30 images is 27,648,000 bytes, about 27.6 MB. Color Doppler and color-mapped images cost three times as much, so check which kind of image the scanner sends.
 
 ## Using it to plan
 A scanner that moves from 500 to 1,000 thin slices per study doubles its CT study size to about 524 MB. If the site does 40 such studies a day, the daily growth is about 21 GB (40 x 524 MB = 20,960 MB). Over a year of 250 working days that is about 5.2 TB before compression. Lossless compression at about 2.5 to 1 would reduce that to roughly 2.1 TB.
