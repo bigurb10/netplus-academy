@@ -42,4 +42,4 @@ scp -rq "$STAGE"/* hetzner:/tmp/fra-deploy/
 echo "uploaded to hetzner:/tmp/fra-deploy/ ($(ssh hetzner 'find /tmp/fra-deploy -type f | wc -l') files there)"
 echo
 echo "To go live (backs up the web root first), run:"
-echo '! ssh hetzner "tar czf /root/fra-backup-$(date +%Y%m%d-%H%M).tgz -C /var/www fieldready && cp -a /tmp/fra-deploy/. /var/www/fieldready/ && chown -R caddy:caddy /var/www/fieldready && echo deployed"'
+echo "  bash scripts/go-live.sh"
