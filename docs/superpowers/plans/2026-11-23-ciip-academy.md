@@ -979,9 +979,49 @@ Checker: `python scripts/termcheck_ciip.py`.
 - CHECK 2 (outline terms): 350 terms. Before: 12 misses (vendor selection, imaging positions, imaging planes, training assessment, fiber channel, hard drive, physical data transfer, progress monitoring, molecular imaging, DICOM tools, web portals, enterprise image viewer). After: 0 misses. All closed by lesson text in the lesson whose obj matches (u1l6, u2l2, u2l4, u4l1, u5l9, u7l3, u9l2, u10l3).
 - CHECK 1a (textbook titles): 186 entries; 47 reported before, 24 after.
 - CHECK 1b (glossary terms, PDF pages 634 to 648): 202 entries; 63 reported before, 21 after.
-- Added where the term maps to an outline item: ontology, actionable finding and urgency, client-server architecture, voxel, Hounsfield unit, isotropic, promiscuous mode, human perception, QMP and phantom, computer vision syndrome, RPV, veiling glare, megapixels, image filtering, codec, addendum, BI-RADS, imaging biobank, pseudoanonymization, consultation tools and nighthawk, RHIO and XDS affinity domain, ePHI and destruction, computer networking, datacenter and ventilation, SBC, databases, business continuance, mission critical application, service interruption management, social engineering, phishing, Trojan horse, man in the middle, penetration testing, just culture, regulatory compliance and policy management, BAA and PHI, FDA, data warehouse, histogram, feasibility and program oversight and mission, best of breed, proof of concept, task allocation matrix, online status website, tactical plan, superusers, POCUS.
+Terms added from the textbook triage (term, lesson):
+
+| Term | Lesson |
+|---|---|
+| ontology, lexicon | u1l4 |
+| actionable finding, urgency | u1l8 |
+| client-server architecture, web portals, enterprise image viewer | u1l6 |
+| voxel, Hounsfield unit, isotropic | u2l1 |
+| molecular imaging, SPECT, POCUS | u2l2 |
+| DICOM tools, promiscuous mode | u2l4 |
+| human perception, QMP, phantom | u2l5 |
+| computer vision syndrome, RPV, veiling glare | u3l1 |
+| megapixels | u3l2 |
+| image filtering | u3l3 |
+| codec | u3l4 |
+| addendum, BI-RADS | u3l6 |
+| imaging biobank, pseudoanonymization | u3l7 |
+| consultation tools, nighthawk | u3l8 |
+| RHIO, XDS affinity domain | u3l9 |
+| destruction, ePHI | u3l10 |
+| Fibre Channel spelling, hard drive | u4l1 |
+| computer networking | u4l3 |
+| datacenter, ventilation | u4l5 |
+| SBC | u4l6 |
+| databases, data retrieval | u4l8 |
+| business continuance, mission critical application, service interruption management | u5l6 |
+| physical data transfer, progress monitoring | u5l9 |
+| social engineering, Trojan horse, man in the middle, penetration testing | u5l10 |
+| just culture | u6l1 |
+| PHI, BAA, FDA, regulatory compliance, policy management | u6l4 |
+| data warehouse, histogram | u6l7 |
+| feasibility, program oversight, mission | u7l1 |
+| best of breed | u7l2 |
+| vendor selection, proof of concept | u7l3 |
+| task allocation matrix | u8l2 |
+| imaging planes and positions | u9l2 |
+| online status website | u9l3 |
+| tactical plan | u9l4 |
+| superusers | u10l2 |
+| training assessment | u10l3 |
+
 - Out of scope (not added): "Additional Healthcare Data", "Bringing It All Together", "Final Thoughts", "Suggested Readings", "Understanding Basic Concepts", "Why Medical Images Are Helpful", "Limitations and Challenges", "Establish an Organizational Foundation" (generic); "Airflow in the Pandemic" (history); "Computers 101" (generic); "Considerations" titles x5 (generic); "Developing a Database for Imaging Research", "Incorporating Nonimage Data", "Imaging Widening the Aperture", "Evolution of Enterprise Image Distribution", "Multivendor Ecosystem", "History and Evolving Impact of Reading Room Design" (history); "Revenue Cycle" (billing); "Databases and Data Retrieval" (normalizer artifact: the checker re-stems "databas" to "databa"; the pack does contain "databases"); glossary: Commoditization (business), Convolution, Fourier Transform, Transform (physics), Fat-Finger Error, One Throat to Choke, Leadership Force Multipliers, Out-of-Band Task, In-the-Wild Threats (slang), Health Literacy (clinical), Incidental Finding (clinical), Microsleep (clinical), Opacity (physics), Phoneme (speech), Pipeline (jargon), RECIST and Radiomics (research), Safe Haven (US-specific), Scrum (methodology), Similarity Metrics (research), Sync for Science (US-specific).
-- Final POCUS: added as inline code in u2l2 (resolved in the last run: 1b = 21).
+- Fix round 1: the eleven acronyms SPECT, POCUS, QMP, RPV, BI-RADS, RHIO, ePHI, PHI, BAA, FDA, SBC are now glossary keys in acronyms.js and plain text in the lessons (the acronym test accepted every key, including ePHI and BI-RADS).
 
 Exam facts hand-checked (course.js exam block, FAQ, realExamNote, examDay; cheat sheet exam section). Sources: CG = Certification-Guide.txt, SP = Seven-Point-Qualification-System.txt, TCO = Test-Content-Outline-2024.txt (all under E:/CERT GUIDES/CIIP/).
 - 170 questions, 10 domains: CG 252. 170 minutes (2 hours 50 minutes) plus 20 minutes: CG 265-267 (8-minute tutorial and 2-minute NDA are part of the 20).
@@ -991,7 +1031,7 @@ Exam facts hand-checked (course.js exam block, FAQ, realExamNote, examDay; cheat
 - Pearson VUE center or online remote proctor, any day: CG 83, 245. Three attempts in 12 months from eligibility: CG 61-64, 238; postponing does not move it: CG 67.
 - Scaled 1 to 99, 75 passes, not a percentage: CG 604-606. Preliminary score on screen: CG 555.
 - Fee $500, retake $250: CG 238. Re-application $250 after late cancel: CG 113-114. Pearson VUE reschedule $10: CG 116. Cancel up to 24 hours before a center appointment or 30 minutes before an online one: CG 108-110. Missed appointment forfeits fee, not an attempt: CG 144-147.
-- Eligibility at least 7 points, minimums per category: SP 16-17. Experience 1 to 5, one point per 12 months: SP 23-24, 30; military non-certified radiologic technologist: SP 7 area. Education 0 to 5: 30 semester (45 quarter) 1; 60 semester 2; 90 semester 3; 120 semester 4; master's or doctorate 5: SP 54-72; plus 1 for an imaging informatics degree: SP 74-80; not cumulative: SP 82. CE 1 to 4, one point per 10 hours within 18 months of applying: SP 25-28, 86-89.
+- Eligibility at least 7 points, minimums per category: SP 16-17. Experience 1 to 5, one point per 12 months: SP 23-24, 30; military non-certified radiologic technologist: SP 34-46. Education 0 to 5: 30 semester (45 quarter) 1; 60 semester 2; 90 semester 3; 120 semester 4; master's or doctorate 5: SP 54-72; plus 1 for an imaging informatics degree: SP 74-80; not cumulative: SP 82. CE 1 to 4, one point per 10 hours within 18 months of applying: SP 25-28, 86-89.
 - Renewal 24 credits every two years: CG 763; annual renewal fee: CG 785-787; ten-year requirements: CG 810-819. No discrepancies found.
 
 Tests after the edits: packcheck OK, acronyms OK, npm test all pass; dist rebuilt.

@@ -110,19 +110,17 @@ A policy has an owner, an approving body, an effective date, and a review date, 
       body: `A privacy officer calls: a radiologist saw the images of a neighbor who is not her patient. At the same time the mammography site is due for its yearly inspection. Compliance is the set of laws you must prove you follow, and the proof is documents and logs that you keep.
 
 ## HIPAA
-Regulatory compliance needs policy management: a written policy, an owner, and a review date. A business associate agreement ({{BAA}}) binds any vendor that touches {{PHI}}.
-HIPAA protects protected health information, meaning anything that identifies a patient and relates to care or payment. Three parts matter to imaging.
+HIPAA protects protected health information (PHI), meaning anything that identifies a patient and relates to care or payment. Three parts matter to imaging.
 - The **Privacy Rule** limits who may use and disclose the data and says to use the minimum necessary for the task.
 - The **Security Rule** requires safeguards for electronic data: administrative (risk analysis, policies, training), physical (locked rooms, workstation placement), and technical (unique user IDs, access control, audit logs, encryption, integrity checks).
 - The **Breach Notification Rule** requires notifying affected individuals without unreasonable delay and no later than 60 days after discovery of a breach; large breaches also go to the government and the media.
-Vendors who handle patient data are business associates and sign an agreement that binds them to the same protections.
+Vendors who handle patient data are business associates and sign a business associate agreement (BAA) that binds them to the same protections.
 
 ## HITECH
 The HITECH Act of 2009 pushed adoption of electronic health records (the meaningful use program), extended HIPAA directly to business associates, strengthened enforcement with higher penalties, and made breach notification law.
 
 ## MQSA
-The {{FDA}}, the Food and Drug Administration, regulates medical devices, including imaging systems and software, and it enforces MQSA.
-The Mammography Quality Standards Act is the federal law for mammography. A facility must be accredited and certified, have qualified interpreting physicians, and perform quality control. For informatics the key duties are records and reporting.
+The Mammography Quality Standards Act is the federal law for mammography, enforced by the Food and Drug Administration (FDA), which also regulates medical devices such as imaging systems and software. A facility must be accredited and certified, have qualified interpreting physicians, and perform quality control. For informatics the key duties are records and reporting.
 - Keep the mammograms and reports for the required period. The federal minimum is 5 years, or 10 years if the patient has no later exam at the facility, and longer where state law says so.
 - Send the patient a written summary of the result in plain language, and track outcomes for the facility's audit.
 - Show the inspector the display quality control records for the mammography workstations.
@@ -131,7 +129,7 @@ The Mammography Quality Standards Act is the federal law for mammography. A faci
 Many states, accreditation programs, and hospital policies require recording the dose of each exam. The informatics job is to collect it automatically from the DICOM radiation dose structured report, store it per exam, compare it to reference levels, and flag outliers for physicist review.
 
 ## Documenting compliance
-A control you cannot prove does not count. Keep policies, access reviews, audit log samples, risk analyses, training rosters, QC records, and incident reports where an auditor can find them.
+Regulatory compliance depends on policy management: each policy has a written owner and a review date, and a control you cannot prove does not count. Keep policies, access reviews, audit log samples, risk analyses, training rosters, QC records, and incident reports where an auditor can find them.
 
 > Exam tip: HIPAA protects the data, HITECH adds breach notification and enforcement, MQSA governs mammography records, and dose tracking compares each exam to reference levels. If you cannot show a record, the auditor assumes it was not done.`,
       hook: "HIPAA protects patient data, HITECH adds breach notification and enforcement, MQSA governs mammography, and dose tracking needs automatic records; compliance is what you can prove."
@@ -278,7 +276,8 @@ FRA.units.push({
       body: `The PACS is eight years old, support ends in two, and the hospital board asks, "Why should we spend money on this?" Before any vendor hears from you, you define the project and justify it in numbers a board understands.
 
 ## Project definition
-Check feasibility first: can the project be done with the money, people, and time available? Imaging program oversight, a steering group with a mission and principles, keeps projects aligned.
+Check feasibility first: can the project be done with the money, people, and time available?
+Imaging program oversight is a steering group with a mission and principles that keeps projects aligned with the organization.
 Write down, in this order, and have the sponsors agree to it:
 - **Goals**: what the organization gets, such as faster reads, a supported platform, and one archive for all sites.
 - **Scope of solution**: what is included (PACS, archive, viewers, interfaces, migration) and what is not (new modalities, the EMR).
@@ -369,7 +368,7 @@ Each evaluator scores each criterion from 1 to 5; the weight times the score, su
 Call current customers of your size and type, and ask what went wrong, how the vendor handled it, how upgrades went, and whether they would buy again. A **site visit** lets your staff watch the system in daily use. Choose customers yourself, not only those the vendor offers.
 
 ## Selection and contract
-Vendor selection is the decision step: choose on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
+Vendor selection rests on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
 - **Deliverables and acceptance criteria**: tests that must pass before the final payment.
 - **Uptime and support terms**, with response and resolution times and remedies.
 - **Data ownership and exit**: the data stays yours, and the vendor must return it in a standard format at no unreasonable cost.
@@ -705,8 +704,7 @@ Quick reference card one page placed at the workstation for the few key steps
 Use more than one format for important tasks. A video shows how, a card reminds, and a practice exercise makes it stick. Keep each piece short: a three-minute video on one task beats a one-hour tour.
 
 ## Super-users and train-the-trainer
-Super-users, also written superusers, are staff who learn first and then coach their peers.
-A **super-user** is a staff member in each area, such as a technologist on each shift or a clerk at each desk, who gets extra training and then coaches colleagues, answers first-line questions, and reports problems to the project team. In a **train-the-trainer** model, you train the super-users and they train their peers. It scales well, puts a trusted face in each area, and keeps help near the work. Support super-users with time in their schedule and a clear way to reach you.
+A **super-user** (also written superuser) is a staff member in each area, such as a technologist on each shift or a clerk at each desk, who gets extra training and then coaches colleagues, answers first-line questions, and reports problems to the project team. In a **train-the-trainer** model, you train the super-users and they train their peers. It scales well, puts a trusted face in each area, and keeps help near the work. Support super-users with time in their schedule and a clear way to reach you.
 
 ## Schedule around clinical work
 Offer sessions on each shift, short enough to fit between exams (30 minutes is a common target for a refresher, as an example), and give a test environment where people can practice without touching a live patient record. Train close to go-live, not months before, because people forget what they do not use. Reserve seats for night and weekend staff, who are often forgotten.
@@ -719,7 +717,7 @@ Offer sessions on each shift, short enough to fit between exams (30 minutes is a
       body: `Training finished last week. The attendance sheet is full and everyone smiled. Then the help desk reports that calls about the same three screens have doubled. A full sign-in sheet shows people attended; it does not show they can do the job. Assessment finds out whether the training worked.
 
 ## Tools to assess
-Training assessment uses one or more of the tools below, matched to the objective.
+Match the tool to the objective: a training assessment often combines two or three of these, such as a quiz for facts and observation for skills.
 \`\`\`
 Tool                        What it tells you
 Quiz                        whether the learner knows the facts

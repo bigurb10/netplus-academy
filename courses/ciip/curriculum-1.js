@@ -207,8 +207,7 @@ At recognition level: an AI tool is another consumer of images and producer of r
       body: `A radiologist finds an urgent finding at 02:10. The question is not only what the finding is. It is whether the right clinician was told, who said so, and where it is written down. Informatics builds that safety net.
 
 ## Critical and urgent results
-The urgency of a result sets how fast it must reach the clinician, and an actionable finding is one the clinician must act on, not just file.
-A **critical result** workflow is closed-loop: the radiologist reports, the system or a person communicates to the responsible clinician, the clinician confirms, and the confirmation is recorded with a time and a name. Systems can prompt for communication, keep a log, and escalate if nobody acknowledges.
+A **critical result** workflow is closed-loop: the radiologist reports, the system or a person communicates to the responsible clinician, the clinician confirms, and the confirmation is recorded with a time and a name. Systems can prompt for communication, keep a log, and escalate if nobody acknowledges. The urgency of a result sets how fast the loop must close, and an actionable finding is one the clinician must act on, not just file.
 
 ## Discordant findings
 When a preliminary read (often by a resident or an overnight reader) differs from the final, the ordering clinician must be told. Informatics supports it with a status flow (preliminary, then final) and an alert when the final changes the meaning.
@@ -283,14 +282,14 @@ Visible light        photos and video, often encapsulated or multi-frame
 \`\`\`
 
 ## What to remember about each
-- **Nuclear medicine and PET:** together with PET and {{SPECT}} this family is often called molecular imaging, because it shows how a tracer behaves in the body rather than only its shape. The patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam.
+- **Nuclear medicine, PET, and SPECT:** together called molecular imaging, because they show how a tracer behaves in the body rather than only its shape. The patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam, and SPECT is often paired with CT the same way.
 - **Cardiology:** often a separate department system. The cardiology PACS must connect to the enterprise so priors and reports are shared.
 - **Radiation therapy:** plan, structure set, and dose are special DICOM objects. The oncology system, not only PACS, consumes them. Know the objects at recognition level.
 - **IR:** procedure room images and dose reports must reach the record.
 - **Visible light:** captured outside radiology workflows, so the order or patient link is often missing.
 
 ## Ancillary services
-Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound ({{POCUS}}) and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
+Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound (POCUS) and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
 
 > Exam tip: for any non-radiology source, ask three things: how does it get the patient and order link, what object type does it produce, and which system consumes it.`,
       hook: "Nuclear medicine, cardiology, radiation therapy, IR, and visible light each produce their own objects and workflows, and each needs a patient link and a consumer."
@@ -360,8 +359,7 @@ Secondary capture wraps a screenshot as an image object. An encapsulated PDF sto
       body: `A radiologist says a diagnostic monitor "looks washed out" on the second screen. The images are fine. Displays drift, and only measurement tells you by how much.
 
 ## Why calibrate
-Human perception is the reason: the eye judges small brightness steps along a curve, and the display must follow that curve so equal steps in the data look equal on screen.
-The **grayscale standard display function** (DICOM part 14) maps each pixel value to a luminance so equal steps look equally different. That is perceptual linearization. A calibrated display shows the same contrast wherever it is used.
+The **grayscale standard display function** (DICOM part 14) maps each pixel value to a luminance so equal steps look equally different. That is perceptual linearization, and human perception is the reason for it: the eye judges small brightness steps along a curve, so the display must follow that curve. A calibrated display shows the same contrast wherever it is used.
 
 ## What gets tested
 AAPM test patterns (TG18, replaced by TG270) support these checks:
@@ -377,11 +375,10 @@ Matched displays      centers within 10 percent of each other
 Also resolution, noise, and geometric patterns, and pixel dropouts.
 
 ## Acceptance versus routine
-A qualified medical physicist ({{QMP}}) usually runs acceptance testing, often with a test pattern or a phantom, an object built to image in a known way.
 An **acceptance test** is done once at installation with the full set. **Routine QC** follows on a schedule with simpler checks and a visual pattern.
 
 ## Automation and records
-Calibration software with a built-in photometer can adjust displays and report remotely. A QA program names who performs each test, how often, and where records are kept. A medical physicist or trained team signs off. Mammography displays need a qualified medical physicist before clinical use.
+Calibration software with a built-in photometer can adjust displays and report remotely. A QA program names who performs each test, how often, and where records are kept. A medical physicist or trained team signs off. A qualified medical physicist (QMP) usually runs acceptance testing, often with a test pattern or a phantom, an object built to image in a known way, and mammography displays need a QMP before clinical use.
 
 > Exam tip: a clean-looking image proves nothing about a display. Test pattern plus meter is the evidence, and each test result is documented.`,
       hook: "Diagnostic displays are calibrated to the grayscale standard display function and checked with test patterns and a meter, with acceptance testing once and routine QC on a schedule."
@@ -431,8 +428,7 @@ FRA.units.push({
       body: `A new reading room opens and within a month three radiologists report neck strain and a glare problem on the end workstation. The design was approved on a floor plan. The exam wants you to design for the person who sits there for hours.
 
 ## Ergonomics
-Computer vision syndrome, meaning eye strain, dry eyes, and headaches from long screen work, is what good ergonomics prevents. One cause is a screen placed nearer than the eyes' resting point of vergence ({{RPV}}), the distance at which the eyes relax.
-Choose adjustable chairs with lumbar support and desks that change height. Place monitors at a comfortable height and angle, matched side by side, at a distance that does not force the neck or eyes to strain. Put the keyboard, mouse, and microphone where the arms rest naturally. Repetitive strain comes from long hours with fixed postures, so adjustability is the control.
+Choose adjustable chairs with lumbar support and desks that change height. Place monitors at a comfortable height and angle, matched side by side, at a distance that does not force the neck or eyes to strain. Put the keyboard, mouse, and microphone where the arms rest naturally. Repetitive strain comes from long hours with fixed postures, so adjustability is the control. The same care prevents computer vision syndrome, meaning eye strain, dry eyes, and headaches from long screen work. One cause is a screen placed nearer than the eyes' resting point of vergence (RPV), the distance at which the eyes relax.
 
 ## Light and the screen
 Veiling glare is stray light that washes over the screen and lowers contrast, so control it first.
@@ -508,8 +504,7 @@ A reader marks key images and annotations. They are stored as their own objects,
       body: `Storage is growing faster than the budget, and someone suggests compressing everything. The first question is what kind of compression, and who decides.
 
 ## Two kinds
-A codec is the program that compresses and decompresses an image, and both ends must support the same one.
-**Lossless** compression recovers every pixel exactly. Typical reduction is about 1.8 to 2.8 times, and storage planners often use 2.5 to 1. **Lossy**, also called irreversible, discards data for good. Ratios used when interpreting are about 20 to 1 for radiography, 10 to 1 for CT, and 5 to 1 for MRI.
+**Lossless** compression recovers every pixel exactly. Typical reduction is about 1.8 to 2.8 times, and storage planners often use 2.5 to 1. **Lossy**, also called irreversible, discards data for good. Ratios used when interpreting are about 20 to 1 for radiography, 10 to 1 for CT, and 5 to 1 for MRI. A codec is the program that compresses and decompresses an image, and both ends must support the same one.
 
 ## Who decides
 The radiology department and its policies decide what may be lossy-compressed for interpretation. It is not a decision for IT alone. A lossy ratio must be stated on each image of the study.
@@ -571,7 +566,6 @@ A wrong-patient image can lead to a wrong diagnosis or treatment. Every check sh
       body: `An emergency physician acted on a preliminary report and the final report said something different. Who saw which version, and when? Report status is a data field with consequences.
 
 ## Report statuses
-An addendum (plural addenda) is added to a signed report instead of rewriting it.
 \`\`\`
 Status       Meaning
 Preliminary  early read, not signed as final
@@ -579,12 +573,13 @@ Final        the signed report of record
 Addended     final report with an added note; original text stays
 Corrected    final report replaced because of an error, flagged for readers
 \`\`\`
+An addendum (plural addenda) is added to a signed report instead of rewriting it, so the original text stays visible.
 
 ## How they flow
 The reporting system sends each version to the EMR as an ORU message, and the RIS status changes with it. The EMR must display the status clearly, and a change from preliminary to final should be visible to the ordering clinician. Who sees which status is a design decision: some roles may see preliminary reports and others only final.
 
 ## Structured versus narrative
-A scheme such as {{BI-RADS}} gives breast reports a fixed set of categories, so results can be counted and followed up.
+A scheme such as BI-RADS gives breast reports a fixed set of categories, so results can be counted and followed up.
 A **structured** report uses standard fields, templates, and terms, so it is easier to search, count, and feed to decision support. A **narrative** report is free text, flexible but harder to analyze.
 
 ## Speech recognition
@@ -616,8 +611,7 @@ UIDs                      may reveal the source if not replaced
 \`\`\`
 
 ## Pseudonymization
-Some documents write this as pseudoanonymization.
-Replace identifiers with a code and keep a separate key, so those authorized can restore the link. Replace UIDs consistently so a study keeps its internal structure without exposing the original.
+Pseudonymization, sometimes written pseudoanonymization, replaces identifiers with a code and keeps a separate key, so those authorized can restore the link. Replace UIDs consistently so a study keeps its internal structure without exposing the original.
 
 ## Burned-in annotations
 Text drawn into the pixels survives header cleaning, so it needs pixel-level removal or masking.
@@ -676,7 +670,7 @@ Imported study risks: wrong demographics, duplicate UIDs, unknown transfer synta
 **PDI** is the standard layout for portable media: a DICOMDIR index and often a viewer. Export rules decide who may export, what, and how it is tracked.
 
 ## Cloud and standards
-Cross-enterprise sharing in a region often runs through a regional health information organization ({{RHIO}}) and an XDS affinity domain, the group of sites that agree to publish and query documents the same way.
+Cross-enterprise sharing in a region often runs through a regional health information organization (RHIO) and an XDS affinity domain, the group of sites that agree to publish and query documents the same way.
 \`\`\`
 Method                Notes
 DICOM media (PDI)     disc or USB with DICOMDIR
@@ -706,7 +700,7 @@ A named policy owner, working with compliance, legal, and radiology leadership, 
 The record that must be kept is the original from which the diagnosis was made. A digitized film copy is not the original for legal retention.
 
 ## Lifecycle and deletion
-Destruction of images and electronic protected health information ({{ePHI}}) follows the written policy and is documented.
+Destruction of images and electronic protected health information (ePHI) follows the written policy and is documented.
 \`\`\`
 Step                  Control
 Classify              by modality, patient age, and legal hold flag

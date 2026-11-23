@@ -14,7 +14,7 @@ FRA.units.push({
 ## Four ways to attach storage
 - **DAS**, direct-attached storage, is a set of drives wired to one server. It is simple and fast, and nobody else can use it.
 - **NAS**, network-attached storage, shares folders over the network. Windows clients use SMB (the older name is CIFS); Unix and Linux clients use NFS. The server sees a file share.
-- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The two transports are Fibre Channel (spelled fiber channel in some documents, its own fast fabric) and iSCSI (block storage over ordinary TCP and Ethernet). The server sees a disk it formats itself.
+- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The server sees a disk it formats itself. There are two transports. Fibre Channel (often written fiber channel) is a dedicated high-speed storage network with its own switches and adapters. iSCSI carries block storage over ordinary TCP and Ethernet.
 - **Object storage** keeps data as objects, each with an ID and metadata, in one flat space. It is reached through an interface such as S3, scales very wide, and is how most cloud archives work.
 
 ## Block, file, and object
@@ -74,8 +74,7 @@ DICOM is an application-layer protocol: association negotiation and AE titles be
 **TCP** is connection-oriented: it acknowledges data and retransmits what is lost. DICOM, HL7, and HTTP use it because a study must arrive whole. **UDP** has no delivery guarantee and is fast, which suits DNS lookups, time, and logging.
 
 ## Devices
-Computer networking is how imaging systems find and talk to each other, and these devices are its building blocks.
-A **hub** repeats every frame to every port. A **switch** forwards by MAC address. A **router** moves traffic between networks by IP address. A **gateway** translates between different protocols or networks. A **trunk** carries several VLANs between switches.
+Computer networking in an imaging site means these devices working together. A **hub** repeats every frame to every port. A **switch** forwards by MAC address. A **router** moves traffic between networks by IP address. A **gateway** translates between different protocols or networks. A **trunk** carries several VLANs between switches.
 
 ## Media
 Wired **ethernet** over Cat 5e or Cat 6 copper reaches 100 meters at gigabit speed. **Fiber** carries light, so it goes farther and ignores electrical noise; multimode is for short runs and single-mode for long ones. **Wireless** is convenient for carts and handhelds but shares the air and has more variable speed, so a diagnostic workstation stays wired. **Bluetooth** is a short-range link for peripherals such as headsets and scanners, not for images.
@@ -156,8 +155,7 @@ Browser-based viewers need no install on the workstation, but they need a suppor
 **RDP** and **VNC** let an administrator or a vendor control a computer from elsewhere. Use them only over a VPN, with named accounts and logging, and close vendor access when the support case ends.
 
 ## Virtual machines and VDI
-Server-based computing ({{SBC}}) is the older cousin: users run sessions on a shared server instead of owning a desktop each.
-A **virtual machine** is a server running in software; one physical host runs many, on a platform such as VMware. **VDI** hosts desktops in the data center and shows them on a thin client, using a product such as Citrix. It helps with central patching and with reading from many places, but a diagnostic session needs enough GPU and bandwidth behind it.
+A **virtual machine** is a server running in software; one physical host runs many, on a platform such as VMware. **VDI** hosts desktops in the data center and shows them on a thin client, using a product such as Citrix. It helps with central patching and with reading from many places, but a diagnostic session needs enough GPU and bandwidth behind it. Server-based computing (SBC) is the older design: users run sessions on a shared server instead of getting a desktop each.
 
 ## Mobile devices
 Phones and tablets suit review, on-call triage, and viewing reports. They are not for primary diagnostic reading unless the display and the software are cleared and calibrated for it. Mobile devices need device management, encryption, and a lockable application.
@@ -192,8 +190,7 @@ Provision on the first day by role, change roles when the job changes, and depro
       body: `The department head asks how many chest studies are still unread, by site, and no report in the system answers it. A short database query will. You do not need to be a programmer for the exam, but you must read a simple query and know how a database is built.
 
 ## SQL in five words
-Databases hold the studies, orders, and users, and data retrieval means asking them questions.
-{{SELECT}} chooses the columns to return, {{WHERE}} filters rows by a condition, {{JOIN}} combines rows from two tables on a matching key, {{GROUP BY}} groups rows so a count is computed per group, and {{COUNT}} counts the rows. A query for unread exams by site reads:
+Data retrieval from the databases behind PACS and the RIS uses SQL, and five words cover most of it. {{SELECT}} chooses the columns to return, {{WHERE}} filters rows by a condition, {{JOIN}} combines rows from two tables on a matching key, {{GROUP BY}} groups rows so a count is computed per group, and {{COUNT}} counts the rows. A query for unread exams by site reads:
 \`\`\`
 SELECT site, COUNT(*) FROM exams WHERE status = 'unread' GROUP BY site
 \`\`\`
@@ -464,7 +461,7 @@ Define what moves: which systems, how many years, which data types (images, repo
 - **Archive to archive**: copy from the old archive into the new one directly, without the viewer in the path.
 
 ## Physical transfer
-A physical data transfer, meaning drives or appliances carried or shipped between sites, is the fallback when the network is too slow. Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or ship drives. A migration also loads the old system, so schedule heavy transfer in off hours.
+Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or fall back to a physical data transfer, shipping drives or appliances between sites. A migration also loads the old system, so schedule heavy transfer in off hours.
 
 ## Standardization and integrity
 Migration is the chance to fix tags: **tag morphing** corrects patient IDs, procedure names, and other fields on the way. **Reconcile counts** by patient, study, series, and image between source and target, and sample images to confirm they open and look the same.
@@ -476,7 +473,7 @@ Find problems by queries: duplicate patients, missing accession numbers, studies
 Presentation states, annotations, and key images are often stored in a vendor-specific form. Plan a custom migration method, convert to a standard representation where possible, and tell the radiologists what will not move.
 
 ## Cost, impact, and progress
-Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Progress monitoring means reporting weekly: studies moved, studies failed, and estimated completion.
+Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Progress monitoring is a weekly report of studies moved, studies failed, and estimated completion.
 
 > Exam tip: the BEST proof of a good migration is a reconciliation of counts at every level plus a sample of images, signed off before the old system is retired.`,
       hook: "Scope it, pick the strategy, compute the transfer time, fix tags in flight, reconcile counts, plan for proprietary data, and report progress."
@@ -493,9 +490,8 @@ Plan the cost of transfer effort, extra storage, and the vendor's migration fees
 Retention periods and breach deadlines vary by state and country, so check the local rule rather than recall a number.
 
 ## Layered security
-Social engineering, such as phishing, tricks a person instead of a system, and a Trojan horse hides harmful code inside something that looks useful. A man in the middle attack sits quietly between two systems and reads or alters their traffic. Penetration testing, authorized attempts to break in, finds weaknesses before an attacker does.
 \`\`\`
-Layer           Examples
+Layer          Examples
 Physical        locked server rooms, badge access, screen privacy
 System          patching, hardening, removing unused services
 Network         segmentation with VLANs, firewalls, VPN for remote access
@@ -504,6 +500,12 @@ Application     role-based access, secure settings, session timeout
 Data            encryption at rest and in transit
 \`\`\`
 **Encryption at rest** protects disks and backups if media is stolen, and **encryption in transit** with TLS protects data on the wire. Manage the keys separately from the data.
+
+Match the threat to the layer that stops it:
+- **Social engineering**, such as phishing, tricks a person instead of a system. Training and least privilege at the endpoint and application layers limit the damage.
+- A **Trojan horse** hides harmful code inside something that looks useful. Antimalware and a controlled software install process at the endpoint stop it.
+- A **man in the middle** attack sits quietly between two systems and reads or alters their traffic. Encryption in transit at the data layer defeats it.
+- **Penetration testing** is an authorized attempt to break in, run to find weaknesses at any layer before an attacker does.
 
 ## Privacy practice
 **Minimum necessary** means users see only the data the job needs. **Access audits** review who opened which record and when, to find snooping. **Breach response** is a written plan: contain, assess, notify the people and the regulators required by local law, and fix the cause.

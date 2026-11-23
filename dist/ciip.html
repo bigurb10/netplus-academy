@@ -722,6 +722,17 @@ FRA.acronyms = {
   "DXA": { full: "Dual-Energy X-ray Absorptiometry", tip: "The bone density scan; its measurements can flow into the report as a structured report.", more: "DXA scanners are modalities with their own measurements. A structured report lets the reporting software take the values instead of retyping them." },
   "IRB": { full: "Institutional Review Board", tip: "The committee that reviews research and says what patient data may leave the organization.", more: "Research and trial image exports need IRB approval on file before de-identified studies are released." },
   "MRN": { full: "Medical Record Number", tip: "The identifier a facility assigns to one patient across its systems.", more: "An outside study must be reconciled to the right patient and MRN before it joins the archive." },
+  "BAA": { full: "Business Associate Agreement", tip: "The contract that binds a vendor to protect the patient data it handles for a hospital.", more: "Any vendor with access to protected health information, such as a cloud archive or a support company with remote access, signs a BAA before work starts. No signed BAA is a purchasing and compliance problem to fix first." },
+  "BI-RADS": { full: "Breast Imaging Reporting and Data System", tip: "A fixed set of assessment categories used to end breast imaging reports.", more: "Because the categories are standard, results can be counted, tracked, and followed up. It is a reporting scheme, so the informatics job is to store the category as a structured value the tracking system can read." },
+  "FDA": { full: "Food and Drug Administration", tip: "The United States agency that regulates medical devices, including imaging systems and software, and enforces MQSA.", more: "An imaging vendor's clearance status matters when you buy or change a system. A change you make to a cleared product, such as running it on unsupported hardware, can move responsibility from the vendor to your site." },
+  "ePHI": { full: "electronic Protected Health Information", tip: "Protected health information kept or sent in electronic form, such as images, reports, and orders.", more: "The HIPAA security rule applies to ePHI. Storage, transmission, retention, and destruction of images all fall under it." },
+  "PHI": { full: "Protected Health Information", tip: "Any information that identifies a patient and relates to their care or payment.", more: "A study with a name, a medical record number, or a date of birth in its header is PHI. De-identification removes or replaces those elements before data leaves the care setting." },
+  "POCUS": { full: "Point-of-Care Ultrasound", tip: "Ultrasound done at the bedside by the treating clinician, often with a handheld probe.", more: "POCUS images are easy to lose because they may not pass through the order workflow. Capture them with an order or an encounter, and send them to the archive with the right patient identity." },
+  "QMP": { full: "Qualified Medical Physicist", tip: "The physicist who tests imaging equipment and displays and signs off on their quality.", more: "A QMP usually runs the acceptance and annual tests on displays and modalities. The informatics analyst supplies access, test patterns, and records, and files the results." },
+  "RHIO": { full: "Regional Health Information Organization", tip: "A regional group that lets member hospitals and clinics share patient records and images.", more: "A RHIO sets the shared rules and the exchange platform. Your site publishes documents to it, and other members query for them under the agreed consent and identity rules." },
+  "RPV": { full: "Resting Point of Vergence", tip: "The distance at which the eyes naturally relax and converge when not focusing on anything.", more: "A screen placed closer than the resting point of vergence makes the eyes work harder. Setting the viewing distance to suit it is part of workstation ergonomics." },
+  "SBC": { full: "Server-Based Computing", tip: "A design in which users run their sessions on a shared server and see only the screen on their device.", more: "It is the older cousin of virtual desktops. Application updates happen once on the server, and the session needs a good network link to stay responsive." },
+  "SPECT": { full: "Single-Photon Emission Computed Tomography", tip: "A nuclear medicine method that builds slice images from a tracer the patient receives.", more: "SPECT studies are often paired with CT. The two parts belong to one logical exam, so keep their identities and series matched." },
   "QA": { full: "Quality Assurance", tip: "The program of planned checks, records, and sign-offs that keeps a service within its limits.", more: "A display QA program names who tests, how often, and where the records are kept." },
   "URL": { full: "Uniform Resource Locator", tip: "A web address; a launch URL carries the patient and accession to open the right study.", more: "Context launch from the EMR to the viewer is a web address with parameters. A wrong or missing identifier in it opens a blank viewer." }
 };
@@ -1645,8 +1656,7 @@ At recognition level: an AI tool is another consumer of images and producer of r
       body: `A radiologist finds an urgent finding at 02:10. The question is not only what the finding is. It is whether the right clinician was told, who said so, and where it is written down. Informatics builds that safety net.
 
 ## Critical and urgent results
-The urgency of a result sets how fast it must reach the clinician, and an actionable finding is one the clinician must act on, not just file.
-A **critical result** workflow is closed-loop: the radiologist reports, the system or a person communicates to the responsible clinician, the clinician confirms, and the confirmation is recorded with a time and a name. Systems can prompt for communication, keep a log, and escalate if nobody acknowledges.
+A **critical result** workflow is closed-loop: the radiologist reports, the system or a person communicates to the responsible clinician, the clinician confirms, and the confirmation is recorded with a time and a name. Systems can prompt for communication, keep a log, and escalate if nobody acknowledges. The urgency of a result sets how fast the loop must close, and an actionable finding is one the clinician must act on, not just file.
 
 ## Discordant findings
 When a preliminary read (often by a resident or an overnight reader) differs from the final, the ordering clinician must be told. Informatics supports it with a status flow (preliminary, then final) and an alert when the final changes the meaning.
@@ -1721,14 +1731,14 @@ Visible light        photos and video, often encapsulated or multi-frame
 \`\`\`
 
 ## What to remember about each
-- **Nuclear medicine and PET:** together with PET and {{SPECT}} this family is often called molecular imaging, because it shows how a tracer behaves in the body rather than only its shape. The patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam.
+- **Nuclear medicine, PET, and SPECT:** together called molecular imaging, because they show how a tracer behaves in the body rather than only its shape. The patient is radioactive after the dose, so timing and handling matter. PET and CT belong to one logical exam, and SPECT is often paired with CT the same way.
 - **Cardiology:** often a separate department system. The cardiology PACS must connect to the enterprise so priors and reports are shared.
 - **Radiation therapy:** plan, structure set, and dose are special DICOM objects. The oncology system, not only PACS, consumes them. Know the objects at recognition level.
 - **IR:** procedure room images and dose reports must reach the record.
 - **Visible light:** captured outside radiology workflows, so the order or patient link is often missing.
 
 ## Ancillary services
-Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound ({{POCUS}}) and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
+Oncology and tumor tracking across serial exams, surgical planning and orthopedic templating from 3D reconstructions, 3D printing of anatomical models, stereotactic and intraoperative imaging, point-of-care ultrasound (POCUS) and medical image capture, wound care, and digital pathology. Whole-slide pathology images are very large objects, so plan storage and viewing for them separately.
 
 > Exam tip: for any non-radiology source, ask three things: how does it get the patient and order link, what object type does it produce, and which system consumes it.`,
       hook: "Nuclear medicine, cardiology, radiation therapy, IR, and visible light each produce their own objects and workflows, and each needs a patient link and a consumer."
@@ -1798,8 +1808,7 @@ Secondary capture wraps a screenshot as an image object. An encapsulated PDF sto
       body: `A radiologist says a diagnostic monitor "looks washed out" on the second screen. The images are fine. Displays drift, and only measurement tells you by how much.
 
 ## Why calibrate
-Human perception is the reason: the eye judges small brightness steps along a curve, and the display must follow that curve so equal steps in the data look equal on screen.
-The **grayscale standard display function** (DICOM part 14) maps each pixel value to a luminance so equal steps look equally different. That is perceptual linearization. A calibrated display shows the same contrast wherever it is used.
+The **grayscale standard display function** (DICOM part 14) maps each pixel value to a luminance so equal steps look equally different. That is perceptual linearization, and human perception is the reason for it: the eye judges small brightness steps along a curve, so the display must follow that curve. A calibrated display shows the same contrast wherever it is used.
 
 ## What gets tested
 AAPM test patterns (TG18, replaced by TG270) support these checks:
@@ -1815,11 +1824,10 @@ Matched displays      centers within 10 percent of each other
 Also resolution, noise, and geometric patterns, and pixel dropouts.
 
 ## Acceptance versus routine
-A qualified medical physicist ({{QMP}}) usually runs acceptance testing, often with a test pattern or a phantom, an object built to image in a known way.
 An **acceptance test** is done once at installation with the full set. **Routine QC** follows on a schedule with simpler checks and a visual pattern.
 
 ## Automation and records
-Calibration software with a built-in photometer can adjust displays and report remotely. A QA program names who performs each test, how often, and where records are kept. A medical physicist or trained team signs off. Mammography displays need a qualified medical physicist before clinical use.
+Calibration software with a built-in photometer can adjust displays and report remotely. A QA program names who performs each test, how often, and where records are kept. A medical physicist or trained team signs off. A qualified medical physicist (QMP) usually runs acceptance testing, often with a test pattern or a phantom, an object built to image in a known way, and mammography displays need a QMP before clinical use.
 
 > Exam tip: a clean-looking image proves nothing about a display. Test pattern plus meter is the evidence, and each test result is documented.`,
       hook: "Diagnostic displays are calibrated to the grayscale standard display function and checked with test patterns and a meter, with acceptance testing once and routine QC on a schedule."
@@ -1869,8 +1877,7 @@ FRA.units.push({
       body: `A new reading room opens and within a month three radiologists report neck strain and a glare problem on the end workstation. The design was approved on a floor plan. The exam wants you to design for the person who sits there for hours.
 
 ## Ergonomics
-Computer vision syndrome, meaning eye strain, dry eyes, and headaches from long screen work, is what good ergonomics prevents. One cause is a screen placed nearer than the eyes' resting point of vergence ({{RPV}}), the distance at which the eyes relax.
-Choose adjustable chairs with lumbar support and desks that change height. Place monitors at a comfortable height and angle, matched side by side, at a distance that does not force the neck or eyes to strain. Put the keyboard, mouse, and microphone where the arms rest naturally. Repetitive strain comes from long hours with fixed postures, so adjustability is the control.
+Choose adjustable chairs with lumbar support and desks that change height. Place monitors at a comfortable height and angle, matched side by side, at a distance that does not force the neck or eyes to strain. Put the keyboard, mouse, and microphone where the arms rest naturally. Repetitive strain comes from long hours with fixed postures, so adjustability is the control. The same care prevents computer vision syndrome, meaning eye strain, dry eyes, and headaches from long screen work. One cause is a screen placed nearer than the eyes' resting point of vergence (RPV), the distance at which the eyes relax.
 
 ## Light and the screen
 Veiling glare is stray light that washes over the screen and lowers contrast, so control it first.
@@ -1946,8 +1953,7 @@ A reader marks key images and annotations. They are stored as their own objects,
       body: `Storage is growing faster than the budget, and someone suggests compressing everything. The first question is what kind of compression, and who decides.
 
 ## Two kinds
-A codec is the program that compresses and decompresses an image, and both ends must support the same one.
-**Lossless** compression recovers every pixel exactly. Typical reduction is about 1.8 to 2.8 times, and storage planners often use 2.5 to 1. **Lossy**, also called irreversible, discards data for good. Ratios used when interpreting are about 20 to 1 for radiography, 10 to 1 for CT, and 5 to 1 for MRI.
+**Lossless** compression recovers every pixel exactly. Typical reduction is about 1.8 to 2.8 times, and storage planners often use 2.5 to 1. **Lossy**, also called irreversible, discards data for good. Ratios used when interpreting are about 20 to 1 for radiography, 10 to 1 for CT, and 5 to 1 for MRI. A codec is the program that compresses and decompresses an image, and both ends must support the same one.
 
 ## Who decides
 The radiology department and its policies decide what may be lossy-compressed for interpretation. It is not a decision for IT alone. A lossy ratio must be stated on each image of the study.
@@ -2009,7 +2015,6 @@ A wrong-patient image can lead to a wrong diagnosis or treatment. Every check sh
       body: `An emergency physician acted on a preliminary report and the final report said something different. Who saw which version, and when? Report status is a data field with consequences.
 
 ## Report statuses
-An addendum (plural addenda) is added to a signed report instead of rewriting it.
 \`\`\`
 Status       Meaning
 Preliminary  early read, not signed as final
@@ -2017,12 +2022,13 @@ Final        the signed report of record
 Addended     final report with an added note; original text stays
 Corrected    final report replaced because of an error, flagged for readers
 \`\`\`
+An addendum (plural addenda) is added to a signed report instead of rewriting it, so the original text stays visible.
 
 ## How they flow
 The reporting system sends each version to the EMR as an ORU message, and the RIS status changes with it. The EMR must display the status clearly, and a change from preliminary to final should be visible to the ordering clinician. Who sees which status is a design decision: some roles may see preliminary reports and others only final.
 
 ## Structured versus narrative
-A scheme such as {{BI-RADS}} gives breast reports a fixed set of categories, so results can be counted and followed up.
+A scheme such as BI-RADS gives breast reports a fixed set of categories, so results can be counted and followed up.
 A **structured** report uses standard fields, templates, and terms, so it is easier to search, count, and feed to decision support. A **narrative** report is free text, flexible but harder to analyze.
 
 ## Speech recognition
@@ -2054,8 +2060,7 @@ UIDs                      may reveal the source if not replaced
 \`\`\`
 
 ## Pseudonymization
-Some documents write this as pseudoanonymization.
-Replace identifiers with a code and keep a separate key, so those authorized can restore the link. Replace UIDs consistently so a study keeps its internal structure without exposing the original.
+Pseudonymization, sometimes written pseudoanonymization, replaces identifiers with a code and keeps a separate key, so those authorized can restore the link. Replace UIDs consistently so a study keeps its internal structure without exposing the original.
 
 ## Burned-in annotations
 Text drawn into the pixels survives header cleaning, so it needs pixel-level removal or masking.
@@ -2114,7 +2119,7 @@ Imported study risks: wrong demographics, duplicate UIDs, unknown transfer synta
 **PDI** is the standard layout for portable media: a DICOMDIR index and often a viewer. Export rules decide who may export, what, and how it is tracked.
 
 ## Cloud and standards
-Cross-enterprise sharing in a region often runs through a regional health information organization ({{RHIO}}) and an XDS affinity domain, the group of sites that agree to publish and query documents the same way.
+Cross-enterprise sharing in a region often runs through a regional health information organization (RHIO) and an XDS affinity domain, the group of sites that agree to publish and query documents the same way.
 \`\`\`
 Method                Notes
 DICOM media (PDI)     disc or USB with DICOMDIR
@@ -2144,7 +2149,7 @@ A named policy owner, working with compliance, legal, and radiology leadership, 
 The record that must be kept is the original from which the diagnosis was made. A digitized film copy is not the original for legal retention.
 
 ## Lifecycle and deletion
-Destruction of images and electronic protected health information ({{ePHI}}) follows the written policy and is documented.
+Destruction of images and electronic protected health information (ePHI) follows the written policy and is documented.
 \`\`\`
 Step                  Control
 Classify              by modality, patient age, and legal hold flag
@@ -2206,7 +2211,7 @@ FRA.units.push({
 ## Four ways to attach storage
 - **DAS**, direct-attached storage, is a set of drives wired to one server. It is simple and fast, and nobody else can use it.
 - **NAS**, network-attached storage, shares folders over the network. Windows clients use SMB (the older name is CIFS); Unix and Linux clients use NFS. The server sees a file share.
-- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The two transports are Fibre Channel (spelled fiber channel in some documents, its own fast fabric) and iSCSI (block storage over ordinary TCP and Ethernet). The server sees a disk it formats itself.
+- **SAN**, a storage area network, gives servers raw block volumes over a dedicated fabric. The server sees a disk it formats itself. There are two transports. Fibre Channel (often written fiber channel) is a dedicated high-speed storage network with its own switches and adapters. iSCSI carries block storage over ordinary TCP and Ethernet.
 - **Object storage** keeps data as objects, each with an ID and metadata, in one flat space. It is reached through an interface such as S3, scales very wide, and is how most cloud archives work.
 
 ## Block, file, and object
@@ -2266,8 +2271,7 @@ DICOM is an application-layer protocol: association negotiation and AE titles be
 **TCP** is connection-oriented: it acknowledges data and retransmits what is lost. DICOM, HL7, and HTTP use it because a study must arrive whole. **UDP** has no delivery guarantee and is fast, which suits DNS lookups, time, and logging.
 
 ## Devices
-Computer networking is how imaging systems find and talk to each other, and these devices are its building blocks.
-A **hub** repeats every frame to every port. A **switch** forwards by MAC address. A **router** moves traffic between networks by IP address. A **gateway** translates between different protocols or networks. A **trunk** carries several VLANs between switches.
+Computer networking in an imaging site means these devices working together. A **hub** repeats every frame to every port. A **switch** forwards by MAC address. A **router** moves traffic between networks by IP address. A **gateway** translates between different protocols or networks. A **trunk** carries several VLANs between switches.
 
 ## Media
 Wired **ethernet** over Cat 5e or Cat 6 copper reaches 100 meters at gigabit speed. **Fiber** carries light, so it goes farther and ignores electrical noise; multimode is for short runs and single-mode for long ones. **Wireless** is convenient for carts and handhelds but shares the air and has more variable speed, so a diagnostic workstation stays wired. **Bluetooth** is a short-range link for peripherals such as headsets and scanners, not for images.
@@ -2348,8 +2352,7 @@ Browser-based viewers need no install on the workstation, but they need a suppor
 **RDP** and **VNC** let an administrator or a vendor control a computer from elsewhere. Use them only over a VPN, with named accounts and logging, and close vendor access when the support case ends.
 
 ## Virtual machines and VDI
-Server-based computing ({{SBC}}) is the older cousin: users run sessions on a shared server instead of owning a desktop each.
-A **virtual machine** is a server running in software; one physical host runs many, on a platform such as VMware. **VDI** hosts desktops in the data center and shows them on a thin client, using a product such as Citrix. It helps with central patching and with reading from many places, but a diagnostic session needs enough GPU and bandwidth behind it.
+A **virtual machine** is a server running in software; one physical host runs many, on a platform such as VMware. **VDI** hosts desktops in the data center and shows them on a thin client, using a product such as Citrix. It helps with central patching and with reading from many places, but a diagnostic session needs enough GPU and bandwidth behind it. Server-based computing (SBC) is the older design: users run sessions on a shared server instead of getting a desktop each.
 
 ## Mobile devices
 Phones and tablets suit review, on-call triage, and viewing reports. They are not for primary diagnostic reading unless the display and the software are cleared and calibrated for it. Mobile devices need device management, encryption, and a lockable application.
@@ -2384,8 +2387,7 @@ Provision on the first day by role, change roles when the job changes, and depro
       body: `The department head asks how many chest studies are still unread, by site, and no report in the system answers it. A short database query will. You do not need to be a programmer for the exam, but you must read a simple query and know how a database is built.
 
 ## SQL in five words
-Databases hold the studies, orders, and users, and data retrieval means asking them questions.
-{{SELECT}} chooses the columns to return, {{WHERE}} filters rows by a condition, {{JOIN}} combines rows from two tables on a matching key, {{GROUP BY}} groups rows so a count is computed per group, and {{COUNT}} counts the rows. A query for unread exams by site reads:
+Data retrieval from the databases behind PACS and the RIS uses SQL, and five words cover most of it. {{SELECT}} chooses the columns to return, {{WHERE}} filters rows by a condition, {{JOIN}} combines rows from two tables on a matching key, {{GROUP BY}} groups rows so a count is computed per group, and {{COUNT}} counts the rows. A query for unread exams by site reads:
 \`\`\`
 SELECT site, COUNT(*) FROM exams WHERE status = 'unread' GROUP BY site
 \`\`\`
@@ -2656,7 +2658,7 @@ Define what moves: which systems, how many years, which data types (images, repo
 - **Archive to archive**: copy from the old archive into the new one directly, without the viewer in the path.
 
 ## Physical transfer
-A physical data transfer, meaning drives or appliances carried or shipped between sites, is the fallback when the network is too slow. Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or ship drives. A migration also loads the old system, so schedule heavy transfer in off hours.
+Compute the transfer time: size in bits divided by the usable throughput, not the link speed. If the window is too short, add parallel streams or fall back to a physical data transfer, shipping drives or appliances between sites. A migration also loads the old system, so schedule heavy transfer in off hours.
 
 ## Standardization and integrity
 Migration is the chance to fix tags: **tag morphing** corrects patient IDs, procedure names, and other fields on the way. **Reconcile counts** by patient, study, series, and image between source and target, and sample images to confirm they open and look the same.
@@ -2668,7 +2670,7 @@ Find problems by queries: duplicate patients, missing accession numbers, studies
 Presentation states, annotations, and key images are often stored in a vendor-specific form. Plan a custom migration method, convert to a standard representation where possible, and tell the radiologists what will not move.
 
 ## Cost, impact, and progress
-Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Progress monitoring means reporting weekly: studies moved, studies failed, and estimated completion.
+Plan the cost of transfer effort, extra storage, and the vendor's migration fees, and a performance model of the load. Warn users of slower response in the windows. Progress monitoring is a weekly report of studies moved, studies failed, and estimated completion.
 
 > Exam tip: the BEST proof of a good migration is a reconciliation of counts at every level plus a sample of images, signed off before the old system is retired.`,
       hook: "Scope it, pick the strategy, compute the transfer time, fix tags in flight, reconcile counts, plan for proprietary data, and report progress."
@@ -2685,9 +2687,8 @@ Plan the cost of transfer effort, extra storage, and the vendor's migration fees
 Retention periods and breach deadlines vary by state and country, so check the local rule rather than recall a number.
 
 ## Layered security
-Social engineering, such as phishing, tricks a person instead of a system, and a Trojan horse hides harmful code inside something that looks useful. A man in the middle attack sits quietly between two systems and reads or alters their traffic. Penetration testing, authorized attempts to break in, finds weaknesses before an attacker does.
 \`\`\`
-Layer           Examples
+Layer          Examples
 Physical        locked server rooms, badge access, screen privacy
 System          patching, hardening, removing unused services
 Network         segmentation with VLANs, firewalls, VPN for remote access
@@ -2696,6 +2697,12 @@ Application     role-based access, secure settings, session timeout
 Data            encryption at rest and in transit
 \`\`\`
 **Encryption at rest** protects disks and backups if media is stolen, and **encryption in transit** with TLS protects data on the wire. Manage the keys separately from the data.
+
+Match the threat to the layer that stops it:
+- **Social engineering**, such as phishing, tricks a person instead of a system. Training and least privilege at the endpoint and application layers limit the damage.
+- A **Trojan horse** hides harmful code inside something that looks useful. Antimalware and a controlled software install process at the endpoint stop it.
+- A **man in the middle** attack sits quietly between two systems and reads or alters their traffic. Encryption in transit at the data layer defeats it.
+- **Penetration testing** is an authorized attempt to break in, run to find weaknesses at any layer before an attacker does.
 
 ## Privacy practice
 **Minimum necessary** means users see only the data the job needs. **Access audits** review who opened which record and when, to find snooping. **Breach response** is a written plan: contain, assess, notify the people and the regulators required by local law, and fix the cause.
@@ -2821,19 +2828,17 @@ A policy has an owner, an approving body, an effective date, and a review date, 
       body: `A privacy officer calls: a radiologist saw the images of a neighbor who is not her patient. At the same time the mammography site is due for its yearly inspection. Compliance is the set of laws you must prove you follow, and the proof is documents and logs that you keep.
 
 ## HIPAA
-Regulatory compliance needs policy management: a written policy, an owner, and a review date. A business associate agreement ({{BAA}}) binds any vendor that touches {{PHI}}.
-HIPAA protects protected health information, meaning anything that identifies a patient and relates to care or payment. Three parts matter to imaging.
+HIPAA protects protected health information (PHI), meaning anything that identifies a patient and relates to care or payment. Three parts matter to imaging.
 - The **Privacy Rule** limits who may use and disclose the data and says to use the minimum necessary for the task.
 - The **Security Rule** requires safeguards for electronic data: administrative (risk analysis, policies, training), physical (locked rooms, workstation placement), and technical (unique user IDs, access control, audit logs, encryption, integrity checks).
 - The **Breach Notification Rule** requires notifying affected individuals without unreasonable delay and no later than 60 days after discovery of a breach; large breaches also go to the government and the media.
-Vendors who handle patient data are business associates and sign an agreement that binds them to the same protections.
+Vendors who handle patient data are business associates and sign a business associate agreement (BAA) that binds them to the same protections.
 
 ## HITECH
 The HITECH Act of 2009 pushed adoption of electronic health records (the meaningful use program), extended HIPAA directly to business associates, strengthened enforcement with higher penalties, and made breach notification law.
 
 ## MQSA
-The {{FDA}}, the Food and Drug Administration, regulates medical devices, including imaging systems and software, and it enforces MQSA.
-The Mammography Quality Standards Act is the federal law for mammography. A facility must be accredited and certified, have qualified interpreting physicians, and perform quality control. For informatics the key duties are records and reporting.
+The Mammography Quality Standards Act is the federal law for mammography, enforced by the Food and Drug Administration (FDA), which also regulates medical devices such as imaging systems and software. A facility must be accredited and certified, have qualified interpreting physicians, and perform quality control. For informatics the key duties are records and reporting.
 - Keep the mammograms and reports for the required period. The federal minimum is 5 years, or 10 years if the patient has no later exam at the facility, and longer where state law says so.
 - Send the patient a written summary of the result in plain language, and track outcomes for the facility's audit.
 - Show the inspector the display quality control records for the mammography workstations.
@@ -2842,7 +2847,7 @@ The Mammography Quality Standards Act is the federal law for mammography. A faci
 Many states, accreditation programs, and hospital policies require recording the dose of each exam. The informatics job is to collect it automatically from the DICOM radiation dose structured report, store it per exam, compare it to reference levels, and flag outliers for physicist review.
 
 ## Documenting compliance
-A control you cannot prove does not count. Keep policies, access reviews, audit log samples, risk analyses, training rosters, QC records, and incident reports where an auditor can find them.
+Regulatory compliance depends on policy management: each policy has a written owner and a review date, and a control you cannot prove does not count. Keep policies, access reviews, audit log samples, risk analyses, training rosters, QC records, and incident reports where an auditor can find them.
 
 > Exam tip: HIPAA protects the data, HITECH adds breach notification and enforcement, MQSA governs mammography records, and dose tracking compares each exam to reference levels. If you cannot show a record, the auditor assumes it was not done.`,
       hook: "HIPAA protects patient data, HITECH adds breach notification and enforcement, MQSA governs mammography, and dose tracking needs automatic records; compliance is what you can prove."
@@ -2989,7 +2994,8 @@ FRA.units.push({
       body: `The PACS is eight years old, support ends in two, and the hospital board asks, "Why should we spend money on this?" Before any vendor hears from you, you define the project and justify it in numbers a board understands.
 
 ## Project definition
-Check feasibility first: can the project be done with the money, people, and time available? Imaging program oversight, a steering group with a mission and principles, keeps projects aligned.
+Check feasibility first: can the project be done with the money, people, and time available?
+Imaging program oversight is a steering group with a mission and principles that keeps projects aligned with the organization.
 Write down, in this order, and have the sponsors agree to it:
 - **Goals**: what the organization gets, such as faster reads, a supported platform, and one archive for all sites.
 - **Scope of solution**: what is included (PACS, archive, viewers, interfaces, migration) and what is not (new modalities, the EMR).
@@ -3080,7 +3086,7 @@ Each evaluator scores each criterion from 1 to 5; the weight times the score, su
 Call current customers of your size and type, and ask what went wrong, how the vendor handled it, how upgrades went, and whether they would buy again. A **site visit** lets your staff watch the system in daily use. Choose customers yourself, not only those the vendor offers.
 
 ## Selection and contract
-Vendor selection is the decision step: choose on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
+Vendor selection rests on the scored evaluation and the references. The contract turns promises into obligations. Negotiate and write down:
 - **Deliverables and acceptance criteria**: tests that must pass before the final payment.
 - **Uptime and support terms**, with response and resolution times and remedies.
 - **Data ownership and exit**: the data stays yours, and the vendor must return it in a standard format at no unreasonable cost.
@@ -3416,8 +3422,7 @@ Quick reference card one page placed at the workstation for the few key steps
 Use more than one format for important tasks. A video shows how, a card reminds, and a practice exercise makes it stick. Keep each piece short: a three-minute video on one task beats a one-hour tour.
 
 ## Super-users and train-the-trainer
-Super-users, also written superusers, are staff who learn first and then coach their peers.
-A **super-user** is a staff member in each area, such as a technologist on each shift or a clerk at each desk, who gets extra training and then coaches colleagues, answers first-line questions, and reports problems to the project team. In a **train-the-trainer** model, you train the super-users and they train their peers. It scales well, puts a trusted face in each area, and keeps help near the work. Support super-users with time in their schedule and a clear way to reach you.
+A **super-user** (also written superuser) is a staff member in each area, such as a technologist on each shift or a clerk at each desk, who gets extra training and then coaches colleagues, answers first-line questions, and reports problems to the project team. In a **train-the-trainer** model, you train the super-users and they train their peers. It scales well, puts a trusted face in each area, and keeps help near the work. Support super-users with time in their schedule and a clear way to reach you.
 
 ## Schedule around clinical work
 Offer sessions on each shift, short enough to fit between exams (30 minutes is a common target for a refresher, as an example), and give a test environment where people can practice without touching a live patient record. Train close to go-live, not months before, because people forget what they do not use. Reserve seats for night and weekend staff, who are often forgotten.
@@ -3430,7 +3435,7 @@ Offer sessions on each shift, short enough to fit between exams (30 minutes is a
       body: `Training finished last week. The attendance sheet is full and everyone smiled. Then the help desk reports that calls about the same three screens have doubled. A full sign-in sheet shows people attended; it does not show they can do the job. Assessment finds out whether the training worked.
 
 ## Tools to assess
-Training assessment uses one or more of the tools below, matched to the objective.
+Match the tool to the objective: a training assessment often combines two or three of these, such as a quiz for facts and observation for skills.
 \`\`\`
 Tool                        What it tells you
 Quiz                        whether the learner knows the facts
