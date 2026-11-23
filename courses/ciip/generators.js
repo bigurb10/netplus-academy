@@ -11,6 +11,8 @@ window.FRA = window.FRA || {};
   const num = (x, d = 2) => String(Number(x.toFixed(d)));
   const comma = x => Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const money = x => "$" + comma(x);
+  const yrs = (x, d) => { const s = num(x, d); return s === "1" ? "1 year" : `${s} years`; };
+  const hrs = h => h >= 1000 ? comma(h) : num(h, 1);
   const wrong = (correct, cands) => { const out = []; for (const c of cands) { if (c !== correct && !out.includes(c)) out.push(c); if (out.length === 3) break; } return out; };
   function build(t, q, correct, distractors, e, prefix) {
     const opts = [correct];
@@ -30,11 +32,11 @@ window.FRA = window.FRA || {};
   function storage() {
     const s = pick(STUDIES); const n = pick(s.images); const mb = n * s.m * s.m * s.bytes / 1e6;
     if (R(2) === 0) return build("u5l1", `${s.name.replace(/^./, c => c.toUpperCase())} has ${n} images, each ${s.m} x ${s.m} pixels at ${s.bytes} byte${s.bytes > 1 ? "s" : ""} per pixel. About how large is it, uncompressed?`, `${num(mb, 1)} MB`,
-      wrong(`${num(mb, 1)} MB`, [`${num(mb / s.bytes, 1)} MB`, `${num(mb * 8, 1)} MB`, `${num(n * s.m * s.bytes / 1e6, 1)} MB`, `${num(mb * 2, 1)} MB`]),
+      wrong(`${num(mb, 1)} MB`, [`${num(mb / s.bytes, 1)} MB`, `${num(mb * 8, 1)} MB`, `${num(mb / n, 1)} MB`, `${num(mb * 2, 1)} MB`]),
       `Study size = images x rows x columns x bytes per pixel = ${n} x ${s.m} x ${s.m} x ${s.bytes} = ${comma(mb * 1e6)} bytes, about ${num(mb, 1)} MB. Forgetting the bytes per pixel, or counting bits, are the usual slips.`, "sto");
     const avg = pick([20, 50, 100, 150, 250]); const exams = pick([20000, 40000, 60000, 100000, 150000]); const tb = exams * avg / 1e6;
     return build("u5l1", `A department performs ${comma(exams)} exams a year with an average study size of ${avg} MB. How much new storage does a year of studies need, uncompressed?`, `${num(tb, 2)} TB`,
-      wrong(`${num(tb, 2)} TB`, [`${num(tb * 1000, 0)} TB`, `${num(tb / 1000, 3)} TB`, `${num(tb / 12, 2)} TB`, `${num(tb * 2, 2)} TB`]),
+      wrong(`${num(tb, 2)} TB`, [`${num(tb * 1000, 0)} TB`, `${num(tb * 8, 2)} TB`, `${num(tb / 12, 2)} TB`, `${num(tb * 2, 2)} TB`]),
       `Annual storage = exams x average size = ${comma(exams)} x ${avg} MB = ${comma(exams * avg)} MB = ${num(tb, 2)} TB (1 TB = 1,000,000 MB). Plan for growth and any second copy on top of this.`, "sto");
   }
 
@@ -54,7 +56,7 @@ window.FRA = window.FRA || {};
   function transfer() {
     const mb = pick([50, 100, 250, 500, 1000, 2000]); const mbps = pick([10, 50, 100, 1000]); const sec = mb * 8 / mbps;
     return build("u4l4", `About how long does it take to send a ${comma(mb)} MB study over a ${comma(mbps)} Mbps link at full speed, ignoring overhead?`, `${num(sec, 1)} seconds`,
-      wrong(`${num(sec, 1)} seconds`, [`${num(mb / mbps, 1)} seconds`, `${num(sec * 8, 1)} seconds`, `${num(sec / 60, 1)} seconds`, `${num(mb / mbps / 8, 2)} seconds`]),
+      wrong(`${num(sec, 1)} seconds`, [`${num(mb / mbps, 1)} seconds`, `${num(sec * 8, 1)} seconds`, `${num(sec / 2, 1)} seconds`, `${num(mb / mbps / 8, 2)} seconds`]),
       `Transfer time = size in bits / speed in bits per second. ${comma(mb)} MB x 8 = ${comma(mb * 8)} megabits; / ${comma(mbps)} Mbps = ${num(sec, 1)} seconds. Links are rated in bits, files in bytes; multiply by 8 first. Real transfers are slower because of protocol overhead and latency.`, "xfr");
   }
 
@@ -63,26 +65,30 @@ window.FRA = window.FRA || {};
   function availability() {
     const a = pick(AV);
     if (R(2) === 0) { const min = (1 - a.f) * 525600;
-      return build("u5l5", `A PACS service level agreement guarantees ${a.p}% availability. How much downtime does that allow in a year?`, `about ${comma(min)} minutes (${num(min / 60, 1)} hours)`,
-        wrong(`about ${comma(min)} minutes (${num(min / 60, 1)} hours)`, [`about ${comma(min / 12)} minutes (${num(min / 720, 1)} hours)`, `about ${comma(min * 10)} minutes (${num(min / 6, 1)} hours)`, `about ${comma(a.f * 525600)} minutes (${num(a.f * 8760, 1)} hours)`, `about ${comma(min / 10)} minutes (${num(min / 600, 1)} hours)`]),
+      return build("u5l5", `A PACS service level agreement guarantees ${a.p}% availability. How much downtime does that allow in a year?`, `about ${comma(min)} minutes (${hrs(min / 60)} hours)`,
+        wrong(`about ${comma(min)} minutes (${hrs(min / 60)} hours)`, [`about ${comma(min / 12)} minutes (${hrs(min / 720)} hours)`, `about ${comma(min * 10)} minutes (${hrs(min / 6)} hours)`, `about ${comma(a.f * 525600)} minutes (${hrs(a.f * 8760)} hours)`, `about ${comma(min / 10)} minutes (${hrs(min / 600)} hours)`]),
         `Allowed downtime = (1 minus availability) x minutes in a year = (1 minus ${a.f}) x 525,600 = about ${comma(min)} minutes. Each extra 9 cuts the allowance tenfold.`, "av"); }
     const down = pick([60, 120, 240, 480, 720]); const pct = (1 - down / 43200) * 100;
     return build("u5l5", `In a 30-day month the archive was down for ${down} minutes. What availability did it achieve?`, `${num(pct, 2)}%`,
-      wrong(`${num(pct, 2)}%`, [`${num(100 - down / 525600 * 100, 3)}%`, `${num(100 - down / 1440 * 100, 2)}%`, `${num(100 - down / 432, 2)}%`, `${num(pct - 1, 2)}%`]),
+      wrong(`${num(pct, 2)}%`, [`${num(100 - down / 525600 * 100, 2)}%`, `${num(100 - down / 1440 * 100, 2)}%`, `${num(pct - 1, 2)}%`]),
       `A 30-day month has 30 x 1,440 = 43,200 minutes. Availability = (43,200 minus ${down}) / 43,200 x 100 = ${num(pct, 2)}%.`, "av");
   }
 
   // ---------- u7l1 ROI and payback ----------
   function roi() {
-    const cost = pick([50000, 80000, 120000, 200000, 300000]); const saving = pick([20000, 30000, 40000, 60000, 80000]); const years = pick([3, 4, 5]);
-    if (R(2) === 0) { const gain = saving * years; const r = (gain - cost) / cost * 100;
+    if (R(2) === 0) {
+      let cost, saving, years;
+      do { cost = pick([50000, 80000, 120000, 200000, 300000]); saving = pick([20000, 30000, 40000, 60000, 80000]); years = pick([3, 4, 5]); } while (saving * years <= cost);
+      const gain = saving * years; const r = (gain - cost) / cost * 100;
       return build("u7l1", `A speech-recognition and reporting upgrade costs ${money(cost)} and saves ${money(saving)} a year in transcription. What is the return on investment over ${years} years?`, `${num(r, 0)}%`,
-        wrong(`${num(r, 0)}%`, [`${num(gain / cost * 100, 0)}%`, `${num(saving / cost * 100, 0)}%`, `${num((gain - cost) / gain * 100, 0)}%`, `${num(r / years, 0)}%`, `${num(r + 50, 0)}%`, `${num(r - 50, 0)}%`, `${num(r + 100, 0)}%`]),
-        `ROI = (gain minus cost) / cost x 100. Gain = ${money(saving)} x ${years} = ${money(gain)}; (${money(gain)} minus ${money(cost)}) / ${money(cost)} x 100 = ${num(r, 0)}%.`, "roi"); }
+        wrong(`${num(r, 0)}%`, [`${num(gain / cost * 100, 0)}%`, `${num(saving / cost * 100, 0)}%`, `${num((gain - cost) / gain * 100, 0)}%`, `${num(r / years, 0)}%`, `${num(r + 50, 0)}%`, `${num(r + 100, 0)}%`]),
+        `ROI = (gain minus cost) / cost x 100. Gain = ${money(saving)} x ${years} = ${money(gain)}; (${money(gain)} minus ${money(cost)}) / ${money(cost)} x 100 = ${num(r, 0)}%.`, "roi");
+    }
+    const cost = pick([50000, 80000, 120000, 200000, 300000]); const saving = pick([20000, 30000, 40000, 60000, 80000]);
     const pb = cost / saving;
-    return build("u7l1", `A cloud archive migration costs ${money(cost)} up front and saves ${money(saving)} a year in on-site storage support. What is the payback period?`, `${num(pb, 1)} years`,
-      wrong(`${num(pb, 1)} years`, [`${num(saving / cost, 2)} years`, `${num(pb * 12, 0)} years`, `${num(pb / 2, 1)} years`, `${num(pb + 1, 1)} years`]),
-      `Payback period = cost / annual savings = ${money(cost)} / ${money(saving)} = ${num(pb, 1)} years. ROI tells you how much; payback tells you how soon.`, "roi");
+    return build("u7l1", `A cloud archive migration costs ${money(cost)} up front and saves ${money(saving)} a year in on-site storage support. What is the payback period?`, yrs(pb, 1),
+      wrong(yrs(pb, 1), [yrs(saving / cost, 2), yrs(pb * 1.5, 1), yrs(pb / 2, 1), yrs(pb + 1, 1)]),
+      `Payback period = cost / annual savings = ${money(cost)} / ${money(saving)} = ${yrs(pb, 1)}. ROI tells you how much; payback tells you how soon.`, "roi");
   }
 
   FRA.generators = { u5l1: storage, u3l4: compression, u4l4: transfer, u5l5: availability, u7l1: roi };
