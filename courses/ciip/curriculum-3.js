@@ -25,7 +25,7 @@ Six Sigma cuts defects and variation with data. Its method is **DMAIC**.
 Define    the problem and the goal         reports finalized too slowly
 Measure   the current performance          median hours from exam to final report
 Analyze   find the root causes             where the time is really lost
-Improve   test and apply the fix           change the worklist routing
+Improve   test and apply the fix           prompt for release on completion
 Control   keep the gain                    monitor the measure every month
 \`\`\`
 
@@ -143,10 +143,9 @@ The operating budget covers the recurring cost to keep systems running.
 Line                 Example
 Support contracts    annual vendor support and maintenance
 Licenses             per-seat, per-modality, and per-server renewals
-Storage growth       new capacity as studies accumulate
+Storage growth       capacity bought each year as studies accumulate, budgeted as operating
 Staff                administrators, analysts, on-call time
 Training             new-hire and upgrade training
-Hardware refresh     replacements planned for aging servers and displays
 \`\`\`
 Build it from last year's actuals, add known growth (the storage lesson's months remaining), and add contract price increases. **Capital** spending buys assets that last years, such as a new server or archive; **operating** spending is the yearly cost to run what you already own. Organizations treat them differently, and your finance team decides how each purchase is classified.
 
@@ -436,7 +435,7 @@ B  Build test system      4      none
 C  Migrate test studies   6      A
 D  Validate and train     3      B and C
 Path A-C-D = 5 + 6 + 3 = 14 days (critical path)
-Path B-D   = 4 + 3     =  7 days (3 days of slack on B)
+Path B-D   = 4 + 3     =  7 days (14 minus 7 = 7 days of slack on B)
 \`\`\`
 
 > Exam tip: the WBS lists the work, effort is hours, duration is calendar time, and the critical path is the longest chain, so only delays there move the end date.`,

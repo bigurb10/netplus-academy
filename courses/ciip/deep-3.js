@@ -453,7 +453,7 @@ A risk that affects a task at the front of a chain affects everything behind it,
 Scope change goes through control and updates the plan. A risk register has likelihood, impact, owner, and mitigation. A dependency is a "cannot start until" statement.`,
 
 u8l2: `## A work breakdown structure for a PACS upgrade
-Here is a WBS for a PACS upgrade, with an example effort estimate in hours for each work package. The numbers are outline headings that group deliverables, and the lowest level is small enough for one person to own.
+Here is a WBS for a PACS upgrade, with an example effort estimate in hours for each work package. The numbering is an outline of the WBS, and the hours are example estimates; the lowest level is small enough for one person to own.
 
 \`\`\`
 1  Project management and governance
@@ -512,7 +512,7 @@ Resources   all roles filled                network engineer out 2 weeks    wors
 Quality     9 open defects, none critical   14 open defects, 1 critical     worse
 \`\`\`
 
-The report also states the top risks, the decisions needed, and what happens next. In week 8 the useful content is not the numbers alone but the action: the critical defect has an owner and a fix date, a second engineer is borrowed, and the sponsor is asked to approve 35,000 from contingency or move the date. Reporting the problem early gives the sponsor time to help.
+The report also states the top risks, the decisions needed, and what happens next. In week 8 the useful content is not the numbers alone but the action: the critical defect has an owner and a fix date, a second engineer is borrowed, and the sponsor is asked to approve 25,000 from contingency, the amount by which the forecast of 625,000 exceeds the 600,000 budget, or to move the date. Reporting the problem early gives the sponsor time to help.
 
 ## Earned effort versus spent effort
 Time-and-task tracking compares real hours with the estimate for each task.
