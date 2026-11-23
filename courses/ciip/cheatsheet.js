@@ -153,7 +153,7 @@ FRA.cheatsheet = {
           ["IID", "Invoke image display: opens the viewer on the right study from another application"],
           ["REM", "Radiation exposure monitoring: sends dose records to a registry for tracking"],
           ["ATNA", "Audit trail and node authentication: central audit logging and encrypted connections between trusted nodes"],
-          ["CT", "Consistent time: every system synchronizes its clock to one source so audit trails line up"],
+          ["Consistent Time", "Every system synchronizes its clock to one source so audit trails line up"],
           ["Integration statement", "The vendor's declaration of which IHE profiles and actors a product supports"]
         ] },
         { type: "table", cols: ["Coding system", "Used for"], rows: [
@@ -298,7 +298,7 @@ FRA.cheatsheet = {
           "Deletion happens only under written policy and is documented",
           "A legal hold suspends deletion of any record involved in a case",
           "The original from which the diagnosis was made is the record that must be kept",
-          "A digitized film copy is not the original for legal retention"
+          "For mammography, a digitized film copy is not the original for legal retention; it can still be used for comparison"
         ] },
         { type: "list", title: "Enterprise imaging", cols: 2, items: [
           "Visible light images from clinics, wards, and operating rooms",
@@ -349,9 +349,9 @@ FRA.cheatsheet = {
           ["RAID is not a backup", "It survives a failed drive, not deleted files, corruption, a fire, or ransomware"]
         ] },
         { type: "table", cols: ["Network term", "What to remember"], rows: [
-          ["OSI layer 7, application", "HTTP, DICOM, and HL7 messages"],
+          ["OSI layer 7, application", "HTTP, DICOM, and HL7 messages; DICOM association negotiation and AE titles live here"],
           ["OSI layer 6, presentation", "Encoding and encryption, such as TLS"],
-          ["OSI layer 5, session", "Starts, keeps, and ends a conversation, such as a DICOM association or a remote desktop session"],
+          ["OSI layer 5, session", "Starts, keeps, and ends a conversation, such as a remote desktop session"],
           ["OSI layer 4, transport", "TCP and UDP, with port numbers"],
           ["OSI layer 3, network", "IP addresses and routers"],
           ["OSI layer 2, data link", "Ethernet frames, MAC addresses, switches, and VLANs"],
@@ -523,7 +523,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Security and privacy", "What to remember"], rows: [
           ["HIPAA privacy rule", "Governs use and disclosure of protected health information"],
           ["HIPAA security rule", "Requires administrative, physical, and technical safeguards for electronic information"],
-          ["HITECH", "Extends HIPAA and sets breach notification duties"],
+          ["HITECH", "Extends HIPAA and sets breach notification duties; affected individuals must be told without unreasonable delay and no later than 60 days after discovery"],
           ["GDPR", "European privacy regulation with strict consent and data-subject rights"],
           ["PIPEDA", "Canadian federal privacy law for private-sector organizations"],
           ["Practice parameter", "The joint ACR, AAPM, and SIIM document on electronic practice of medical imaging"],

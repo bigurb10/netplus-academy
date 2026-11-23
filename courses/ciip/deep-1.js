@@ -741,7 +741,7 @@ Adult general radiology          kept for the period the state requires, then el
 Minor patient                    kept until a set age past majority
 Mammography                      at least 5 years, or 10 years if no later mammogram at the facility
 Study on legal hold              kept regardless of age
-Original diagnostic images       kept; a digitized film copy is not the original
+Original diagnostic images       kept; for mammography a digitized film copy is not the original
 \`\`\`
 The periods differ by state, so the policy cites the state rule and the policy owner approves it.
 

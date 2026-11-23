@@ -894,7 +894,7 @@ FRA.cheatsheet = {
           ["IID", "Invoke image display: opens the viewer on the right study from another application"],
           ["REM", "Radiation exposure monitoring: sends dose records to a registry for tracking"],
           ["ATNA", "Audit trail and node authentication: central audit logging and encrypted connections between trusted nodes"],
-          ["CT", "Consistent time: every system synchronizes its clock to one source so audit trails line up"],
+          ["Consistent Time", "Every system synchronizes its clock to one source so audit trails line up"],
           ["Integration statement", "The vendor's declaration of which IHE profiles and actors a product supports"]
         ] },
         { type: "table", cols: ["Coding system", "Used for"], rows: [
@@ -1039,7 +1039,7 @@ FRA.cheatsheet = {
           "Deletion happens only under written policy and is documented",
           "A legal hold suspends deletion of any record involved in a case",
           "The original from which the diagnosis was made is the record that must be kept",
-          "A digitized film copy is not the original for legal retention"
+          "For mammography, a digitized film copy is not the original for legal retention; it can still be used for comparison"
         ] },
         { type: "list", title: "Enterprise imaging", cols: 2, items: [
           "Visible light images from clinics, wards, and operating rooms",
@@ -1090,9 +1090,9 @@ FRA.cheatsheet = {
           ["RAID is not a backup", "It survives a failed drive, not deleted files, corruption, a fire, or ransomware"]
         ] },
         { type: "table", cols: ["Network term", "What to remember"], rows: [
-          ["OSI layer 7, application", "HTTP, DICOM, and HL7 messages"],
+          ["OSI layer 7, application", "HTTP, DICOM, and HL7 messages; DICOM association negotiation and AE titles live here"],
           ["OSI layer 6, presentation", "Encoding and encryption, such as TLS"],
-          ["OSI layer 5, session", "Starts, keeps, and ends a conversation, such as a DICOM association or a remote desktop session"],
+          ["OSI layer 5, session", "Starts, keeps, and ends a conversation, such as a remote desktop session"],
           ["OSI layer 4, transport", "TCP and UDP, with port numbers"],
           ["OSI layer 3, network", "IP addresses and routers"],
           ["OSI layer 2, data link", "Ethernet frames, MAC addresses, switches, and VLANs"],
@@ -1264,7 +1264,7 @@ FRA.cheatsheet = {
         { type: "table", cols: ["Security and privacy", "What to remember"], rows: [
           ["HIPAA privacy rule", "Governs use and disclosure of protected health information"],
           ["HIPAA security rule", "Requires administrative, physical, and technical safeguards for electronic information"],
-          ["HITECH", "Extends HIPAA and sets breach notification duties"],
+          ["HITECH", "Extends HIPAA and sets breach notification duties; affected individuals must be told without unreasonable delay and no later than 60 days after discovery"],
           ["GDPR", "European privacy regulation with strict consent and data-subject rights"],
           ["PIPEDA", "Canadian federal privacy law for private-sector organizations"],
           ["Practice parameter", "The joint ACR, AAPM, and SIIM document on electronic practice of medical imaging"],
@@ -2146,7 +2146,7 @@ Retention requirements vary by state, by country, and by record type. Minors are
 A named policy owner, working with compliance, legal, and radiology leadership, sets the schedule. IT carries it out.
 
 ## The original record
-The record that must be kept is the original from which the diagnosis was made. A digitized film copy is not the original for legal retention.
+The record that must be kept is the original from which the diagnosis was made. For mammography, a digitized film copy is not the original for legal retention; it can still be used for comparison.
 
 ## Lifecycle and deletion
 Destruction of images and electronic protected health information (ePHI) follows the written policy and is documented.
@@ -4205,7 +4205,7 @@ Adult general radiology          kept for the period the state requires, then el
 Minor patient                    kept until a set age past majority
 Mammography                      at least 5 years, or 10 years if no later mammogram at the facility
 Study on legal hold              kept regardless of age
-Original diagnostic images       kept; a digitized film copy is not the original
+Original diagnostic images       kept; for mammography a digitized film copy is not the original
 \`\`\`
 The periods differ by state, so the policy cites the state rule and the policy owner approves it.
 
@@ -5955,7 +5955,7 @@ FRA.questions.push(
 {id:"u2l2-2",t:"u2l2",q:"Which department system most often holds echo loops and waveform objects outside the main PACS?",a:["The enterprise viewer in the emergency department","The nuclear medicine workstation","The visible light capture device","The cardiology system"],c:3,e:"Cardiology often runs a separate department system and archive for echo, cath lab, and waveforms. It must be connected to the enterprise so priors and reports are shared."},
 {id:"u2l2-3",t:"u2l2",q:"Radiation therapy plans are stored in PACS but the oncology system cannot display them. What should you check?",a:["That the plan, structure set, and dose objects reference the same planning study UID","That the monitors are calibrated","That the images are lossless compressed","That the accession number is 12 digits long"],c:0,e:"RT objects link to the planning images by UID, and the oncology system, not PACS alone, consumes them. A mismatch in references breaks the link."},
 {id:"u2l2-4",t:"u2l2",q:"Endoscopy video and photos are captured outside radiology workflows. What problem is MOST common?",a:["The image matrix is too small","The order or patient link is missing","The video cannot be stored in any format","The radiologists dislike the viewer"],c:1,e:"Visible light capture often has no order, so the patient link must come from a worklist, a barcode, or an encounter list."},
-{id:"u2l2-5",t:"u2l2",q:"Why does digital pathology need separate storage planning?",a:["They are compressed to a fixed size by the scanner","Pathology images use a color depth that PACS cannot store","Whole-slide images are very large objects","They are stored by the laboratory system, so they need no planning"],c:2,e:"Whole-slide images are among the largest objects in the enterprise, so storage and viewing must be planned for them separately."},
+{id:"u2l2-5",t:"u2l2",q:"Why does digital pathology need separate storage planning?",a:["Slide scanners compress every image to a fixed small size","Pathology images use a color depth that no PACS can store","Whole-slide images are very large objects","Slides are stored by the laboratory system, so they need no planning"],c:2,e:"Whole-slide images are among the largest objects in the enterprise, so storage and viewing must be planned for them separately."},
 
 // u2l3
 {id:"u2l3-1",t:"u2l3",q:"A new scanner's C-ECHO to PACS is rejected. The scanner title was typed in capitals but PACS lists it in lowercase. What is the BEST fix?",a:["Restart the scanner and repeat the echo","Open more firewall ports between the two devices on the network","Change the scanner's IP address","Correct the AE title on PACS to match the scanner exactly"],c:3,e:"AE titles are case-sensitive. A rejected association means the connection reached PACS, so the title on its allowed list must match exactly."},
@@ -6045,14 +6045,14 @@ FRA.questions.push(
 {id:"u3l9-1",t:"u3l9",q:"A disc arrives carrying 'Robert Lee' with a different birth date than your record for 'Bob Lee.' What should you do?",a:["Refuse every outside disc on principle","Import it under the closest matching name and fix it later","Import it under both names to be safe","Verify identity, correct the demographics, and then import"],c:3,e:"Never import on a guess. An unreconciled study can be filed in the wrong chart and read as a prior."},
 {id:"u3l9-2",t:"u3l9",q:"What is the standard layout for studies on portable media?",a:["PDI with a DICOMDIR index and often a viewer","A zip archive of image files named by study date","A single very large image of the study","A spreadsheet listing each study and its owner"],c:0,e:"Portable Data for Imaging defines the layout with a DICOMDIR index and commonly a viewer."},
 {id:"u3l9-3",t:"u3l9",q:"Which standard lets enterprises publish and fetch imaging documents with a registry, repository, and manifest?",a:["PDI","XDS-I.b","HL7 ADT","SIU"],c:1,e:"XDS-I.b applies cross-enterprise document sharing to imaging, with a manifest that points at the images."},
-{id:"u3l9-4",t:"u3l9",q:"Which is a typical risk of an imported study?",a:["Too much calibration on the sending side","Excess storage commitment from the sender","Wrong demographics, duplicate UIDs, unknown syntaxes, and corrupt files","Duplicate studies that the sending site forgot to delete from its own archive"],c:2,e:"Imported studies come from outside systems, so identity, UID, syntax, and file integrity all need checking."},
+{id:"u3l9-4",t:"u3l9",q:"Which is a typical risk of an imported study?",a:["Images that arrive with a window level the viewer cannot apply","Excess storage commitment from the sender","Wrong demographics, duplicate UIDs, and corrupt files","Duplicate studies that the sending site forgot to delete from its own archive"],c:2,e:"Imported studies come from outside systems, so identity, UID, syntax, and file integrity all need checking."},
 {id:"u3l9-5",t:"u3l9",q:"Who sets the rules for who may export images and how it is logged?",a:["The vendor, in the support contract for the archive system","Each technologist, according to the situation","The PACS administrator alone, as part of the daily work","An exchange policy owned by compliance and radiology"],c:3,e:"Policy decides who may export, what, and how it is tracked. It is owned by compliance and radiology, not by IT alone."},
 
 // u3l10
 {id:"u3l10-1",t:"u3l10",q:"The archive is growing. Who decides what may be deleted?",a:["A named policy owner working with compliance and legal","The PACS administrator, who runs the archive every single day","The storage vendor, based on the size of the contract","Any radiologist who finds a study that is no longer needed"],c:0,e:"IT carries out deletion but does not decide it. A policy owner sets the schedule within state and legal rules."},
 {id:"u3l10-2",t:"u3l10",q:"What is the minimum retention for a mammogram when the patient has no later mammogram at the facility?",a:["1 year, after which the facility may delete it","10 years, and longer if a state requires it","5 years in every case, whatever happens later","Until the next annual screening is performed"],c:1,e:"Mammography is kept at least 5 years, or 10 years when there is no later mammogram at the facility, and longer where a state requires it."},
 {id:"u3l10-3",t:"u3l10",q:"What does a legal hold do?",a:["Moves the study to portable media for safekeeping","Compresses the study to save archive space","Suspends deletion of any record involved in a case","Changes the study's UID so it cannot be altered"],c:2,e:"A legal hold overrides the retention schedule for records involved in a case until it is lifted."},
-{id:"u3l10-4",t:"u3l10",q:"Which record must be kept for legal retention?",a:["A lossy compressed review copy made for referring clinicians","A screenshot","A digitized film copy made from the original film","The original from which the diagnosis was made"],c:3,e:"The original is the record. A digitized film copy is not the original for legal retention."},
+{id:"u3l10-4",t:"u3l10",q:"Which record must be kept for legal retention?",a:["A lossy compressed review copy made for referring clinicians","A screenshot","A digitized film copy made from the original film","The original from which the diagnosis was made"],c:3,e:"The original from which the diagnosis was made is the record. For mammography, a digitized film copy is not the original for legal retention; it can still be used for comparison."},
 {id:"u3l10-5",t:"u3l10",q:"After a purge run, the signed list has 90,000 studies but 92,000 were deleted. What should you do?",a:["Stop and investigate before any further run","Accept the result because more space was freed","Run the purge again to confirm the same count","Delete the log so the difference is not found"],c:0,e:"The deleted count must match the signed list. A difference means something outside the approval was deleted, so stop and investigate."},
 
 // u3l11
@@ -6298,7 +6298,7 @@ FRA.questions.push(
 
 // u8l4
 {id:"u8l4-1",t:"u8l4",q:"On the Thursday before cutover, three modalities fail connectivity tests. What is the BEST action?",a:["Ask the vendor to sign a statement that the three modalities will work, then proceed with the cutover","Go live as scheduled with all modalities and fix the three failing ones during the first week of support","Go live on the working modalities only, with no documented exception, and add the others when they are ready","Check the open item against the go-live criteria, decide go or no-go at the meeting, and record the decision and its reasons"],c:3,e:"Go-live uses criteria agreed in advance. An open critical item is weighed at the go/no-go meeting, and either a fix, a documented exception, or a delay is chosen and recorded. A promise does not make the modalities connect."},
-{id:"u8l4-2",t:"u8l4",q:"When should the back-out plan be retired after go-live?",a:["When a named decision confirms that the system is stable","Immediately after the cutover completes and the first study is read","After the first radiologist reads a study on the new system","At the end of the first full day with no reported errors"],c:0,e:"The back-out plan stays ready until the team agrees on a named day or decision that the system is stable. Retiring it at cutover removes the safety net when problems are most likely."},
+{id:"u8l4-2",t:"u8l4",q:"When should the back-out plan be retired after go-live?",a:["When a named decision confirms that the system is stable","Immediately after the cutover completes and the first study is read","When the vendor engineer leaves the site after the cutover weekend","At the end of the first full day with no reported errors"],c:0,e:"The back-out plan stays ready until the team agrees on a named day or decision that the system is stable. Retiring it at cutover removes the safety net when problems are most likely."},
 {id:"u8l4-3",t:"u8l4",q:"What is the purpose of a project retrospective?",a:["To assign blame for the problems that occurred","To review what went well and what did not, and write lessons learned with owners","To obtain the sponsor's acceptance signature and release the final payment to the vendor","To compare actual hours with the estimate for the final invoice and the audit"],c:1,e:"A retrospective asks what went well, what did not, and what to change, and records actions with owners. Acceptance and invoicing are closing tasks, and blame teaches nothing."},
 {id:"u8l4-4",t:"u8l4",q:"What makes a lessons-learned record useful?",a:["It is kept in the project manager's personal notes so that it can be shared on request","It is written by the vendor and sent to the sponsor in a formal report when the project closes","It sits in a shared place with an owner per action, and is read at the next kickoff","It is presented at the go-live meeting and then archived in the project folder for audit"],c:2,e:"Lessons help only if the next team can find them, someone owns each action, and the file is read when planning begins. Private notes and archived slides are not used again."},
 {id:"u8l4-5",t:"u8l4",q:"Which support plan fits the first days after go-live?",a:["One senior analyst on call for the whole site, with a phone line and a weekly review of all issues","Normal help-desk hours with the vendor's phone number posted in each reading room for urgent problems","Vendor email support only, with the tickets reviewed once a week by the project manager and analyst","Analysts and super-users in the reading rooms on every shift, a direct line, and a daily review of the logged issues"],c:3,e:"Support is heaviest at the start: people at the elbow on every shift, a direct line, and a daily review of logged issues. Normal hours and email leave users stuck during the period of most confusion."},

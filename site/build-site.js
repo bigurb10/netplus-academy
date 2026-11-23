@@ -841,7 +841,6 @@ function buildAll(opts) {
   const packFor = dir => packs[dir] || (packs[dir] = loadPack(dir));
   const models = allDirs.map(dir => model(packFor(dir)));
   const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
-  // A course's siblings are the other courses from the same certifying body, in catalog (directory) order.
   // A course's siblings are the other courses from the same certifying body, in catalog (directory) order, followed by
   // any course its manifest names in seo.related (courses from other bodies that a learner would take next).
   const siblingsOf = m => {

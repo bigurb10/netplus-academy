@@ -697,7 +697,7 @@ Retention requirements vary by state, by country, and by record type. Minors are
 A named policy owner, working with compliance, legal, and radiology leadership, sets the schedule. IT carries it out.
 
 ## The original record
-The record that must be kept is the original from which the diagnosis was made. A digitized film copy is not the original for legal retention.
+The record that must be kept is the original from which the diagnosis was made. For mammography, a digitized film copy is not the original for legal retention; it can still be used for comparison.
 
 ## Lifecycle and deletion
 Destruction of images and electronic protected health information (ePHI) follows the written policy and is documented.
