@@ -6,7 +6,7 @@
 #   bash scripts/stage.sh --local    build and assemble only
 #
 # Staged: the catalog (dist/index.html), catalog.css, the favicons, account/, callback/,
-# serviceforge/, serviceforge/leaderboard/, privacy/, terms/, support/, the eight course bundles as <id>/app/index.html, each course's landing page
+# serviceforge/, serviceforge/leaderboard/, privacy/, terms/, support/, the nine course bundles as <id>/app/index.html, each course's landing page
 # at <id>/index.html from the static site, and the rest of the static site (site.css,
 # robots.txt, sitemap.xml, every <id>/lessons/ and <id>/cheatsheet/ page).
 # Cheat sheet PDFs are not staged; they change only when a pack's cheat sheet does.
@@ -28,7 +28,7 @@ for p in account callback serviceforge privacy terms support; do
 done
 mkdir -p "$STAGE/serviceforge/leaderboard"
 cp dist/serviceforge-leaderboard.html "$STAGE/serviceforge/leaderboard/index.html"
-for id in bmet netplus secplus cbet cres chtm aplus1 aplus2; do
+for id in bmet netplus secplus cbet cres chtm ciip aplus1 aplus2; do
   mkdir -p "$STAGE/$id/app"
   cp "dist/$id.html" "$STAGE/$id/app/index.html"
   test -f "$STAGE/$id/index.html" || { echo "missing landing page for $id (run node site/build-site.js)"; exit 1; }

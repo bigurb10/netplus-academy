@@ -479,7 +479,7 @@ ${m.flashcards && m.flashcards.total ? `<section id="flashcards">
 ${labs.length ? `<section><h2>Hands-on labs on virtual instruments</h2><p class="ink2">${labs.length} lessons carry a lab: a virtual multimeter on drawn circuits, an electrical safety analyzer, a patient simulator with a monitor, an infusion flow check, and a defibrillator analyzer. The kit labs also run on a $60 to $100 home kit; the instrument labs need nothing but a browser.</p><ul class="lesson-body">${labs.map(l => `<li>${esc(l.title)}</li>`).join('')}</ul><p><a href="/guides/virtual-electrical-safety-analyzer-lab/">How the virtual safety analyzer lab works</a></p></section>` : ''}
 ${Object.keys(m.pbqs || {}).length ? `<section><h2>Performance-based questions</h2><p class="ink2">${Object.keys(m.pbqs).length} interactive PBQs: ${esc(((m.seo && m.seo.pbqPhrases) || []).join(', ') || 'drag, match, select, configure, and type')}. Every task graded and explained, and the official-format test opens with ${(c.test && c.test.pbqInTest) || 'a few'} of them.</p><p><a class="btn" href="${m.urls.pbq}">Try ${Object.keys(m.pbqs).filter(id => m.pbqs[id].seo === true).length} PBQs here</a></p></section>` : ''}
 ${relatedGuides.length ? `<section><h2>Guides</h2><ul class="guide-list">${relatedGuides.map(g => `<li><a href="/guides/${esc(g.slug)}/">${esc(g.title)}</a><br><span class="ink2">${esc(g.description || '')}</span></li>`).join('')}</ul></section>` : ''}
-${(siblings || []).length ? `<section class="related"><h2>More ${esc(ex.vendor || '')} courses</h2><ul>${siblings.map(s => `<li><a href="${s.urls.landing}">${esc(s.c.name)}</a> <span class="muted">${esc((s.c.exam && s.c.exam.title) || '')}</span> &middot; <a href="${s.urls.practice}">practice test</a></li>`).join('')}</ul></section>` : ''}
+${(siblings || []).length ? `<section class="related"><h2>${siblings.every(s => (s.c.exam && s.c.exam.vendor) === ex.vendor) ? `More ${esc(ex.vendor || '')} courses` : 'Related courses'}</h2><ul>${siblings.map(s => `<li><a href="${s.urls.landing}">${esc(s.c.name)}</a> <span class="muted">${esc((s.c.exam && s.c.exam.title) || '')}</span> &middot; <a href="${s.urls.practice}">practice test</a></li>`).join('')}</ul></section>` : ''}
 <section>
   <h2>Questions people ask</h2>
   ${faq.map(f => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}
@@ -842,7 +842,13 @@ function buildAll(opts) {
   const models = allDirs.map(dir => model(packFor(dir)));
   const guides = loadGuides(opts.guidesDir === undefined ? path.join(__dirname, 'guides') : opts.guidesDir);
   // A course's siblings are the other courses from the same certifying body, in catalog (directory) order.
-  const siblingsOf = m => models.filter(o => o.c.id !== m.c.id && (o.c.exam && o.c.exam.vendor) === (m.c.exam && m.c.exam.vendor));
+  // A course's siblings are the other courses from the same certifying body, in catalog (directory) order, followed by
+  // any course its manifest names in seo.related (courses from other bodies that a learner would take next).
+  const siblingsOf = m => {
+    const same = models.filter(o => o.c.id !== m.c.id && (o.c.exam && o.c.exam.vendor) === (m.c.exam && m.c.exam.vendor));
+    const rel = ((m.c.seo && m.c.seo.related) || []).map(id => models.find(o => o.c.id === id)).filter(o => o && o.c.id !== m.c.id && !same.includes(o));
+    return same.concat(rel);
+  };
   const results = dirs.map(dir => { const m = model(packFor(dir)); return buildCourse(packFor(dir), { out, origin, analytics: opts.analytics, guides, siblings: siblingsOf(m) }); });
   const guideUrls = [];
   if (guides.length) {

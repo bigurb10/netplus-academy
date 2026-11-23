@@ -120,16 +120,17 @@ function run(token) {
   {
     const w = run(null); const d = w.document;
     const heads = [...d.querySelectorAll('main section.cat > h2')].map(h => h.textContent.trim());
-    check('the catalog has four category sections in order', heads.join('|') === 'Start here: Biomed basic training|AAMI certifications|CompTIA certifications|Tools for technicians', heads.join('|'));
+    check('the catalog has five category sections in order', heads.join('|') === 'Start here: Biomed basic training|AAMI certifications|Imaging informatics|CompTIA certifications|Tools for technicians', heads.join('|'));
     const under = id => [...d.querySelectorAll(`#${id} .card h3 a`)].map(a => a.getAttribute('href'));
     check('BMET sits under Start here', under('start').join(',') === 'bmet/', under('start').join(','));
     // Blake, 2026-10-14: the exam name sits in parentheses to the right of the title so the card says what it trains for.
     check('the BMET card title names the CABT', d.querySelector('#start .card h3 a').textContent.trim() === 'BMET Academy (CABT)', d.querySelector('#start .card h3 a').textContent.trim());
     check('CBET, CRES, and CHTM sit under AAMI certifications', under('aami').join(',') === 'cbet/,cres/,chtm/', under('aami').join(','));
+    check('CIIP sits under Imaging informatics', under('informatics').join(',') === 'ciip/', under('informatics').join(','));
     check('the four CompTIA courses sit under CompTIA certifications', under('comptia').join(',') === 'netplus/,secplus/,aplus1/,aplus2/', under('comptia').join(','));
     check('ServiceForge sits under Tools for technicians', under('tools').join(',') === 'serviceforge/', under('tools').join(','));
     const cards = [...d.querySelectorAll('main .card')].filter(c => c.querySelector('h3 a') && !/serviceforge\//.test(c.querySelector('h3 a').getAttribute('href')));
-    check('every course card links its practice test', cards.length === 8 && cards.every(c => { const id = c.querySelector('h3 a').getAttribute('href'); return !!c.querySelector(`.links a[href="${id}practice-test/"]`); }), cards.map(c => c.querySelector('h3 a').getAttribute('href')).join(','));
+    check('every course card links its practice test', cards.length === 9 && cards.every(c => { const id = c.querySelector('h3 a').getAttribute('href'); return !!c.querySelector(`.links a[href="${id}practice-test/"]`); }), cards.map(c => c.querySelector('h3 a').getAttribute('href')).join(','));
     check('every category has a one-line lede', [...d.querySelectorAll('main section.cat')].every(s => s.querySelector('p.cat-lede') && s.querySelector('p.cat-lede').textContent.trim().length > 20));
     check('How every course works is still on the page', /How every course works/.test(d.querySelector('main').textContent));
     check('the catalog header links the guides', !!d.querySelector('header .top-links a[href="/guides/"]'));
