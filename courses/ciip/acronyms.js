@@ -152,7 +152,14 @@ FRA.acronyms = {
   "WBS": { full: "Work Breakdown Structure", tip: "The project split into smaller pieces of work.", more: "A WBS breaks a project into tasks that can be estimated, assigned, and tracked." },
   "XDS": { full: "Cross-Enterprise Document Sharing", tip: "The IHE approach to publishing and finding documents across organizations.", more: "XDS uses a registry to list documents and a repository to store them. XDS-I.b applies it to imaging with a manifest pointing to the images." },
   "XML": { full: "Extensible Markup Language", tip: "A structured text format that marks data with tags.", more: "XML is used in SAML tokens, some FHIR messages, and many configuration files." },
-  "iSCSI": { full: "Internet Small Computer System Interface", tip: "Block storage carried over ordinary TCP and Ethernet.", more: "iSCSI lets a server use a remote storage volume as if it were a local drive, without a dedicated Fibre Channel network." }
+  "iSCSI": { full: "Internet Small Computer System Interface", tip: "Block storage carried over ordinary TCP and Ethernet.", more: "iSCSI lets a server use a remote storage volume as if it were a local drive, without a dedicated Fibre Channel network." },
+  "AI": { full: "Artificial Intelligence", tip: "Software that learns patterns from data, used in imaging to flag or measure findings.", more: "An AI tool is another consumer of images and producer of results. It needs a route in from PACS, a route out as a stored result, and a place in the reading worklist." },
+  "CAD": { full: "Computer-Aided Detection", tip: "Software that marks areas on an image for the reader to consider, as a second look.", more: "CAD is used for breast, lung, and prostate imaging. Its marks return to PACS as a structured report or a secondary capture image." },
+  "DXA": { full: "Dual-Energy X-ray Absorptiometry", tip: "The bone density scan; its measurements can flow into the report as a structured report.", more: "DXA scanners are modalities with their own measurements. A structured report lets the reporting software take the values instead of retyping them." },
+  "IRB": { full: "Institutional Review Board", tip: "The committee that reviews research and says what patient data may leave the organization.", more: "Research and trial image exports need IRB approval on file before de-identified studies are released." },
+  "MRN": { full: "Medical Record Number", tip: "The identifier a facility assigns to one patient across its systems.", more: "An outside study must be reconciled to the right patient and MRN before it joins the archive." },
+  "QA": { full: "Quality Assurance", tip: "The program of planned checks, records, and sign-offs that keeps a service within its limits.", more: "A display QA program names who tests, how often, and where the records are kept." },
+  "URL": { full: "Uniform Resource Locator", tip: "A web address; a launch URL carries the patient and accession to open the right study.", more: "Context launch from the EMR to the viewer is a web address with parameters. A wrong or missing identifier in it opens a blank viewer." }
 };
 FRA.acronymIgnore = ["BEST", "FIRST", "MOST"];
 
