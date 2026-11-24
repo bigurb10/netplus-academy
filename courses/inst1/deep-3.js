@@ -44,13 +44,13 @@ Link  B2-014   Cat 6A permanent link   Result: PASS
 Parameter         Measured     Limit        Margin   Worst case
 Wiremap           pass         -            -        -
 Length            71 m         90 m         19 m     pair 3-6
-Insertion loss    mid-range    at limit     6.1 dB   pair 7-8 at 500 MHz
-NEXT              good         at limit     3.4 dB   pair 4-5 / 7-8
-PSNEXT            good         at limit     3.9 dB   pair 3-6
-ACR-F             good         at limit     5.2 dB   pair 1-2 / 3-6
-Return loss       good         at limit     2.8 dB   pair 1-2 at 90 MHz
-Prop. delay       lower        at limit     lower    pair 7-8
-Delay skew        lower        at limit     lower    pair 1-2
+Insertion loss    30.2 dB      36.3 dB      6.1 dB   pair 7-8 at 500 MHz
+NEXT              42.1 dB      38.7 dB      3.4 dB   pair 4-5 / 7-8
+PSNEXT            40.6 dB      36.7 dB      3.9 dB   pair 3-6
+ACR-F             31.0 dB      25.8 dB      5.2 dB   pair 1-2 / 3-6
+Return loss       17.6 dB      14.8 dB      2.8 dB   pair 1-2 at 90 MHz
+Prop. delay       380 ns       498 ns       118 ns   pair 7-8
+Delay skew        12 ns        44 ns        32 ns    pair 1-2
 \`\`\`
 The values here are illustrative; the point is how to read each line.
 
@@ -120,7 +120,7 @@ Screen 2  SHORT
   fix:   find the touch point, retrim, reterminate, retest
 
 Screen 3  CROSSED PAIRS
-  pins 1,2 go straight; pins 3,6 and 4,5 show crossed at the far end
+  pins 4,5 and 7,8 go straight; pins 1,2 and 3,6 show crossed at the far end
   cause: T568A on one end and T568B on the other
   fix:   rewire one end to match the other, retest
 
@@ -247,11 +247,11 @@ Part of a life-safety or building circuit       no           leave; tell the own
 \`\`\`
 
 ## Worked example
-Above a corridor you find 14 old cables hanging loose. Each end is cut. Nine have no tag, three carry a faded paper tag reading "future, 2019, B. Lee", and two disappear into a wall box you cannot open.
+Above a corridor you find 14 old cables hanging loose. Twelve have both ends cut. Nine of those have no tag, and three carry a faded paper tag reading "future, 2019, B. Lee". The other two are cut at one end and disappear at the other into a wall box you cannot open.
 
 - The nine untagged cables, not terminated at either end: abandoned. Remove the accessible portions.
 - The three tagged cables: identified for future use. They are not abandoned, though a faded tag needs checking. Ask the owner whether they are still wanted, and if so, replace the tag with a clear one.
-- The two that vanish into the box: unknown. Trace them, check the records, and ask. Do not cut.
+- The two that vanish into the box: unknown, because you cannot see what is at the box end. Trace them, check the records, and ask. Do not cut.
 
 ## Confirm before cutting
 Check the drawings and administration records, then use a tone and probe, or a tester, to trace each end. Cut a cable only when it is certain to be out of service.

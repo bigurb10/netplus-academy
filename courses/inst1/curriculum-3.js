@@ -115,7 +115,7 @@ FRA.units.push({
 Fault      What the screen shows                     Usual cause                              Fix
 Open       a pin has no connection to the far end    conductor missed or poorly seated        reterminate the pair
 Short      two pins connected to each other          stray strand, nicked jacket, a staple    find the touch point, reterminate
-Reversed   a pair is wired tip to ring               one pair punched in the wrong order      reterminate that pair
+Reversed   a pair is wired tip to ring               tip and ring swapped within one pair     reterminate that pair
 Crossed    pairs 2 and 3 arrive on each other's pins A on one end and B on the other          make both ends the same, retest
 Split pair pins connect but pairs are not twisted    one wire from two pairs swapped          rewire to the color code
 \`\`\`
