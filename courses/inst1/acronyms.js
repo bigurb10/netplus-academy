@@ -93,6 +93,8 @@ FRA.acronyms = {
   "IL": { full: "Insertion Loss", tip: "The signal lost along the link; lower is better.", more: "It rises with length and frequency." },
   "NVP": { full: "Nominal Velocity of Propagation", tip: "The speed of signal in the cable as a percent of the speed of light, used to compute length.", more: "Set the right NVP on the tester or the length reading will be off." },
   "OLTS": { full: "Optical Loss Test Set", tip: "A light source and power meter used to measure total fiber link loss.", more: "Reference it first, then measure the link." },
+  "HDTDR": { full: "High-Definition Time-Domain Reflectometry", tip: "A tester display that shows where along a link a reflection (return loss problem) occurs.", more: "The distance tells you which end to reterminate, or whether to look at the cable in the middle." },
+  "HDTDX": { full: "High-Definition Time-Domain Crosstalk", tip: "A tester display that shows where along a link crosstalk is coming from.", more: "A fault near one end points to the termination there." },
   "OTDR": { full: "Optical Time-Domain Reflectometer", tip: "A tester that shows where loss and reflections occur along a fiber.", more: "It is recognition-level for an installer." },
   "PoE": { full: "Power over Ethernet", tip: "Power delivered over the same twisted pairs that carry data.", more: "Types 1 to 4 supply 15.4, 30, 60, and 90 W at the source." },
   "PSE": { full: "Power Sourcing Equipment", tip: "The switch or injector that supplies PoE power.", more: "It is the source end of a PoE link." },
