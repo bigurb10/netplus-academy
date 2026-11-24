@@ -59,7 +59,7 @@ FRA.cheatsheet = {
           ["Main cross-connect (MC)", "The top of the backbone hierarchy, usually in the equipment room"],
           ["Intermediate cross-connect (IC)", "The optional middle level between the main cross-connect and a floor's horizontal cross-connect"],
           ["Horizontal cross-connect", "Where horizontal cabling meets the patch panel and equipment, normally in the TR"],
-          ["Telecommunications outlet", "The wall or furniture jack that ends the horizontal cable. Also called the telecommunications outlet and connector"]
+          ["Telecommunications outlet", "The wall or furniture jack that ends the horizontal cable, in the work area"]
         ] },
         { type: "table", cols: ["Topology rule", "Value"], rows: [
           ["Shape", "A hierarchical star: every floor reaches back to a higher level, never in a ring or a chain"],
@@ -250,8 +250,8 @@ FRA.cheatsheet = {
           ["Fill, three or more cables", "40 percent"],
           ["Bends between pull points", "No more than two 90-degree bends"],
           ["Distance between pull points", "No more than 30 m (100 ft)"],
-          ["Bend radius, trade size 2 in (53 mm) and smaller", "6 x the inside diameter"],
-          ["Bend radius, larger than 2 in", "10 x the inside diameter"],
+          ["Bend radius, copper cable, trade size 2 in (53 mm) and smaller", "6 x the inside diameter"],
+          ["Bend radius, copper cable, larger than 2 in", "10 x the inside diameter"],
           ["Bend radius, conduit carrying optical fiber", "10 x the inside diameter"],
           ["Conduit types", "EMT is thin-wall steel tubing, ENT is flexible nonmetallic tubing, and PVC is rigid plastic. Each has its own inside diameter, so look it up before you calculate fill"],
           ["Pull box", "Add one where a run would otherwise exceed two bends or the pull length; it must stay accessible, never behind a finished wall"],
@@ -295,7 +295,7 @@ FRA.cheatsheet = {
           ["Load", "Do not exceed the hook's rated cable count; use bigger hooks or a tray"],
           ["Fiber cords", "Keep them off solid-bottom supports; use mesh, ladder, or noncontinuous supports to avoid pressure points"]
         ] },
-        { type: "table", cols: ["Separation from power and EMI sources", "Minimum distance"], rows: [
+        { type: "table", cols: ["Separation from power and EMI sources (circuits above 5 kVA unless stated)", "Minimum distance"], rows: [
           ["Branch circuits of 5 kVA or less", "No extra separation needed"],
           ["Unshielded power in open or nonmetal pathways", "610 mm (24 in)"],
           ["Unshielded power next to a grounded metal pathway", "305 mm (12 in)"],
