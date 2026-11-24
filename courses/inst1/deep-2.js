@@ -46,11 +46,11 @@ A pull string is the first and cheapest part of a pull, and the one most often s
 \`\`\`
 Situation                                  Best method
 Short, straight stub with one bend         steel or fiberglass fish tape
-Long straight run, no power nearby         fiberglass fish tape
+Long straight run                          fiberglass fish tape, the preferred tape near electrical work
 Ceiling drop to a wall box                 glow or push rod
 Long run with several bends                blown line with a piston, or a vacuum
 Run with an old string already inside      tie new string to old, pull the old string out
-Anywhere power may be live                 fiberglass only, and ask who controls the circuit first
+Box or raceway with live conductors      no tape of any kind until the electrician de-energizes and locks out the circuit
 \`\`\`
 
 ## Blown line in more detail
@@ -69,7 +69,7 @@ You pull eight cables through a conduit that had one pull string in it. The stri
 A footage line prints a number every foot or meter. At the far end, read the mark where the line comes out. That figure is the run length. Record it against the cable ID so the next crew knows which conduits are long.
 
 ## Safety
-Metal fish tapes carry electricity and can pull a fault into your hands. Do not feed one into a box that holds power conductors. The person who controls the circuit decides if it is safe to work there.
+Metal fish tapes carry electricity and can pull a fault into your hands. Never fish any tape, steel or fiberglass, into a box or raceway with energized conductors. The electrician de-energizes and locks out the circuit first. Fiberglass is preferred near electrical work because it does not conduct, but that is not permission to work live.
 
 > Remember: tie off both ends, use a rope rather than string for the real pull, and always leave a fresh string in.`,
 
@@ -181,7 +181,7 @@ The backbone cable runs from the sixth-floor TR down to the basement TR. It is a
 \`\`\`
 Position        Person   Task
 Top floor       2        set the reel on a stand, set the brake, feed
-Floors 5 to 2   1 each   guide the cable, call stop, hold the grip at the floor
+Floors 5 to 1   1 each   guide the cable, call stop, hold the grip at the floor
 Basement        2        receive the cable, secure it, confirm the arrival
 \`\`\`
 
@@ -196,7 +196,7 @@ Everyone has a radio on the same channel and a signal for stop.
 6. Firestop each floor opening around the cable, label it at every floor, and never splice it.
 
 ## Worked example: how many supports
-Six floors have openings, from floor 6 down through floor 1 to the basement, and the plan calls for a support at every floor. That is 7 openings: floors 6, 5, 4, 3, 2, 1 and the basement, so 7 supports, plus one grip at the reel. The weight is shared among the 7 supports and not carried by the lowest one.
+The riser serves floors 6 through 1 and the basement, seven levels, and the plan calls for a support at every level. That is 7 supports. The reel at the top has its own brake and is not counted. The weight is shared among the 7 supports and not carried by the lowest one.
 
 ## What goes wrong
 - A reel without a brake can spin faster than the crew can feed, and the cable falls.
@@ -258,7 +258,7 @@ Outdoor cable is built for weather: it may be loose tube with gel inside and a j
 Two pull points divide the 150 ft run. The cable reel stays at the first pull point in the manhole, and the cable is fed into the duct while the crew at the second point pulls on the rope. The plan reads like this:
 
 1. Set the reel at the feed point on a stand, clear of the opening.
-2. Feed cable in a figure eight on the ground if the run is long, so no twist builds.
+2. Feed the cable off the reel steadily, with a person guiding it at the mouth of the manhole so it never bends tighter than its radius.
 3. Use a swivel and a tension meter at the pulling end.
 4. After the cable arrives, leave slack coiled at a large radius in the manhole.
 
@@ -289,7 +289,7 @@ Suppose a cable is 0.5 in across.
 - During the pull, the radius must be at least 20 x 0.5 = 10 in.
 - Once installed with no load, the radius must be at least 10 x 0.5 = 5 in.
 
-A 4 in sheave is too small for the pull. A 10 in or larger sheave passes. At a tray corner, use a sweep, not a sharp angle.
+A bend radius is a radius, but sheaves are sold by diameter. The sheave's radius must be at least the 10 in minimum under tension, so you need a sheave at least 20 in in diameter. A sheave 4 in across has a 2 in radius and fails badly, and even a 10 in sheave has only a 5 in radius, which is too small for the pull. At a tray corner, use a sweep, not a sharp angle.
 
 ## The figure-eight, step by step
 1. Pay the cable off the reel and lay it on the floor in a large figure eight, two loops side by side.
@@ -314,12 +314,14 @@ TE                           2 m (6.6 ft) stored outside the enclosure
 \`\`\`
 
 ## Worked example: a TR slack estimate
-A TR is 3 m (10 ft) square with a 2.6 m (8.5 ft) ceiling. A four-pair cable comes in on the ladder rack above the door and lands on a patch panel in the far corner. The slack must reach the farthest corner and the rack position.
+A TR is 3 m (10 ft) square with a 2.6 m (8.5 ft) ceiling. A four-pair cable comes in on the ladder rack above the door, and the farthest corner of the room is 3 m along that rack.
 
-1. Along the wall to the far corner: about 3 m.
-2. Down the wall from the ladder rack at 2.6 m to a patch panel at mid height of 1.3 m: another 1.3 m.
-3. A margin for terminations and a retermination: add what the plan gives.
-That puts the TR slack well over 4.3 m, the sum of the first two steps, before the margin. The point is to measure the route, not to guess a round number.
+The rule is enough to reach the farthest corner by way of the pathway, plus floor to ceiling.
+
+1. The ladder rack runs along the wall from the door to the far corner: 3 m by way of the pathway.
+2. Floor to ceiling: 2.6 m.
+3. Slack = 3 + 2.6 = 5.6 m, plus any margin the plan adds for a retermination.
+The point is to measure the route, not to guess a round number.
 
 ## A service loop done right
 Lay a loop in the ceiling or on the ladder rack in a coil larger than the cable's minimum bend radius, supported on the rack or in hooks, not hanging on one cable. Tie it loosely. Never stuff a loop into the ceiling with a tight twist.

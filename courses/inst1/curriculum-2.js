@@ -51,7 +51,7 @@ Example: 1000 ft boxes, runs of 180 ft with 10 ft of slack at each end make 200 
 \`\`\`
 Tool                 Use                                          Watch for
 Steel fish tape      short runs of conduit with few bends          conducts electricity; never near energized power
-Fiberglass fish tape stiff, nonconductive; longer straight runs    still not for energized boxes; wear eye protection
+Fiberglass fish tape stiff, nonconductive; longer straight runs    not permission to work live; wear eye protection
 Glow or push rod     open ceilings, wall cavities, short drops     rods flex and can snag on insulation
 Vacuum or blown line long conduit runs, many bends                 needs a piston or mouse sized to the conduit
 Pull-line tape       footage marks along the line                  read the marks to measure the run
@@ -70,7 +70,7 @@ A pull line with printed footage marks tells you the length of the run as it goe
 
 > Tip: tie a knot big enough that it cannot slide through the bushing, and tape the tail so it does not catch.
 
-> Exam tip: never push a steel or any conductive fish tape into a box or conduit that holds or may hold power. Ask who controls it first.`,
+> Exam tip: never fish any tape, steel or fiberglass, into a box or raceway with energized conductors. The electrician de-energizes and locks out the circuit first. Fiberglass is only the better choice near electrical work because it does not conduct.`,
       hook: "Use a fish tape, rod, or blown line to get a line through, tie both ends off, measure with a footage line, and always leave a new pull string behind."
     },
     {
@@ -284,7 +284,7 @@ Innerduct               pull inside innerduct in conduit and trays
 \`\`\`
 
 ## Bend radius
-Fiber needs the bigger radius while you pull. A 0.5 in cable bends no tighter than 20 x 0.5 = 10 in under tension, and 10 x 0.5 = 5 in once it is in place. Use large sheaves and sweep elbows.
+Fiber needs the bigger radius while you pull. A 0.5 in cable bends no tighter than 20 x 0.5 = 10 in under tension, and 10 x 0.5 = 5 in once it is in place. Sheaves are sold by diameter, but the rule is a radius: the sheave's radius must be at least the minimum bend radius under tension. A cable that needs a 10 in radius needs a sheave at least 20 in across. Use large sheaves and sweep elbows.
 
 ## Figure-eight storage
 A coil laid on the floor puts a twist into the cable with each loop. A figure eight puts one twist in each lobe in opposite directions, so the twists cancel. Lay a long run in a figure eight on the floor and flip it as you feed.
@@ -372,7 +372,7 @@ Shielded cable has a drain wire and foil that must be handled before the pairs a
       body: `A box of connecting hardware is on the shelf in the staging room: jacks, panels, blocks, and fiber cassettes, in three categories. The drawing says which. Your job is to match the hardware to the cable and the job, not to use what is nearest.
 
 ## Match the category
-The link is only as good as its weakest part. Cable, jacks, panels, blocks, and cords must all be the same category, or higher for cords. One Category 5e jack in a Category 6A link makes the link a Category 5e link.
+The link is only as good as its weakest part. Every component in a link, cable, jacks, panels, blocks, and cords, must be rated at least the category of the link. A higher-rated part never hurts, and a lower-rated one drags the whole link down. One Category 5e jack in a Category 6A link makes the link a Category 5e link.
 
 \`\`\`
 Hardware           Where it belongs
@@ -394,14 +394,14 @@ A fiber panel holds adapters (the couplers where two connectors meet) and someti
 
 A punch tool does two jobs in one stroke: it seats the wire in the IDC and cuts off the extra. Cutting side in puts the cut on the wire you need to keep.
 
-> Tip: mark the jack's color code on the label side of the jack and follow it for every pair so no one has to guess.
+> Tip: use the jack's own color-coded label for the scheme the job uses, and follow it for every pair so no one has to guess.
 
 > Exam tip: a 66 block is for voice only. Every part of a link must match the category of the cable.`,
       hook: "Match the category of every part, use keystone jacks at the outlet, patch panels and 110 blocks in the TR, 66 blocks for voice only, and seat 110 wire with the blade cutting side out."
     },
     {
       id: "u5l3", title: "Four-Pair Termination: T568A and T568B on Jacks, Panels, and Plugs", domain: 4, obj: "4.4", minutes: 11, lab: "jack-t568b",
-      body: `The designer's note says T568B. The jacks in the box show both color codes printed on the housing. If the crew mixes them, the tester will show you split pairs and a wasted afternoon. One scheme per job is the rule.
+      body: `The designer's note says T568B. The jacks in the box show both color codes printed on the housing. If the crew mixes them, the tester will show crossed pairs and a wasted afternoon. One scheme per job is the rule.
 
 ## The two pin tables
 \`\`\`
