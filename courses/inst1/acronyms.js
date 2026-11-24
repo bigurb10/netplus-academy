@@ -96,6 +96,7 @@ FRA.acronyms = {
   "OTDR": { full: "Optical Time-Domain Reflectometer", tip: "A tester that shows where loss and reflections occur along a fiber.", more: "It is recognition-level for an installer." },
   "PoE": { full: "Power over Ethernet", tip: "Power delivered over the same twisted pairs that carry data.", more: "Types 1 to 4 supply 15.4, 30, 60, and 90 W at the source." },
   "PSE": { full: "Power Sourcing Equipment", tip: "The switch or injector that supplies PoE power.", more: "It is the source end of a PoE link." },
+  "HVAC": { full: "Heating, Ventilating, and Air Conditioning", tip: "The building systems that move and condition air, including the ducts and plenums above the ceiling.", more: "HVAC contractors own the ducts and air handlers, so an installer never moves or hangs cable from their work." },
   "PD": { full: "Powered Device", tip: "The camera, phone, or access point that receives PoE power.", more: "It is the load end of a PoE link." }
 };
 FRA.acronymIgnore = ["BEST", "FIRST", "MOST", "PASS", "FAIL", "III"];
