@@ -107,6 +107,8 @@ check('validate: an empty why string is reported', I.validate(lab('choices', { t
 check('validate: a choice expect outside its options is reported', I.validate(lab('choices', { text: 't' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 2 }], { why: { a: 'w' } })).some(p => /expect/.test(p)));
 check('validate: no tasks is reported', I.validate(lab('choices', { text: 't' }, [])).some(p => /tasks/.test(p)));
 check('validate: an id that is also an Object.prototype key is handled', (() => { const p = I.validate(lab('choices', { text: 't' }, [{ id: 'constructor', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: {} })); return !p.some(x => /duplicate/.test(x)) && p.some(x => /why/.test(x)); })());
+check('validate: a choices svg that is not an svg drawing is reported', I.validate(lab('choices', { text: 't', svg: '<div>no</div>' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { a: 'w' } })).some(p => /svg/.test(p)));
+check('validate: a choices svg that is a drawing is accepted', !I.validate(lab('choices', { text: 't', svg: '<svg viewBox="0 0 1 1"></svg>' }, [{ id: 'a', kind: 'choice', prompt: 'p', options: ['x', 'y'], expect: 0 }], { why: { a: 'w' } })).some(p => /svg/.test(p)));
 
 // ---------- figures ----------
 let svg = I.figure({ kind: 'meter', min: 0, max: 10, value: 5, unit: 'V' });
@@ -132,6 +134,9 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   const w = new JSDOM('<!doctype html><div id="x"></div>').window; const el = w.document.getElementById('x');
   I.render(el, lab('choices', { text: 'Reply from 10.0.0.1 <ok>' }, []), {}, {});
   check('render: choices shows its text escaped in a pre', !!el.querySelector('pre.ins-text') && el.querySelector('pre').textContent === 'Reply from 10.0.0.1 <ok>');
+  el.innerHTML = '';
+  I.render(el, lab('choices', { text: 'Read the jack', svg: '<svg viewBox="0 0 10 10"><rect id="pin1" width="1" height="1"/></svg>' }, []), {}, {});
+  check('render: choices draws its svg above the text', !!el.querySelector('.ins-drawing svg #pin1') && el.querySelector('.ins-drawing').compareDocumentPosition(el.querySelector('pre.ins-text')) === 4);
   I.render(el, lab('figures', { figures: [{ kind: 'meter', min: 0, max: 10, value: 3, unit: 'V', caption: 'Meter one' }, { kind: 'cylinder', ml: 100, value: 20 }] }, []), {}, {});
   check('render: figures draws every figure with its caption', el.querySelectorAll('svg.fig').length === 2 && /Meter one/.test(el.textContent));
 
