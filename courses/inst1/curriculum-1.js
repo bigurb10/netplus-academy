@@ -162,7 +162,7 @@ Schedules                  tables listing outlets, cable, or equipment
 \`\`\`
 
 ## Telecom symbols
-Outlets carry symbols for voice, data, or both, and a number or a count beside the symbol tells you how many ports. Each outlet also has an ID such as a room and port, and the ID is what you label.
+Outlets carry symbols for voice, data, or both, and a number or a count beside the symbol tells you how many ports. Pathways are drawn as lines with their own symbols: conduit, cable tray, and ladder rack each have a line style the legend decodes, usually with a size or tag beside it. A telecom room (TR) is drawn as a room outline with a boxed label, and an equipment room or entrance facility is tagged the same way, so you can find the room every run ends in. Each outlet also has an ID such as a room and port, and the ID is what you label.
 
 ## When the drawing and the field disagree
 A wall is in the wrong place or a duct blocks the route. Stop. Do not guess. Ask the foreman, who asks the designer in writing. Document the change on your as-built set so the record matches what was built.
@@ -446,14 +446,14 @@ Bonding joins metal parts so they sit at the same electrical potential. It also 
 \`\`\`
 Part                                   What it does
 PBB (formerly TMGB)                    one per building; in the EF; bonded to the service ground
-BCT                                    joins the PBB to the building's grounding electrode; keep short
+BCT                                    connects the PBB to the electrical service's grounding electrode system; keep short
 TBB                                    insulated stranded copper from the PBB to each SBB
 SBB (formerly TGB)                     one or more per TR or ER, in each room
 Rack bonding conductor (formerly TEBC) 6 AWG minimum, from the busbar to each rack
 Grounding equalizer                    6 AWG minimum between TRs, evening out potentials
 \`\`\`
 
-The BCT runs from the electrical service to the PBB, the TBB links the SBBs on each floor, and each rack gets its own conductor back to the nearest busbar.
+The BCT connects the PBB to the electrical service's grounding electrode system, the TBB links the SBBs on each floor, and each rack gets its own conductor back to the nearest busbar.
 
 ## What gets bonded
 - Racks and cabinets
@@ -468,7 +468,7 @@ Never use the water pipe as the telecom ground path on its own. Never rely on a 
 
 > Tip: copy the old name next to the new on your notes. The exam and some drawings use both.
 
-> Exam tip: the PBB is formerly the TMGB and the SBB is formerly the TGB. The TBB goes from the PBB to the SBBs, and the BCT goes from the PBB to the building's grounding electrode.`,
+> Exam tip: the PBB is formerly the TMGB and the SBB is formerly the TGB. The TBB goes from the PBB to the SBBs, and the BCT connects the PBB to the electrical service's grounding electrode system.`,
       hook: "PBB in the entrance room, TBB up the building to each SBB, BCT to the electrode, and a green conductor to every rack, tray, and shield."
     },
     {
@@ -597,7 +597,7 @@ A stud, a fire blocking, or a power cable inside the cavity means move the openi
 ## The cut
 1. Trace the ring template at the marked height.
 2. Cut slowly with a drywall saw, staying inside the lines.
-3. Drop a string or fish tape from the ceiling or run a fish tape to the opening. Pull the cable through.
+3. Drop a string from the ceiling space, or run a fish tape up from the opening, and tie on the cable. Pull the cable through.
 4. Feed the cable into the ring, set the ring, and tighten the wings until the ring clamps the drywall.
 5. Dress the cable, leave slack, and keep the bend radius.
 
@@ -724,7 +724,7 @@ Assemble each section with the maker's **splice plates** and hardware. Support t
 Every section is bonded, whether it carries power or low-voltage cable. Splice plates alone are not a guaranteed bond; use the listed bonding jumper where the maker requires it.
 
 ## Fill
-Fill and depth are set by the designer and the code. Plan for growth: a common design target is to start with a tray no more than 25 percent full. Use retaining posts so cable never rises above the side rails.
+Fill and depth are set by the designer and the code. Plan for growth by leaving the room the designer sets. Use retaining posts so cable never rises above the side rails.
 
 ## Transitions and drop-outs
 Cables leave a tray through a drop-out that protects the bend radius. Never let cable drop over a bare edge. Vertical runs are secured to the rung so the weight spreads over several supports.
@@ -826,8 +826,9 @@ L        how well the system seals against smoke leakage
 A **smoke barrier** is built to resist smoke, not just flame. Penetrations in it also need sealing.
 
 ## Methods
-- **Mechanical**: devices, sleeves with built-in firestop, and pillows that expand or close when heated.
-- **Nonmechanical**: sealant, putty, wraps, and collars that fill or seal the gap.
+- **Mechanical**: manufactured, presized elastomeric components, such as modules, blocks, and grommets, held in place by mechanical compression, sometimes in a frame. They are durable and can be reconfigured when cable is added.
+- **Nonmechanical**: pliable materials molded or sized to fit the opening: putties, caulks and sealants, blankets, pads, foams, pillows, and intumescent wraps. Some are intumescent (they expand with heat) and some are passive (they absorb or burn away heat).
+- For plastic pipe, use the intumescent collar or wrap that the listing names.
 - **Putty pads** seal the back of an outlet box in a rated wall.
 
 Install it **exactly as the listing says**. Never substitute foam, tape, rags, or insulation. If you cannot find a listed system that fits, stop and ask the designer or the AHJ.

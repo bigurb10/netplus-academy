@@ -51,7 +51,7 @@ Core a slab                silica dust               water, vacuum, respirator
 ## The 4-to-1 ladder rule, worked
 The base of an extension ladder sits 1 unit out for every 4 units of working height. A ladder that reaches 4 m up a wall has its base 1 m out. A ladder reaching 5 ft up has its base 1.25 ft out. Too steep and it tips backward; too shallow and the base slides out.
 
-Worked example: you need to step off onto a 3.2 m (about 10.5 ft) landing. The ladder must extend 1 m (3.28 ft) above the landing, so its working length to the top support is 3.2 m, and the base sits 0.8 m from the wall. Always use three points of contact, face the ladder, and stay off the top step of a stepladder or the top two rungs of an extension ladder.
+Worked example: you need to step off onto a 3.2 m (about 10.5 ft) landing. The ladder must extend 1 m (3.28 ft) above the landing, so the landing edge, where the ladder rests, is the 3.2 m working height. One quarter of 3.2 m puts the base 0.8 m from the wall. Always use three points of contact, face the ladder, and stay off the top step of a stepladder or the top two rungs of an extension ladder.
 
 ## Energy control
 Lockout and tagout is not a suggestion. If a task puts you near a circuit, the person who controls that circuit locks it and tags it. You never remove another worker's lock, and you never assume a panel is dead because it looks off. You are an installer, not an electrician, and power work belongs to the electrician.
@@ -440,7 +440,7 @@ Rack bonding conductors     SBB in each TR     each rack            6 AWG minimu
 Equalizer                   TR 1 SBB           TR 3 SBB             6 AWG minimum, if designed
 \`\`\`
 
-The **BCT** joins the PBB to the building's grounding electrode and is kept as short as possible. The **TBB** links the PBB to each SBB so every floor is at the same potential. The **rack bonding conductor** (formerly TEBC) is a 6 AWG minimum, stranded, insulated copper conductor from the SBB to each rack. Every bonding conductor is green, or green with a yellow stripe.
+The **BCT** connects the PBB to the electrical service's grounding electrode system and is kept as short as possible. The **TBB** links the PBB to each SBB so every floor is at the same potential. The **rack bonding conductor** (formerly TEBC) is a 6 AWG minimum, stranded, insulated copper conductor from the SBB to each rack. Every bonding conductor is green, or green with a yellow stripe.
 
 ## Count the labels
 Each bonding conductor is labeled at both ends.
@@ -716,7 +716,7 @@ Cap and label them. If the wall or floor is rated, firestop them too. At the end
 > Remember: scan before coring, bush the edges, leave spare capacity, and firestop every opening that holds cable.`,
 
 u3l12: `## Filling a tray the way a designer does
-A cable tray is sized from the cross-section of the cable it carries. The common planning target is to start with the tray no more than 25 percent full, which leaves room to add cable later. The fill percent is cable area divided by tray area. The designer's number wins; this example shows how the arithmetic works.
+A cable tray is sized from the cross-section of the cable it carries. In this example the designer limits the tray to 25 percent full on day one, which leaves room to add cable later. The fill percent is cable area divided by tray area. The designer's number wins; this example shows how the arithmetic works.
 
 \`\`\`
 Tray width                       12 in (305 mm)
@@ -845,17 +845,20 @@ Choosing a firestop is a matching problem. You hold three facts, and the listing
 
 \`\`\`
 Penetration                           Assembly            Typical method class         What the listing decides
-Bundle of cables, rectangular opening wall, rated        pillows or sealant with board   product, depth, and packing
-Many cables, repeated additions       wall or floor       sleeve or device with built-in firestop  which device fits
-Single small cable, round core        floor, rated        putty or sealant ring            product and depth
-Metal conduit, round opening          wall, rated         sealant, wrap, or collar         product and gap size
-Plastic conduit                       floor or wall       wrap or collar strip             product and size
-Back of an outlet box                 wall, rated         putty pad                        pad size and placement
-Open slot for a riser                 floor, rated        framed opening with pillows or board   frame and filler
+Bundle of cables, rectangular opening wall, rated        nonmechanical: pillows or sealant with board   product, depth, and packing
+Many cables, repeated additions       wall or floor       mechanical: modules or blocks in a frame  which module fits
+Single small cable, round core        floor, rated        nonmechanical: putty or sealant ring  product and depth
+Metal conduit, round opening          wall, rated         nonmechanical: sealant or wrap as listed  product and gap size
+Plastic conduit                       floor or wall       intumescent wrap or collar as listed  product and size
+Back of an outlet box                 wall, rated         nonmechanical: putty pad  pad size and placement
+Open slot for a riser                 floor, rated        framed opening with pillows or board (nonmechanical)  frame and filler
 \`\`\`
 
 ## The pick, worked
 You have a 4 in round core through a two-hour concrete floor carrying a bundle of cables. The three facts: a concrete floor of a two-hour rating, a bundle of cables, and a round opening of a stated size. You search the approval sheet for a system that lists all three. The sheet shows a system that uses a sealant with a stated depth and a mineral wool backing. You match the system exactly: the backing, the depth, and the product, not "something similar." If no system lists your combination, you stop and ask the designer or the AHJ.
+
+## Mechanical or nonmechanical
+A **mechanical** system is made of manufactured, presized elastomeric components, such as modules, blocks, and grommets, held in place by mechanical compression, sometimes in a frame. It is durable and can be reconfigured when cable is added. A **nonmechanical** system uses pliable materials molded or sized to the opening: putties, caulks and sealants, blankets, pads, foams, pillows, and intumescent wraps. Intumescent materials expand with heat; passive ones absorb or burn away heat. The listing, not your preference, says which one you may use.
 
 ## Ratings
 \`\`\`

@@ -225,7 +225,7 @@ FRA.cheatsheet = {
           ["Primary bonding busbar (PBB)", "Formerly the telecommunications main grounding busbar (TMGB). One per building, in the entrance facility, bonded straight to the service ground"],
           ["Secondary bonding busbar (SBB)", "Formerly the telecommunications grounding busbar (TGB). One or more per TR or ER, as many as needed"],
           ["Telecommunications bonding backbone (TBB)", "An insulated, stranded copper conductor from the PBB to each SBB, equalizing the floors"],
-          ["Bonding conductor for telecommunications (BCT)", "Joins the PBB to the building's grounding electrode. Keep it as short as possible"],
+          ["Bonding conductor for telecommunications (BCT)", "Connects the PBB to the electrical service's grounding electrode system. Keep it as short as possible"],
           ["Rack bonding conductor", "Formerly the TEBC. 6 AWG minimum, stranded, insulated copper from the SBB or PBB to each rack and cabinet"],
           ["Grounding equalizer", "A 6 AWG minimum insulated copper conductor that evens out potentials between TRs"],
           ["Jacket color", "Green, or green with a yellow stripe, for every bonding conductor"],
@@ -337,8 +337,8 @@ FRA.cheatsheet = {
           ["L rating", "How well the system seals against smoke leakage"],
           ["Listing number", "The tested system has an identifier such as a letter code and a number. Read it from the approval sheet, then match the system exactly"],
           ["Smoke barrier", "A wall built to resist smoke, not just flame. Penetrations in it also need sealing"],
-          ["Mechanical devices", "Collars, wraps, sleeves, and pass-through devices that expand or close when heated"],
-          ["Nonmechanical materials", "Caulk, putty, pillows, sealant, and board that fill the gap"],
+          ["Mechanical systems", "Manufactured, presized elastomeric components (modules, blocks, grommets) held in place by mechanical compression, sometimes in a frame. Durable, and they can be reconfigured"],
+          ["Nonmechanical systems", "Pliable materials molded or sized to the opening: putties, caulks and sealants, blankets, pads, foams, pillows, and intumescent wraps. Intumescent materials expand with heat; passive ones are endothermic or ablative"],
           ["Putty pads", "Seal the back of an outlet box in a rated wall"]
         ] },
         { type: "table", cols: ["Rule", "Detail"], rows: [
