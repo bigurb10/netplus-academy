@@ -99,4 +99,4 @@ FRA.acronyms = {
   "HVAC": { full: "Heating, Ventilating, and Air Conditioning", tip: "The building systems that move and condition air, including the ducts and plenums above the ceiling.", more: "HVAC contractors own the ducts and air handlers, so an installer never moves or hangs cable from their work." },
   "PD": { full: "Powered Device", tip: "The camera, phone, or access point that receives PoE power.", more: "It is the load end of a PoE link." }
 };
-FRA.acronymIgnore = ["BEST", "FIRST", "MOST", "PASS", "FAIL", "III"];
+FRA.acronymIgnore = ["BEST", "FIRST", "MOST", "PASS", "FAIL", "III", "UP", "DOWN", "BOTH", "ONE", "OUT"];
