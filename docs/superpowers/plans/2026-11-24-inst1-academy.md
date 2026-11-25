@@ -1124,3 +1124,7 @@ Edition re-check list: every rule-bearing number that appears in the cheat sheet
 | 335 square meters | acronyms -, cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, questions-1 - | NOT IN DUMP |
 | 6 x the inside diameter | cheatsheet sheet:pathways, curriculum-1 u3l14, questions-1 - | NOT IN DUMP |
 | 10 x the inside diameter | cheatsheet sheet:pathways, questions-1 - | NOT IN DUMP |
+
+### Task 10 (2026-11-25)
+
+Final review: Approved after two Important fixes (source named in an FAQ answer; tray-cutting question had a second defensible answer, reworded to wire mesh tray; the rule itself is supported by the manual's note on field-modified listed tray). Minor fixes: firestop scenario wording, cleave wording, fill stem. Left as is: pair-colors drawing shows the grid (reading it is the lab's skill); bundle tension rule is on the re-check list. Fix commit 2b6e7cc; merge 1581525. Deployed with stage.sh and go-live.sh (backup /root/fra-backup-20261125-1353.tgz); cheat sheet PDF copied. Live checks: /, /inst1/, /inst1/app/, lessons, practice-test, cheatsheet, flashcards, cheatsheet.pdf all 200; catalog links inst1/; BMET app carries the lab choice shuffle. Search Console resubmission of /sitemap.xml is Blake's.
