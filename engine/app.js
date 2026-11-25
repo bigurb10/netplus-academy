@@ -915,6 +915,18 @@
       ${done ? `<div class="row"><button class="btn ghost small" data-act="lab-redo" data-arg="${esc(lab.id)}">Redo this lab</button></div>` : ''}
     </section>`;
   }
+  // A choice task's display order: a Fisher-Yates shuffle seeded by the lab id and task id, so the
+  // order is the same on every render and reload. Authors put the key first; this hides that.
+  // data-arg keeps the ORIGINAL option index, so grading and saved answers do not change.
+  function choiceOrder(labId, taskId, n) {
+    let h = 2166136261; const str = labId + '/' + taskId;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    const rnd = () => { h = (h + 0x6D2B79F5) >>> 0; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const a = []; for (let i = 0; i < n; i++) a.push(i);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; }
+    return a;
+  }
+  FRA.choiceOrder = choiceOrder;
   function labTask(lab, t, i, ls) {
     const ok = ls.ok[t.id]; const v = ls.values[t.id]; const why = lab.why && lab.why[t.id];
     const dis = ok === true ? 'disabled' : '';
@@ -922,7 +934,7 @@
     let input;
     if (t.kind === 'reading') input = `<div class="row" style="gap:8px;flex-wrap:wrap"><input type="number" step="any" class="lab-in" id="lab-${esc(t.id)}" data-task="${esc(t.id)}" value="${v != null ? esc(v) : ''}" ${dis}><span class="muted">${esc(t.unit || '')}</span>${t.measure ? `<button class="btn small ghost" data-act="lab-use" data-arg="${esc(t.id)}" ${dis}>Record the reading</button>` : ''}<button class="btn small primary" data-act="lab-check" data-arg="${esc(t.id)}" ${dis}>Check</button></div>`;
     else if (t.kind === 'verdict') input = `<div class="row" style="gap:8px">${['pass', 'fail'].map(o => `<button class="chip" data-act="lab-answer" data-arg="${esc(t.id)}:${o}" aria-pressed="${v === o}" ${dis}>${o === 'pass' ? 'Pass' : 'Fail'}</button>`).join('')}</div>`;
-    else input = `<div class="options">${(t.options || []).map((o, k) => `<button class="option" data-act="lab-answer" data-arg="${esc(t.id)}:${k}" aria-pressed="${v === k}" ${dis}><span class="key">${letters[k] || k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+    else input = `<div class="options">${choiceOrder(lab.id, t.id, (t.options || []).length).map((k, d) => `<button class="option" data-act="lab-answer" data-arg="${esc(t.id)}:${k}" aria-pressed="${v === k}" ${dis}><span class="key">${'ABCDEFGH'[d] || d + 1}</span><span>${esc(t.options[k])}</span></button>`).join('')}</div>`;
     return `<div class="lab-task ${ok === true ? 'ok' : ''}" data-task="${esc(t.id)}"><div class="q-stem"><span class="muted tnum">${i + 1}.</span> ${inline(t.prompt)}</div>${input}${result}</div>`;
   }
   // Mount the instrument panel into the lab card after each paint. The module is optional.
