@@ -397,6 +397,9 @@ textarea.io { width: 100%; min-height: 120px; font-family: var(--font-mono); fon
 .ins-dial { display: flex; gap: 6px; flex-wrap: wrap; }
 .ins-drawing { position: relative; display: inline-block; max-width: 100%; }
 .ins-drawing svg { display: block; max-width: 100%; height: auto; }
+.ins-drawing.wide { display: block; width: 100%; max-width: 640px; }
+.ins-drawing.wide svg { width: 100%; }
+.ins-note { margin: 0; }
 .tp { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 0.7rem var(--font-display); cursor: pointer; padding: 0; }
 .tp.red { background: #C8322B; color: #fff; border-color: #C8322B; }
 .tp.black { background: #14212E; color: #fff; border-color: #14212E; }

@@ -833,6 +833,32 @@ const lessonsOf = w => { const out = {}; w.FRA.units.forEach(u => u.lessons.forE
     check('Redo clears the lab', st().labs['mini-ping'].done === false && /0 of 3 tasks/.test(w.$('#lab').textContent));
     w.close();
   }
+  // ----- Choice options are shown in a stable shuffled order (authors put the key first) -----
+  {
+    const fs = require('fs');
+    const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');
+    const four = ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4'];
+    const mk = () => boot({ courseDir: mini, beforeApp: x => { x.FRA.labs['mini-ping'].tasks[0].options = four.slice(); } });
+    const shown = w => w.$$('.lab-task[data-task="who"] [data-act="lab-answer"]').map(b => [b.dataset.arg, b.querySelector('span:last-child').textContent, b.querySelector('.key').textContent]);
+    const w1 = mk(); act(w1, 'lesson', 'u1l2'); const a = shown(w1);
+    const w2 = mk(); act(w2, 'lesson', 'u1l2'); const b = shown(w2);
+    check('choice options are a permutation of the authored options', JSON.stringify(a.map(x => x[1]).sort()) === JSON.stringify(four) && a.every(x => four[Number(x[0].split(':')[1])] === x[1]), JSON.stringify(a));
+    check('the shuffled order is identical across two renders', JSON.stringify(a) === JSON.stringify(b), JSON.stringify(a) + ' vs ' + JSON.stringify(b));
+    check('letters follow display position', a.map(x => x[2]).join('') === 'ABCD', a.map(x => x[2]).join(''));
+    // Grading still uses the original index: click whichever button carries the expect index.
+    w1.click(w1.$('[data-act="lab-answer"][data-arg="who:0"]'));
+    check('the button carrying the expect index still grades correct', !!w1.$('.lab-task[data-task="who"] .feedback.good'));
+    // Across both packs the key must not always land first.
+    const wp = boot({ courseDir: mini });
+    for (const f of [...fs.readdirSync(path.join(ROOT, 'courses', 'bmet')).filter(n => /^labs/.test(n)).map(n => path.join(ROOT, 'courses', 'bmet', n)), path.join(ROOT, 'courses', 'inst1', 'labs-1.js')]) if (fs.existsSync(f)) wp.eval(fs.readFileSync(f, 'utf8'));
+    const pos = {}; let n = 0;
+    for (const lab of Object.values(wp.FRA.labs)) for (const t of lab.tasks) if (t.kind === 'choice' && t.options.length > 2) {
+      const ord = wp.FRA.choiceOrder(lab.id, t.id, t.options.length); n++;
+      const p = ord.indexOf(t.expect); pos[p] = (pos[p] || 0) + 1;
+    }
+    check('across the BMET and INST1 labs the key lands in at least three display positions', Object.keys(pos).length >= 3 && n > 30, JSON.stringify(pos) + ' of ' + n);
+    check('the key is not first for most tasks', pos[0] < n * 0.5, JSON.stringify(pos));
+  }
   // ----- A missing instruments module degrades to a note, never a blank page -----
   {
     const mini = path.join(ROOT, 'tests', 'fixtures', 'mini');

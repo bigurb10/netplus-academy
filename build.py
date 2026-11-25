@@ -42,7 +42,7 @@ def manifest(course_dir):
     return {"id": get("id"), "name": get("name"), "description": get("description")}
 
 
-CATALOG_ORDER = ["bmet", "cbet", "cres", "chtm", "ciip", "netplus", "secplus", "aplus1", "aplus2"]
+CATALOG_ORDER = ["bmet", "cbet", "cres", "chtm", "ciip", "netplus", "secplus", "aplus1", "aplus2", "inst1"]
 
 
 def course_meta(course_id):
