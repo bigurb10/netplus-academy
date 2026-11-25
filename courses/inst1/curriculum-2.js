@@ -9,7 +9,7 @@ FRA.units.push({
   lessons: [
     {
       id: "u4l1", title: "Pull Planning and Setup: Reels, Sheaves, the Pull Schedule", domain: 3, obj: "3.1", minutes: 10,
-      body: `The foreman hands you a pull schedule for the second floor and says the cable arrives at seven tomorrow. Cable is pulled well or badly before the first foot leaves the box. Setup is where you win the pull.
+      body: `The foreman hands you a pull schedule for the second floor and says the cable arrives at seven tomorrow. Cable is pulled well or badly before the first foot leaves the box. The **cable pulling setup**, meaning the reels, the sheaves, the schedule, and a crew member at each end, is where you win the pull.
 
 ## The pull schedule
 The schedule lists every cable the crew will pull, one line each. It is your work order and, later, your record.
@@ -37,6 +37,8 @@ Count whole runs, never part of one. Each run needs its length plus the slack th
 3. Boxes = total runs divided by runs per box, rounded UP, because you cannot buy part of a box.
 
 Example: 1000 ft boxes, runs of 180 ft with 10 ft of slack at each end make 200 ft per run. That is 5 runs per box, so 32 runs need 7 boxes (6.4 rounds up).
+
+The gear: a **reel dolly**, or a pair of **jackstands** with a bar through the reel, lets the reel turn freely as the cable pays out. A **tugger** is a powered puller that winds in the **bull line**, the heavy rope used on long or heavy pulls. Boxed cable pays out of its box without kinks, as long as the box is not twisted.
 
 > Tip: pull the longest runs first from a fresh box, then use the leftover lengths for the short runs.
 
@@ -67,6 +69,8 @@ A pull line with printed footage marks tells you the length of the run as it goe
 - Tie the line off at both ends of the conduit so it cannot slip back inside.
 - Pull the new cable with a rope or tape, never the thin string alone.
 - After the pull, leave a new pull string in the conduit for the next crew. Do not remove the last string.
+
+A **snake rod** (a flexible fiberglass rod) or a **telescoping pole** reaches across a ceiling or down a wall cavity without opening every tile. Rope is tied with hitches that hold under load and still untie afterward, such as the **clove hitch** and the **timber hitch**, and the knot is taped so it cannot snag. Pull a **trailer string** in behind the cable so the next pull has a line waiting.
 
 > Tip: tie a knot big enough that it cannot slide through the bushing, and tape the tail so it does not catch.
 
@@ -292,6 +296,8 @@ A coil laid on the floor puts a twist into the cable with each loop. A figure ei
 ## Ends and cleanliness
 Protect the ends with a pulling eye or a pre-terminated cable sleeve. Cap them and keep dirt out. Never drag fiber across a dirty floor.
 
+Fiber loses light at bends in two ways. A **macrobend** is a bend you can see that is tighter than the bend radius. A **microbend** is a tiny kink in the fiber from crushing, a tight tie, or a sharp edge. Both add loss, and both are avoided by keeping the radius and never cinching a bundle.
+
 > Tip: a swivel between the line and the grip keeps the twist out of the cable, and a tension meter keeps you honest.
 
 > Exam tip: fiber is pulled on the strength member, never the fibers, and the bend radius is 10 x at rest and 20 x under tension.`,
@@ -394,6 +400,8 @@ A fiber panel holds adapters (the couplers where two connectors meet) and someti
 
 A punch tool does two jobs in one stroke: it seats the wire in the IDC and cuts off the extra. Cutting side in puts the cut on the wire you need to keep.
 
+The **designation strip** is the labeled strip that sits in the holder on a 110 or 66 block and names each position, so the next technician can read what lands where.
+
 > Tip: use the jack's own color-coded label for the scheme the job uses, and follow it for every pair so no one has to guess.
 
 > Exam tip: a 66 block is for voice only. Every part of a link must match the category of the cable.`,
@@ -403,7 +411,7 @@ A punch tool does two jobs in one stroke: it seats the wire in the IDC and cuts 
       id: "u5l3", title: "Four-Pair Termination: T568A and T568B on Jacks, Panels, and Plugs", domain: 4, obj: "4.4", minutes: 11, lab: "jack-t568b",
       body: `The designer's note says T568B. The jacks in the box show both color codes printed on the housing. If the crew mixes them, the tester will show crossed pairs and a wasted afternoon. One scheme per job is the rule.
 
-## The two pin tables
+## The two pin tables (pinouts)
 \`\`\`
 Pin   T568A         T568B
 1     white-green   white-orange
@@ -534,6 +542,10 @@ UPC (ultra physical contact) has a polished flat-curved face and a blue body. AP
 - **Mechanical splice (prepolished):** a factory-polished stub inside the connector joins the fiber in a splice with index-matching gel.
 - **Fusion-spliced pigtail:** a factory-made connector and a short fiber (a pigtail) are fused to the cable fiber by a machine. It gives the lowest loss and is the most common on large jobs.
 
+Each field method starts with a **cleave**: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
+
+A fourth option skips field termination: with **pre-termination**, the cable or trunk arrives from the factory cut to length with its connectors already on and tested. The installer pulls it, protecting the ends, and plugs it in, so the lengths must be measured right before the order goes in.
+
 ## Panels and polarity
 A duplex link needs the transmit of one end to land on the receive of the other. Polarity is that crossing. Follow the labeling on the panel and the plan, and check it with a light source before you trust it.
 
@@ -610,6 +622,8 @@ Use shielded jacks and shielded patch panels. Their metal bodies make contact wi
 
 ## A broken shield is an antenna
 If the shield breaks, or is grounded at one end only through a bad connection, it can pick up noise and radiate it. A broken or poorly bonded shield is worse than no shield. The tester's shield test and a bonding resistance check, 0.1 ohm (100 milliohms) at most, confirm the work.
+
+A cable with one overall foil screen around four unshielded pairs is a **screened twisted-pair** cable (F/UTP). Like any shielded cable, it works only when the screen is continuous and bonded at the panel.
 
 > Tip: do not cut away the foil because it is in your way. Fold it, tape it neatly if needed, and keep it in contact.
 

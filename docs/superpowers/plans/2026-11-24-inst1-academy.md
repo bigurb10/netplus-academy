@@ -968,3 +968,159 @@ Record in Status: the merge commit, the backup file name `go-live.sh` printed, t
 - Type consistency: lab ids in Tasks 3 to 5 match Task 6 and `kitLab`; generator keys `u3l14 u4l3 u4l1 u5l4` match lessons that teach their rules; cheat sheet section ids are used as Task 2 defines them.
 
 ## Status
+
+### Task 9 (2026-11-25)
+
+Term check (`python scripts/termcheck_inst1.py`): CHECK 2 INST1 outline terms 72, misses 0:; CHECK 1a textbook chapter and section titles entries 112, entries with an absent content word 29:; CHECK 1b textbook glossary terms (PDF pages 934 to 993) entries 983, entries with an absent content word 320:.
+CHECK 2 closed from 7 misses by teaching each term in its lesson (u2l1 building and fire code, u3l4 bonding infrastructure, u3l6 continuous cable support, u4l1 cable pulling setup, u5l6 pre-termination, u6l1 copper cable testing). CHECK 1b was 369 before triage; about thirty installer terms were taught (u1l2 safety data sheet, personnel and bucket lift, powder-actuated tool; u1l3 balanced twisted-pair; u1l4 total internal reflection; u1l6 scope of work, bill of material, cutsheet, submittals, preinstallation meeting, request for information; u3l1 intra- and interbuilding backbone; u3l3 relay rack; u3l10 suspended ceiling; u3l12 trapeze; u3l14 wireway; u3l15 through and membrane penetration, compartmentation, engineered judgment; u4l1 reel dolly, jackstands, tugger, bull line; u4l2 snake rod, telescoping pole, clove and timber hitch, trailer string; u4l9 macrobend, microbend; u5l2 designation strip; u5l3 pinouts; u5l6 cleave; u5l8 screened twisted-pair; u6l2 alien crosstalk; u7l3 foreign voltage, multimeter, inductive amplifier, telephone test set; u8l1 infection control risk assessment, flash cut, phased cutover, downtime, temporary cabling, retrofitting).
+The checker's glossary range stops at the Abbreviations entry (the next TOC entry after Terms is a letter heading, which cut the range to four pages).
+
+Out of scope (left out on purpose, with the reason):
+
+- outside plant (26): Bonding and Grounding (Earthing) Systems; Systems Bulletin (TSB); aerial cable; aerial plant; aural ear protector; bullwheel; carbon block; carbon protector; customer premises; device (NID); earthing; exothermic; flashing; fuse; fuse cable link; fuse link; insulating gap; insulating joint; lashing; lightning rod; maintenance hole (MH; outside plant (OSP); same-day surgery; splice closure; surge arrestor; unidirectional signaling
+- health care (24): Electromagnetic Interference (EMI) Considerations for Support Structure Installation; Infection Control Risk Assessment (ICRA); Working Conditions in Medical Facilities; acute care; ambulatory care; ambulatory care clinic; chief of service; clinic; continuum of care; coronary care unit; healthcare clinic; imaging (MRI); inpatient care; intensive care unit; magnetic resonance; medical center; medical clinic; neonatal intensive care; operating room; proton; special care unit (SCU); telemedicine; tertiary care; unit (NICU)
+- fiber optics theory and splicing (56): Blowing Optical Fiber; Fresnel reflection; Rayleigh scattering; V-groove; backscatter; backscatter coefficient; biconic; by stimulated; chromatic dispersion; concentricity; detector (optical); dispersion; dopant; emission of radiation; event table; false event; fiber optic cable; fiber optic flashlight; fiber optics; foldback splicing; furcating harness; furcation; furcation tubing; hybrid optical; index of refraction; infrared (IR); infrared conversion; laser diodelight; light amplification; linewidth; loss resolution; low-intensity laser; mandrel; modal dispersion; mode; mode (ATM); mode field diameter; modem; nanometer (nm); near infrared; near-field radiation; nonreflective break; numerical aperture; of radiation); overfill; overfilled launch; photon; reflection coefficient; reflective break; reflectometer (TDR); refraction; refractive index; scattering; splicing rig; stimulated emission; wand
+- signal and network theory (77): Gigabit Ethernet; ITS Installation Methods Manual, 6th edition; Internet; Manchester encoding; Web; accelerator; analog; analog input (AI); analog output (AO); analog signal; asynchronous transfer; baseband signaling; baseband transmission; baud; bidirectional signaling; binary; binary digit; binary digital system; bit; bit error rate (BER); bit per second (b/s); broadband; bus topology; cell; codec; datagram; demodulator; digital; digital network (ISDN); digital signal; digital subscriber line; exchange (PBX); firewall; gigabit per second; hub; interface; interface (FDDI); interface (SNI); inverter; key service unit (KSU); link state algorithm; logical topology; megabit per second; metropolitan area; modulation; modulation (PCM); modulator; multiplexer (mux); multiplexing (TDM); multiplexing (muxing); multiuser; network (MAN); network interface; network interface card; nibble; node; nonreturn-to-zero; packet; peripheral device; power supply (UPS); program; protocol (VoIP); rectifier; server; service (POTS); simplex; telephony; terminator; thicknet; thinnet; throughput; token ring; transceiver; transfer impedance; uninterruptible; vampire tap; voice over Internet
+- electrical theory (35): alternating current; alternating current (ac); ampere (A); amplification by; autorange; bel; capacitance; coefficient (PTC); coefficient of expansion; compatibility (EMC; conductance (G); dBm; decibel (dB); dielectric constant; electrostatic discharge; frequency (freq); gigahertz (GHz); hertz (Hz); impulse noise; inductance (L); input impedance; megahertz•kilometer; megger; mutual capacitance; nanosecond (ns); ohmmeter; picofarad; resistance unbalance; resistivity; sine wave; spike; standing wave ratio; structural return loss; volt (V); volt-ohmmeter (VOM)
+- project management (45): Appendix A: Specifications; Appendix A: Underwriters Laboratories Inc.® (UL®) Numbering System; Canadian Approval of Electrical Products and Equipment; Developing a Project Plan; Enforcement of United States Building Codes, Standards, and Regulations; Example C: Labor List; Example D: Project Timeline; Regional Codes and Standards; Regulations and Standards for Wireless Transmission; United States (U.S.) Approval of Electrical Productsand Equipment; Wireless Standards Development Organizations; Accreditation of; Alliance (EIA); American Institute of; Architects (AIA); Gantt chart; Laboratories of Canada; Laboratories, Inc.®; MasterFormat™; PERT chart; Specifications Institute; Standards Institute; TIA/EIA; accreditation; addendum; characteristic; comprehensive; configuration; consultant; divestiture; emergency preparedness; interstitial space; labor list; narrative summary; nomograph; prime contractor; proposal; quote; request for proposal; request for quotation; resolution; rule of percentage; safety committee; spatial resolution; subcommittee (SC)
+- peripheral, or taught under the full name with only the abbreviation or a title word absent (86): Abbreviations, Acronyms, and Units of Measure; Additional Resources; Administration of Structured Cabling Systems (SCSs); Appendix B: Firestopping Decision Methods; Appendix B: Telecommunications Drawings; Appendix C: Approved Firestopping Methods; Distributed Antenna System (DAS) Installation Fundamentals; Extending Special Circuits; Field Test Equipment Selection; Generic Structured Cabling System (SCS); Numbers and Abbreviations; Professionalism; Structured Cabling Systems (SCSs); D-subminiature; apparatus; aught; badge reader; balun; barrel connector; bill of material (BOM); cable-end locator kit; carding brush; catwalk; cementitious; chase nipple; circuit interrupter; clustered star; composite cable; conductor (CBC); conductor (GEC); cone; coupled bonding; cross threading; curing; detection badge; distributor (BD)]); distributor (CD)]); distributor (FD)]); endcap; endplate; equipment (CPE); exposure monitor; fireproof; forming; grunt sack; hermaphroditic; hybrid cable; integrated services; interconnection; medium-dependent; modified cut-through; mushroom; offset; padding down; pair scanner; panel (EDP); patching; payout box; peak power (PP); plugger; poke-thru; polyethylene (PE); polymer; poststressed concrete; prefusing; premises cabling; prestressed concrete; pulling technique; pulse code; pulse repetition rate; quad cable; rat; red iron; reinforcing bar; rigging; ringing tool; scanner; scope of work (SoW); scribing tool; sheet (MSDS); shorting bar; shorting plug; structural (AMES); swing-floor phasing; time-division; wirewrap
+
+Exam facts checked against `BICSI-INST1_Handbook.txt` (all agree with course.js and the cheat sheet):
+
+| Fact | Value | Handbook line |
+|---|---|---|
+| Nonrenewable certificate | nonrenewable | 89, 177 |
+| Hands-on: six tasks, 20 min each, pass/fail after each, last day of IN101 | as stated | 390-392 |
+| Hands-on retest: one failed task same day free; same task twice or two tasks means another date | as stated | 392-395 |
+| Written only after hands-on passed; 2 hours; 75 multiple-choice; knowledge and application | as stated | 397-400, 406 |
+| Passing score by standard setting (Angoff), not published; fail report by topic area, not a score | as stated | 438-440, 704-718 |
+| 50 hours independent study recommended | 50 h | 268, 411 |
+| Physical: colors, dexterity, stand, climb ladders, lift 50 lb | 50 lb | 271-272 |
+| Application at least seven days before hands-on | 7 days | 456 |
+| Fee $335 member, $400 nonmember | as stated | 466-467 |
+| Retest $135 member, $200 nonmember; virtual walk-in $135 | as stated | 479-486 |
+| Eligibility one year from first hands-on; 30-day wait; 90 days after third failure | as stated | 542-547 |
+| Government photo ID with signature plus secondary ID; name matches BICSI profile | as stated | 643-646 |
+| Calculator and whiteboard provided; no scheduled breaks | as stated | 684-686 |
+| Next steps INSTC and INSTF | as stated | 126-128, 184-185 |
+
+Edition re-check list: every rule-bearing number that appears in the cheat sheet or a lesson body, where it appears, and its source. Numbers that appear only in deep dives, questions, or labs are worked arithmetic on these rules (scenario lengths, readings, totals) and are not listed. Values marked NOT IN DUMP are current practice newer than the 6th edition or derived examples; re-check them first against the 8th edition.
+
+| Value | Where | Source |
+|---|---|---|
+| 15 % | cheatsheet sheet:exam, cheatsheet sheet:spaces, curriculum-1 u3l2 | ITSIMM 6 line 2696 |
+| 31 % | cheatsheet sheet:exam, cheatsheet sheet:pathways, curriculum-1 u3l14, deep-1 -, labs-1 u3l14, questions-1 - | Global Constraints |
+| 40 % | cheatsheet sheet:pathways, curriculum-1 u3l14, deep-1 -, labs-1 u3l14, questions-1 - | Global Constraints |
+| 53 % | cheatsheet sheet:pathways, curriculum-1 u3l14, deep-1 -, labs-1 u3l14, questions-1 - | Global Constraints |
+| 6 AWG | acronyms -, cheatsheet sheet:spaces, curriculum-1 u3l4, curriculum-1 u3l5, curriculum-2 u5l8, deep-1 -, deep-2 - | ITSIMM 6 line 8239 |
+| 23 AWG | cheatsheet sheet:media, curriculum-1 u1l3, deep-1 - | NOT IN DUMP |
+| 24 AWG | acronyms -, cheatsheet sheet:media, curriculum-1 u1l3 | ITSIMM 6 line 6476 |
+| 100 MHz | acronyms -, cheatsheet sheet:media, curriculum-1 u1l3, questions-1 - | ITSIMM 6 line 12597 |
+| 250 MHz | acronyms -, cheatsheet sheet:media, cheatsheet sheet:testing, curriculum-1 u1l3, questions-1 - | ITSIMM 6 line 12600 |
+| 500 MHz | acronyms -, cheatsheet sheet:media, cheatsheet sheet:testing, curriculum-1 u1l3, deep-3 -, questions-1 - | ITSIMM 6 line 3268 |
+| 110 N | cheatsheet sheet:pulling, curriculum-2 u4l3, deep-2 -, labs-1 u4l3 | Global Constraints |
+| 1320 N | curriculum-2 u4l3, deep-2 - | NOT IN DUMP |
+| 15.4 W | cheatsheet sheet:job, curriculum-3 u9l2, deep-3 -, questions-3 - | Global Constraints |
+| 30 W | cheatsheet sheet:job, curriculum-3 u9l2, deep-3 -, questions-3 - | Global Constraints |
+| 60 W | cheatsheet sheet:job, curriculum-3 u9l2, deep-3 -, questions-3 - | Global Constraints |
+| 90 W | acronyms -, cheatsheet sheet:job, curriculum-3 u9l2, deep-3 -, questions-3 - | Global Constraints |
+| 5 dB | curriculum-3 u6l2 | NOT IN DUMP (worked example or conduit trade size) |
+| 2 ft | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 -, questions-2 - | ITSIMM 6 line 9504 |
+| 3.28 ft | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u1l2, curriculum-1 u3l12, curriculum-1 u3l2, deep-1 -, questions-1 - | ITSIMM 6 line 4536 |
+| 4 ft | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 - | ITSIMM 6 line 7927 |
+| 5 ft | cheatsheet sheet:pathways, curriculum-1 u3l12, curriculum-1 u3l13, curriculum-1 u3l6, curriculum-2 u4l5, deep-1 -, deep-2 -, questions-1 - (+1 more) | Global Constraints |
+| 6.6 ft | cheatsheet sheet:pulling, curriculum-2 u4l10, deep-2 -, questions-2 - | ITSIMM 6 line 14305 |
+| 7 ft | cheatsheet sheet:spaces, curriculum-1 u3l3, deep-1 - | ITSIMM 6 line 7955 |
+| 8 ft | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 7879 |
+| 8.5 ft | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, deep-2 - | ITSIMM 6 line 7307 |
+| 10 ft | cheatsheet sheet:pathways, curriculum-2 u4l1, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 4663 |
+| 33 ft | cheatsheet sheet:system, curriculum-1 u3l1, curriculum-3 u6l1, deep-1 -, deep-3 - | Global Constraints |
+| 100 ft | cheatsheet sheet:pathways, curriculum-1 u3l14, curriculum-2 u4l4, deep-1 -, deep-2 -, questions-1 -, questions-2 - | Global Constraints |
+| 144 ft | curriculum-2 u4l1 | NOT IN DUMP (worked example or conduit trade size) |
+| 168 ft | curriculum-2 u4l1 | NOT IN DUMP (worked example or conduit trade size) |
+| 180 ft | curriculum-2 u4l1, deep-2 - | NOT IN DUMP (worked example or conduit trade size) |
+| 182 ft | curriculum-2 u4l1 | NOT IN DUMP (worked example or conduit trade size) |
+| 200 ft | curriculum-2 u4l1, deep-2 - | ITSIMM 6 line 42749 (worked example or conduit trade size) |
+| 295 ft | cheatsheet sheet:system, curriculum-1 u3l1, curriculum-3 u6l1, deep-1 -, deep-3 -, questions-1 -, questions-3 - | Global Constraints |
+| 328 ft | cheatsheet sheet:system, curriculum-1 u3l1, curriculum-3 u6l1, deep-1 -, deep-3 -, questions-1 -, questions-3 - | Global Constraints |
+| 1000 ft | curriculum-2 u4l1, deep-2 -, questions-2 - | ITSIMM 6 line 3743 (worked example or conduit trade size) |
+| 6562 ft | cheatsheet sheet:system | ITSIMM 6 line 12716 |
+| 9842 ft | cheatsheet sheet:system | ITSIMM 6 line 12729 |
+| 0.25 in | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l14, curriculum-2 u4l3, deep-1 -, deep-2 -, labs-1 u3l14, labs-1 u4l3 (+3 more) | ITSIMM 6 line 3022 |
+| 0.5 in | cheatsheet sheet:spaces, cheatsheet sheet:termination, curriculum-1 u3l2, curriculum-2 u4l9, curriculum-2 u5l1, curriculum-3 u7l2, deep-1 -, deep-2 - (+6 more) | Global Constraints |
+| 0.622 in | cheatsheet sheet:pathways | NOT IN DUMP (worked example or conduit trade size) |
+| 0.824 in | cheatsheet sheet:pathways | NOT IN DUMP (worked example or conduit trade size) |
+| 1 in | cheatsheet sheet:pathways, curriculum-1 u3l14, curriculum-2 u4l3, deep-1 -, labs-1 u3l14, labs-1 u5l2, questions-1 -, questions-2 - | ITSIMM 6 line 9008 |
+| 1.049 in | cheatsheet sheet:pathways, curriculum-1 u3l14, deep-1 -, labs-1 u3l14 | NOT IN DUMP (worked example or conduit trade size) |
+| 1.380 in | cheatsheet sheet:pathways, deep-1 -, questions-1 - | NOT IN DUMP (worked example or conduit trade size) |
+| 1.5 in | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 -, questions-2 - | ITSIMM 6 line 9007 |
+| 1.610 in | cheatsheet sheet:pathways | ITSIMM 6 line 9283 (worked example or conduit trade size) |
+| 1.75 in | cheatsheet sheet:spaces, curriculum-1 u3l3, deep-1 -, questions-1 - | ITSIMM 6 line 45407 |
+| 2 in | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l14, curriculum-1 u3l5, deep-1 -, deep-2 -, labs-1 u5l2, questions-1 - (+1 more) | Global Constraints |
+| 2.067 in | cheatsheet sheet:pathways, deep-1 - | NOT IN DUMP (worked example or conduit trade size) |
+| 3.94 in | cheatsheet sheet:pathways, deep-1 -, questions-1 - | ITSIMM 6 line 8010 |
+| 4 in | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, deep-2 -, questions-1 - | ITSIMM 6 line 7305 |
+| 5 in | curriculum-2 u4l9, curriculum-2 u5l4, deep-2 -, questions-2 - | ITSIMM 6 line 29571 (worked example or conduit trade size) |
+| 5.12 in | cheatsheet sheet:pathways, curriculum-1 u3l6, curriculum-2 u4l5, deep-1 -, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 7671 |
+| 6 in | cheatsheet sheet:pathways, curriculum-1 u3l12, curriculum-1 u3l6, deep-1 -, questions-1 -, questions-2 - | ITSIMM 6 line 3022 |
+| 8 in | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l12, curriculum-1 u3l2, curriculum-1 u3l5, curriculum-2 u5l3, deep-1 -, questions-1 - | ITSIMM 6 line 6309 |
+| 10 in | curriculum-2 u4l9, deep-2 -, questions-2 - | NOT IN DUMP (worked example or conduit trade size) |
+| 12 in | cheatsheet sheet:pathways, cheatsheet sheet:pulling, cheatsheet sheet:spaces, curriculum-1 u3l6, curriculum-2 u4l10, deep-1 -, deep-2 -, questions-1 - (+1 more) | ITSIMM 6 line 7653 |
+| 19 in | cheatsheet sheet:spaces, curriculum-1 u3l3 | ITSIMM 6 line 8261 |
+| 20 in | curriculum-2 u4l9, deep-2 -, labs-1 u3l8, questions-2 - | NOT IN DUMP (worked example or conduit trade size) |
+| 23 in | cheatsheet sheet:spaces, curriculum-1 u3l3 | ITSIMM 6 line 8261 |
+| 24 in | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l6, deep-1 -, questions-1 -, questions-2 - | ITSIMM 6 line 7650 |
+| 30 in | curriculum-3 u6l3 | ITSIMM 6 line 32557 |
+| 31.5 in | cheatsheet sheet:pathways | ITSIMM 6 line 7679 |
+| 39.37 in | cheatsheet sheet:pathways | ITSIMM 6 line 7681 |
+| 48 in | cheatsheet sheet:pathways, curriculum-1 u3l6, questions-1 - | ITSIMM 6 line 7660 |
+| 25 lbf | cheatsheet sheet:pulling, curriculum-2 u4l3, deep-2 -, labs-1 u4l3, questions-2 - | Global Constraints |
+| 300 lbf | curriculum-2 u4l3, deep-2 -, labs-1 u4l3 | NOT IN DUMP |
+| 0.6 m | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 -, questions-2 - | ITSIMM 6 line 9504 |
+| 1 m | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u1l2, curriculum-1 u3l12, curriculum-1 u3l2, deep-1 -, questions-1 -, questions-2 - | ITSIMM 6 line 3736 |
+| 1.2 m | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 - | ITSIMM 6 line 7927 |
+| 1.5 m | cheatsheet sheet:pathways, curriculum-1 u3l13, curriculum-1 u3l6, curriculum-2 u4l5, deep-1 -, deep-2 -, deep-3 -, questions-1 - (+1 more) | Global Constraints |
+| 1.52 m | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 - | ITSIMM 6 line 4513 |
+| 2 m | cheatsheet sheet:pulling, curriculum-2 u4l10, deep-1 -, deep-2 -, questions-2 - | ITSIMM 6 line 14305 |
+| 2.1 m | cheatsheet sheet:spaces, curriculum-1 u3l3, deep-1 - | ITSIMM 6 line 7954 |
+| 2.4 m | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, questions-1 -, questions-2 - | ITSIMM 6 line 7878 |
+| 2.6 m | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, deep-2 - | ITSIMM 6 line 7307 |
+| 3 m | cheatsheet sheet:pathways, deep-1 -, deep-2 -, deep-3 -, questions-1 -, questions-2 - | ITSIMM 6 line 4663 |
+| 10 m | cheatsheet sheet:system, curriculum-1 u3l1, curriculum-3 u6l1, deep-1 -, deep-3 -, questions-1 -, questions-3 - | Global Constraints |
+| 30 m | cheatsheet sheet:pathways, curriculum-1 u3l14, curriculum-2 u4l4, deep-1 -, deep-2 -, questions-1 -, questions-2 - | Global Constraints |
+| 70 m | curriculum-1 u3l1, questions-1 - | NOT IN DUMP (worked example or conduit trade size) |
+| 85 m | curriculum-1 u3l1, deep-1 - | NOT IN DUMP (worked example or conduit trade size) |
+| 90 m | acronyms -, cheatsheet sheet:spaces, cheatsheet sheet:system, curriculum-1 u3l1, curriculum-1 u3l2, curriculum-3 u6l1, curriculum-3 u7l2, deep-1 - (+4 more) | Global Constraints |
+| 100 m | cheatsheet sheet:system, curriculum-1 u3l1, curriculum-3 u6l1, deep-1 -, deep-3 -, questions-1 -, questions-3 - | Global Constraints |
+| 2000 m | cheatsheet sheet:system | ITSIMM 6 line 40788 |
+| 3000 m | cheatsheet sheet:system | ITSIMM 6 line 21623 |
+| 6.3 mm | cheatsheet sheet:spaces, deep-1 - | ITSIMM 6 line 8067 |
+| 12.7 mm | cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 - | ITSIMM 6 line 8056 |
+| 13 mm | cheatsheet sheet:termination, curriculum-2 u5l1, curriculum-2 u5l2, curriculum-2 u5l3, curriculum-3 u7l2, deep-1 -, deep-2 -, deep-3 - (+4 more) | Global Constraints |
+| 16 mm | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 - | ITSIMM 6 line 8589 |
+| 19 mm | cheatsheet sheet:spaces, curriculum-1 u3l2, questions-1 - | ITSIMM 6 line 7305 |
+| 38 mm | cheatsheet sheet:pathways, curriculum-1 u3l12, deep-1 -, questions-3 - | ITSIMM 6 line 9007 |
+| 45 mm | cheatsheet sheet:spaces, curriculum-1 u3l3, deep-1 -, questions-1 - | ITSIMM 6 line 8458 |
+| 51 mm | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l5, deep-1 - | ITSIMM 6 line 8087 |
+| 53 mm | cheatsheet sheet:pathways, curriculum-1 u3l14, deep-1 -, questions-1 - | Global Constraints |
+| 78 mm | cheatsheet sheet:pathways | ITSIMM 6 line 7881 |
+| 100 mm | cheatsheet sheet:pathways, deep-1 - | ITSIMM 6 line 849 |
+| 130 mm | cheatsheet sheet:pathways, curriculum-1 u3l6, curriculum-2 u4l5, deep-1 -, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 7671 |
+| 152 mm | cheatsheet sheet:pathways, curriculum-1 u3l12, curriculum-1 u3l6, deep-1 -, questions-2 - | ITSIMM 6 line 7656 |
+| 203 mm | cheatsheet sheet:spaces, curriculum-1 u3l2, curriculum-1 u3l5, deep-1 -, questions-1 - | ITSIMM 6 line 7979 |
+| 305 mm | cheatsheet sheet:pathways, cheatsheet sheet:pulling, cheatsheet sheet:spaces, curriculum-1 u3l6, curriculum-2 u4l10, deep-1 -, deep-2 -, questions-1 - (+1 more) | ITSIMM 6 line 7653 |
+| 483 mm | cheatsheet sheet:spaces, curriculum-1 u3l3 | ITSIMM 6 line 8261 |
+| 584 mm | cheatsheet sheet:spaces, curriculum-1 u3l3 | ITSIMM 6 line 8261 |
+| 610 mm | cheatsheet sheet:pathways, cheatsheet sheet:spaces, curriculum-1 u3l6, deep-1 -, questions-1 -, questions-2 - | ITSIMM 6 line 7650 |
+| 800 mm | cheatsheet sheet:pathways | ITSIMM 6 line 7679 |
+| 1000 mm | cheatsheet sheet:pathways | ITSIMM 6 line 7681 |
+| 1220 mm | cheatsheet sheet:pathways, curriculum-1 u3l6, deep-1 -, questions-1 - | ITSIMM 6 line 7660 |
+| 0.1 ohms | cheatsheet sheet:spaces, curriculum-1 u3l5, curriculum-2 u5l8, deep-1 -, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 11445 |
+| 50 ohms | cheatsheet sheet:media, curriculum-1 u1l3 | NOT IN DUMP |
+| 75 ohms | cheatsheet sheet:media, curriculum-1 u1l3, curriculum-2 u5l5, deep-1 -, deep-2 -, questions-1 -, questions-2 - | ITSIMM 6 line 14023 |
+| 108 square feet | cheatsheet sheet:system | NOT IN DUMP |
+| 3600 square feet | acronyms -, cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, questions-1 - | NOT IN DUMP |
+| 10 square meters | cheatsheet sheet:system | NOT IN DUMP |
+| 335 square meters | acronyms -, cheatsheet sheet:spaces, curriculum-1 u3l2, deep-1 -, questions-1 - | NOT IN DUMP |
+| 6 x the inside diameter | cheatsheet sheet:pathways, curriculum-1 u3l14, questions-1 - | NOT IN DUMP |
+| 10 x the inside diameter | cheatsheet sheet:pathways, questions-1 - | NOT IN DUMP |

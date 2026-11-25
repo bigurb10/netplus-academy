@@ -68,6 +68,8 @@ Inspect the ladder before every use. Set it at a 4-to-1 pitch: the base sits 1 u
 - **Fiber**: shards go in a sealed container, and you never look into a fiber end.
 - **First aid**: know the kit, report every injury, however small.
 
+Every chemical on the job, from firestop sealant to pulling lubricant, comes with a **safety data sheet** that lists its hazards, the PPE it needs, and first aid; keep the sheets where the crew can reach them. A **personnel lift**, such as a scissor lift or a **bucket lift**, is used only after training, with the gate closed and a harness where the lift requires one. A **powder-actuated tool** fires a fastener into concrete or steel with a charge; only a trained, certified operator uses one, with eye and hearing protection.
+
 > Tip: a safe job is a quiet job. If you are about to improvise around a hazard, that is the moment to call the foreman.
 
 > Exam tip: the FIRST step before any hazardous task is to review the site safety plan and the hazards, not to start and fix problems as they appear.`,
@@ -99,6 +101,8 @@ The print gives the category, the listing (CMP, CMR, CM), the AWG, and footage m
 
 ## Coax
 RG-6 is the standard 75 ohm cable for video and cable television. RG-59 is older and thinner with more loss, used for short video and camera runs. RG-11 is thick and low loss for long and outdoor runs. Video systems are 75 ohm and radio systems are 50 ohm.
+
+Four-pair UTP is a **balanced twisted-pair** cable: the two wires of each pair carry equal and opposite signals, so noise that reaches both wires cancels out. Keeping the twists, the pair order, and the untwist limit is what keeps the pair balanced.
 
 > Tip: read the print at both ends of the reel before you cut. A reel that changes category midway is a returned reel.
 
@@ -133,6 +137,8 @@ Blue, orange, green, brown, slate, white, red, black, yellow, violet, rose, aqua
 
 ## Light and handling
 Multimode uses LED or VCSEL sources at 850 and 1300 nm. Singlemode uses a laser at 1310 and 1550 nm. Never look into a fiber end.
+
+Light stays in the core because the core bends light more than the cladding around it. Light that strikes the boundary at a shallow angle reflects back into the core, which is called **total internal reflection**. A bend that is too tight changes that angle and lets light leak out, which is why fiber has a bend radius.
 
 > Tip: write the strand number on your pull sheet as you terminate. Colors fade in memory faster than on the buffer.
 
@@ -205,6 +211,8 @@ Keep blades sharp and clean. A dull blade nicks a conductor and a dirty one leav
 ## Track the footage
 Cable reels carry footage marks. Write the starting and ending mark for each cable on your pull sheet, so waste is visible and a short pull is caught before a reel runs out.
 
+Paperwork sets the job before the first cable moves. The **scope of work** says what the crew installs and what it does not. The **bill of material** lists every part and its quantity, and a **cutsheet** lists each cable and the port it lands on. Product **submittals** go to the designer for approval before anything is ordered. At the **preinstallation meeting**, the crew, the contractor, and the owner agree on schedule, access, and site rules. When the drawings and the site disagree, the foreman sends a **request for information** and waits for the written answer instead of guessing.
+
 > Tip: never leave a reel exposed overnight where weather or other trades can damage it.
 
 > Exam tip: the FIRST step when a delivery arrives is to check it against the materials list and the order, then note any damage before signing.`,
@@ -258,7 +266,7 @@ FRA.units.push({
       body: `The inspector walks into the TR, points at a cable, and says it has to come out. You say the standard allows it. He says the code does not. Who wins? You need to know the difference before you argue.
 
 ## Code versus standard
-A **code** is a rule adopted into law and enforced by an inspector. The NEC is a code once your jurisdiction adopts it. A **standard** is a consensus document that sets the technical method. It is not law by itself, but it becomes binding when a code, a contract, or a specification calls for it.
+A **code** is a rule adopted into law and enforced by an inspector. The NEC is a code once your jurisdiction adopts it. So are the **building code**, which covers construction, fire ratings, and exits, and the **fire code**, which the fire marshal enforces to keep the occupied building fire safe. A **standard** is a consensus document that sets the technical method. It is not law by itself, but it becomes binding when a code, a contract, or a specification calls for it.
 
 ## The AHJ
 The **authority having jurisdiction** is the inspector, the fire marshal, or the building official whose decision wins on your job. Mounting heights, permit rules, and whether a product is acceptable are the AHJ's call. Local codes may be stricter than the national ones, and the stricter rule applies.
@@ -361,6 +369,8 @@ Patch and equipment cords         10 m (33 ft) total
 
 The permanent link is what you build; the channel adds the cords. Never stretch the 90 m to make a run work.
 
+Backbone that runs between rooms inside one building is **intrabuilding backbone**. Backbone that runs between buildings on a campus is **interbuilding backbone**, and it usually enters each building through an entrance facility.
+
 > Tip: measure the route, not the straight line. A 70 m wall-to-wall distance can be an 85 m cable route.
 
 > Exam tip: 90 + 10 = 100 m. The permanent link is the part you install, and cords add the last 10 m.`,
@@ -406,7 +416,7 @@ If no clearance distance is specified, plan at least 1 m (3.28 ft) around and be
       body: `The rack arrives on a pallet and the crew wants it standing before lunch. Standing is not the same as secure. A rack holds hundreds of pounds of equipment and the cables that feed it, and it is the one thing in the room that can hurt someone if it falls.
 
 ## Types
-A **two-post rack** holds light equipment and patch panels. A **four-post rack** or **cabinet** carries heavy equipment and gives better cable management. A **wall mount** serves small zones and needs a wall that can carry the full load. Equipment screws use M5, M6, 10-32, or 12-24 threads, with star washers for bonding.
+A **two-post rack** (also called a **relay rack**) holds light equipment and patch panels. A **four-post rack** or **cabinet** carries heavy equipment and gives better cable management. A **wall mount** serves small zones and needs a wall that can carry the full load. Equipment screws use M5, M6, 10-32, or 12-24 threads, with star washers for bonding.
 
 ## Sizes
 \`\`\`
@@ -437,7 +447,7 @@ Every rack is bonded to the busbar with its own conductor. Never daisy-chain.
     },
     {
       id: "u3l4", title: "Bonding and Grounding: PBB, SBB, TBB, BCT, and What Gets Bonded", domain: 2, obj: "2.2", minutes: 11,
-      body: `A storm takes out a switch in a building that passed inspection last year. The cause is not the cable, it is the difference in electrical potential between two rooms. Telecom bonding exists to keep that difference small.
+      body: `A storm takes out a switch in a building that passed inspection last year. The cause is not the cable, it is the difference in electrical potential between two rooms. Telecom bonding exists to keep that difference small. The busbars, the conductors between them, and the bonds to racks and pathways together make up the **telecommunications bonding infrastructure**.
 
 ## Why bond
 Bonding joins metal parts so they sit at the same electrical potential. It also gives fault and surge current a deliberate, low-resistance path instead of letting it find one through a person or a cable. **Grounding** connects to the earth; **bonding** joins metal to metal. Telecom needs both.
@@ -521,7 +531,7 @@ J-hooks and rings   small bundles of cable; low cost
 Raceway             surface runs in finished rooms
 \`\`\`
 
-**Continuous** support (tray, ladder rack, basket) carries the cable along its whole length. **Noncontinuous** support (J-hooks, rings) holds it at points. Noncontinuous supports are no more than 1.5 m (5 ft) apart.
+**Continuous cable support** (tray, ladder rack, basket) carries the cable along its whole length. **Noncontinuous** support (J-hooks, rings) holds it at points. Noncontinuous supports are no more than 1.5 m (5 ft) apart.
 
 ## Where not to hang cable
 Never attach to ceiling grid wires, the grid itself, sprinkler pipes, or another trade's conduit, duct, or hangers. Hang from the structure above with your own supports.
@@ -670,6 +680,8 @@ In wet and exterior locations, form a **drip loop** so water runs off the cable 
 ## Who decides
 Hazardous and special locations are the AHJ's and the designer's call. Ask first, and install only what the drawing and the listing allow.
 
+Most offices have a **suspended ceiling**: lay-in tiles on a metal grid hung from the structure on wires. The grid and its wires hold the tiles and nothing else, so cable is hung from its own supports above them.
+
 > Tip: tag every pole and raceway feed with its outlet ID at the source, not just at the faceplate.
 
 > Exam tip: power and communications go on separate sides of a pole or raceway, and a wet or exterior outlet needs a weatherproof box and a drip loop.`,
@@ -731,6 +743,8 @@ Cables leave a tray through a drop-out that protects the bend radius. Never let 
 
 ## Ladder rack in the TR
 Tubular ladder rack is 38 mm (1.5 in) deep and 152 mm (6 in) to about 1 m (3.28 ft) wide. It carries cable overhead to the racks and is braced to the walls and racks.
+
+Where there is no wall to bracket from, tray or ladder rack hangs on a **trapeze**: two threaded rods dropped from the structure with a strut channel across the bottom for the tray to sit on.
 
 > Tip: walk the tray with a flashlight before you pull and look for sharp edges and missing bonds.
 
@@ -801,6 +815,8 @@ Ream every cut end and install a bushing so the jacket is not cut. Leave a pull 
 ## Raceway and innerduct
 **Surface raceway** is a surface channel with its own fittings, used where walls cannot be opened; a raceway in a plenum needs plenum-rated cable. **Innerduct** is a small flexible tube pulled inside a conduit or tray, used to protect fiber. ENT is flexible nonmetallic tubing, and it, like all innerduct, must be listed for the space.
 
+A **wireway** is a metal trough with a hinged or removable cover, run along a wall or above a rack to carry many cables over a short distance where conduit would need too many pull points.
+
 > Tip: look up the ID of the conduit type and size. EMT, ENT, and PVC differ.
 
 > Exam tip: fill limits are 53, 31, and 40 percent; no more than two 90-degree bends and 30 m between pull points.`,
@@ -835,6 +851,8 @@ Install it **exactly as the listing says**. Never substitute foam, tape, rags, o
 
 ## Label, inspect, reseal
 Label the firestop with the system number, the date, and the installer. The AHJ or inspector must accept it before it is covered. Adding or removing a cable breaks the seal, so reseal every time. A rated-wall opening is sealed at the end of every workday.
+
+A **through penetration** passes all the way through a rated wall or floor. A **membrane penetration** opens only one face of it, such as a box set into one side of a rated wall, and it needs a listed firestop too. Together these keep the building's **compartmentation**: each rated wall and floor holds fire and smoke inside one compartment. When no listed system fits the job, the firestop maker's engineer may write an **engineered judgment** for that one condition, and the AHJ must accept it before the work is done.
 
 > Tip: take a photo of the approval sheet and the installed system before it is covered.
 

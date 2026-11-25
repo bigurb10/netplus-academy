@@ -9,7 +9,7 @@ FRA.units.push({
   lessons: [
     {
       id: "u6l1", title: "Permanent Link and Channel: What Each Includes and When to Test It", domain: 5, obj: "5.1", minutes: 10,
-      body: `The last jack on the floor is punched down, and the foreman asks for test results by Friday. Before you pick up the tester, decide what you are certifying. The installer certifies the cabling you installed. The user's equipment sees something larger.
+      body: `The last jack on the floor is punched down, and the foreman asks for test results by Friday. Before you pick up the tester for **copper cable testing**, decide what you are certifying. The installer certifies the cabling you installed. The user's equipment sees something larger.
 
 ## Two ways to measure one link
 \`\`\`
@@ -61,6 +61,8 @@ Each result also shows a **margin**: how far the measurement is from the limit. 
 
 ## What to do with it
 A failing wiremap is a fault to fix before reading anything else. Loss and crosstalk results at high frequency point to termination quality, since the worst crosstalk usually comes from the last few inches of untwisted conductor.
+
+Category 6A adds **alien crosstalk**: noise that couples into a pair from the pairs of neighboring cables in a tight bundle. Avoid long, tightly combed bundles of Category 6A; it is field-tested only when the job calls for it.
 
 > Tip: for a failing NEXT or return loss result, look at the worst-case pair and the distance reading before you reterminate anything.
 
@@ -184,6 +186,8 @@ A phone will not link. The cord is good, the port is active, and the label match
 - Replacing a part without testing the old one.
 - Fixing the cable and not updating the tester file, so the report still says FAIL.
 
+Before you connect any tester, check the pair for **foreign voltage**, such as a live phone line or stray power, with a **multimeter**, because it can damage the tester. To find one cable in a bundle, put a tone generator on one end and use an **inductive amplifier** (the probe) at the other. On a voice circuit, a **telephone test set** (a butt set) checks for dial tone.
+
 > Tip: keep one known-good patch cord in your pouch, so you can rule out cords in seconds.
 
 > Exam tip: check the cord, port, and label first, isolate the link, and change one variable at a time.`,
@@ -211,7 +215,7 @@ Hot work, ceiling access, core drilling, and after-hours entry may need permits 
 - Use dust barriers and drop cloths under any opening.
 - Lift ceiling tiles carefully, set them aside flat, and put them back. Replace any you break or stain.
 - Move furniture only with permission, and put it back.
-- In a hospital, follow the **infection-control rules**, which may mean sealed work areas and special cleanup. Recognize that they exist and follow the instructions you are given.
+- In a hospital, the work needs an **infection control risk assessment** before it starts: a permit that sets the infection-control rules, which may mean sealed work areas and special cleanup. Recognize that they exist and follow the instructions you are given.
 
 ## Cutover planning
 \`\`\`
@@ -222,6 +226,8 @@ Back-out plan       a way to return to the old system if the new one fails
 Labeling            old and new ends marked so nobody mixes them up
 \`\`\`
 Keep the old system working until the new one is accepted.
+
+A **flash cut** moves every user to the new cabling at once, usually overnight or over a weekend. A **phased cutover** moves one area at a time while old and new run side by side. Either way the plan keeps **downtime** short, and **temporary cabling** may carry service during the change. This is **retrofitting**: new cabling in a building that is already in use.
 
 > Tip: take a photo of the ceiling before you open it, so the room looks the same when you leave.
 

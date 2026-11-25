@@ -1303,6 +1303,8 @@ Inspect the ladder before every use. Set it at a 4-to-1 pitch: the base sits 1 u
 - **Fiber**: shards go in a sealed container, and you never look into a fiber end.
 - **First aid**: know the kit, report every injury, however small.
 
+Every chemical on the job, from firestop sealant to pulling lubricant, comes with a **safety data sheet** that lists its hazards, the PPE it needs, and first aid; keep the sheets where the crew can reach them. A **personnel lift**, such as a scissor lift or a **bucket lift**, is used only after training, with the gate closed and a harness where the lift requires one. A **powder-actuated tool** fires a fastener into concrete or steel with a charge; only a trained, certified operator uses one, with eye and hearing protection.
+
 > Tip: a safe job is a quiet job. If you are about to improvise around a hazard, that is the moment to call the foreman.
 
 > Exam tip: the FIRST step before any hazardous task is to review the site safety plan and the hazards, not to start and fix problems as they appear.`,
@@ -1334,6 +1336,8 @@ The print gives the category, the listing (CMP, CMR, CM), the AWG, and footage m
 
 ## Coax
 RG-6 is the standard 75 ohm cable for video and cable television. RG-59 is older and thinner with more loss, used for short video and camera runs. RG-11 is thick and low loss for long and outdoor runs. Video systems are 75 ohm and radio systems are 50 ohm.
+
+Four-pair UTP is a **balanced twisted-pair** cable: the two wires of each pair carry equal and opposite signals, so noise that reaches both wires cancels out. Keeping the twists, the pair order, and the untwist limit is what keeps the pair balanced.
 
 > Tip: read the print at both ends of the reel before you cut. A reel that changes category midway is a returned reel.
 
@@ -1368,6 +1372,8 @@ Blue, orange, green, brown, slate, white, red, black, yellow, violet, rose, aqua
 
 ## Light and handling
 Multimode uses LED or VCSEL sources at 850 and 1300 nm. Singlemode uses a laser at 1310 and 1550 nm. Never look into a fiber end.
+
+Light stays in the core because the core bends light more than the cladding around it. Light that strikes the boundary at a shallow angle reflects back into the core, which is called **total internal reflection**. A bend that is too tight changes that angle and lets light leak out, which is why fiber has a bend radius.
 
 > Tip: write the strand number on your pull sheet as you terminate. Colors fade in memory faster than on the buffer.
 
@@ -1440,6 +1446,8 @@ Keep blades sharp and clean. A dull blade nicks a conductor and a dirty one leav
 ## Track the footage
 Cable reels carry footage marks. Write the starting and ending mark for each cable on your pull sheet, so waste is visible and a short pull is caught before a reel runs out.
 
+Paperwork sets the job before the first cable moves. The **scope of work** says what the crew installs and what it does not. The **bill of material** lists every part and its quantity, and a **cutsheet** lists each cable and the port it lands on. Product **submittals** go to the designer for approval before anything is ordered. At the **preinstallation meeting**, the crew, the contractor, and the owner agree on schedule, access, and site rules. When the drawings and the site disagree, the foreman sends a **request for information** and waits for the written answer instead of guessing.
+
 > Tip: never leave a reel exposed overnight where weather or other trades can damage it.
 
 > Exam tip: the FIRST step when a delivery arrives is to check it against the materials list and the order, then note any damage before signing.`,
@@ -1493,7 +1501,7 @@ FRA.units.push({
       body: `The inspector walks into the TR, points at a cable, and says it has to come out. You say the standard allows it. He says the code does not. Who wins? You need to know the difference before you argue.
 
 ## Code versus standard
-A **code** is a rule adopted into law and enforced by an inspector. The NEC is a code once your jurisdiction adopts it. A **standard** is a consensus document that sets the technical method. It is not law by itself, but it becomes binding when a code, a contract, or a specification calls for it.
+A **code** is a rule adopted into law and enforced by an inspector. The NEC is a code once your jurisdiction adopts it. So are the **building code**, which covers construction, fire ratings, and exits, and the **fire code**, which the fire marshal enforces to keep the occupied building fire safe. A **standard** is a consensus document that sets the technical method. It is not law by itself, but it becomes binding when a code, a contract, or a specification calls for it.
 
 ## The AHJ
 The **authority having jurisdiction** is the inspector, the fire marshal, or the building official whose decision wins on your job. Mounting heights, permit rules, and whether a product is acceptable are the AHJ's call. Local codes may be stricter than the national ones, and the stricter rule applies.
@@ -1596,6 +1604,8 @@ Patch and equipment cords         10 m (33 ft) total
 
 The permanent link is what you build; the channel adds the cords. Never stretch the 90 m to make a run work.
 
+Backbone that runs between rooms inside one building is **intrabuilding backbone**. Backbone that runs between buildings on a campus is **interbuilding backbone**, and it usually enters each building through an entrance facility.
+
 > Tip: measure the route, not the straight line. A 70 m wall-to-wall distance can be an 85 m cable route.
 
 > Exam tip: 90 + 10 = 100 m. The permanent link is the part you install, and cords add the last 10 m.`,
@@ -1641,7 +1651,7 @@ If no clearance distance is specified, plan at least 1 m (3.28 ft) around and be
       body: `The rack arrives on a pallet and the crew wants it standing before lunch. Standing is not the same as secure. A rack holds hundreds of pounds of equipment and the cables that feed it, and it is the one thing in the room that can hurt someone if it falls.
 
 ## Types
-A **two-post rack** holds light equipment and patch panels. A **four-post rack** or **cabinet** carries heavy equipment and gives better cable management. A **wall mount** serves small zones and needs a wall that can carry the full load. Equipment screws use M5, M6, 10-32, or 12-24 threads, with star washers for bonding.
+A **two-post rack** (also called a **relay rack**) holds light equipment and patch panels. A **four-post rack** or **cabinet** carries heavy equipment and gives better cable management. A **wall mount** serves small zones and needs a wall that can carry the full load. Equipment screws use M5, M6, 10-32, or 12-24 threads, with star washers for bonding.
 
 ## Sizes
 \`\`\`
@@ -1672,7 +1682,7 @@ Every rack is bonded to the busbar with its own conductor. Never daisy-chain.
     },
     {
       id: "u3l4", title: "Bonding and Grounding: PBB, SBB, TBB, BCT, and What Gets Bonded", domain: 2, obj: "2.2", minutes: 11,
-      body: `A storm takes out a switch in a building that passed inspection last year. The cause is not the cable, it is the difference in electrical potential between two rooms. Telecom bonding exists to keep that difference small.
+      body: `A storm takes out a switch in a building that passed inspection last year. The cause is not the cable, it is the difference in electrical potential between two rooms. Telecom bonding exists to keep that difference small. The busbars, the conductors between them, and the bonds to racks and pathways together make up the **telecommunications bonding infrastructure**.
 
 ## Why bond
 Bonding joins metal parts so they sit at the same electrical potential. It also gives fault and surge current a deliberate, low-resistance path instead of letting it find one through a person or a cable. **Grounding** connects to the earth; **bonding** joins metal to metal. Telecom needs both.
@@ -1756,7 +1766,7 @@ J-hooks and rings   small bundles of cable; low cost
 Raceway             surface runs in finished rooms
 \`\`\`
 
-**Continuous** support (tray, ladder rack, basket) carries the cable along its whole length. **Noncontinuous** support (J-hooks, rings) holds it at points. Noncontinuous supports are no more than 1.5 m (5 ft) apart.
+**Continuous cable support** (tray, ladder rack, basket) carries the cable along its whole length. **Noncontinuous** support (J-hooks, rings) holds it at points. Noncontinuous supports are no more than 1.5 m (5 ft) apart.
 
 ## Where not to hang cable
 Never attach to ceiling grid wires, the grid itself, sprinkler pipes, or another trade's conduit, duct, or hangers. Hang from the structure above with your own supports.
@@ -1905,6 +1915,8 @@ In wet and exterior locations, form a **drip loop** so water runs off the cable 
 ## Who decides
 Hazardous and special locations are the AHJ's and the designer's call. Ask first, and install only what the drawing and the listing allow.
 
+Most offices have a **suspended ceiling**: lay-in tiles on a metal grid hung from the structure on wires. The grid and its wires hold the tiles and nothing else, so cable is hung from its own supports above them.
+
 > Tip: tag every pole and raceway feed with its outlet ID at the source, not just at the faceplate.
 
 > Exam tip: power and communications go on separate sides of a pole or raceway, and a wet or exterior outlet needs a weatherproof box and a drip loop.`,
@@ -1966,6 +1978,8 @@ Cables leave a tray through a drop-out that protects the bend radius. Never let 
 
 ## Ladder rack in the TR
 Tubular ladder rack is 38 mm (1.5 in) deep and 152 mm (6 in) to about 1 m (3.28 ft) wide. It carries cable overhead to the racks and is braced to the walls and racks.
+
+Where there is no wall to bracket from, tray or ladder rack hangs on a **trapeze**: two threaded rods dropped from the structure with a strut channel across the bottom for the tray to sit on.
 
 > Tip: walk the tray with a flashlight before you pull and look for sharp edges and missing bonds.
 
@@ -2036,6 +2050,8 @@ Ream every cut end and install a bushing so the jacket is not cut. Leave a pull 
 ## Raceway and innerduct
 **Surface raceway** is a surface channel with its own fittings, used where walls cannot be opened; a raceway in a plenum needs plenum-rated cable. **Innerduct** is a small flexible tube pulled inside a conduit or tray, used to protect fiber. ENT is flexible nonmetallic tubing, and it, like all innerduct, must be listed for the space.
 
+A **wireway** is a metal trough with a hinged or removable cover, run along a wall or above a rack to carry many cables over a short distance where conduit would need too many pull points.
+
 > Tip: look up the ID of the conduit type and size. EMT, ENT, and PVC differ.
 
 > Exam tip: fill limits are 53, 31, and 40 percent; no more than two 90-degree bends and 30 m between pull points.`,
@@ -2071,6 +2087,8 @@ Install it **exactly as the listing says**. Never substitute foam, tape, rags, o
 ## Label, inspect, reseal
 Label the firestop with the system number, the date, and the installer. The AHJ or inspector must accept it before it is covered. Adding or removing a cable breaks the seal, so reseal every time. A rated-wall opening is sealed at the end of every workday.
 
+A **through penetration** passes all the way through a rated wall or floor. A **membrane penetration** opens only one face of it, such as a box set into one side of a rated wall, and it needs a listed firestop too. Together these keep the building's **compartmentation**: each rated wall and floor holds fire and smoke inside one compartment. When no listed system fits the job, the firestop maker's engineer may write an **engineered judgment** for that one condition, and the AHJ must accept it before the work is done.
+
 > Tip: take a photo of the approval sheet and the installed system before it is covered.
 
 > Exam tip: a firestop system is matched to the assembly, the penetrant, and the opening exactly, and any added cable means resealing.`,
@@ -2090,7 +2108,7 @@ FRA.units.push({
   lessons: [
     {
       id: "u4l1", title: "Pull Planning and Setup: Reels, Sheaves, the Pull Schedule", domain: 3, obj: "3.1", minutes: 10,
-      body: `The foreman hands you a pull schedule for the second floor and says the cable arrives at seven tomorrow. Cable is pulled well or badly before the first foot leaves the box. Setup is where you win the pull.
+      body: `The foreman hands you a pull schedule for the second floor and says the cable arrives at seven tomorrow. Cable is pulled well or badly before the first foot leaves the box. The **cable pulling setup**, meaning the reels, the sheaves, the schedule, and a crew member at each end, is where you win the pull.
 
 ## The pull schedule
 The schedule lists every cable the crew will pull, one line each. It is your work order and, later, your record.
@@ -2118,6 +2136,8 @@ Count whole runs, never part of one. Each run needs its length plus the slack th
 3. Boxes = total runs divided by runs per box, rounded UP, because you cannot buy part of a box.
 
 Example: 1000 ft boxes, runs of 180 ft with 10 ft of slack at each end make 200 ft per run. That is 5 runs per box, so 32 runs need 7 boxes (6.4 rounds up).
+
+The gear: a **reel dolly**, or a pair of **jackstands** with a bar through the reel, lets the reel turn freely as the cable pays out. A **tugger** is a powered puller that winds in the **bull line**, the heavy rope used on long or heavy pulls. Boxed cable pays out of its box without kinks, as long as the box is not twisted.
 
 > Tip: pull the longest runs first from a fresh box, then use the leftover lengths for the short runs.
 
@@ -2148,6 +2168,8 @@ A pull line with printed footage marks tells you the length of the run as it goe
 - Tie the line off at both ends of the conduit so it cannot slip back inside.
 - Pull the new cable with a rope or tape, never the thin string alone.
 - After the pull, leave a new pull string in the conduit for the next crew. Do not remove the last string.
+
+A **snake rod** (a flexible fiberglass rod) or a **telescoping pole** reaches across a ceiling or down a wall cavity without opening every tile. Rope is tied with hitches that hold under load and still untie afterward, such as the **clove hitch** and the **timber hitch**, and the knot is taped so it cannot snag. Pull a **trailer string** in behind the cable so the next pull has a line waiting.
 
 > Tip: tie a knot big enough that it cannot slide through the bushing, and tape the tail so it does not catch.
 
@@ -2373,6 +2395,8 @@ A coil laid on the floor puts a twist into the cable with each loop. A figure ei
 ## Ends and cleanliness
 Protect the ends with a pulling eye or a pre-terminated cable sleeve. Cap them and keep dirt out. Never drag fiber across a dirty floor.
 
+Fiber loses light at bends in two ways. A **macrobend** is a bend you can see that is tighter than the bend radius. A **microbend** is a tiny kink in the fiber from crushing, a tight tie, or a sharp edge. Both add loss, and both are avoided by keeping the radius and never cinching a bundle.
+
 > Tip: a swivel between the line and the grip keeps the twist out of the cable, and a tension meter keeps you honest.
 
 > Exam tip: fiber is pulled on the strength member, never the fibers, and the bend radius is 10 x at rest and 20 x under tension.`,
@@ -2475,6 +2499,8 @@ A fiber panel holds adapters (the couplers where two connectors meet) and someti
 
 A punch tool does two jobs in one stroke: it seats the wire in the IDC and cuts off the extra. Cutting side in puts the cut on the wire you need to keep.
 
+The **designation strip** is the labeled strip that sits in the holder on a 110 or 66 block and names each position, so the next technician can read what lands where.
+
 > Tip: use the jack's own color-coded label for the scheme the job uses, and follow it for every pair so no one has to guess.
 
 > Exam tip: a 66 block is for voice only. Every part of a link must match the category of the cable.`,
@@ -2484,7 +2510,7 @@ A punch tool does two jobs in one stroke: it seats the wire in the IDC and cuts 
       id: "u5l3", title: "Four-Pair Termination: T568A and T568B on Jacks, Panels, and Plugs", domain: 4, obj: "4.4", minutes: 11, lab: "jack-t568b",
       body: `The designer's note says T568B. The jacks in the box show both color codes printed on the housing. If the crew mixes them, the tester will show crossed pairs and a wasted afternoon. One scheme per job is the rule.
 
-## The two pin tables
+## The two pin tables (pinouts)
 \`\`\`
 Pin   T568A         T568B
 1     white-green   white-orange
@@ -2615,6 +2641,10 @@ UPC (ultra physical contact) has a polished flat-curved face and a blue body. AP
 - **Mechanical splice (prepolished):** a factory-polished stub inside the connector joins the fiber in a splice with index-matching gel.
 - **Fusion-spliced pigtail:** a factory-made connector and a short fiber (a pigtail) are fused to the cable fiber by a machine. It gives the lowest loss and is the most common on large jobs.
 
+Each field method starts with a **cleave**: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
+
+A fourth option skips field termination: with **pre-termination**, the cable or trunk arrives from the factory cut to length with its connectors already on and tested. The installer pulls it, protecting the ends, and plugs it in, so the lengths must be measured right before the order goes in.
+
 ## Panels and polarity
 A duplex link needs the transmit of one end to land on the receive of the other. Polarity is that crossing. Follow the labeling on the panel and the plan, and check it with a light source before you trust it.
 
@@ -2692,6 +2722,8 @@ Use shielded jacks and shielded patch panels. Their metal bodies make contact wi
 ## A broken shield is an antenna
 If the shield breaks, or is grounded at one end only through a bad connection, it can pick up noise and radiate it. A broken or poorly bonded shield is worse than no shield. The tester's shield test and a bonding resistance check, 0.1 ohm (100 milliohms) at most, confirm the work.
 
+A cable with one overall foil screen around four unshielded pairs is a **screened twisted-pair** cable (F/UTP). Like any shielded cable, it works only when the screen is continuous and bonded at the panel.
+
 > Tip: do not cut away the foil because it is in your way. Fold it, tape it neatly if needed, and keep it in contact.
 
 > Exam tip: the shield must be continuous end to end and bonded at the panel. A shield that is not continuous or not bonded is an antenna.`,
@@ -2711,7 +2743,7 @@ FRA.units.push({
   lessons: [
     {
       id: "u6l1", title: "Permanent Link and Channel: What Each Includes and When to Test It", domain: 5, obj: "5.1", minutes: 10,
-      body: `The last jack on the floor is punched down, and the foreman asks for test results by Friday. Before you pick up the tester, decide what you are certifying. The installer certifies the cabling you installed. The user's equipment sees something larger.
+      body: `The last jack on the floor is punched down, and the foreman asks for test results by Friday. Before you pick up the tester for **copper cable testing**, decide what you are certifying. The installer certifies the cabling you installed. The user's equipment sees something larger.
 
 ## Two ways to measure one link
 \`\`\`
@@ -2763,6 +2795,8 @@ Each result also shows a **margin**: how far the measurement is from the limit. 
 
 ## What to do with it
 A failing wiremap is a fault to fix before reading anything else. Loss and crosstalk results at high frequency point to termination quality, since the worst crosstalk usually comes from the last few inches of untwisted conductor.
+
+Category 6A adds **alien crosstalk**: noise that couples into a pair from the pairs of neighboring cables in a tight bundle. Avoid long, tightly combed bundles of Category 6A; it is field-tested only when the job calls for it.
 
 > Tip: for a failing NEXT or return loss result, look at the worst-case pair and the distance reading before you reterminate anything.
 
@@ -2886,6 +2920,8 @@ A phone will not link. The cord is good, the port is active, and the label match
 - Replacing a part without testing the old one.
 - Fixing the cable and not updating the tester file, so the report still says FAIL.
 
+Before you connect any tester, check the pair for **foreign voltage**, such as a live phone line or stray power, with a **multimeter**, because it can damage the tester. To find one cable in a bundle, put a tone generator on one end and use an **inductive amplifier** (the probe) at the other. On a voice circuit, a **telephone test set** (a butt set) checks for dial tone.
+
 > Tip: keep one known-good patch cord in your pouch, so you can rule out cords in seconds.
 
 > Exam tip: check the cord, port, and label first, isolate the link, and change one variable at a time.`,
@@ -2913,7 +2949,7 @@ Hot work, ceiling access, core drilling, and after-hours entry may need permits 
 - Use dust barriers and drop cloths under any opening.
 - Lift ceiling tiles carefully, set them aside flat, and put them back. Replace any you break or stain.
 - Move furniture only with permission, and put it back.
-- In a hospital, follow the **infection-control rules**, which may mean sealed work areas and special cleanup. Recognize that they exist and follow the instructions you are given.
+- In a hospital, the work needs an **infection control risk assessment** before it starts: a permit that sets the infection-control rules, which may mean sealed work areas and special cleanup. Recognize that they exist and follow the instructions you are given.
 
 ## Cutover planning
 \`\`\`
@@ -2924,6 +2960,8 @@ Back-out plan       a way to return to the old system if the new one fails
 Labeling            old and new ends marked so nobody mixes them up
 \`\`\`
 Keep the old system working until the new one is accepted.
+
+A **flash cut** moves every user to the new cabling at once, usually overnight or over a weekend. A **phased cutover** moves one area at a time while old and new run side by side. Either way the plan keeps **downtime** short, and **temporary cabling** may carry service during the change. This is **retrofitting**: new cabling in a building that is already in use.
 
 > Tip: take a photo of the ceiling before you open it, so the room looks the same when you leave.
 
