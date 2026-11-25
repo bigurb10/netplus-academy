@@ -388,7 +388,7 @@ A fiber panel holds adapters (the couplers where two connectors meet) and someti
 
 ## 110 punch-down in order
 1. Lay the cable on the block, pairs in order, and keep the twist to within 13 mm.
-2. Lay each conductor into its slot following the color code on the block.
+2. Lay each conductor into its slot following the color code on the block. The pairs land in the order blue, orange, green, brown, and inside each pair the white-striped conductor (the tip) goes in before its solid mate (the ring).
 3. Seat each conductor with the 110 punch tool. The blade has a cutting side: turn it OUT, toward the end of the wire, so the tool trims the excess as it seats the conductor.
 4. Check that each wire is seated and trimmed flush.
 

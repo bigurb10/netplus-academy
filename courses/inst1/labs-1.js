@@ -35,7 +35,7 @@ FRA.labs = FRA.labs || {};
         box(10, 15, 170, 165), text(95, 33, 'TR 2A (floor 2)', 12),
         box(30, 55, 130, 70), text(95, 72, 'Panel B', 11),
         [0, 1, 2, 3, 4, 5, 6, 7].map(i => box(36 + i * 15, 82, 11, 11, i === 6 ? 'currentColor' : 'none')).join(''),
-        text(41, 108, '01', 8), text(141, 108, '08', 8), text(131, 76, 'port 07', 8, 'end'),
+        text(41, 108, '01', 8), text(141, 108, '08', 8), text(131, 80, 'port 07', 7),
         box(240, 15, 170, 165), text(325, 33, 'Work area', 12),
         box(300, 85, 50, 40), text(325, 109, '07', 14),
         line(131, 93, 131, 150, 1.5, '4 3'), line(131, 150, 325, 150, 1.5, '4 3'), line(325, 150, 325, 125, 1.5, '4 3'),
@@ -52,7 +52,7 @@ FRA.labs = FRA.labs || {};
     ],
     why: {
       tr: "The room identifier is the floor number followed by the room letter: floor 2, room A, so 2A. A2 reverses the pattern, and 2B names a different room.",
-      cable: "The cable identifier is the room, a dash, then the panel letter and the two-digit port: 2A, then B and 07. It names the panel end, and the same identifier goes on the outlet end so either end leads to the other.",
+      cable: "This job's scheme builds the cable identifier from the room, a dash, then the panel letter and the two-digit port: 2A, then B and 07. Both ends carry that same identifier, so a tech holding either end can find the other.",
       where: "Both ends of the cable carry the same identifier, placed where it can be read without moving the cable, and the faceplate and the panel port are labeled too. A label on one end only leaves the other end unreadable.",
       type: "Machine-printed, durable labels survive handling and stay readable. Handwriting smudges, and tags and flags fall off.",
       records: "The records tie the identifier, both ends, and the test result together, and they must agree with the labels and the drawing. A run with no test result is not finished."
@@ -60,7 +60,7 @@ FRA.labs = FRA.labs || {};
   };
 
   // ---------- cut-in-ring ----------
-  const studs = [70, 150, 230, 310].map(x => box(x - 4, 20, 8, 170, 'currentColor')).join('');
+  const studs = [50, 130, 210, 290, 370].map(x => box(x - 4, 20, 8, 170, 'currentColor')).join('');
   FRA.labs["cut-in-ring"] = {
     id: "cut-in-ring", lesson: "u3l8", title: "Add an outlet with a cut-in ring", instrument: "choices",
     intro: `Add one outlet to a finished wall with a cut-in ring. By hand you would use a stud finder, a level, a drywall saw, a string or fish tape, and a cut-in ring on a scrap of drywall.
@@ -73,12 +73,11 @@ FRA.labs = FRA.labs || {};
       svg: svg([
         line(10, 190, 410, 190, 2), line(10, 20, 410, 20, 2),
         studs,
-        box(80, 105, 20, 30), text(90, 150, 'Electrical box', 9),
-        box(180, 105, 20, 30, 'none').replace('stroke-width="1.5"', 'stroke-width="1.5" stroke-dasharray="4 3"'), text(190, 150, 'Outlet mark', 9),
-        text(70, 12, 'stud', 9), text(150, 12, 'stud', 9), text(230, 12, 'stud', 9), text(310, 12, 'stud', 9),
-        line(90, 70, 190, 70, 1.5), line(90, 64, 90, 76), line(190, 64, 190, 76), text(140, 64, '20 in', 10),
-        line(150, 45, 230, 45, 1.5), line(150, 39, 150, 51), line(230, 39, 230, 51), text(190, 38, '16 in', 10),
-        text(365, 100, 'Finished', 10), text(365, 114, 'drywall', 10), text(365, 128, 'wall', 10)
+        box(80, 105, 20, 30), text(90, 150, 'Electrical', 9), text(90, 161, 'box', 9),
+        box(180, 105, 20, 30, 'none').replace('stroke-width="1.5"', 'stroke-width="1.5" stroke-dasharray="4 3"'), text(190, 150, 'Outlet', 9), text(190, 161, 'mark', 9),
+        text(50, 12, 'stud', 9), text(130, 12, 'stud', 9), text(210, 12, 'stud', 9), text(290, 12, 'stud', 9), text(370, 12, 'stud', 9),
+        line(90, 203, 190, 203, 1.5), line(90, 197, 90, 209), line(190, 197, 190, 209), text(140, 216, '20 in between centers', 9),
+        line(130, 45, 210, 45, 1.5), line(130, 39, 130, 51), line(210, 39, 210, 51), text(170, 36, '16 in', 10)
       ], 'Wall elevation with studs 16 in apart, an electrical box 20 in left of the outlet mark')
     },
     tasks: [
@@ -109,8 +108,7 @@ FRA.labs = FRA.labs || {};
         circ(110, 110, 90, 'none', 3), circ(88.5, 109, 21.5), circ(131.5, 109, 21.5),
         circ(67, 152, 21.5), circ(110, 152, 21.5), circ(153, 152, 21.5),
         text(110, 16, '1 in EMT, 5 cables shown', 11),
-        text(320, 60, 'ID 1.049 in', 12), text(320, 80, 'Cable OD 0.25 in', 12),
-        text(320, 130, 'Fill limits', 11), text(320, 148, '1 cable: 53 percent', 10), text(320, 162, '2 cables: 31 percent', 10), text(320, 176, '3 or more: 40 percent', 10)
+        text(320, 60, 'ID 1.049 in', 12), text(320, 80, 'Cable OD 0.25 in', 12)
       ], 'Cross-section of 1 in EMT with five cables')
     },
     tasks: [
@@ -136,7 +134,7 @@ FRA.labs = FRA.labs || {};
 - **Common failures:** foam, rags, or tape in place of a listed system, the wrong annular space, a system listed for a different penetrant, and an opening left unsealed overnight.
 - **Standard:** only a listed system matched to the wall, the penetrant, and the opening restores the rating.`,
     scenario: {
-      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve holding a cable bundle, where more cable will be added over time. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve kept for future cable.",
+      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve already full of cable, with no cable to be added. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve held for cable that will be pulled later.",
       svg: svg([
         box(10, 30, 400, 150), text(210, 22, 'Two-hour rated wall', 11),
         box(40, 80, 50, 50), [0, 1, 2, 3, 4, 5].map(i => circ(50 + (i % 3) * 15, 95 + Math.floor(i / 3) * 20, 5)).join(''),
@@ -144,22 +142,22 @@ FRA.labs = FRA.labs || {};
         circ(290, 105, 26, 'none', 3), circ(290, 105, 17),
         box(340, 80, 50, 50),
         text(65, 70, '1', 14), text(190, 70, '2', 14), text(290, 70, '3', 14), text(365, 70, '4', 14),
-        text(65, 152, 'steel sleeve', 9), text(65, 164, 'with cables', 9), text(190, 152, 'cored hole', 9), text(190, 164, 'with cables', 9),
-        text(290, 152, 'plastic pipe', 9), text(365, 152, 'empty sleeve', 9), text(365, 164, 'spare capacity', 9)
+        text(65, 152, 'steel sleeve', 9), text(65, 164, 'full of cable', 9), text(190, 152, 'cored hole', 9), text(190, 164, 'with cables', 9),
+        text(290, 152, 'plastic pipe', 9), text(365, 152, 'empty sleeve', 9), text(365, 164, 'held for later', 9)
       ], 'A rated wall with four penetrations: a sleeve with cables, a cored hole with cables, a plastic pipe, and an empty sleeve')
     },
     tasks: [
-      { id: "p1", kind: "choice", prompt: "Penetration 1, the sleeve with cables, where cable will be added: which method matches a listed system?", options: ["A firestop device or sleeve listed for cable, which can be reconfigured when cable is added", "Sealant applied to the listed annular space", "An intumescent collar or wrap listed for plastic pipe", "A removable plug or pillow listed for re-entry"], expect: 0 },
-      { id: "p2", kind: "choice", prompt: "Penetration 2, the bare bundle in the cored hole: which method matches a listed system?", options: ["Sealant applied to the listed annular space", "A firestop device or sleeve listed for cable", "An intumescent collar or wrap listed for plastic pipe", "A removable plug or pillow listed for re-entry"], expect: 0 },
-      { id: "p3", kind: "choice", prompt: "Penetration 3, the plastic pipe: which method matches a listed system?", options: ["An intumescent collar or wrap listed for plastic pipe", "Sealant applied to the listed annular space", "A firestop device or sleeve listed for cable", "A removable plug or pillow listed for re-entry"], expect: 0 },
-      { id: "p4", kind: "choice", prompt: "Penetration 4, the empty sleeve kept for future cable: which method matches a listed system?", options: ["A removable plug or pillow listed for re-entry", "Sealant applied to the listed annular space", "A firestop device or sleeve listed for cable", "An intumescent collar or wrap listed for plastic pipe"], expect: 0 },
+      { id: "p1", kind: "choice", prompt: "Penetration 1, the sleeve already full of cable: which method matches a listed system?", options: ["A firestop device listed for cable in that sleeve, held by compression", "An intumescent collar listed for plastic pipe", "A removable plug sized for an empty sleeve", "Spray foam packed around the cables"], expect: 0 },
+      { id: "p2", kind: "choice", prompt: "Penetration 2, the bare bundle in the cored hole: which method matches a listed system?", options: ["Sealant at the annular space and depth the listed system names", "A compression device sized for a steel sleeve", "An intumescent collar listed for plastic pipe", "A removable pillow with the bundle left loose in it"], expect: 0 },
+      { id: "p3", kind: "choice", prompt: "Penetration 3, the plastic pipe: which method matches a listed system?", options: ["An intumescent collar or wrap listed for plastic pipe", "A putty pad of the kind used behind an outlet box", "A compression device listed for cable", "Mineral wool packed tight and caulked"], expect: 0 },
+      { id: "p4", kind: "choice", prompt: "Penetration 4, the empty sleeve held for later cable: which method matches a listed system?", options: ["A removable plug or pillow listed for re-entry", "Permanent sealant filling the sleeve from end to end", "An intumescent collar listed for plastic pipe", "Nothing yet, since no cable passes through it"], expect: 0 },
       { id: "add", kind: "choice", prompt: "A cable is added to penetration 1 six months later. What is the right action?", options: ["Reseal it per the same listing and have it inspected", "Push the cable through the old seal, which still holds", "Fill the gap around the new cable with spray foam", "Log the cable and reseal at the next shutdown"], expect: 0 }
     ],
     why: {
-      p1: "A manufactured device or sleeve listed for cable is held by compression and can be reconfigured when cable is added, which suits a sleeve that will grow. Sealant would have to be cut out each time.",
-      p2: "A bare bundle in a cored hole with no sleeve is sealed with sealant, put in at the annular space the listed system names, to the listed depth.",
-      p3: "Plastic pipe burns away in a fire and leaves a hole, so it needs the intumescent collar or wrap that is listed for plastic pipe.",
-      p4: "An empty sleeve still passes smoke and flame. A plug or pillow listed for re-entry closes it now and comes out and goes back when cable is pulled later.",
+      p1: "A sleeve that is full and stays full needs a manufactured firestop device listed for cable, held by compression. A plug is for an empty sleeve, a collar is for plastic pipe, and foam is not a listed system.",
+      p2: "A bare bundle in a cored hole with no sleeve is sealed with sealant at the annular space and depth the listed system names. A compression device needs a sleeve, and a collar is for plastic pipe.",
+      p3: "Plastic pipe burns away in a fire and leaves a hole, so it needs the intumescent collar or wrap that is listed for plastic pipe. A putty pad is for the back of a box, and loose packing is not a listed system.",
+      p4: "An empty sleeve still passes smoke and flame. A plug or pillow listed for re-entry closes it now and comes out and goes back when cable is pulled later. Permanent sealant would have to be cut out, and a rated opening is not left open.",
       add: "Adding or removing a cable breaks the seal. Reseal it every time to the same listing and have it inspected. Foam is not a listed system, and a rated opening is not left open for later."
     }
   };
@@ -199,7 +197,6 @@ FRA.labs = FRA.labs || {};
   };
 
   // ---------- punch-110 ----------
-  const pairs110 = ['blue', 'orange', 'green', 'brown'];
   FRA.labs["punch-110"] = {
     id: "punch-110", lesson: "u5l2", title: "Punch down a 110 block", instrument: "choices",
     intro: `Terminate a four-pair cable on a 110 block. By hand you would use a 110 punch-down tool with a 110 blade, a cable stripper, and a scrap block with a short length of cable.
@@ -211,16 +208,16 @@ FRA.labs = FRA.labs || {};
       text: "A four-pair cable is fanned out above a 110 block row with four pair positions, 1 to 4, from left to right. Each pair has a white-striped conductor (the tip) and a solid conductor (the ring).",
       svg: svg([
         box(30, 28, 360, 24), text(210, 44, 'cable jacket (stripped back)', 10),
-        pairs110.map((c, i) => cond(60 + i * 85, 52, 12, 55, 'white-' + c) + cond(76 + i * 85, 52, 12, 55, c)).join(''),
-        box(30, 112, 360, 45, 'none'),
-        [0, 1, 2, 3].map(i => box(52 + i * 85, 118, 44, 33) + text(74 + i * 85, 139, 'P' + (i + 1), 11)).join(''),
-        text(210, 177, '110 block: four pair positions', 10),
-        `<polygon points="190,200 210,200 200,188" fill="currentColor"/>`, text(255, 205, 'punch tool: cutting edge faces the waste end', 9)
+        [['green', 0, 0], ['brown', 1, 1], ['blue', 0, 0], ['orange', 1, 1]].map((q, i) => (q[1] ? cond(60 + i * 85, 52, 12, 55, q[0]) + cond(76 + i * 85, 52, 12, 55, 'white-' + q[0]) : cond(60 + i * 85, 52, 12, 55, 'white-' + q[0]) + cond(76 + i * 85, 52, 12, 55, q[0]))).join(''),
+        text(210, 120, 'pairs as they come out of the jacket', 9),
+        box(30, 130, 360, 40, 'none'),
+        [0, 1, 2, 3].map(i => box(52 + i * 85, 136, 44, 28) + text(74 + i * 85, 155, 'P' + (i + 1), 11)).join(''),
+        text(210, 190, '110 block: four pair positions', 10)
       ], 'A fanned-out four-pair cable above a 110 block with four pair positions')
     },
     tasks: [
       { id: "order", kind: "choice", prompt: "In which order do the pairs land across positions 1 to 4?", options: ["Blue, orange, green, brown", "Brown, green, orange, blue", "Blue, green, orange, brown", "Green, blue, orange, brown"], expect: 0 },
-      { id: "tip", kind: "choice", prompt: "Within each pair, which conductor lands first?", options: ["The white-striped conductor (tip), then the solid one (ring)", "The solid conductor (ring), then the white-striped one (tip)", "Either one, because the order inside a pair does not matter"], expect: 0 },
+      { id: "tip", kind: "choice", prompt: "Within each pair, which conductor lands first?", options: ["The white-striped conductor (tip), then the solid one (ring)", "The solid conductor (ring), then the white-striped one (tip)", "Either one, because the order inside a pair does not matter", "The one on the left as the pair leaves the jacket"], expect: 0 },
       { id: "tool", kind: "choice", prompt: "Which tool and blade position seats and trims the wire?", options: ["A 110 punch-down tool with the cutting edge turned out, toward the waste end", "A 110 punch-down tool with the cutting edge turned in, toward the wire you keep", "A flat screwdriver to seat the wire, then diagonal cutters to trim it"], expect: 0 },
       { id: "untwist", kind: "choice", prompt: "At most how far may a pair be untwisted at the block?", options: ["13 mm (0.5 in)", "6 mm (0.25 in)", "25 mm (1 in)", "50 mm (2 in)"], expect: 0 }
     ],
@@ -235,6 +232,8 @@ FRA.labs = FRA.labs || {};
   // ---------- jack-t568b ----------
   const T568B = ['white-orange', 'orange', 'white-green', 'blue', 'white-blue', 'green', 'white-brown', 'brown'];
   const T568A = ['white-green', 'green', 'white-orange', 'blue', 'white-blue', 'orange', 'white-brown', 'brown'];
+  const C568 = ['orange', 'white-orange', 'white-green', 'blue', 'white-blue', 'green', 'white-brown', 'brown'];
+  const D568 = ['white-orange', 'orange', 'green', 'blue', 'white-blue', 'white-green', 'white-brown', 'brown'];
   const jackDraw = (ox, letter, set) => text(ox + 47, 50, 'Jack ' + letter, 11) + box(ox, 58, 94, 82) + set.map((n, i) => cond(ox + 4 + i * 11, 64, 10, 62, n) + text(ox + 9 + i * 11, 136, i + 1, 7)).join('');
   FRA.labs["jack-t568b"] = {
     id: "jack-t568b", lesson: "u5l3", title: "Wire a jack to T568B", instrument: "choices",
@@ -244,11 +243,11 @@ FRA.labs = FRA.labs || {};
 - **Common failures:** the white-orange and white-green conductors confused, one end wired T568A and the other T568B, a stray strand, and a cap not seated flush.
 - **Standard:** one scheme at every jack, panel, and cord end on the job, and the tester shows a clean wiremap.`,
     scenario: {
-      text: "The job specifies T568B. Four jacks are drawn from the same job, with the pins numbered 1 to 8 from the left. Three were wired by one tech and one was wired by another.",
+      text: "The job specifies T568B. Four jacks are drawn from the same job, with the pins numbered 1 to 8 from the left. Each was wired by a different tech, and the far end of every link is wired T568B.",
       svg: svg([
-        jackDraw(6, 'A', T568B), jackDraw(110, 'B', T568B), jackDraw(214, 'C', T568A), jackDraw(318, 'D', T568B),
+        jackDraw(6, 'A', T568B), jackDraw(110, 'B', T568A), jackDraw(214, 'C', C568), jackDraw(318, 'D', D568),
         text(210, 165, 'Pin 1 is at the left of every jack', 10),
-        text(210, 190, 'White-striped bars: color stripe on white', 10)
+        text(210, 190, 'A bar with a stripe is white with that color stripe', 10)
       ], 'Four jack faces with eight color-coded slots each')
     },
     tasks: [
@@ -256,14 +255,14 @@ FRA.labs = FRA.labs || {};
       { id: "pin2", kind: "choice", prompt: "In T568B, which color is on pin 2?", options: ["Orange", "Green", "White-orange", "Brown"], expect: 0 },
       { id: "pin3", kind: "choice", prompt: "In T568B, which color is on pin 3?", options: ["White-green", "White-orange", "Green", "White-brown"], expect: 0 },
       { id: "pin6", kind: "choice", prompt: "In T568B, which color is on pin 6?", options: ["Green", "Orange", "White-green", "Blue"], expect: 0 },
-      { id: "wrong", kind: "choice", prompt: "Which drawn jack is wrong for this job, and why?", options: ["Jack C: the orange and green pairs trade places, so it is T568A and the link tests as crossed pairs", "Jack A: the blue pair is on the wrong pins, so the link tests open", "Jack B: the brown pair is reversed, so the link tests as a split pair", "Jack D: the white-orange conductor is on pin 2, so the link tests as a short"], expect: 0 }
+      { id: "wrong", kind: "choice", prompt: "Which drawn jack makes the link test as crossed pairs against the T568B far end, and why?", options: ["Jack B: the orange and green pairs trade places, so it is T568A", "Jack C: the orange pair is reversed on pins 1 and 2, so it is T568A", "Jack D: the green pair is reversed on pins 3 and 6, so it is T568A", "Jack A: the blue pair is on the wrong pins, so it is T568A"], expect: 0 }
     ],
     why: {
       pin1: "T568B starts with white-orange on pin 1. White-green on pin 1 is T568A.",
       pin2: "Pin 2 is the solid orange, the ring of the pair that starts on pin 1.",
       pin3: "T568B puts white-green on pin 3. White-orange on pin 3 is T568A.",
       pin6: "Pin 6 is solid green, the ring of the pair whose tip is on pin 3. The pair at pins 3 and 6 straddles the blue pair on 4 and 5.",
-      wrong: "Jack C has green on pins 1 and 2 and orange on pins 3 and 6, the T568A order. Wired to the T568B job at the other end, the orange and green pairs cross over, and the tester shows crossed pairs. The blue and brown pairs are in the same place in both schemes."
+      wrong: "Jack B has green on pins 1 and 2 and orange on pins 3 and 6, the T568A order. Against a T568B far end the orange and green pairs cross over, and the tester shows crossed pairs. Jacks C and D keep the T568B pairs on the right pins but reverse one pair, which tests as a reversed pair, and Jack A is correct T568B."
     }
   };
 

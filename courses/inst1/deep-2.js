@@ -389,7 +389,7 @@ Category 6A cable goes into a Category 6A jack, to a Category 6A patch panel, wi
 ## Seating a 110 block, with the blade
 The tool carries a replaceable blade with a cutting edge on one side. You place the tool over the wire with the cutting edge facing outward, toward the end of the wire you will not use.
 
-1. Lay the pair on the block's slots in order, keeping the twist to within 13 mm.
+1. Lay the pair on the block's slots in order, keeping the twist to within 13 mm. Across the row the pairs go blue, orange, green, brown, and in every pair the white-striped conductor goes in before the solid one.
 2. Position the tool so the cutting side is out.
 3. Push firmly until it clicks. The wire is seated in the contact and the end is trimmed.
 4. Look for a clean cut with the wire flush with the block.
