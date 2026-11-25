@@ -303,8 +303,9 @@
   PANEL.figures = lab => `<div class="ins figures">${(obj(lab.scenario).figures || []).map((f, i) => `<figure class="ins-fig"><div class="ins-fig-n">Figure ${i + 1}</div>${figure(f)}${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ''}</figure>`).join('')}</div>`;
   HANDLE.figures = () => false;
   // A choices lab may show a pack-drawn picture (a jack face, a punch block, a tester screen) above its text. The svg is
-  // pack content, trusted like the dmm circuit drawings; the text is escaped.
-  PANEL.choices = lab => { const sc = obj(lab.scenario); return `${typeof sc.svg === 'string' ? `<div class="ins-drawing">${sc.svg}</div>` : ''}<pre class="ins-text">${esc(sc.text || '')}</pre>`; };
+  // pack content, trusted like the dmm circuit drawings; the text is escaped. With a drawing, the text describes it and
+  // wraps as prose; without one, the text is a screen (console output) and keeps its lines in the terminal block.
+  PANEL.choices = lab => { const sc = obj(lab.scenario); return typeof sc.svg === 'string' ? `<div class="ins-drawing wide">${sc.svg}</div><p class="ins-note">${esc(sc.text || '')}</p>` : `<pre class="ins-text">${esc(sc.text || '')}</pre>`; };
   HANDLE.choices = () => false;
 
   const sel = (ui, field, opts) => `<select data-field="${field}">${opts.map(([v, l]) => `<option value="${v}" ${ui[field] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;

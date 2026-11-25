@@ -136,7 +136,8 @@ check('current: no readout yet is null', I.current(lab('dmm', DMM, []), {}, {}) 
   check('render: choices shows its text escaped in a pre', !!el.querySelector('pre.ins-text') && el.querySelector('pre').textContent === 'Reply from 10.0.0.1 <ok>');
   el.innerHTML = '';
   I.render(el, lab('choices', { text: 'Read the jack', svg: '<svg viewBox="0 0 10 10"><rect id="pin1" width="1" height="1"/></svg>' }, []), {}, {});
-  check('render: choices draws its svg above the text', !!el.querySelector('.ins-drawing svg #pin1') && el.querySelector('.ins-drawing').compareDocumentPosition(el.querySelector('pre.ins-text')) === 4);
+  check('render: choices draws its svg full width above the text', !!el.querySelector('.ins-drawing.wide svg #pin1') && el.querySelector('.ins-drawing').compareDocumentPosition(el.querySelector('p.ins-note')) === 4);
+  check('render: a choices drawing caption is wrapping prose, not a terminal pre', !el.querySelector('pre') && el.querySelector('p.ins-note').textContent === 'Read the jack');
   I.render(el, lab('figures', { figures: [{ kind: 'meter', min: 0, max: 10, value: 3, unit: 'V', caption: 'Meter one' }, { kind: 'cylinder', ml: 100, value: 20 }] }, []), {}, {});
   check('render: figures draws every figure with its caption', el.querySelectorAll('svg.fig').length === 2 && /Meter one/.test(el.textContent));
 
