@@ -134,7 +134,7 @@ FRA.labs = FRA.labs || {};
 - **Common failures:** foam, rags, or tape in place of a listed system, the wrong annular space, a system listed for a different penetrant, and an opening left unsealed overnight.
 - **Standard:** only a listed system matched to the wall, the penetrant, and the opening restores the rating.`,
     scenario: {
-      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve already full of cable, with no cable to be added. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve held for cable that will be pulled later.",
+      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve already full of cable. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve held for cable that will be pulled later.",
       svg: svg([
         box(10, 30, 400, 150), text(210, 22, 'Two-hour rated wall', 11),
         box(40, 80, 50, 50), [0, 1, 2, 3, 4, 5].map(i => circ(50 + (i % 3) * 15, 95 + Math.floor(i / 3) * 20, 5)).join(''),
@@ -154,7 +154,7 @@ FRA.labs = FRA.labs || {};
       { id: "add", kind: "choice", prompt: "A cable is added to penetration 1 six months later. What is the right action?", options: ["Reseal it per the same listing and have it inspected", "Push the cable through the old seal, which still holds", "Fill the gap around the new cable with spray foam", "Log the cable and reseal at the next shutdown"], expect: 0 }
     ],
     why: {
-      p1: "A sleeve that is full and stays full needs a manufactured firestop device listed for cable, held by compression. A plug is for an empty sleeve, a collar is for plastic pipe, and foam is not a listed system.",
+      p1: "A sleeve full of cable needs a manufactured firestop device listed for cable, held by compression. A plug is for an empty sleeve, a collar is for plastic pipe, and foam is not a listed system.",
       p2: "A bare bundle in a cored hole with no sleeve is sealed with sealant at the annular space and depth the listed system names. A compression device needs a sleeve, and a collar is for plastic pipe.",
       p3: "Plastic pipe burns away in a fire and leaves a hole, so it needs the intumescent collar or wrap that is listed for plastic pipe. A putty pad is for the back of a box, and loose packing is not a listed system.",
       p4: "An empty sleeve still passes smoke and flame. A plug or pillow listed for re-entry closes it now and comes out and goes back when cable is pulled later. Permanent sealant would have to be cut out, and a rated opening is not left open.",

@@ -502,7 +502,7 @@ FRA.course = {
       { q: "How many questions are on the BICSI Installer 1 exam?", a: "The written exam has 75 multiple-choice questions in 2 hours, on a computer at a Pearson test center. Questions test both knowledge and how you apply it. A calculator and a whiteboard are provided, and there are no scheduled breaks." },
       { q: "What is the Installer 1 hands-on exam?", a: "Six tasks done to industry standards, 20 minutes each, graded pass or fail after each task. It is given on the last day of BICSI's Installer 1 class. Fail one task and you may retry it the same day at no cost; fail the same task twice, or two tasks, and you retake the hands-on on another date. You must pass the hands-on before you can take the written exam. This course's labs prepare the knowledge behind those tasks; nothing replaces practice with real tools." },
       { q: "How is the Installer 1 written exam scored?", a: "BICSI sets the passing score through a standard-setting panel of experts and does not publish it. If you fail, you get a report of your performance by topic area, not a score. This course's official-format test asks for 75 percent." },
-      { q: "Who can take the Installer 1?", a: "No installation experience is required. BICSI recommends its Installer 1 training class, 50 hours of independent study of its installation methods manual, and safety and PPE training. Candidates must be able to tell colors apart, do fine hand work, stand for long periods, climb ladders, and lift and carry up to 50 pounds." },
+      { q: "Who can take the Installer 1?", a: "No installation experience is required. BICSI recommends its Installer 1 training class, about 50 hours of independent study, and safety and PPE training. Candidates must be able to tell colors apart, do fine hand work, stand for long periods, climb ladders, and lift and carry up to 50 pounds." },
       { q: "How much does the Installer 1 cost?", a: "The application fee is $335 for BICSI members and $400 for nonmembers, and it covers your first hands-on and first written attempt. A retest is $135 for members and $200 for nonmembers. You have one year from your first hands-on attempt, with a 30-day wait between unsuccessful attempts and 90 days after a third." },
       { q: "Does the Installer 1 renew?", a: "No. Installer 1 is a nonrenewable certificate. The next steps are Installer 2 Copper and Installer 2 Optical Fiber." },
       { q: "Is this course from BICSI?", a: "No. INST1 Academy is an independent course and is not affiliated with or endorsed by BICSI. Its lessons and questions are original and never reproduce exam content." },
@@ -2659,7 +2659,7 @@ UPC (ultra physical contact) has a polished flat-curved face and a blue body. AP
 - **Mechanical splice (prepolished):** a factory-polished stub inside the connector joins the fiber in a splice with index-matching gel.
 - **Fusion-spliced pigtail:** a factory-made connector and a short fiber (a pigtail) are fused to the cable fiber by a machine. It gives the lowest loss and is the most common on large jobs.
 
-Each field method starts with a **cleave**: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
+Each field method needs a **cleave** at one step: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
 
 A fourth option skips field termination: with **pre-termination**, the cable or trunk arrives from the factory cut to length with its connectors already on and tested. The installer pulls it, protecting the ends, and plugs it in, so the lengths must be measured right before the order goes in.
 
@@ -4986,7 +4986,7 @@ window.FRA = window.FRA || {};
     const at40 = Math.floor(0.40 * ratio);
     if (R(2) === 0 && at40 >= 3) {
       const cands = [Math.floor(0.53 * ratio), Math.floor(0.31 * ratio), Math.floor(ratio), at40 + 1, at40 - 1, Math.floor(0.40 * p.id / cab.od), Math.round(0.40 * ratio) + 2].map(String);
-      return build("u3l14", `How many ${cab.name} cables (${cab.od} in OD) may go in ${p.size} EMT (inside diameter ${p.id} in) at the 40 percent fill limit?`, String(at40),
+      return build("u3l14", `What is the largest number of ${cab.name} cables (${cab.od} in OD) that may go in ${p.size} EMT (inside diameter ${p.id} in) at the 40 percent fill limit?`, String(at40),
         wrong(String(at40), cands),
         `Cables at the limit = 0.40 x (conduit ID squared) / (cable OD squared) = 0.40 x ${num(p.id * p.id, 3)} / ${num(cab.od * cab.od, 4)} = ${num(0.40 * ratio, 2)}, rounded down to ${at40}. Round down: a partial cable over the limit is over the limit. Using diameters instead of their squares, or the 53 percent one-cable figure, are the usual slips.`, "fill");
     }
@@ -5197,7 +5197,7 @@ FRA.labs = FRA.labs || {};
 - **Common failures:** foam, rags, or tape in place of a listed system, the wrong annular space, a system listed for a different penetrant, and an opening left unsealed overnight.
 - **Standard:** only a listed system matched to the wall, the penetrant, and the opening restores the rating.`,
     scenario: {
-      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve already full of cable, with no cable to be added. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve held for cable that will be pulled later.",
+      text: "A two-hour rated wall has four penetrations. 1: a steel sleeve already full of cable. 2: a bundle of cables through a cored hole with no sleeve. 3: a plastic pipe. 4: an empty steel sleeve held for cable that will be pulled later.",
       svg: svg([
         box(10, 30, 400, 150), text(210, 22, 'Two-hour rated wall', 11),
         box(40, 80, 50, 50), [0, 1, 2, 3, 4, 5].map(i => circ(50 + (i % 3) * 15, 95 + Math.floor(i / 3) * 20, 5)).join(''),
@@ -5217,7 +5217,7 @@ FRA.labs = FRA.labs || {};
       { id: "add", kind: "choice", prompt: "A cable is added to penetration 1 six months later. What is the right action?", options: ["Reseal it per the same listing and have it inspected", "Push the cable through the old seal, which still holds", "Fill the gap around the new cable with spray foam", "Log the cable and reseal at the next shutdown"], expect: 0 }
     ],
     why: {
-      p1: "A sleeve that is full and stays full needs a manufactured firestop device listed for cable, held by compression. A plug is for an empty sleeve, a collar is for plastic pipe, and foam is not a listed system.",
+      p1: "A sleeve full of cable needs a manufactured firestop device listed for cable, held by compression. A plug is for an empty sleeve, a collar is for plastic pipe, and foam is not a listed system.",
       p2: "A bare bundle in a cored hole with no sleeve is sealed with sealant at the annular space and depth the listed system names. A compression device needs a sleeve, and a collar is for plastic pipe.",
       p3: "Plastic pipe burns away in a fire and leaves a hole, so it needs the intumescent collar or wrap that is listed for plastic pipe. A putty pad is for the back of a box, and loose packing is not a listed system.",
       p4: "An empty sleeve still passes smoke and flame. A plug or pillow listed for re-entry closes it now and comes out and goes back when cable is pulled later. Permanent sealant would have to be cut out, and a rated opening is not left open.",
@@ -5592,7 +5592,7 @@ FRA.questions.push(
 
 // u3l12
 {id:"u3l12-1",t:"u3l12",q:"A new ladder rack carries only low-voltage cable. What do you do about bonding?",a:["Skip it","Bond every section","Bond only the first section","Bond it at one end only"],c:1,e:"Every tray and ladder rack section is bonded, whether it carries power or low-voltage cable."},
-{id:"u3l12-2",t:"u3l12",q:"A listed tray is a few inches too long for the corridor. What should the crew do?",a:["Cut it with a hacksaw and file the edge, since it is only one section","Cut it and leave a note on the drawing for the next trade","Ask the AHJ first, because a field cut can void the listing","Splice a shorter piece from scrap tray on the other end"],c:2,e:"A field cut can void the tray's listing, so ask the AHJ before cutting a listed tray."},
+{id:"u3l12-2",t:"u3l12",q:"A listed wire mesh tray is a few inches too long for the corridor. What should the crew do?",a:["Cut it with a hacksaw and file the edge, since a listing covers the material and not the length","Cut it and leave a note on the drawing for the next trade","Ask the AHJ first, because a field cut can void the listing","Splice a shorter piece from scrap tray on the other end"],c:2,e:"A listed tray may lose its listing when it is modified in the field, so check with the AHJ before cutting it. The listing covers the product as made and installed, not just its material."},
 {id:"u3l12-3",t:"u3l12",q:"The foreman asks how full to load a new ladder tray on day one. What is the BEST answer?",a:["Match it to the hook rating used elsewhere on the floor","Load it to the top of the side rails so that no space is wasted","Use the conduit limit of 40 percent, since a tray is only a larger pipe","Follow the fill limit the designer and code set, and leave room for growth"],c:3,e:"Tray fill and depth are set by the designer and the code, and a new tray should leave room to add cable. Conduit fill limits and hook ratings belong to other supports."},
 {id:"u3l12-4",t:"u3l12",q:"A vertical ladder rack carries heavy backbone cable up through a riser. How do you hold the cable?",a:["Secure each cable to the rung","Tie every cable at the top only, where the pull ends","Rely on the friction of the cables against one another in the bundle","Hang each cable by its own jacket from the rack's top rung"],c:0,e:"Secure each cable to the rung so the weight spreads over several supports instead of hanging on one point."},
 {id:"u3l12-5",t:"u3l12",q:"A tray 12 in wide by 3.94 in deep will hold 120 cables of 0.30 in OD. What is the fill percent?",a:["9.0 percent","17.9 percent","26.9 percent","35.8 percent"],c:1,e:"Cable area is 120 x 0.0707 = 8.48 square in over a tray area of 47.28 square in, which is 17.9 percent. Half that is 9.0 for 60 cables, 26.9 is for 180, and 35.8 is for 240."},

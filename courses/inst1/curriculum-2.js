@@ -542,7 +542,7 @@ UPC (ultra physical contact) has a polished flat-curved face and a blue body. AP
 - **Mechanical splice (prepolished):** a factory-polished stub inside the connector joins the fiber in a splice with index-matching gel.
 - **Fusion-spliced pigtail:** a factory-made connector and a short fiber (a pigtail) are fused to the cable fiber by a machine. It gives the lowest loss and is the most common on large jobs.
 
-Each field method starts with a **cleave**: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
+Each field method needs a **cleave** at one step: the bare fiber is scored and snapped so its end is flat and square. Shards go straight into a marked container.
 
 A fourth option skips field termination: with **pre-termination**, the cable or trunk arrives from the factory cut to length with its connectors already on and tested. The installer pulls it, protecting the ends, and plugs it in, so the lengths must be measured right before the order goes in.
 

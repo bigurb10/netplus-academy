@@ -28,7 +28,7 @@ window.FRA = window.FRA || {};
     const at40 = Math.floor(0.40 * ratio);
     if (R(2) === 0 && at40 >= 3) {
       const cands = [Math.floor(0.53 * ratio), Math.floor(0.31 * ratio), Math.floor(ratio), at40 + 1, at40 - 1, Math.floor(0.40 * p.id / cab.od), Math.round(0.40 * ratio) + 2].map(String);
-      return build("u3l14", `How many ${cab.name} cables (${cab.od} in OD) may go in ${p.size} EMT (inside diameter ${p.id} in) at the 40 percent fill limit?`, String(at40),
+      return build("u3l14", `What is the largest number of ${cab.name} cables (${cab.od} in OD) that may go in ${p.size} EMT (inside diameter ${p.id} in) at the 40 percent fill limit?`, String(at40),
         wrong(String(at40), cands),
         `Cables at the limit = 0.40 x (conduit ID squared) / (cable OD squared) = 0.40 x ${num(p.id * p.id, 3)} / ${num(cab.od * cab.od, 4)} = ${num(0.40 * ratio, 2)}, rounded down to ${at40}. Round down: a partial cable over the limit is over the limit. Using diameters instead of their squares, or the 53 percent one-cable figure, are the usual slips.`, "fill");
     }
